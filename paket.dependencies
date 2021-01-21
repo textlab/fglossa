@@ -2,7 +2,9 @@ source https://api.nuget.org/v3/index.json
 framework: net5.0
 storage: none
 
+nuget Dapper
 nuget Fable.Remoting.Giraffe
+nuget Giraffe.SerilogExtensions
 nuget Saturn
 nuget Expecto
 
@@ -16,6 +18,8 @@ nuget Fable.Mocha
 nuget Fable.React
 nuget Fable.Remoting.Client
 nuget Fulma
+nuget Serilog.Sinks.Console
+nuget System.Data.SQLite
 
 group Build
     source https://api.nuget.org/v3/index.json
