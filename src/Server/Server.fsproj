@@ -6,8 +6,11 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="paket.references" />
+    <Compile Include="fs/Database.fs" />
+    <Compile Include="fs/Remoting/Corpus.fs" />
+    <Compile Include="corpora/Core.fs" />
     <Compile Include="corpora/*/*.fs" />
-    <Compile Include="Server.fs" />
+    <Compile Include="fs/Server.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.fsproj" />
