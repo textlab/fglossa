@@ -2,22 +2,31 @@ namespace Shared
 
 open System
 
-type Todo =
-    { Id : Guid
-      Description : string }
+module Metadata =
+    type Category =
+        | Text of code: string * name: string
+        | Inteval of code: string * name: string * from: int * ``to``: int
 
-module Todo =
-    let isValid (description: string) =
-        String.IsNullOrWhiteSpace description |> not
+    type CategoryNode =
+        | NonLeafNode of CategoryNode list
+        | LeafNode of Category
 
-    let create (description: string) =
-        { Id = Guid.NewGuid()
-          Description = description }
+    type MetadataCategories =
+        | CategoryList of Category list
+        | CategoryTree of CategoryNode
+
+    type Selection = Category []
+
+type Corpus =
+    { Code: string
+      Name: string
+      MetadataCategories: Metadata.MetadataCategories }
 
 module Route =
     let builder typeName methodName =
-        sprintf "/api/%s/%s" typeName methodName
+        sprintf "/glossa3/api/%s/%s" typeName methodName
 
-type ITodosApi =
-    { getTodos : unit -> Async<Todo list>
-      addTodo : Todo -> Async<Todo> }
+type IServerApi =
+    { getCorpora: unit -> Async<Corpus list>
+      getCorpus: string -> Async<Corpus>
+      getMetadataForCategory: string * Metadata.Selection -> Async<string * string []> }
