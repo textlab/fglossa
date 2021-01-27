@@ -9,6 +9,6 @@ open Shared
 
 open Shared
 
-let getCorpora () = task { return Corpora.Core.corpora }
+let getCorpora () = task { return [] }
 
 let getCorpus code = task

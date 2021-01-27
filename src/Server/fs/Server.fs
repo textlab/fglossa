@@ -7,7 +7,7 @@ open Saturn
 open Shared
 
 let serverApi =
-    { getCorpora = fun () -> Remoting.Corpus.getCorpora ()
+    { getCorpora = fun () -> Remoting.Corpus.getCorpora () |> Async.AwaitTask
       getCorpus =
           fun code ->
               async {
@@ -15,7 +15,6 @@ let serverApi =
                       { Code = "a"
                         Encoding = UTF8
                         Logo = None
-                        MetadataCategories = None
                         Name = "b"
                         SearchEngine = Cwb }
               }

@@ -14,4 +14,4 @@ release.cmd
 release.sh
 *.orig
 *.DotSettings.user
-src/Server/corpora
+src/Corpora
