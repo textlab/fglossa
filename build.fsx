@@ -5,8 +5,6 @@
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
-open Farmer
-open Farmer.Builders
 
 Target.initEnvironment ()
 
@@ -50,26 +48,7 @@ Target.create
     "Bundle"
     (fun _ ->
         dotnet (sprintf "publish -c Release -o \"%s\"" deployDir) serverPath
-        npm "run build" ".")
-
-Target.create
-    "Azure"
-    (fun _ ->
-        let web =
-            webApp {
-                name "fglossa"
-                zip_deploy "deploy"
-            }
-
-        let deployment =
-            arm {
-                location Location.WestEurope
-                add_resource web
-            }
-
-        deployment
-        |> Deploy.execute "fglossa" Deploy.NoParameters
-        |> ignore)
+        dotnet "fable src/Client --run webpack" ".")
 
 Target.create
     "Run"
@@ -77,7 +56,7 @@ Target.create
         dotnet "build" sharedPath
 
         [ async { dotnet "watch run" serverPath }
-          async { npm "run start" "." } ]
+          async { dotnet "fable watch src/Client -s --run webpack-dev-server" "." } ]
         |> Async.Parallel
         |> Async.RunSynchronously
         |> ignore)
@@ -95,10 +74,7 @@ Target.create
 
 open Fake.Core.TargetOperators
 
-"Clean"
-==> "InstallClient"
-==> "Bundle"
-==> "Azure"
+"Clean" ==> "InstallClient" ==> "Bundle"
 
 "Clean" ==> "InstallClient" ==> "Run"
 
