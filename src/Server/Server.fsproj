@@ -8,7 +8,7 @@
     <None Include="paket.references" />
     <Compile Include="fs/Database.fs" />
     <Compile Include="../Corpora/*/Shared/*.fs" />
-    <Compile Include="../Corpora/*/Server/*.fs" />
+    <Compile Include="../Corpora/*/Server.fs" />
     <Compile Include="fs/Remoting/Corpus.fs" />
     <Compile Include="fs/Server.fs" />
   </ItemGroup>

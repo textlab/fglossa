@@ -8,7 +8,7 @@
         <None Include="index.html" />
         <None Include="paket.references" />
         <Compile Include="../Corpora/*/Shared/*.fs" />
-        <Compile Include="../Corpora/*/Client/*.fs" />
+        <Compile Include="../Corpora/*/Client.fs" />
         <Compile Include="Index.fs" />
         <Compile Include="App.fs" />
     </ItemGroup>
