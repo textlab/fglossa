@@ -46,7 +46,7 @@ module Metadata =
         // Since a section may have no title, the proper F# way would be to define it
         // as a "string option", but using a normal string (and simply omitting the title
         // bar if the title is empty) makes it easier for non-programmers to define menus.
-        | Section of title: string * MenuState * children: MenuItem list
+        | Section of MenuState * title: string * children: MenuItem list
 
     type Menu = MenuItem list
 
