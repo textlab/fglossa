@@ -60,6 +60,12 @@ type Corpus =
       Logo: string option
       Name: string
       SearchEngine: SearchEngine }
+    static member Init(code, name, ?encoding, ?logo, ?searchEngine) =
+        { Code = code
+          Encoding = defaultArg encoding UTF8
+          Logo = logo
+          Name = name
+          SearchEngine = defaultArg searchEngine Cwb }
 
 module Route =
     let builder typeName methodName =

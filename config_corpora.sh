@@ -1,3 +1,3 @@
 #!/bin/sh
 
-dotnet fsi ConfigCorpora.fsx > src/Corpora/Core.fs
+dotnet fsi ConfigCorpora.fsx > src/Corpora/Server.fs
