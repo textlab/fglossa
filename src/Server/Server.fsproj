@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="paket.references" />
+    <Compile Include="fs/ServerTypes.fs" />
     <Compile Include="fs/Database.fs" />
     <Compile Include="../Corpora/corpora/*/Shared/*.fs" />
     <Compile Include="../Corpora/corpora/*/Server.fs" />

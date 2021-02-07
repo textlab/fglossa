@@ -4,11 +4,11 @@ open Elmish
 open Fable.Remoting.Client
 open Shared
 
-type Model = { Corpora: Corpus list }
+type Model = { Corpora: CorpusConfig list }
 
 type Msg =
     | FetchCorpora
-    | FetchedCorpora of Corpus list
+    | FetchedCorpora of CorpusConfig list
 
 let serverApi =
     Remoting.createApi ()

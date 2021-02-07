@@ -14,17 +14,14 @@ let toCamelCase str =
 
 let corpusDirs = [ "bokmal"; "ndc2"; "nowac_1_1"; "norint_tekst" ]
 
-let corpusCodeStrings =
-    corpusDirs
-    |> List.map (fun dir -> $"    | {toCamelCase dir}")
-    |> String.concat "\n"
-
 let matchStrings =
-    corpusDirs
-    |> List.map (fun dir ->
-        let s = toCamelCase dir
-        $"    | {s} -> {s}.Server.getCorpus ()")
-    |> String.concat "\n"
+    let dirStrings =
+        corpusDirs
+        |> List.map (fun dir ->
+            let corpusModule = toCamelCase dir
+            $"""    | "{dir}" -> {corpusModule}.Server.getCorpus ()""")
+        |> String.concat "\n"
+    dirStrings + "\n    | _ -> failwithf \"Unknown corpus: %s\" code"
 
 printfn $"""module Corpora.Core
 
@@ -32,10 +29,9 @@ printfn $"""module Corpora.Core
 /// !!! Auto-generated from corpus directory structure. Do not edit!
 /////////////////////////////////////////////////////////////////////
 
-type CorpusCode =
-{corpusCodeStrings}
+open ServerTypes
 
-let getCorpus (code: CorpusCode) : Shared.Corpus =
+let getCorpus (code: string) : Corpus =
     match code with
 {matchStrings}
 """

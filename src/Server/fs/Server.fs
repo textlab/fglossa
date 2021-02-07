@@ -8,16 +8,7 @@ open Shared
 
 let serverApi =
     { getCorpora = fun () -> Remoting.Corpus.getCorpora () |> Async.AwaitTask
-      getCorpus =
-          fun code ->
-              async {
-                  return
-                      { Code = "a"
-                        Encoding = UTF8
-                        Logo = None
-                        Name = "b"
-                        SearchEngine = Cwb }
-              }
+      getCorpus = fun code -> Remoting.Corpus.getCorpus code |> Async.AwaitTask
       getMetadataForCategory = fun (code, selection) -> async { return "", [||] } }
 
 let webApp =

@@ -54,7 +54,7 @@ module Metadata =
 
     type Value = string * string
 
-type Corpus =
+type CorpusConfig =
     { Code: string
       Encoding: TextEncoding
       Logo: string option
@@ -72,6 +72,6 @@ module Route =
         sprintf "/glossa3/api/%s/%s" typeName methodName
 
 type IServerApi =
-    { getCorpora: unit -> Async<Corpus list>
-      getCorpus: string -> Async<Corpus>
+    { getCorpora: unit -> Async<CorpusConfig list>
+      getCorpus: string -> Async<CorpusConfig>
       getMetadataForCategory: string * Metadata.Selection -> Async<string * string []> }
