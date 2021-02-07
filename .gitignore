@@ -4,6 +4,7 @@
 .idea/
 .ionide/
 .vs/
+build/
 deploy/
 obj/
 bin/

@@ -56,7 +56,7 @@ Target.create
         dotnet "build" sharedPath
 
         [ async { dotnet "watch run" serverPath }
-          async { dotnet "fable watch src/Client -s --run webpack-dev-server" "." } ]
+          async { dotnet "fable watch src/Client --outDir build -s --run webpack-dev-server" "." } ]
         |> Async.Parallel
         |> Async.RunSynchronously
         |> ignore)
