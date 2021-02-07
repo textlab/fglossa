@@ -8,7 +8,8 @@ open ServerTypes
 open Database
 open Shared
 
-let getCorpora () = async { return [] }
+let getCorpusList () =
+    async { return Corpora.Server.getCorpusList () }
 
 let getCorpus code =
     async {

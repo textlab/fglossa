@@ -71,7 +71,10 @@ module Route =
     let builder typeName methodName =
         sprintf "/glossa3/api/%s/%s" typeName methodName
 
+type CorpusCode = string
+type CorpusName = string
+
 type IServerApi =
-    { getCorpora: unit -> Async<CorpusConfig list>
+    { getCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
       getCorpus: string -> Async<CorpusConfig>
       getMetadataForCategory: string * Metadata.Selection -> Async<string * string []> }

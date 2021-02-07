@@ -4,11 +4,12 @@ open Elmish
 open Fable.Remoting.Client
 open Shared
 
-type Model = { Corpora: CorpusConfig list }
+type Model =
+    { CorpusList: (CorpusCode * CorpusName) list }
 
 type Msg =
     | FetchCorpora
-    | FetchedCorpora of CorpusConfig list
+    | FetchedCorpora of (CorpusCode * CorpusName) list
 
 let serverApi =
     Remoting.createApi ()
@@ -16,17 +17,17 @@ let serverApi =
     |> Remoting.buildProxy<IServerApi>
 
 let init (): Model * Cmd<Msg> =
-    let model = { Corpora = [] }
+    let model = { CorpusList = [] }
 
     let cmd =
-        Cmd.OfAsync.perform serverApi.getCorpora () FetchedCorpora
+        Cmd.OfAsync.perform serverApi.getCorpusList () FetchedCorpora
 
     model, cmd
 
 let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
     match msg with
-    | FetchCorpora -> model, Cmd.OfAsync.perform serverApi.getCorpora () FetchedCorpora
-    | FetchedCorpora corpora -> { model with Corpora = corpora }, Cmd.none
+    | FetchCorpora -> model, Cmd.OfAsync.perform serverApi.getCorpusList () FetchedCorpora
+    | FetchedCorpora corpora -> { model with CorpusList = corpora }, Cmd.none
 
 open Fable.React
 open Fable.React.Props
@@ -44,8 +45,8 @@ let containerBox (model: Model) (dispatch: Msg -> unit) =
     Box.box' [] [
         Content.content [] [
             Content.Ol.ol [] [
-                for corpus in model.Corpora do
-                    li [] [ str corpus.Name ]
+                for corpus in model.CorpusList do
+                    li [] [ str (fst corpus) ]
             ]
         ]
     ]

@@ -7,7 +7,7 @@ open Saturn
 open Shared
 
 let serverApi =
-    { getCorpora = fun () -> Remoting.Corpus.getCorpora ()
+    { getCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
       getCorpus = fun code -> Remoting.Corpus.getCorpus code
       getMetadataForCategory = fun (code, selection) -> async { return "", [||] } }
 
