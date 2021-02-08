@@ -57,12 +57,16 @@ module Metadata =
 type CorpusConfig =
     { Code: string
       Encoding: TextEncoding
+      IsParallel: bool
+      IsSpoken: bool
       Logo: string option
       Name: string
       SearchEngine: SearchEngine }
-    static member Init(code, name, ?encoding, ?logo, ?searchEngine) =
+    static member Init(code, name, ?encoding, ?isSpoken, ?isParallel, ?logo, ?searchEngine) =
         { Code = code
           Encoding = defaultArg encoding UTF8
+          IsParallel = defaultArg isParallel false
+          IsSpoken = defaultArg isSpoken false
           Logo = logo
           Name = name
           SearchEngine = defaultArg searchEngine Cwb }
