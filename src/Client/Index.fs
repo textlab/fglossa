@@ -33,6 +33,9 @@ open Fable.React
 open Fable.React.Props
 open Feliz
 open Feliz.Bulma
+open Zanaptak.TypedCssClasses
+
+type Icon = CssClasses<"../../node_modules/@fortawesome/fontawesome-free/css/all.min.css", Naming.PascalCase>
 
 // let navBrand =
 //     Navbar.Brand.div [] [
@@ -54,7 +57,7 @@ open Feliz.Bulma
 
 let view (model: Model) (dispatch: Msg -> unit) =
     span [] [
-        Html.i [ prop.className "fas fa-adjust" ]
+        Html.i [ prop.className [ Icon.Fas; Icon.FaPen ] ]
     ]
 // Hero.hero [ Hero.Color IsPrimary
 //             Hero.IsFullHeight
