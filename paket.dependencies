@@ -5,6 +5,7 @@ storage: none
 nuget Dapper
 nuget Fable.Remoting.Giraffe >= 4.9
 nuget Feliz
+nuget Feliz.Bulma
 nuget Giraffe.SerilogExtensions
 nuget Saturn
 nuget Expecto
