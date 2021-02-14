@@ -18,7 +18,6 @@ nuget Fable.FontAwesome.Free
 nuget Fable.Mocha
 nuget Fable.React
 nuget Fable.Remoting.Client
-nuget Fulma
 nuget Serilog.Sinks.Console
 nuget System.Data.SQLite
 
