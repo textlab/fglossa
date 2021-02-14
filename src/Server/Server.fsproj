@@ -8,6 +8,9 @@
     <None Include="paket.references" />
     <Compile Include="fs/ServerTypes.fs" />
     <Compile Include="fs/Database.fs" />
+    <Compile Include="fs/Templates/App.fs" />
+    <Compile Include="fs/Templates/Index.fs" />
+    <Compile Include="fs/Templates/NotFound.fs" />
     <Compile Include="../Corpora/corpora/*/Shared/*.fs" />
     <Compile Include="../Corpora/corpora/*/Server.fs" />
     <Compile Include="../Corpora/Server.fs" />
