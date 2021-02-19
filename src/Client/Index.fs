@@ -37,48 +37,31 @@ open Zanaptak.TypedCssClasses
 
 type Icon = CssClasses<"../../node_modules/@fortawesome/fontawesome-free/css/all.min.css", Naming.PascalCase>
 
-// let navBrand =
-//     Navbar.Brand.div [] [
-//         Navbar.Item.a [ Navbar.Item.Props [ Href "https://safe-stack.github.io/" ]
-//                         Navbar.Item.IsActive true ] [
-//             img [ Src "/favicon.png"; Alt "Logo" ]
-//         ]
-//     ]
-
-// let containerBox (model: Model) (dispatch: Msg -> unit) =
-//     Box.box' [] [
-//         Content.content [] [
-//             Content.Ol.ol [] [
-//                 for corpus in model.CorpusList do
-//                     li [] [ str (fst corpus) ]
-//             ]
-//         ]
-//     ]
+module Navbar =
+    let view model dispatch =
+        Bulma.navbar [ navbar.isFixedTop
+                       navbar.hasShadow
+                       prop.style [ style.padding (length.rem 0.4) ]
+                       prop.children [ Bulma.navbarBrand.div (
+                                           Bulma.navbarItem.div (
+                                               Html.span [ prop.style [ style.fontSize 20 ]
+                                                           prop.text "Glossa" ]
+                                           )
+                                       )
+                                       Bulma.navbarMenu (
+                                           Bulma.navbarEnd.div [ Bulma.navbarItem.div (
+                                                                     Html.img [ prop.style [ style.width 80
+                                                                                             style.maxHeight 100 ]
+                                                                                prop.src "clarino-green-sml.png" ]
+                                                                 )
+                                                                 Bulma.navbarItem.div (
+                                                                     Html.img [ prop.src "logo.png"
+                                                                                prop.style [ style.marginBottom 5 ] ]
+                                                                 ) ]
+                                       ) ] ]
 
 let view (model: Model) (dispatch: Msg -> unit) =
     span [] [
+        Navbar.view model dispatch
         Html.i [ prop.className [ Icon.Fas; Icon.FaPen ] ]
     ]
-// Hero.hero [ Hero.Color IsPrimary
-//             Hero.IsFullHeight
-//             Hero.Props [ Style [ Background
-//                                      """linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("https://unsplash.it/1200/900?random") no-repeat center center fixed"""
-//                                  BackgroundSize "cover" ] ] ] [
-//     Hero.head [] [
-//         Navbar.navbar [] [
-//             Container.container [] [ navBrand ]
-//         ]
-//     ]
-
-//     Hero.body [] [
-//         Container.container [] [
-//             Column.column [ Column.Width(Screen.All, Column.Is6)
-//                             Column.Offset(Screen.All, Column.Is3) ] [
-//                 Heading.p [ Heading.Modifiers [ Modifier.TextAlignment(Screen.All, TextAlignment.Centered) ] ] [
-//                     str "fglossa"
-//                 ]
-//                 containerBox model dispatch
-//             ]
-//         ]
-//     ]
-// ]
