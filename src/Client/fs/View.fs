@@ -72,8 +72,6 @@ let navbar model dispatch =
                                                              ) ]
                                    ) ] ]
 
-let metadataSidebar model dispatch = Html.div "HEI"
-
 let view (model: Model) (dispatch: Msg -> unit) =
     let metadataSidebarWidth =
         if model.IsShowingMetadata then
@@ -83,8 +81,8 @@ let view (model: Model) (dispatch: Msg -> unit) =
 
     Html.span [ navbar model dispatch
                 Html.div [ prop.style [ style.display.table
-                                        style.marginTop 53 ]
+                                        style.marginTop 65 ]
                            prop.children [ tableRow [ tableCellWithWidth
                                                           metadataSidebarWidth
-                                                          [ metadataSidebar model dispatch ]
+                                                          [ Metadata.menu model dispatch ]
                                                       tableCell [ Html.span "DU" ] ] ] ] ]
