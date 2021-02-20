@@ -9,7 +9,8 @@
         <None Include="paket.references" />
         <Compile Include="../Corpora/corpora/*/Shared/*.fs" />
         <Compile Include="../Corpora/corpora/*/Client.fs" />
-        <Compile Include="fs/Index.fs" />
+        <Compile Include="fs/Model.fs" />
+        <Compile Include="fs/View.fs" />
         <Compile Include="fs/App.fs" />
     </ItemGroup>
     <ItemGroup>
