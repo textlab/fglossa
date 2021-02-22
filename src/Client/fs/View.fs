@@ -14,19 +14,20 @@ open Zanaptak.TypedCssClasses
 type Icon = CssClasses<"../../node_modules/@fortawesome/fontawesome-free/css/all.min.css", Naming.PascalCase>
 
 let shouldShowMetadata (model: LoadedCorpusModel) =
-    // Don't show metadata if the corpus doesn't have any (duh!)
     if model.Corpus.MetadataMenu.IsEmpty then
+        // Don't show metadata if the corpus doesn't have any (duh!)
         false
-    // If ShouldShowMetadata is a Some, the user has explicitly chosen whether to see metadata,
-    // so we respect that unconditionally
     else
         match model.ShouldShowMetadata with
-        | Some shouldShow -> shouldShow
-        // Now we know that we have metadata, and that the user has not explicitly chosen
-        // whether to see them. If we are showing search results, we hide the metadata if the
-        // window is narrow; if instead we are showing the start page, we show the metadata
-        // regardless of window size.
+        | Some shouldShow ->
+            // If ShouldShowMetadata is a Some, the user has explicitly chosen whether to see metadata,
+            // so we respect that unconditionally
+            shouldShow
         | None ->
+            // Now we know that we have metadata, and that the user has not explicitly chosen
+            // whether to see them. If we are showing search results, we hide the metadata if the
+            // window is narrow; if instead we are showing the start page, we show the metadata
+            // regardless of window size.
             match model.Substate with
             | StartPage -> true
             | ShowingResults -> not model.IsNarrowWindow
