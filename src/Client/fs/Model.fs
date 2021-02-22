@@ -6,11 +6,12 @@ type Corpus =
     { Config: CorpusConfig
       MetadataMenu: Metadata.Menu }
 
-type Model =
+type LoadedCorpusModel =
     { IsNarrowWindow: bool
       IsShowingMetadata: bool
-      CorpusConfig: CorpusConfig option }
-    static member Default =
-        { IsNarrowWindow = false
-          IsShowingMetadata = true
-          CorpusConfig = None }
+      Corpus: Corpus }
+
+type Model =
+    | LoadingCorpus
+    | LoadedCorpus of LoadedCorpusModel
+    static member Default = LoadingCorpus

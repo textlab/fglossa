@@ -1,34 +1,9 @@
 module Index
 
 open Elmish
-open Fable.Remoting.Client
 open Shared
 open Model
-
-type Msg =
-    | FetchCorpus of string
-    | FetchedCorpus of CorpusConfig
-
-let serverApi =
-    Remoting.createApi ()
-    |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.buildProxy<IServerApi>
-
-let init (): Model * Cmd<Msg> =
-    let model = Model.Default
-
-    let cmd =
-        Cmd.OfAsync.perform serverApi.getCorpus "bokmal" FetchedCorpus
-
-    model, cmd
-
-let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
-    match msg with
-    | FetchCorpus code -> model, Cmd.OfAsync.perform serverApi.getCorpus code FetchedCorpus
-    | FetchedCorpus corpusConfig ->
-        { model with
-              CorpusConfig = Some corpusConfig },
-        Cmd.none
+open Update
 
 open Fable.React
 open Fable.React.Props
@@ -73,16 +48,19 @@ let navbar model dispatch =
                                    ) ] ]
 
 let view (model: Model) (dispatch: Msg -> unit) =
-    let metadataSidebarWidth =
-        if model.IsShowingMetadata then
-            170
-        else
-            0
+    match model with
+    | LoadingCorpus -> Html.none
+    | LoadedCorpus loadedCorpusModel ->
+        let metadataSidebarWidth =
+            if loadedCorpusModel.IsShowingMetadata then
+                170
+            else
+                0
 
-    Html.span [ navbar model dispatch
-                Html.div [ prop.style [ style.display.table
-                                        style.marginTop 65 ]
-                           prop.children [ tableRow [ tableCellWithWidth
-                                                          metadataSidebarWidth
-                                                          [ Metadata.menu model dispatch ]
-                                                      tableCell [ Html.span "DU" ] ] ] ] ]
+        Html.span [ navbar model dispatch
+                    Html.div [ prop.style [ style.display.table
+                                            style.marginTop 65 ]
+                               prop.children [ tableRow [ tableCellWithWidth
+                                                              metadataSidebarWidth
+                                                              [ Metadata.menu model dispatch ]
+                                                          tableCell [ Html.span "DU" ] ] ] ] ]
