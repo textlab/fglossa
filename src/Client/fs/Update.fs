@@ -30,7 +30,8 @@ let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
 
         let m =
             { IsNarrowWindow = false
-              IsShowingMetadata = false
-              Corpus = corpus }
+              ShouldShowMetadata = None
+              Corpus = corpus
+              Substate = StartPage }
 
         LoadedCorpus m, Cmd.none

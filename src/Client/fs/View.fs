@@ -13,6 +13,24 @@ open Zanaptak.TypedCssClasses
 
 type Icon = CssClasses<"../../node_modules/@fortawesome/fontawesome-free/css/all.min.css", Naming.PascalCase>
 
+let shouldShowMetadata (model: LoadedCorpusModel) =
+    // Don't show metadata if the corpus doesn't have any (duh!)
+    if model.Corpus.MetadataMenu.IsEmpty then
+        false
+    // If ShouldShowMetadata is a Some, the user has explicitly chosen whether to see metadata,
+    // so we respect that unconditionally
+    else
+        match model.ShouldShowMetadata with
+        | Some shouldShow -> shouldShow
+        // Now we know that we have metadata, and that the user has not explicitly chosen
+        // whether to see them. If we are showing search results, we hide the metadata if the
+        // window is narrow; if instead we are showing the start page, we show the metadata
+        // regardless of window size.
+        | None ->
+            match model.Substate with
+            | StartPage -> true
+            | ShowingResults -> not model.IsNarrowWindow
+
 let tableRow (children: ReactElement list) =
     Html.div [ prop.style [ style.display.tableRow ]
                prop.children children ]
@@ -52,7 +70,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
     | LoadingCorpus -> Html.none
     | LoadedCorpus loadedCorpusModel ->
         let metadataSidebarWidth =
-            if loadedCorpusModel.IsShowingMetadata then
+            if shouldShowMetadata loadedCorpusModel then
                 170
             else
                 0

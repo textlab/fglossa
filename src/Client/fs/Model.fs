@@ -6,10 +6,15 @@ type Corpus =
     { Config: CorpusConfig
       MetadataMenu: Metadata.Menu }
 
+type LoadedCorpusSubstate =
+    | StartPage
+    | ShowingResults
+
 type LoadedCorpusModel =
     { IsNarrowWindow: bool
-      IsShowingMetadata: bool
-      Corpus: Corpus }
+      ShouldShowMetadata: bool option
+      Corpus: Corpus
+      Substate: LoadedCorpusSubstate }
 
 type Model =
     | LoadingCorpus

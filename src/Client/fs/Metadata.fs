@@ -15,7 +15,8 @@ let section (state: MenuState) (title: string) (items: MenuItem list) =
                 | _ -> Html.li "annet")
 
     [ Bulma.menuLabel title
-      Bulma.menuList children ]
+      // Bulma.menuList children
+     ]
 
 let menu model dispatch =
     Bulma.menu [ prop.style [ style.marginLeft 15 ]
