@@ -4,7 +4,7 @@ open Dapper
 open System
 open System.Data.Common
 open System.Collections.Generic
-open FSharp.Control.Tasks.ContextInsensitive
+open FSharp.Control.Tasks
 
 let inline (=>) k v = k, box v
 
@@ -21,7 +21,10 @@ type OptionHandler<'T>() =
         param.Value <- valueOrNull
 
     override __.Parse value =
-        if isNull value || value = box DBNull.Value then None else Some(value :?> 'T)
+        if isNull value || value = box DBNull.Value then
+            None
+        else
+            Some(value :?> 'T)
 
 SqlMapper.AddTypeHandler(OptionHandler<string>())
 SqlMapper.AddTypeHandler(OptionHandler<int>())
@@ -54,7 +57,11 @@ let querySingle (connection: #DbConnection) (sql: string) (parameters: IDictiona
                 | Some p -> connection.QuerySingleOrDefaultAsync<'T>(sql, p)
                 | None -> connection.QuerySingleOrDefaultAsync<'T>(sql)
 
-            return if isNull (box res) then Ok None else Ok(Some res)
+            return
+                if isNull (box res) then
+                    Ok None
+                else
+                    Ok(Some res)
         with ex -> return Error ex
     }
 
@@ -66,6 +73,10 @@ let queryDynamic (connection: #DbConnection) (sql: string) (parameters: IDiction
                 | Some p -> connection.QueryAsync(sql, p)
                 | None -> connection.QueryAsync(sql)
 
-            return if isNull (box res) then Ok None else Ok(Some res)
+            return
+                if isNull (box res) then
+                    Ok None
+                else
+                    Ok(Some res)
         with ex -> return Error ex
     }

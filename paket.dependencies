@@ -2,13 +2,15 @@ source https://api.nuget.org/v3/index.json
 framework: net5.0
 storage: none
 
-nuget Dapper
-nuget Fable.Remoting.Giraffe >= 4.9
-nuget Feliz
-nuget Feliz.Bulma
-nuget Giraffe.SerilogExtensions
-nuget Saturn
+nuget Fable.Remoting.Giraffe prerelease
+nuget Saturn prerelease
 nuget Expecto
+
+nuget Dapper
+nuget Giraffe.SerilogExtensions
+nuget Serilog.Sinks.Console
+nuget System.Data.SQLite
+nuget Zanaptak.TypedCssClasses
 
 nuget Fable.Core
 nuget Fable.Elmish
@@ -19,18 +21,10 @@ nuget Fable.FontAwesome.Free
 nuget Fable.Mocha
 nuget Fable.React
 nuget Fable.Remoting.Client
-nuget Serilog.Sinks.Console
-nuget System.Data.SQLite
-nuget Zanaptak.TypedCssClasses
+nuget Feliz
+nuget Feliz.Bulma
 
-group Build
-    source https://api.nuget.org/v3/index.json
-    framework: netstandard2.0
-    storage: none
-
-    nuget FSharp.Core = 4.7.0.0
-    nuget Fake.Core.ReleaseNotes
-    nuget Fake.Core.Target
-    nuget Fake.DotNet.Cli
-    nuget Fake.IO.FileSystem
-    nuget Farmer
+nuget Fake.Core.Target
+nuget Fake.DotNet.Cli
+nuget Fake.IO.FileSystem
+nuget Farmer

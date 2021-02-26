@@ -4,7 +4,7 @@
 // In most cases, you'll only need to edit the CONFIG object (after dependencies)
 // See below if you need better fine-tuning of Webpack options
 
-// Dependencies. Also required: core-js, fable-loader, fable-compiler, @babel/core,
+// Dependencies. Also required: core-js, @babel/core,
 // @babel/preset-env, babel-loader, sass, sass-loader, css-loader, style-loader, file-loader, resolve-url-loader
 var path = require('path');
 var webpack = require('webpack');
@@ -17,7 +17,7 @@ var CONFIG = {
     // The tags to include the generated JS and CSS will be automatically injected in the HTML template
     // See https://github.com/jantimon/html-webpack-plugin
     indexHtmlTemplate: './src/Client/index.html',
-    fsharpEntry: './build/fs/App.js',
+    fsharpEntry: './src/Client/build/fs/App.js',
     outputDir: './deploy/public',
     assetsDir: './src/Client/public',
     devServerPort: 8080,
@@ -117,7 +117,6 @@ module.exports = {
         hot: true,
         inline: true
     },
-    // - fable-loader: transforms F# into JS
     // - babel-loader: transforms JS to old syntax (compatible with old browsers)
     // - sass-loaders: transforms SASS/SCSS into JS
     // - file-loader: Moves files referenced in the code (fonts, images) into output folder

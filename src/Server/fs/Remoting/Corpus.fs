@@ -2,7 +2,7 @@ module Remoting.Corpus
 
 open System.Data.SQLite
 open System.Threading.Tasks
-open FSharp.Control.Tasks.ContextInsensitive
+open FSharp.Control.Tasks
 open Serilog
 open ServerTypes
 open Database

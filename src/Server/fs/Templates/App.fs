@@ -1,6 +1,6 @@
 module App
 
-open Giraffe.GiraffeViewEngine
+open Giraffe.ViewEngine
 
 let layout (content: XmlNode list) =
     let urlBaseValue =
@@ -8,7 +8,7 @@ let layout (content: XmlNode list) =
 
     let headContent =
         [ if not (isNull urlBaseValue) then
-              yield (Giraffe.GiraffeViewEngine.``base`` [ _href urlBaseValue ])
+              yield (``base`` [ _href urlBaseValue ])
           yield meta [ _charset "utf-8" ]
           yield
               meta [ _name "viewport"

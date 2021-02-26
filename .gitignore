@@ -1,10 +1,11 @@
 .fable/
+*.fs.js
+*.fs.js.map
 .fake/
 .farmer/
 .idea/
 .ionide/
 .vs/
-build/
 deploy/
 obj/
 bin/
@@ -15,6 +16,5 @@ release.cmd
 release.sh
 *.orig
 *.DotSettings.user
-*.fs.js
-*.fs.js.map
+build/
 src/Corpora
