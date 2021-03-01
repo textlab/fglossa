@@ -11,21 +11,25 @@ let serverApi =
     |> Remoting.buildProxy<IServerApi>
 
 type Msg =
-    | FetchCorpus of string
-    | FetchedCorpus of CorpusConfig
+    | FetchCorpusConfig of string
+    | FetchedCorpusConfig of CorpusConfig
 
 let init (): Model * Cmd<Msg> =
     let model = Model.Default
 
     let cmd =
-        Cmd.OfAsync.perform serverApi.getCorpus "bokmal" FetchedCorpus
+        Cmd.OfAsync.perform serverApi.getCorpusConfig "bokmal" FetchedCorpusConfig
 
     model, cmd
 
 let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
     match msg with
-    | FetchCorpus code -> LoadingCorpus, Cmd.OfAsync.perform serverApi.getCorpus code FetchedCorpus
-    | FetchedCorpus corpusConfig ->
+    | FetchCorpusConfig code ->
+        let cmd =
+            Cmd.OfAsync.perform serverApi.getCorpusConfig code FetchedCorpusConfig
+
+        LoadingCorpus, cmd
+    | FetchedCorpusConfig corpusConfig ->
         let corpus = Corpora.Client.getCorpus corpusConfig
 
         let m =

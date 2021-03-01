@@ -11,7 +11,7 @@ open Shared
 
 let serverApi =
     { getCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
-      getCorpus = fun code -> Remoting.Corpus.getCorpus code
+      getCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
       getMetadataForCategory = fun (code, selection) -> async { return "", [||] } }
 
 let remotingRouter =
