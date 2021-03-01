@@ -4,16 +4,16 @@ open Shared
 
 type Corpus =
     { Config: CorpusConfig
-      MetadataMenu: Metadata.Menu }
+      MetadataMenu: Metadata.MenuItem list }
 
 type LoadedCorpusSubstate =
     | StartPage
     | ShowingResults
 
 type LoadedCorpusModel =
-    { IsNarrowWindow: bool
+    { Corpus: Corpus
+      IsNarrowWindow: bool
       ShouldShowMetadata: bool option
-      Corpus: Corpus
       Substate: LoadedCorpusSubstate }
 
 type Model =

@@ -81,5 +81,5 @@ let view (model: Model) (dispatch: Msg -> unit) =
                                             style.marginTop 65 ]
                                prop.children [ tableRow [ tableCellWithWidth
                                                               metadataSidebarWidth
-                                                              [ Metadata.menu model dispatch ]
+                                                              [ Metadata.menu loadedCorpusModel dispatch ]
                                                           tableCell [ Html.span "DU" ] ] ] ] ]

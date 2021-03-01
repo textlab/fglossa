@@ -48,8 +48,6 @@ module Metadata =
         // bar if the title is empty) makes it easier for non-programmers to define menus.
         | Section of MenuState * title: string * items: MenuItem list
 
-    type Menu = MenuItem list
-
     type Selection = (string * string list) list
 
     type Value = string * string

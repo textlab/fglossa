@@ -29,9 +29,9 @@ let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
         let corpus = Corpora.Client.getCorpus corpusConfig
 
         let m =
-            { IsNarrowWindow = false
+            { Corpus = corpus
+              IsNarrowWindow = false
               ShouldShowMetadata = None
-              Corpus = corpus
               Substate = StartPage }
 
         LoadedCorpus m, Cmd.none
