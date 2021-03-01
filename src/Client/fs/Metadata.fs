@@ -29,33 +29,59 @@ let freeTextSearch (category: LongTextCategory) =
                  prop.text category.Name ]
     )
 
-let section (state: MenuState) (title: string) (items: MenuItem list) =
-    let children =
-        items
-        |> List.map
-            (fun item ->
-                match item with
-                | StringSelect category -> stringSelect category
-                | NumberSelect category -> numberSelect category
-                | Interval category -> interval category
-                | FreeTextSearch category -> freeTextSearch category
-                | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}")
+type SectionProps =
+    { StartExpanded: bool
+      Title: string
+      Items: MenuItem list }
 
-    [ if title <> "" then
-          Bulma.menuLabel title
-      Html.ul [ prop.className "menu-list"
-                prop.style [ style.borderLeft (1, borderStyle.solid, "#dbdbdb") ]
-                prop.children children ] ]
+let section =
+    React.functionComponent (
+        "Metadata section",
+        fun (props: SectionProps) ->
+            let (isExpanded, setIsExpanded) = React.useState (props.StartExpanded)
+
+            let children =
+                props.Items
+                |> List.map
+                    (fun item ->
+                        match item with
+                        | StringSelect category -> stringSelect category
+                        | NumberSelect category -> numberSelect category
+                        | Interval category -> interval category
+                        | FreeTextSearch category -> freeTextSearch category
+                        | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}")
+
+            [ if props.Title <> "" then
+                  Bulma.menuLabel [ prop.style [ style.cursor "pointer" ]
+                                    prop.onClick (fun _ -> setIsExpanded (not isExpanded))
+                                    prop.children [ Html.text props.Title
+                                                    Bulma.icon [ Html.i [ prop.className [ Icon.Fa
+                                                                                           if isExpanded then
+                                                                                               Icon.FaAngleUp
+                                                                                           else
+                                                                                               Icon.FaAngleDown ] ] ] ] ]
+              if isExpanded then
+                  Html.ul [ prop.className "menu-list"
+                            prop.style [ style.borderLeft (1, borderStyle.solid, "#dbdbdb") ]
+                            prop.children children ] ]
+    )
 
 let menu (model: LoadedCorpusModel) dispatch =
     let menuItems =
         [ for item in model.Corpus.MetadataMenu do
               match item with
-              | Section (state, title, items) -> yield! section state title items
-              | StringSelect category -> yield (stringSelect category)
-              | NumberSelect category -> yield (numberSelect category)
-              | Interval category -> yield (interval category)
-              | FreeTextSearch category -> yield (freeTextSearch category) ]
+              | Section (state, title, items) ->
+                  section
+                      { StartExpanded =
+                            match state with
+                            | Open -> true
+                            | Closed -> false
+                        Title = title
+                        Items = items }
+              | StringSelect category -> (stringSelect category)
+              | NumberSelect category -> (numberSelect category)
+              | Interval category -> (interval category)
+              | FreeTextSearch category -> (freeTextSearch category) ]
 
     Bulma.menu [ Bulma.menuList [ prop.style [ style.marginLeft 15 ]
                                   prop.children menuItems ] ]

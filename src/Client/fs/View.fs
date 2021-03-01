@@ -9,9 +9,6 @@ open Fable.React
 open Fable.React.Props
 open Feliz
 open Feliz.Bulma
-open Zanaptak.TypedCssClasses
-
-type Icon = CssClasses<"../../node_modules/@fortawesome/fontawesome-free/css/all.min.css", Naming.PascalCase>
 
 let shouldShowMetadata (model: LoadedCorpusModel) =
     if model.Corpus.MetadataMenu.IsEmpty then
