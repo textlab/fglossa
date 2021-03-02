@@ -10,9 +10,9 @@ open Saturn
 open Shared
 
 let serverApi =
-    { getCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
-      getCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
-      getMetadataForCategory = fun (code, selection) -> async { return "", [||] } }
+    { GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
+      GetCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
+      GetMetadataForCategory = fun (code, selection) -> async { return "", [||] } }
 
 let remotingRouter =
     Remoting.createApi ()

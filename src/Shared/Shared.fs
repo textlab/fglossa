@@ -77,6 +77,6 @@ type CorpusCode = string
 type CorpusName = string
 
 type IServerApi =
-    { getCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
-      getCorpusConfig: string -> Async<CorpusConfig>
-      getMetadataForCategory: string * Metadata.Selection -> Async<string * string []> }
+    { GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
+      GetCorpusConfig: string -> Async<CorpusConfig>
+      GetMetadataForCategory: string * Metadata.Selection -> Async<string * string []> }
