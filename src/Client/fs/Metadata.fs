@@ -29,6 +29,8 @@ let freeTextSearch (category: LongTextCategory) =
                  prop.text category.Name ]
     )
 
+module RW = Import.ReactWindow
+
 [<ReactComponent>]
 let Section
     (props: {| StartExpanded: bool
@@ -62,7 +64,9 @@ let Section
                 if isExpanded then
                     Html.ul [ prop.className "menu-list"
                               prop.style [ style.borderLeft (1, borderStyle.solid, "#dbdbdb") ]
-                              prop.children children ] ]
+                              prop.children children ]
+
+                    RW.fixedSizeList ]
 
 let menu (model: LoadedCorpusModel) dispatch =
     let menuItems =
