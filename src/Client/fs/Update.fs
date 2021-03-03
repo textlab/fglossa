@@ -4,6 +4,7 @@ open Elmish
 open Fable.Remoting.Client
 open Shared
 open Model
+open Metadata.Update
 
 let serverApi =
     Remoting.createApi ()
@@ -11,6 +12,7 @@ let serverApi =
     |> Remoting.buildProxy<IServerApi>
 
 type Msg =
+    | MetadataMsg of Metadata.Update.Msg
     | FetchCorpusConfig of string
     | FetchedCorpusConfig of CorpusConfig
 
@@ -24,6 +26,7 @@ let init (): Model * Cmd<Msg> =
 
 let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
     match msg with
+    | MetadataMsg msg' -> model, Cmd.none
     | FetchCorpusConfig code ->
         let cmd =
             Cmd.OfAsync.perform serverApi.GetCorpusConfig code FetchedCorpusConfig

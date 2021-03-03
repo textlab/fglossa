@@ -1,10 +1,11 @@
-module Metadata
+module Metadata.View
 
 open Fable.Core.JsInterop
 open Feliz
 open Feliz.Bulma
 open Shared.Metadata
 open Model
+open Metadata.Update
 
 let FixedSizeList: obj = importMember "react-window"
 
@@ -35,35 +36,40 @@ let fixedSizeList: ReactElement =
                                          "width" ==> 100 ],
                              ListItem)
 
-let stringSelect (category: StringCategory) =
+let stringSelect (category: StringCategory) dispatch =
     Html.li (
         Html.a [ prop.key category.Code
-                 prop.text category.Name ]
+                 prop.text category.Name
+                 prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
     )
 
-let numberSelect (category: NumberCategory) =
+let numberSelect (category: NumberCategory) dispatch =
     Html.li (
         Html.a [ prop.key category.Code
-                 prop.text category.Name ]
+                 prop.text category.Name
+                 prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
     )
 
-let interval (category: NumberCategory) =
+let interval (category: NumberCategory) dispatch =
     Html.li (
         Html.a [ prop.key category.Code
-                 prop.text category.Name ]
+                 prop.text category.Name
+                 prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
     )
 
-let freeTextSearch (category: LongTextCategory) =
+let freeTextSearch (category: LongTextCategory) dispatch =
     Html.li (
         Html.a [ prop.key category.Code
-                 prop.text category.Name ]
+                 prop.text category.Name
+                 prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
     )
 
 [<ReactComponent>]
 let Section
     (props: {| StartExpanded: bool
                Title: string
-               Items: MenuItem list |})
+               Items: MenuItem list
+               Dispatch: (Msg -> unit) |})
     =
     let (isExpanded, setIsExpanded) = React.useState (props.StartExpanded)
 
@@ -72,10 +78,10 @@ let Section
         |> List.map
             (fun item ->
                 match item with
-                | StringSelect category -> stringSelect category
-                | NumberSelect category -> numberSelect category
-                | Interval category -> interval category
-                | FreeTextSearch category -> freeTextSearch category
+                | StringSelect category -> stringSelect category props.Dispatch
+                | NumberSelect category -> numberSelect category props.Dispatch
+                | Interval category -> interval category props.Dispatch
+                | FreeTextSearch category -> freeTextSearch category props.Dispatch
                 | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}")
 
     Html.span [ if props.Title <> "" then
@@ -107,11 +113,12 @@ let menu (model: LoadedCorpusModel) dispatch =
                              | Open -> true
                              | Closed -> false
                          Title = title
-                         Items = items |}
-              | StringSelect category -> (stringSelect category)
-              | NumberSelect category -> (numberSelect category)
-              | Interval category -> (interval category)
-              | FreeTextSearch category -> (freeTextSearch category) ]
+                         Items = items
+                         Dispatch = dispatch |}
+              | StringSelect category -> (stringSelect category dispatch)
+              | NumberSelect category -> (numberSelect category dispatch)
+              | Interval category -> (interval category dispatch)
+              | FreeTextSearch category -> (freeTextSearch category dispatch) ]
 
     Bulma.menu [ Bulma.menuList [ prop.style [ style.marginLeft 15 ]
                                   prop.children menuItems ] ]
