@@ -39,6 +39,6 @@ let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
             { Corpus = corpus
               IsNarrowWindow = false
               ShouldShowMetadata = None
-              Substate = StartPage }
+              Substate = CorpusStartPage }
 
         LoadedCorpus m, Cmd.none

@@ -26,7 +26,7 @@ let shouldShowMetadata (model: LoadedCorpusModel) =
             // window is narrow; if instead we are showing the start page, we show the metadata
             // regardless of window size.
             match model.Substate with
-            | StartPage -> true
+            | CorpusStartPage -> true
             | ShowingResults -> not model.IsNarrowWindow
 
 let tableRow (children: ReactElement list) =
