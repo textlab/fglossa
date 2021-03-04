@@ -53,6 +53,6 @@ let view (model: Model) (dispatch: Msg -> unit) =
                                                                    prop.children [ Metadata.View.menu
                                                                                        loadedCorpusModel
                                                                                        (MetadataMsg >> dispatch) ] ]
-                                                    Bulma.column [ LoadedCorpus.View.corpusStartPage
+                                                    Bulma.column [ LoadedCorpus.View.CorpusStartPage.view
                                                                        loadedCorpusModel
                                                                        (LoadedCorpusMsg >> dispatch) ] ] ] ]

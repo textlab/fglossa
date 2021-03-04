@@ -11,4 +11,17 @@ let topRowButtons =
                     Bulma.button.button [ color.isInfo
                                           prop.text "Reset form" ] ]
 
-let corpusStartPage (model: LoadedCorpusModel) (dispatch: Msg -> unit) = topRowButtons
+module CorpusStartPage =
+    let corpusNameBox model =
+        let logo =
+            match model.Corpus.Config.Logo with
+            | Some logo -> Html.img [ prop.src logo ]
+            | None -> Html.none
+
+        Bulma.box [ prop.style [ style.padding 20 ]
+                    prop.children [ Bulma.title model.Corpus.Config.Name
+                                    logo ] ]
+
+    let view (model: LoadedCorpusModel) (dispatch: Msg -> unit) =
+        Html.span [ topRowButtons
+                    corpusNameBox model ]
