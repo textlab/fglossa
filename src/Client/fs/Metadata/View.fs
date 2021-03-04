@@ -7,7 +7,26 @@ open Shared.Metadata
 open Model
 open Metadata.Update
 
-let FixedSizeList: obj = importMember "react-window"
+let shouldShowMetadata (model: LoadedCorpusModel) =
+    if model.Corpus.MetadataMenu.IsEmpty then
+        // Don't show metadata if the corpus doesn't have any (duh!)
+        false
+    else
+        match model.ShouldShowMetadata with
+        | Some shouldShow ->
+            // If ShouldShowMetadata is a Some, the user has explicitly chosen whether to see metadata,
+            // so we respect that unconditionally
+            shouldShow
+        | None ->
+            // Now we know that we have metadata, and that the user has not explicitly chosen
+            // whether to see them. If we are showing search results, we hide the metadata if the
+            // window is narrow; if instead we are showing the start page, we show the metadata
+            // regardless of window size.
+            match model.Substate with
+            | CorpusStartPage -> true
+            | ShowingResults -> not model.IsNarrowWindow
+
+let FixedSizeList : obj = importMember "react-window"
 
 let ListItem (props: {| index: int; style: obj |}) =
     Html.div [ prop.style [ style.height (int props.style?height)
@@ -26,9 +45,9 @@ let ListItem (props: {| index: int; style: obj |}) =
 // React.createElement directly, since it allows us to provide function components as
 // the `children` argument and leaves them uninstantiated.
 
-let ReactBare: obj = importAll "react"
+let ReactBare : obj = importAll "react"
 
-let fixedSizeList: ReactElement =
+let fixedSizeList : ReactElement =
     ReactBare?createElement (FixedSizeList,
                              createObj [ "height" ==> 100
                                          "itemCount" ==> 10
@@ -103,6 +122,12 @@ let Section
                     fixedSizeList ]
 
 let menu (model: LoadedCorpusModel) dispatch =
+    let sidebarWidth =
+        if shouldShowMetadata model then
+            170
+        else
+            0
+
     let menuItems =
         [ for item in model.Corpus.MetadataMenu do
               match item with
@@ -120,5 +145,6 @@ let menu (model: LoadedCorpusModel) dispatch =
               | Interval category -> (interval category dispatch)
               | FreeTextSearch category -> (freeTextSearch category dispatch) ]
 
-    Bulma.menu [ Bulma.menuList [ prop.style [ style.marginLeft 15 ]
-                                  prop.children menuItems ] ]
+    Bulma.menu [ prop.style [ style.width sidebarWidth
+                              style.overflowX.hidden ]
+                 prop.children [ Bulma.menuList [ prop.children menuItems ] ] ]

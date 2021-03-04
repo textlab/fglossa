@@ -10,25 +10,6 @@ open Fable.React.Props
 open Feliz
 open Feliz.Bulma
 
-let shouldShowMetadata (model: LoadedCorpusModel) =
-    if model.Corpus.MetadataMenu.IsEmpty then
-        // Don't show metadata if the corpus doesn't have any (duh!)
-        false
-    else
-        match model.ShouldShowMetadata with
-        | Some shouldShow ->
-            // If ShouldShowMetadata is a Some, the user has explicitly chosen whether to see metadata,
-            // so we respect that unconditionally
-            shouldShow
-        | None ->
-            // Now we know that we have metadata, and that the user has not explicitly chosen
-            // whether to see them. If we are showing search results, we hide the metadata if the
-            // window is narrow; if instead we are showing the start page, we show the metadata
-            // regardless of window size.
-            match model.Substate with
-            | CorpusStartPage -> true
-            | ShowingResults -> not model.IsNarrowWindow
-
 let tableRow (children: ReactElement list) =
     Html.div [ prop.style [ style.display.tableRow ]
                prop.children children ]
@@ -67,18 +48,11 @@ let view (model: Model) (dispatch: Msg -> unit) =
     match model with
     | LoadingCorpus -> Html.none
     | LoadedCorpus loadedCorpusModel ->
-        let metadataSidebarWidth =
-            if shouldShowMetadata loadedCorpusModel then
-                170
-            else
-                0
-
         Html.span [ navbar model dispatch
-                    Html.div [ prop.style [ style.display.table
-                                            style.marginTop 65 ]
-                               prop.children [ tableRow [ tableCellWithWidth
-                                                              metadataSidebarWidth
-                                                              [ Metadata.View.menu
-                                                                    loadedCorpusModel
-                                                                    (MetadataMsg >> dispatch) ]
-                                                          tableCell [ Html.span "DU" ] ] ] ] ]
+                    Bulma.section [ Bulma.columns [ Bulma.column [ column.isNarrow
+                                                                   prop.children [ Metadata.View.menu
+                                                                                       loadedCorpusModel
+                                                                                       (MetadataMsg >> dispatch) ] ]
+                                                    Bulma.column [ LoadedCorpus.View.corpusStartPage
+                                                                       loadedCorpusModel
+                                                                       (LoadedCorpusMsg >> dispatch) ] ] ] ]
