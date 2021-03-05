@@ -12,11 +12,56 @@ let topRowButtons =
                     Bulma.button.button [ color.isInfo
                                           prop.text "Reset form" ] ]
 
+let searchInterface (model: LoadedCorpusModel) dispatch =
+    let simpleHeading = "Simple"
+    let extendedHeading = "Extended"
+    let cqpHeading = "CQP query"
+
+    let link title (heading: string) ``interface`` =
+        Html.a [ prop.href "#"
+                 prop.title title
+                 prop.onClick (fun _ -> dispatch (SetSearchInterface ``interface``))
+                 prop.text heading ]
+
+    let simpleLink = link "Simple search box" "Simple" Simple
+
+    let extendedLink =
+        link "Search for grammatical categories etc." "Extended" Extended
+
+    let cqpLink = link "CQP expressions" "CQP query" Cqp
+
+    let separator =
+        Html.span [ prop.style [ style.whitespace.pre ]
+                    prop.text " | " ]
+
+    let links =
+        match model.Search.Interface with
+        | Simple ->
+            [ Html.b simpleHeading
+              separator
+              extendedLink
+              separator
+              cqpLink ]
+        | Extended ->
+            [ simpleLink
+              separator
+              Html.b extendedHeading
+              separator
+              cqpLink ]
+        | Cqp ->
+            [ simpleLink
+              separator
+              extendedLink
+              separator
+              Html.b cqpHeading ]
+
+    Bulma.level [ Bulma.levelLeft [ Bulma.levelItem links ] ]
+
 module CorpusStartPage =
     let corpusNameBox config =
         let logo =
             match config.Logo with
-            | Some logo -> Html.img [ prop.src $"corpora/%s{config.Code}/%s{logo}" ]
+            | Some logo -> Html.img [ prop.src $"corpora/{config.Code}/{logo}" ]
             | None -> Html.none
 
         Bulma.box [ prop.style [ style.padding 20 ]
@@ -25,4 +70,5 @@ module CorpusStartPage =
 
     let view (model: LoadedCorpusModel) (dispatch: Msg -> unit) =
         Html.span [ topRowButtons
-                    corpusNameBox model.Corpus.Config ]
+                    corpusNameBox model.Corpus.Config
+                    searchInterface model dispatch ]

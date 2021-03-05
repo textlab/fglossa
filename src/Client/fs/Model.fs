@@ -5,11 +5,21 @@ open Shared
 
 type Icon = CssClasses<"../../node_modules/@fortawesome/fontawesome-free/css/all.min.css", Naming.PascalCase>
 
-type MetadataSelection = (Metadata.Category * (string list) list)
+type SearchInterface =
+    | Simple
+    | Extended
+    | Cqp
+
+type MetadataSelection = (Metadata.Category * (string list)) list
 
 type Search =
-    { Query: string
-      MetadataSelection: MetadataSelection }
+    { Interface: SearchInterface
+      MetadataSelection: MetadataSelection
+      Query: string }
+    static member Default =
+        { Interface = Simple
+          MetadataSelection = []
+          Query = "" }
 
 type Corpus =
     { Config: CorpusConfig
@@ -22,6 +32,7 @@ type LoadedCorpusSubstate =
 type LoadedCorpusModel =
     { Corpus: Corpus
       IsNarrowWindow: bool
+      Search: Search
       ShouldShowMetadata: bool option
       Substate: LoadedCorpusSubstate }
 

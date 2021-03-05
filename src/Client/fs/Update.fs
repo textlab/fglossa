@@ -4,7 +4,6 @@ open Elmish
 open Fable.Remoting.Client
 open Shared
 open Model
-open Metadata.Update
 
 let serverApi =
     Remoting.createApi ()
@@ -27,8 +26,18 @@ let init () : Model * Cmd<Msg> =
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
-    | MetadataMsg msg' -> model, Cmd.none
-    | LoadedCorpusMsg msg' -> model, Cmd.none
+    | MetadataMsg msg' ->
+        let model', cmd = Metadata.Update.update msg' model
+        model', Cmd.map MetadataMsg cmd
+    | LoadedCorpusMsg msg' ->
+        match model with
+        | LoadedCorpus loadedCorpusModel ->
+            let model', cmd =
+                LoadedCorpus.Update.update msg' loadedCorpusModel
+
+            LoadedCorpus model', Cmd.map LoadedCorpusMsg cmd
+        | _ -> failwith "Wrong model for LoadedCorpusMsg"
+
     | FetchCorpusConfig code ->
         let cmd =
             Cmd.OfAsync.perform serverApi.GetCorpusConfig code FetchedCorpusConfig
@@ -40,6 +49,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         let m =
             { Corpus = corpus
               IsNarrowWindow = false
+              Search = Search.Default
               ShouldShowMetadata = None
               Substate = CorpusStartPage }
 
