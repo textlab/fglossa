@@ -55,7 +55,12 @@ let searchInterface (model: LoadedCorpusModel) dispatch =
               separator
               Html.b cqpHeading ]
 
-    Bulma.level [ Bulma.levelLeft [ Bulma.levelItem links ] ]
+    Html.div [ prop.style [ style.width 500 ]
+               prop.children [ Bulma.level [ prop.style [ style.paddingTop 20 ]
+                                             prop.children [ Bulma.levelLeft [ Bulma.levelItem links ]
+                                                             Bulma.levelRight [ Bulma.button.button [ color.isSuccess
+                                                                                                      prop.text "Search" ] ] ] ]
+                               Bulma.field.div [ Bulma.control.div [ Bulma.input.search [] ] ] ] ]
 
 module CorpusStartPage =
     let corpusNameBox config =
