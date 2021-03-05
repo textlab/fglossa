@@ -27,11 +27,13 @@ let tableCellWithWidth (width: int) (children: ReactElement list) =
 let navbar model dispatch =
     Bulma.navbar [ navbar.isFixedTop
                    navbar.hasShadow
-                   prop.children [ Bulma.navbarBrand.div [ Bulma.navbarItem.a [ prop.src
+                   prop.children [ Bulma.navbarBrand.div [ Bulma.navbarItem.a [ prop.href
                                                                                     "https://www.hf.uio.no/iln/english/about/organization/text-laboratory/services/glossa/index.html"
                                                                                 prop.target "_blank"
                                                                                 prop.style [ style.fontSize 20 ]
-                                                                                prop.text "Glossa" ] ]
+                                                                                prop.text "Glossa" ]
+                                                           Bulma.navbarItem.a [ prop.href "#"
+                                                                                prop.text "Corpus list" ] ]
                                    Bulma.navbarMenu (
                                        Bulma.navbarEnd.div [ Bulma.navbarItem.div (
                                                                  Html.img [ prop.style [ style.width 80
