@@ -29,11 +29,13 @@ let shouldShowMetadata (model: LoadedCorpusModel) =
 let FixedSizeList : obj = importMember "react-window"
 
 let ListItem (props: {| index: int; style: obj |}) =
-    Html.div [ prop.style [ style.height (int props.style?height)
+    Html.div [ prop.className "metadata-menu-list-item"
+               prop.style [ style.height (int props.style?height)
                             style.left (int props.style?left)
                             style.position.absolute
                             style.top (int props.style?top)
-                            style.width (length.percent 100) ]
+                            style.width (length.percent 100)
+                            style.padding 6 ]
                prop.text props.index ]
 
 // The components in react-window expect a `children` prop, which should be a
@@ -47,12 +49,12 @@ let ListItem (props: {| index: int; style: obj |}) =
 
 let ReactBare : obj = importAll "react"
 
-let fixedSizeList : ReactElement =
+let selectDropdown : ReactElement =
     ReactBare?createElement (FixedSizeList,
-                             createObj [ "height" ==> 100
+                             createObj [ "height" ==> 200
                                          "itemCount" ==> 10
-                                         "itemSize" ==> 35
-                                         "width" ==> 100 ],
+                                         "itemSize" ==> 32
+                                         "width" ==> 170 ],
                              ListItem)
 
 let stringSelect (category: StringCategory) dispatch =
@@ -119,7 +121,7 @@ let Section
                               prop.style [ style.borderLeft (1, borderStyle.solid, "#dbdbdb") ]
                               prop.children children ]
 
-                    fixedSizeList ]
+                    selectDropdown ]
 
 let menu (model: LoadedCorpusModel) dispatch =
     let sidebarWidth =
