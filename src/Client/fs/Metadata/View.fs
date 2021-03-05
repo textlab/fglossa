@@ -111,11 +111,11 @@ let Section
                                                    style.marginBottom 0 ]
                                       prop.onClick (fun _ -> setIsExpanded (not isExpanded))
                                       prop.children [ Html.text props.Title
-                                                      Bulma.icon [ Html.i [ prop.className [ Icon.Fa
+                                                      Bulma.icon [ Html.i [ prop.className [ "fa"
                                                                                              if isExpanded then
-                                                                                                 Icon.FaAngleUp
+                                                                                                 "fa-angle-up"
                                                                                              else
-                                                                                                 Icon.FaAngleDown ] ] ] ] ]
+                                                                                                 "fa-angle-down" ] ] ] ] ]
                 if isExpanded then
                     Html.ul [ prop.className "menu-list"
                               prop.style [ style.borderLeft (1, borderStyle.solid, "#dbdbdb") ]
@@ -156,8 +156,7 @@ let menu (model: LoadedCorpusModel) dispatch =
                                                                  color.isInfo
                                                                  prop.title "Show selection"
                                                                  prop.style [ style.marginLeft 10 ]
-                                                                 prop.children [ Bulma.icon [ Html.i [ prop.className [ Icon.Fa
-                                                                                                                        Icon.FaBinoculars ] ] ] ] ] ] ]
+                                                                 prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-binoculars" ] ] ] ] ] ] ]
                 Bulma.menu [ prop.style [ style.width sidebarWidth
                                           style.overflowX.hidden ]
                              prop.children [ Bulma.menuList menuItems ] ] ]

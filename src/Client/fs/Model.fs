@@ -1,9 +1,6 @@
 module Model
 
-open Zanaptak.TypedCssClasses
 open Shared
-
-type Icon = CssClasses<"../../node_modules/@fortawesome/fontawesome-free/css/all.min.css", Naming.PascalCase>
 
 type SearchInterface =
     | Simple

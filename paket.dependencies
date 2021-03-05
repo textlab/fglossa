@@ -10,7 +10,6 @@ nuget Dapper
 nuget Giraffe.SerilogExtensions
 nuget Serilog.Sinks.Console
 nuget System.Data.SQLite
-nuget Zanaptak.TypedCssClasses
 
 nuget Fable.Core
 nuget Fable.Elmish
