@@ -60,7 +60,8 @@ let searchInterface (model: LoadedCorpusModel) dispatch =
                                              prop.children [ Bulma.levelLeft [ Bulma.levelItem links ]
                                                              Bulma.levelRight [ Bulma.button.button [ color.isSuccess
                                                                                                       prop.text "Search" ] ] ] ]
-                               Bulma.field.div [ Bulma.control.div [ Bulma.input.search [] ] ] ] ]
+                               Bulma.field.div [ Bulma.control.div [ Bulma.input.search [] ] ]
+                               Bulma.field.div [ Bulma.control.div [ Bulma.button.button "Or..." ] ] ] ]
 
 module CorpusStartPage =
     let corpusNameBox config =
