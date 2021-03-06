@@ -57,19 +57,17 @@ let selectDropdown : ReactElement =
                                          "width" ==> 170 ],
                              ListItem)
 
-let stringSelect (category: StringCategory) dispatch =
-    Html.li (
-        Html.a [ prop.key category.Code
-                 prop.text category.Name
-                 prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
-    )
+let stringSelect (category: StringCategory) showDropdown dispatch =
+    Html.li [ Html.a [ prop.key category.Code
+                       prop.text category.Name
+                       prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
+              if showDropdown then selectDropdown ]
 
-let numberSelect (category: NumberCategory) dispatch =
-    Html.li (
-        Html.a [ prop.key category.Code
-                 prop.text category.Name
-                 prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
-    )
+let numberSelect (category: NumberCategory) showDropdown dispatch =
+    Html.li [ Html.a [ prop.key category.Code
+                       prop.text category.Name
+                       prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
+              if showDropdown then selectDropdown ]
 
 let interval (category: NumberCategory) dispatch =
     Html.li (
@@ -90,6 +88,7 @@ let Section
     (props: {| StartExpanded: bool
                Title: string
                Items: MenuItem list
+               OpenCategoryCode: string option
                Dispatch: (Msg -> unit) |})
     =
     let (isExpanded, setIsExpanded) = React.useState (props.StartExpanded)
@@ -99,8 +98,10 @@ let Section
         |> List.map
             (fun item ->
                 match item with
-                | StringSelect category -> stringSelect category props.Dispatch
-                | NumberSelect category -> numberSelect category props.Dispatch
+                | StringSelect category ->
+                    stringSelect category (Some category.Code = props.OpenCategoryCode) props.Dispatch
+                | NumberSelect category ->
+                    numberSelect category (Some category.Code = props.OpenCategoryCode) props.Dispatch
                 | Interval category -> interval category props.Dispatch
                 | FreeTextSearch category -> freeTextSearch category props.Dispatch
                 | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}")
@@ -141,9 +142,12 @@ let menu (model: LoadedCorpusModel) (dispatch: Metadata.Update.Msg -> unit) =
                              | Closed -> false
                          Title = title
                          Items = items
+                         OpenCategoryCode = model.OpenMetadataCategoryCode
                          Dispatch = dispatch |}
-              | StringSelect category -> (stringSelect category dispatch)
-              | NumberSelect category -> (numberSelect category dispatch)
+              | StringSelect category ->
+                  stringSelect category (Some category.Code = model.OpenMetadataCategoryCode) dispatch
+              | NumberSelect category ->
+                  numberSelect category (Some category.Code = model.OpenMetadataCategoryCode) dispatch
               | Interval category -> (interval category dispatch)
               | FreeTextSearch category -> (freeTextSearch category dispatch) ]
 
