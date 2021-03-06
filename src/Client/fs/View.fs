@@ -51,12 +51,4 @@ let view (model: Model) (dispatch: Msg -> unit) =
     | LoadingCorpus -> Html.none
     | LoadedCorpus loadedCorpusModel ->
         Html.span [ navbar model dispatch
-                    Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
-                                    prop.children [ Bulma.columns [ Bulma.column [ column.isNarrow
-                                                                                   prop.children [ Metadata.View.menu
-                                                                                                       loadedCorpusModel
-                                                                                                       (MetadataMsg
-                                                                                                        >> dispatch) ] ]
-                                                                    Bulma.column [ LoadedCorpus.View.CorpusStartPage.view
-                                                                                       loadedCorpusModel
-                                                                                       (LoadedCorpusMsg >> dispatch) ] ] ] ] ]
+                    LoadedCorpus.View.view loadedCorpusModel (LoadedCorpusMsg >> dispatch) ]

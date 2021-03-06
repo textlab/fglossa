@@ -11,7 +11,6 @@ let serverApi =
     |> Remoting.buildProxy<IServerApi>
 
 type Msg =
-    | MetadataMsg of Metadata.Update.Msg
     | LoadedCorpusMsg of LoadedCorpus.Update.Msg
     | FetchCorpusConfig of string
     | FetchedCorpusConfig of CorpusConfig
@@ -26,16 +25,13 @@ let init () : Model * Cmd<Msg> =
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
-    | MetadataMsg msg' ->
-        let model', cmd = Metadata.Update.update msg' model
-        model', Cmd.map MetadataMsg cmd
     | LoadedCorpusMsg msg' ->
         match model with
         | LoadedCorpus loadedCorpusModel ->
-            let model', cmd =
+            let newModel, cmd =
                 LoadedCorpus.Update.update msg' loadedCorpusModel
 
-            LoadedCorpus model', Cmd.map LoadedCorpusMsg cmd
+            LoadedCorpus newModel, Cmd.map LoadedCorpusMsg cmd
         | _ -> failwith "Wrong model for LoadedCorpusMsg"
 
     | FetchCorpusConfig code ->
@@ -49,6 +45,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         let m =
             { Corpus = corpus
               IsNarrowWindow = false
+              OpenMetadataMenu = None
               Search = Search.Default
               ShouldShowMetadata = None
               Substate = CorpusStartPage }

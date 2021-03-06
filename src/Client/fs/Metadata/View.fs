@@ -123,7 +123,7 @@ let Section
 
                     selectDropdown ]
 
-let menu (model: LoadedCorpusModel) dispatch =
+let menu (model: LoadedCorpusModel) (dispatch: Metadata.Update.Msg -> unit) =
     let sidebarWidth =
         if shouldShowMetadata model then
             170

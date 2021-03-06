@@ -74,7 +74,16 @@ module CorpusStartPage =
                     prop.children [ Bulma.title config.Name
                                     logo ] ]
 
-    let view (model: LoadedCorpusModel) (dispatch: Msg -> unit) =
+    let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) =
         Html.span [ topRowButtons
                     corpusNameBox model.Corpus.Config
                     searchInterface model dispatch ]
+
+let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) =
+    Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
+                                prop.children [ Bulma.columns [ Bulma.column [ column.isNarrow
+                                                                               prop.children [ Metadata.View.menu
+                                                                                                   model
+                                                                                                   (MetadataMsg
+                                                                                                    >> dispatch) ] ]
+                                                                Bulma.column [ CorpusStartPage.view model dispatch ] ] ] ] ]

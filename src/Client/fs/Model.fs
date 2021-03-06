@@ -29,6 +29,7 @@ type LoadedCorpusSubstate =
 type LoadedCorpusModel =
     { Corpus: Corpus
       IsNarrowWindow: bool
+      OpenMetadataMenu: Metadata.Category option
       Search: Search
       ShouldShowMetadata: bool option
       Substate: LoadedCorpusSubstate }
