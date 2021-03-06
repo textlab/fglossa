@@ -36,7 +36,7 @@ let ListItem (props: {| index: int; style: obj |}) =
                             style.top (int props.style?top)
                             style.width (length.percent 100)
                             style.padding 6 ]
-               prop.text props.index ]
+               prop.text $"Metadataverdi nr. %d{props.index}" ]
 
 // The components in react-window expect a `children` prop, which should be a
 // component function or class. However, all React functions in Fable.React and
@@ -57,17 +57,20 @@ let selectDropdown : ReactElement =
                                          "width" ==> 170 ],
                              ListItem)
 
-let stringSelect (category: StringCategory) showDropdown dispatch =
+let selectMenu (category: Category) showDropdown dispatch =
     Html.li [ Html.a [ prop.key category.Code
                        prop.text category.Name
                        prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
-              if showDropdown then selectDropdown ]
+              if showDropdown then
+                  Html.div [ prop.style [ style.border (1, borderStyle.solid, "#aaa")
+                                          style.borderRadius 4 ]
+                             prop.children selectDropdown ] ]
+
+let stringSelect (category: StringCategory) showDropdown dispatch =
+    selectMenu category showDropdown dispatch
 
 let numberSelect (category: NumberCategory) showDropdown dispatch =
-    Html.li [ Html.a [ prop.key category.Code
-                       prop.text category.Name
-                       prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
-              if showDropdown then selectDropdown ]
+    selectMenu category showDropdown dispatch
 
 let interval (category: NumberCategory) dispatch =
     Html.li (
@@ -122,7 +125,7 @@ let Section
                               prop.style [ style.borderLeft (1, borderStyle.solid, "#dbdbdb") ]
                               prop.children children ]
 
-                    selectDropdown ]
+                 ]
 
 let menu (model: LoadedCorpusModel) (dispatch: Metadata.Update.Msg -> unit) =
     let sidebarWidth =
