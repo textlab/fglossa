@@ -45,6 +45,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         let m =
             { Corpus = corpus
               IsNarrowWindow = false
+              IsShowSelectionOpen = false
               OpenMetadataCategoryCode = None
               Search = Search.Default
               ShouldShowMetadata = None

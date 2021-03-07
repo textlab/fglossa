@@ -20,7 +20,8 @@ type Search =
 
 type Corpus =
     { Config: CorpusConfig
-      MetadataMenu: Metadata.MenuItem list }
+      MetadataMenu: Metadata.MenuItem list
+      MetadataTable: Metadata.Category list }
 
 type LoadedCorpusSubstate =
     | CorpusStartPage
@@ -29,6 +30,7 @@ type LoadedCorpusSubstate =
 type LoadedCorpusModel =
     { Corpus: Corpus
       IsNarrowWindow: bool
+      IsShowSelectionOpen: bool
       OpenMetadataCategoryCode: string option
       Search: Search
       ShouldShowMetadata: bool option

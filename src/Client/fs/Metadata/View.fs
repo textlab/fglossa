@@ -7,6 +7,51 @@ open Shared.Metadata
 open Model
 open Metadata.Update
 
+[<ReactComponent>]
+let MetadataSelectionPopup model dispatch =
+    let header =
+        Bulma.level [ prop.style [ style.padding 10
+                                   style.margin 0 ]
+                      prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle
+                                                                              "All 123 texts (123,456,789 tokens) selected" ] ]
+                                      Bulma.levelRight [ Bulma.levelItem [ Bulma.delete [ Bulma.delete.isMedium
+                                                                                          prop.title "Close"
+                                                                                          prop.onClick
+                                                                                              (fun _ ->
+                                                                                                  dispatch
+                                                                                                      ToggleShowSelectionOpen) ] ] ] ] ]
+
+    let table =
+        Bulma.tableContainer [ Bulma.table [ table.isStriped
+                                             table.isFullWidth
+                                             prop.children [ Html.thead [ Html.tr [ for category in model.Corpus.MetadataTable ->
+                                                                                        Html.th category.Name ] ] ] ] ]
+
+    let popup =
+        Html.div [ prop.style [ style.height (
+                                    if model.IsShowSelectionOpen then
+                                        length.percent 100
+                                    else
+                                        (length.percent 0)
+                                )
+                                style.top 0
+                                style.left 0
+                                style.width (length.percent 100)
+                                style.position.absolute
+                                style.zIndex 40
+                                style.backgroundColor "white"
+                                style.overflowX.hidden
+                                style.border (1, borderStyle.solid, "black")
+                                style.transitionProperty transitionProperty.height
+                                style.transitionDuration (System.TimeSpan(3500000L))
+                                style.transitionTimingFunction.easeOut ]
+                   prop.children [ header; table ] ]
+
+    let root =
+        Browser.Dom.document.getElementById ("metadata-selection-popup-root")
+
+    ReactDOM.createPortal (popup, root)
+
 let shouldShowMetadata (model: LoadedCorpusModel) =
     if model.Corpus.MetadataMenu.IsEmpty then
         // Don't show metadata if the corpus doesn't have any (duh!)
@@ -163,7 +208,10 @@ let menu (model: LoadedCorpusModel) (dispatch: Metadata.Update.Msg -> unit) =
                                                                  color.isInfo
                                                                  prop.title "Show selection"
                                                                  prop.style [ style.marginLeft 10 ]
+                                                                 prop.onClick
+                                                                     (fun _ -> dispatch ToggleShowSelectionOpen)
                                                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-binoculars" ] ] ] ] ] ] ]
+                MetadataSelectionPopup model dispatch
                 Bulma.menu [ prop.style [ style.width sidebarWidth
                                           style.overflowX.hidden ]
                              prop.children [ Bulma.menuList menuItems ] ] ]
