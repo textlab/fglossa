@@ -11,11 +11,13 @@ type TextEncoding =
     | Latin1
 
 module Metadata =
+    type StringSelectOption = { Name: string; Value: string }
+
     /// Base class for all metadata categories
     [<AbstractClass>]
     type Category(aName: string) =
         member _.Name = aName
-        abstract member Code: string
+        abstract member Code : string
 
     /// Metadata category that can be presented as a metadata value list
     [<AbstractClass>]

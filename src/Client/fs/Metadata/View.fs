@@ -7,8 +7,27 @@ open Shared.Metadata
 open Model
 open Metadata.Update
 
+let fetchedMetadataValues =
+    [ { Name = "Adresseavisen"
+        Value = "Adresseavisen" }
+      { Name = "Aftenposten"
+        Value = "Aftenposten" }
+      { Name = "Bellona"; Value = "Bellona" }
+      { Name = "Bergens Tidende"
+        Value = "Bergens Tidende" }
+      { Name = "Dagbladet"
+        Value = "Dagbladet" }
+      { Name = "Det Nye"; Value = "Det Nye" }
+      { Name = "Familien"
+        Value = "Familien" }
+      { Name = "Filmmagasinet"
+        Value = "Filmmagasinet" }
+      { Name = "Gateavisa"
+        Value = "Gateavisa" }
+      { Name = "KK"; Value = "KK" } ]
+
 [<ReactComponent>]
-let MetadataSelectionPopup model dispatch =
+let MetadataSelectionTablePopup model dispatch =
     let iconButton iconClass =
         Bulma.button.button [ button.isSmall
                               prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"; iconClass ] ] ] ] ]
@@ -99,7 +118,7 @@ let ListItem (props: {| index: int; style: obj |}) =
                             style.top (int props.style?top)
                             style.width (length.percent 100)
                             style.padding 6 ]
-               prop.text $"Metadataverdi nr. %d{props.index}" ]
+               prop.text fetchedMetadataValues.[props.index].Name ]
 
 // The components in react-window expect a `children` prop, which should be a
 // component function or class. However, all React functions in Fable.React and
@@ -235,7 +254,7 @@ let menu (model: LoadedCorpusModel) (dispatch: Metadata.Update.Msg -> unit) =
                                                                  prop.onClick
                                                                      (fun _ -> dispatch ToggleShowSelectionOpen)
                                                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-binoculars" ] ] ] ] ] ] ]
-                MetadataSelectionPopup model dispatch
+                MetadataSelectionTablePopup model dispatch
                 Bulma.menu [ prop.style [ style.width sidebarWidth
                                           style.overflowX.hidden ]
                              prop.children [ Bulma.menuList menuItems ] ] ]
