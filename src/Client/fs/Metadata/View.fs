@@ -9,26 +9,16 @@ open Metadata.Update
 
 [<ReactComponent>]
 let MetadataSelectionPopup model dispatch =
-    let header =
-        Bulma.level [ prop.style [ style.padding 10
-                                   style.margin 0 ]
-                      prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle
-                                                                              "All 123 texts (123,456,789 tokens) selected" ] ]
-                                      Bulma.levelRight [ Bulma.levelItem [ Bulma.delete [ Bulma.delete.isMedium
-                                                                                          prop.title "Close"
-                                                                                          prop.onClick
-                                                                                              (fun _ ->
-                                                                                                  dispatch
-                                                                                                      ToggleShowSelectionOpen) ] ] ] ] ]
-
     let iconButton iconClass =
         Bulma.button.button [ button.isSmall
                               prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"; iconClass ] ] ] ] ]
 
-    let pagination =
-        Bulma.level [ prop.style [ style.padding 10
-                                   style.margin 0 ]
-                      prop.children [ Bulma.levelLeft []
+    let header =
+        Bulma.level [ prop.style [ style.padding 20
+                                   //    style.marginTop 10
+                                   style.marginBottom 0 ]
+                      prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle
+                                                                              "All 123 texts (123,456,789 tokens) selected" ] ]
                                       Bulma.levelRight [ Bulma.levelItem [ Bulma.buttons [ iconButton
                                                                                                "fa-angle-double-left"
                                                                                            iconButton "fa-angle-left" ] ]
@@ -39,7 +29,15 @@ let MetadataSelectionPopup model dispatch =
                                                                                                 prop.value 1 ] ]
                                                          Bulma.levelItem [ Bulma.buttons [ iconButton "fa-angle-right"
                                                                                            iconButton
-                                                                                               "fa-angle-double-right" ] ] ] ] ]
+                                                                                               "fa-angle-double-right" ] ]
+                                                         Bulma.levelItem [ Bulma.delete [ delete.isMedium
+                                                                                          prop.title "Close"
+                                                                                          prop.style [ style.marginLeft
+                                                                                                           40 ]
+                                                                                          prop.onClick
+                                                                                              (fun _ ->
+                                                                                                  dispatch
+                                                                                                      ToggleShowSelectionOpen) ] ] ] ] ]
 
     let table =
         Bulma.tableContainer [ Bulma.table [ table.isStriped
@@ -65,9 +63,7 @@ let MetadataSelectionPopup model dispatch =
                                 style.transitionProperty transitionProperty.height
                                 style.transitionDuration (System.TimeSpan(3500000L))
                                 style.transitionTimingFunction.easeOut ]
-                   prop.children [ header
-                                   pagination
-                                   table ] ]
+                   prop.children [ header; table ] ]
 
     let root =
         Browser.Dom.document.getElementById ("metadata-selection-popup-root")
