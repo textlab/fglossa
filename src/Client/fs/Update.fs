@@ -48,7 +48,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
               IsShowSelectionOpen = false
               OpenMetadataCategoryCode = None
               Search = Search.Default
-              ShouldShowMetadata = None
+              ShouldShowMetadataMenu = None
               Substate = CorpusStartPage }
 
         LoadedCorpus m, Cmd.none

@@ -33,7 +33,7 @@ type LoadedCorpusModel =
       IsShowSelectionOpen: bool
       OpenMetadataCategoryCode: string option
       Search: Search
-      ShouldShowMetadata: bool option
+      ShouldShowMetadataMenu: bool option
       Substate: LoadedCorpusSubstate }
 
 type Model =
