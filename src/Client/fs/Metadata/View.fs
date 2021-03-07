@@ -139,11 +139,27 @@ let selectDropdown : ReactElement =
                                          "width" ==> 170 ],
                              ListItem)
 
-let selectMenu (category: Category) showDropdown dispatch =
+let selectMenu (category: Category) isMenuOpen dispatch =
     Html.li [ Html.a [ prop.key category.Code
-                       prop.text category.Name
-                       prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
-              if showDropdown then
+                       if isMenuOpen then
+                           prop.style [ style.lineHeight (length.em 1.7) ]
+                       prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category))
+                       prop.children [ Html.text category.Name
+                                       if isMenuOpen then
+                                           Bulma.button.button [ button.isSmall
+                                                                 color.isDanger
+                                                                 prop.style [ style.marginLeft 10 ]
+                                                                 prop.title "Remove selection"
+                                                                 prop.children [ Bulma.icon [ Html.i [ prop.className
+                                                                                                           "fa fa-times" ] ] ] ] ] ]
+              if isMenuOpen then
+                  Bulma.button.button [ button.isSmall
+                                        // color.isDanger
+                                        prop.title "Exclude selected values"
+                                        prop.style [ style.marginBottom 5
+                                                     style.marginLeft 10 ]
+                                        prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-minus" ] ] ] ] ]
+
                   Html.div [ prop.className "metadata-menu-selection"
                              prop.children [ Html.div [ prop.className "metadata-choice"
                                                         prop.children [ Html.span [ prop.className
