@@ -201,7 +201,7 @@ let menu (model: LoadedCorpusModel) (dispatch: Metadata.Update.Msg -> unit) =
 
     Html.span [ Html.div [ prop.style [ style.width sidebarWidth
                                         style.paddingLeft (length.em 0.75)
-                                        style.marginBottom (length.rem 1) ]
+                                        style.marginBottom (length.rem 0.75) ]
                            prop.children [ Html.text "All 123 texts (123,456,789 tokens) selected"
                                            Bulma.button.button [ button.isSmall
                                                                  button.isOutlined
