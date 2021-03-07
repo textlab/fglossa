@@ -21,6 +21,26 @@ let MetadataSelectionPopup model dispatch =
                                                                                                   dispatch
                                                                                                       ToggleShowSelectionOpen) ] ] ] ] ]
 
+    let iconButton iconClass =
+        Bulma.button.button [ button.isSmall
+                              prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"; iconClass ] ] ] ] ]
+
+    let pagination =
+        Bulma.level [ prop.style [ style.padding 10
+                                   style.margin 0 ]
+                      prop.children [ Bulma.levelLeft []
+                                      Bulma.levelRight [ Bulma.levelItem [ Bulma.buttons [ iconButton
+                                                                                               "fa-angle-double-left"
+                                                                                           iconButton "fa-angle-left" ] ]
+                                                         Bulma.levelItem [ Bulma.input.number [ input.isSmall
+                                                                                                prop.style [ style.width
+                                                                                                                 60
+                                                                                                             style.textAlign.right ]
+                                                                                                prop.value 1 ] ]
+                                                         Bulma.levelItem [ Bulma.buttons [ iconButton "fa-angle-right"
+                                                                                           iconButton
+                                                                                               "fa-angle-double-right" ] ] ] ] ]
+
     let table =
         Bulma.tableContainer [ Bulma.table [ table.isStriped
                                              table.isFullWidth
@@ -45,7 +65,9 @@ let MetadataSelectionPopup model dispatch =
                                 style.transitionProperty transitionProperty.height
                                 style.transitionDuration (System.TimeSpan(3500000L))
                                 style.transitionTimingFunction.easeOut ]
-                   prop.children [ header; table ] ]
+                   prop.children [ header
+                                   pagination
+                                   table ] ]
 
     let root =
         Browser.Dom.document.getElementById ("metadata-selection-popup-root")
