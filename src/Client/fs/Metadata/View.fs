@@ -132,7 +132,7 @@ let selectMenu (category: Category) showDropdown dispatch =
                                                                                     prop.text "x" ]
                                                                         Html.span "M" ] ] ] ]
 
-                  Html.div [ prop.style [ style.border (1, borderStyle.solid, "#aaa") ]
+                  Html.div [ prop.className "metadata-menu-list-container"
                              prop.children selectDropdown ] ]
 
 let stringSelect (category: StringCategory) showDropdown dispatch =
