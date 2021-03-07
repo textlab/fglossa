@@ -125,8 +125,14 @@ let selectMenu (category: Category) showDropdown dispatch =
                        prop.text category.Name
                        prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
               if showDropdown then
-                  Html.div [ prop.style [ style.border (1, borderStyle.solid, "#aaa")
-                                          style.borderRadius 4 ]
+                  Html.div [ prop.className "metadata-menu-selection"
+                             prop.children [ Html.div [ prop.className "metadata-choice"
+                                                        prop.children [ Html.span [ prop.className
+                                                                                        "metadata-choice-cross"
+                                                                                    prop.text "x" ]
+                                                                        Html.span "M" ] ] ] ]
+
+                  Html.div [ prop.style [ style.border (1, borderStyle.solid, "#aaa") ]
                              prop.children selectDropdown ] ]
 
 let stringSelect (category: StringCategory) showDropdown dispatch =
