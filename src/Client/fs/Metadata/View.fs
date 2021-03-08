@@ -177,7 +177,7 @@ module MetadataMenu =
                                                                            prop.children [ Html.span [ prop.onClick
                                                                                                            (fun _ ->
                                                                                                                dispatch (
-                                                                                                                   UnselectItem(
+                                                                                                                   DeselectItem(
                                                                                                                        category,
                                                                                                                        choice
                                                                                                                    )

@@ -8,7 +8,7 @@ type Msg =
     | SelectItem of Metadata.Category * Metadata.StringSelectOption
     | ToggleMetadataMenuOpen of category: Metadata.Category
     | ToggleShowSelectionOpen
-    | UnselectItem of Metadata.Category * Metadata.StringSelectOption
+    | DeselectItem of Metadata.Category * Metadata.StringSelectOption
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
     match msg with
@@ -44,7 +44,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         { model with
               IsShowSelectionOpen = not model.IsShowSelectionOpen },
         Cmd.none
-    | UnselectItem (category, optionToRemove) ->
+    | DeselectItem (category, optionToRemove) ->
         let newSelection =
             // Find the selected values for this category and remove the given one
             model.Search.MetadataSelection
