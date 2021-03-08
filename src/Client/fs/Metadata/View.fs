@@ -188,8 +188,10 @@ module MetadataMenu =
                                 Html.div [ prop.className "metadata-choice"
                                            if categorySelection.ShouldExclude then
                                                prop.style [ style.color "white"
-                                                            style.backgroundColor "red" ]
+                                                            style.backgroundColor "#f14668" ]
                                            prop.children [ Html.span [ prop.className "metadata-choice-cross"
+                                                                       if categorySelection.ShouldExclude then
+                                                                           prop.style [ style.color "white" ]
                                                                        prop.children [ Html.span [ prop.onClick
                                                                                                        (fun _ ->
                                                                                                            dispatch (
