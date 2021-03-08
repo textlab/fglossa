@@ -8,23 +8,23 @@ open Model
 open Metadata.Update
 
 let fetchedMetadataValues =
-    [ { Name = "Adresseavisen"
-        Value = "Adresseavisen" }
-      { Name = "Aftenposten"
-        Value = "Aftenposten" }
-      { Name = "Bellona"; Value = "Bellona" }
-      { Name = "Bergens Tidende"
-        Value = "Bergens Tidende" }
-      { Name = "Dagbladet"
-        Value = "Dagbladet" }
-      { Name = "Det Nye"; Value = "Det Nye" }
-      { Name = "Familien"
-        Value = "Familien" }
-      { Name = "Filmmagasinet"
-        Value = "Filmmagasinet" }
-      { Name = "Gateavisa"
-        Value = "Gateavisa" }
-      { Name = "KK"; Value = "KK" } ]
+    [| { Name = "Adresseavisen"
+         Value = "Adresseavisen" }
+       { Name = "Aftenposten"
+         Value = "Aftenposten" }
+       { Name = "Bellona"; Value = "Bellona" }
+       { Name = "Bergens Tidende"
+         Value = "Bergens Tidende" }
+       { Name = "Dagbladet"
+         Value = "Dagbladet" }
+       { Name = "Det Nye"; Value = "Det Nye" }
+       { Name = "Familien"
+         Value = "Familien" }
+       { Name = "Filmmagasinet"
+         Value = "Filmmagasinet" }
+       { Name = "Gateavisa"
+         Value = "Gateavisa" }
+       { Name = "KK"; Value = "KK" } |]
 
 module SelectionTable =
     [<ReactComponent>]
@@ -35,7 +35,6 @@ module SelectionTable =
 
         let header =
             Bulma.level [ prop.style [ style.padding 20
-                                       //    style.marginTop 10
                                        style.marginBottom 0 ]
                           prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle
                                                                                   "All 123 texts (123,456,789 tokens) selected" ] ]
@@ -114,16 +113,6 @@ module MetadataMenu =
 
     let FixedSizeList : obj = importMember "react-window"
 
-    let ListItem (props: {| index: int; style: obj |}) =
-        Html.div [ prop.className "metadata-menu-list-item"
-                   prop.style [ style.height (int props.style?height)
-                                style.left (int props.style?left)
-                                style.position.absolute
-                                style.top (int props.style?top)
-                                style.width (length.percent 100)
-                                style.padding 6 ]
-                   prop.text fetchedMetadataValues.[props.index].Name ]
-
     // The components in react-window expect a `children` prop, which should be a
     // component function or class. However, all React functions in Fable.React and
     // Feliz (such as `ofImport`, `ofType`, and even `Fable.React.ReactBindings.React.createElement`)
@@ -135,7 +124,21 @@ module MetadataMenu =
 
     let ReactBare : obj = importAll "react"
 
-    let selectDropdown : ReactElement =
+    let selectDropdown category (dispatch: Msg -> unit) : ReactElement =
+        /// A single item in a metadata category dropdown list
+        let ListItem (props: {| index: int; style: obj |}) =
+            let selectOption = fetchedMetadataValues.[props.index]
+
+            Html.div [ prop.className "metadata-menu-list-item"
+                       prop.style [ style.height (int props.style?height)
+                                    style.left (int props.style?left)
+                                    style.position.absolute
+                                    style.top (int props.style?top)
+                                    style.width (length.percent 100)
+                                    style.padding 6 ]
+                       prop.onClick (fun _ -> dispatch (SelectItem(category, selectOption)))
+                       prop.text selectOption.Name ]
+
         ReactBare?createElement (FixedSizeList,
                                  createObj [ "height" ==> 200
                                              "itemCount" ==> 10
@@ -143,13 +146,13 @@ module MetadataMenu =
                                              "width" ==> 170 ],
                                  ListItem)
 
-    let selectMenu (category: Category) isMenuOpen dispatch =
+    let metadataSelect (category: Category) isOpen (metadataSelection: Shared.Metadata.Selection) dispatch =
         Html.li [ Html.a [ prop.key category.Code
-                           if isMenuOpen then
+                           if isOpen then
                                prop.style [ style.lineHeight (length.em 1.7) ]
                            prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category))
                            prop.children [ Html.text category.Name
-                                           if isMenuOpen then
+                                           if isOpen then
                                                Bulma.button.button [ button.isSmall
                                                                      // color.isDanger
                                                                      prop.title "Exclude selected values"
@@ -163,24 +166,39 @@ module MetadataMenu =
                                                                      prop.title "Remove selection"
                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className
                                                                                                                "fa fa-times" ] ] ] ] ] ]
-                  if isMenuOpen then
+                  if isOpen then
+                      // List of already selected values
+                      let choices =
+                          match metadataSelection.TryFind category.Code with
+                          | Some cs ->
+                              [ for choice in cs do
+                                    Html.div [ prop.className "metadata-choice"
+                                               prop.children [ Html.span [ prop.className "metadata-choice-cross"
+                                                                           prop.children [ Html.span [ prop.onClick
+                                                                                                           (fun _ ->
+                                                                                                               dispatch (
+                                                                                                                   UnselectItem(
+                                                                                                                       category,
+                                                                                                                       choice
+                                                                                                                   )
+                                                                                                               ))
+                                                                                                       prop.text "x" ] ] ]
+                                                               Html.span choice.Name ] ] ]
+                          | None -> []
 
-
+                      // The box containing already selected values
                       Html.div [ prop.className "metadata-menu-selection"
-                                 prop.children [ Html.div [ prop.className "metadata-choice"
-                                                            prop.children [ Html.span [ prop.className
-                                                                                            "metadata-choice-cross"
-                                                                                        prop.text "x" ]
-                                                                            Html.span "M" ] ] ] ]
+                                 prop.children choices ]
 
+                      // The menu dropdown
                       Html.div [ prop.className "metadata-menu-list-container"
-                                 prop.children selectDropdown ] ]
+                                 prop.children [ selectDropdown category dispatch ] ] ]
 
-    let stringSelect (category: StringCategory) showDropdown dispatch =
-        selectMenu category showDropdown dispatch
+    let stringSelect (category: StringCategory) isOpen metadataSelection dispatch =
+        metadataSelect category isOpen metadataSelection dispatch
 
-    let numberSelect (category: NumberCategory) showDropdown dispatch =
-        selectMenu category showDropdown dispatch
+    let numberSelect (category: NumberCategory) isOpen metadataSelection dispatch =
+        metadataSelect category isOpen metadataSelection dispatch
 
     let interval (category: NumberCategory) dispatch =
         Html.li (
@@ -196,12 +214,14 @@ module MetadataMenu =
                      prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
         )
 
+    /// A collapsible section in a metadata menu
     [<ReactComponent>]
     let Section
         (props: {| StartExpanded: bool
                    Title: string
                    Items: MenuItem list
                    OpenCategoryCode: string option
+                   MetadataSelection: Shared.Metadata.Selection
                    Dispatch: (Msg -> unit) |})
         =
         let (isExpanded, setIsExpanded) = React.useState (props.StartExpanded)
@@ -212,9 +232,15 @@ module MetadataMenu =
                 (fun item ->
                     match item with
                     | StringSelect category ->
-                        stringSelect category (Some category.Code = props.OpenCategoryCode) props.Dispatch
+                        let isOpen =
+                            (Some category.Code = props.OpenCategoryCode)
+
+                        stringSelect category isOpen props.MetadataSelection props.Dispatch
                     | NumberSelect category ->
-                        numberSelect category (Some category.Code = props.OpenCategoryCode) props.Dispatch
+                        let isOpen =
+                            (Some category.Code = props.OpenCategoryCode)
+
+                        numberSelect category isOpen props.MetadataSelection props.Dispatch
                     | Interval category -> interval category props.Dispatch
                     | FreeTextSearch category -> freeTextSearch category props.Dispatch
                     | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}")
@@ -237,6 +263,7 @@ module MetadataMenu =
 
                      ]
 
+    /// The main view of the metadata menu on the left hand side of the interface
     let view (model: LoadedCorpusModel) (dispatch: Metadata.Update.Msg -> unit) =
         let sidebarWidth =
             if shouldShowMetadataMenu model then
@@ -256,11 +283,18 @@ module MetadataMenu =
                              Title = title
                              Items = items
                              OpenCategoryCode = model.OpenMetadataCategoryCode
+                             MetadataSelection = model.Search.MetadataSelection
                              Dispatch = dispatch |}
                   | StringSelect category ->
-                      stringSelect category (Some category.Code = model.OpenMetadataCategoryCode) dispatch
+                      let isOpen =
+                          (Some category.Code = model.OpenMetadataCategoryCode)
+
+                      stringSelect category isOpen model.Search.MetadataSelection dispatch
                   | NumberSelect category ->
-                      numberSelect category (Some category.Code = model.OpenMetadataCategoryCode) dispatch
+                      let isOpen =
+                          (Some category.Code = model.OpenMetadataCategoryCode)
+
+                      numberSelect category isOpen model.Search.MetadataSelection dispatch
                   | Interval category -> (interval category dispatch)
                   | FreeTextSearch category -> (freeTextSearch category dispatch) ]
 

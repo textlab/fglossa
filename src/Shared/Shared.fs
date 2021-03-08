@@ -11,8 +11,6 @@ type TextEncoding =
     | Latin1
 
 module Metadata =
-    type StringSelectOption = { Name: string; Value: string }
-
     /// Base class for all metadata categories
     [<AbstractClass>]
     type Category(aName: string) =
@@ -50,7 +48,10 @@ module Metadata =
         // bar if the title is empty) makes it easier for non-programmers to define menus.
         | Section of MenuState * title: string * items: MenuItem list
 
-    type Selection = (string * string list) list
+    type CategoryCode = string
+    type StringSelectOption = { Name: string; Value: string }
+
+    type Selection = Map<CategoryCode, StringSelectOption []>
 
     type Value = string * string
 

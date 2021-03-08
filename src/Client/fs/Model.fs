@@ -7,15 +7,13 @@ type SearchInterface =
     | Extended
     | Cqp
 
-type MetadataSelection = (Metadata.Category * (string list)) list
-
 type Search =
     { Interface: SearchInterface
-      MetadataSelection: MetadataSelection
+      MetadataSelection: Metadata.Selection
       Query: string }
     static member Default =
         { Interface = Simple
-          MetadataSelection = []
+          MetadataSelection = Map.empty
           Query = "" }
 
 type Corpus =
