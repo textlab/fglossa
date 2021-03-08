@@ -54,6 +54,9 @@ module Metadata =
     type CategorySelection =
         { Choices: StringSelectOption []
           ShouldExclude: bool }
+        static member Default =
+            { Choices = [||]
+              ShouldExclude = false }
 
     type Selection = Map<CategoryCode, CategorySelection>
 

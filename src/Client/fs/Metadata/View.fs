@@ -147,6 +147,10 @@ module MetadataMenu =
                                  ListItem)
 
     let metadataSelect (category: Category) isOpen (metadataSelection: Shared.Metadata.Selection) dispatch =
+        let categorySelection =
+            metadataSelection.TryFind(category.Code)
+            |> Option.defaultValue CategorySelection.Default
+
         Html.li [ Html.a [ prop.key category.Code
                            if isOpen then
                                prop.style [ style.lineHeight (length.em 1.7) ]
@@ -154,12 +158,15 @@ module MetadataMenu =
                            prop.children [ Html.text category.Name
                                            if isOpen then
                                                Bulma.button.button [ button.isSmall
-                                                                     // color.isDanger
+                                                                     if categorySelection.ShouldExclude then
+                                                                         color.isDanger
                                                                      prop.title "Exclude selected values"
                                                                      prop.style [ style.marginBottom 5
                                                                                   style.marginLeft 10 ]
                                                                      prop.onClick
-                                                                         (fun _ -> dispatch (ToggleExclude category))
+                                                                         (fun e ->
+                                                                             dispatch (ToggleExclude category)
+                                                                             e.stopPropagation ())
                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-minus" ] ] ] ] ]
 
                                                Bulma.button.button [ button.isSmall
@@ -171,22 +178,22 @@ module MetadataMenu =
                   if isOpen then
                       // List of already selected values
                       let choices =
-                          match metadataSelection.TryFind category.Code with
-                          | Some categorySelection ->
-                              [ for choice in categorySelection.Choices do
-                                    Html.div [ prop.className "metadata-choice"
-                                               prop.children [ Html.span [ prop.className "metadata-choice-cross"
-                                                                           prop.children [ Html.span [ prop.onClick
-                                                                                                           (fun _ ->
-                                                                                                               dispatch (
-                                                                                                                   DeselectItem(
-                                                                                                                       category,
-                                                                                                                       choice
-                                                                                                                   )
-                                                                                                               ))
-                                                                                                       prop.text "x" ] ] ]
-                                                               Html.span choice.Name ] ] ]
-                          | None -> []
+                          [ for choice in categorySelection.Choices do
+                                Html.div [ prop.className "metadata-choice"
+                                           if categorySelection.ShouldExclude then
+                                               prop.style [ style.color "white"
+                                                            style.backgroundColor "red" ]
+                                           prop.children [ Html.span [ prop.className "metadata-choice-cross"
+                                                                       prop.children [ Html.span [ prop.onClick
+                                                                                                       (fun _ ->
+                                                                                                           dispatch (
+                                                                                                               DeselectItem(
+                                                                                                                   category,
+                                                                                                                   choice
+                                                                                                               )
+                                                                                                           ))
+                                                                                                   prop.text "x" ] ] ]
+                                                           Html.span choice.Name ] ] ]
 
                       // The box containing already selected values
                       Html.div [ prop.className "metadata-menu-selection"

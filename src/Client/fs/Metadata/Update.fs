@@ -39,7 +39,23 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                             MetadataSelection = newSelection } }
 
         newModel, Cmd.none
-    | ToggleExclude category -> model, Cmd.none
+    | ToggleExclude category ->
+        let newMetadataSelection =
+            model.Search.MetadataSelection
+            |> Map.change
+                category.Code
+                (fun maybeCategorySelection ->
+                    maybeCategorySelection
+                    |> Option.map
+                        (fun categorySelection ->
+                            { categorySelection with
+                                  ShouldExclude = not categorySelection.ShouldExclude }))
+
+        { model with
+              Search =
+                  { model.Search with
+                        MetadataSelection = newMetadataSelection } },
+        Cmd.none
     | ToggleMetadataMenuOpen category ->
         let newCode =
             if model.OpenMetadataCategoryCode = Some category.Code then
