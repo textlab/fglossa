@@ -51,7 +51,11 @@ module Metadata =
     type CategoryCode = string
     type StringSelectOption = { Name: string; Value: string }
 
-    type Selection = Map<CategoryCode, StringSelectOption []>
+    type CategorySelection =
+        { Choices: StringSelectOption []
+          ShouldExclude: bool }
+
+    type Selection = Map<CategoryCode, CategorySelection>
 
     type Value = string * string
 

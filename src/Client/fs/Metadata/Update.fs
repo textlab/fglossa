@@ -6,22 +6,31 @@ open Model
 
 type Msg =
     | SelectItem of Metadata.Category * Metadata.StringSelectOption
+    | ToggleExclude of category: Metadata.Category
     | ToggleMetadataMenuOpen of category: Metadata.Category
     | ToggleShowSelectionOpen
     | DeselectItem of Metadata.Category * Metadata.StringSelectOption
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
     match msg with
-    | SelectItem (category, value) ->
-        let newCategoryValues =
+    | SelectItem (category, selectedOption) ->
+        let newCategorySelection =
             // Find the already selected values for this category, if any, and append the new one
             match model.Search.MetadataSelection.TryFind category.Code with
-            | Some values -> Array.append values [| value |] |> Array.distinct
-            | None -> [| value |]
+            | Some categorySelection ->
+                let newChoices =
+                    Array.append categorySelection.Choices [| selectedOption |]
+                    |> Array.distinct
+
+                { categorySelection with
+                      Choices = newChoices }
+            | None ->
+                { Choices = [| selectedOption |]
+                  ShouldExclude = false }
 
         let newSelection =
             model.Search.MetadataSelection
-            |> Map.add category.Code newCategoryValues
+            |> Map.add category.Code newCategorySelection
 
         let newModel =
             { model with
@@ -30,6 +39,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                             MetadataSelection = newSelection } }
 
         newModel, Cmd.none
+    | ToggleExclude category -> model, Cmd.none
     | ToggleMetadataMenuOpen category ->
         let newCode =
             if model.OpenMetadataCategoryCode = Some category.Code then
@@ -50,9 +60,16 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             model.Search.MetadataSelection
             |> Map.change
                 category.Code
-                (fun maybeSelectOptions ->
-                    maybeSelectOptions
-                    |> Option.map (fun selectOptions -> selectOptions |> Array.except [ optionToRemove ]))
+                (fun maybeCategorySelection ->
+                    maybeCategorySelection
+                    |> Option.map
+                        (fun categorySelection ->
+                            let newCategoryChoices =
+                                categorySelection.Choices
+                                |> Array.except [ optionToRemove ]
+
+                            { categorySelection with
+                                  Choices = newCategoryChoices }))
 
         let newModel =
             { model with

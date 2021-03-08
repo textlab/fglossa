@@ -158,6 +158,8 @@ module MetadataMenu =
                                                                      prop.title "Exclude selected values"
                                                                      prop.style [ style.marginBottom 5
                                                                                   style.marginLeft 10 ]
+                                                                     prop.onClick
+                                                                         (fun _ -> dispatch (ToggleExclude category))
                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-minus" ] ] ] ] ]
 
                                                Bulma.button.button [ button.isSmall
@@ -170,8 +172,8 @@ module MetadataMenu =
                       // List of already selected values
                       let choices =
                           match metadataSelection.TryFind category.Code with
-                          | Some cs ->
-                              [ for choice in cs do
+                          | Some categorySelection ->
+                              [ for choice in categorySelection.Choices do
                                     Html.div [ prop.className "metadata-choice"
                                                prop.children [ Html.span [ prop.className "metadata-choice-cross"
                                                                            prop.children [ Html.span [ prop.onClick
