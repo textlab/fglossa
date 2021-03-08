@@ -124,10 +124,14 @@ module MetadataMenu =
 
     let ReactBare : obj = importAll "react"
 
-    let selectDropdown category (dispatch: Msg -> unit) : ReactElement =
+    let selectDropdown category categorySelection (dispatch: Msg -> unit) : ReactElement =
         /// A single item in a metadata category dropdown list
         let ListItem (props: {| index: int; style: obj |}) =
             let selectOption = fetchedMetadataValues.[props.index]
+
+            let isAlreadySelected =
+                categorySelection.Choices
+                |> Array.contains selectOption
 
             Html.div [ prop.className "metadata-menu-list-item"
                        prop.style [ style.height (int props.style?height)
@@ -135,7 +139,9 @@ module MetadataMenu =
                                     style.position.absolute
                                     style.top (int props.style?top)
                                     style.width (length.percent 100)
-                                    style.padding 6 ]
+                                    style.padding 6
+                                    if isAlreadySelected then
+                                        style.backgroundColor "#ddd" ]
                        prop.onClick (fun _ -> dispatch (SelectItem(category, selectOption)))
                        prop.text selectOption.Name ]
 
@@ -201,7 +207,7 @@ module MetadataMenu =
 
                       // The menu dropdown
                       Html.div [ prop.className "metadata-menu-list-container"
-                                 prop.children [ selectDropdown category dispatch ] ] ]
+                                 prop.children [ selectDropdown category categorySelection dispatch ] ] ]
 
     let stringSelect (category: StringCategory) isOpen metadataSelection dispatch =
         metadataSelect category isOpen metadataSelection dispatch
