@@ -141,7 +141,11 @@ module MetadataMenu =
                                     style.width (length.percent 100)
                                     style.padding 6
                                     if isAlreadySelected then
-                                        style.backgroundColor "#ddd" ]
+                                        if categorySelection.ShouldExclude then
+                                            style.color "white"
+                                            style.backgroundColor "#f14668"
+                                        else
+                                            style.backgroundColor "#ddd" ]
                        prop.onClick (fun _ -> dispatch (SelectItem(category, selectOption)))
                        prop.text selectOption.Name ]
 
