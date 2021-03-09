@@ -26,6 +26,23 @@ let fetchedMetadataValues =
          Value = "Gateavisa" }
        { Name = "KK"; Value = "KK" } |]
 
+let dummyMetadataTableData =
+    [| "SA00BaJo04"
+       "Årboka Litteratur for barn og unge 2004: Nyskapende faglitteratur - to fulltreffere og ett godt forsøk"
+       "Årboka Litteratur for barn og unge 2004"
+       "SA"
+       "SA00"
+       "Samlaget"
+       "2004"
+       "Oslo"
+       "original"
+       "HUM%: Humaniora"
+       "HUM02"
+       "Bakken, Jonas"
+       "M"
+       "1976" |]
+    |> Array.create 25
+
 module SelectionTable =
     [<ReactComponent>]
     let SelectionTablePopup model dispatch =
@@ -64,7 +81,10 @@ module SelectionTable =
             Bulma.tableContainer [ Bulma.table [ table.isStriped
                                                  table.isFullWidth
                                                  prop.children [ Html.thead [ Html.tr [ for category in model.Corpus.MetadataTable ->
-                                                                                            Html.th category.Name ] ] ] ] ]
+                                                                                            Html.th category.Name ] ]
+                                                                 Html.tbody [ for row in dummyMetadataTableData ->
+                                                                                  Html.tr [ for column in row ->
+                                                                                                Html.td column ] ] ] ] ]
 
         let popup =
             Html.div [ prop.style [ style.height (
