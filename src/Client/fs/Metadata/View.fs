@@ -339,19 +339,24 @@ module MetadataMenu =
                   | Interval category -> (interval category dispatch)
                   | FreeTextSearch category -> (freeTextSearch category dispatch) ]
 
+        let showSelectionButton =
+            Bulma.button.button [ button.isSmall
+                                  button.isOutlined
+                                  color.isInfo
+                                  prop.title "Show selection"
+                                  prop.style [ style.marginLeft 10 ]
+                                  prop.onClick (fun _ -> dispatch ToggleShowSelectionOpen)
+                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-binoculars" ] ] ]
+                                                  Html.span "Show" ] ]
+
         Html.span [ Html.div [ prop.style [ style.width sidebarWidth
                                             style.paddingLeft (length.em 0.75)
                                             style.marginBottom (length.rem 0.75) ]
                                prop.children [ Html.text "All 123 texts (123,456,789 tokens) selected"
-                                               Bulma.button.button [ button.isSmall
-                                                                     button.isOutlined
-                                                                     color.isInfo
-                                                                     prop.title "Show selection"
-                                                                     prop.style [ style.marginLeft 10 ]
-                                                                     prop.onClick
-                                                                         (fun _ -> dispatch ToggleShowSelectionOpen)
-                                                                     prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-binoculars" ] ] ] ] ] ] ]
+                                               showSelectionButton ] ]
                     SelectionTable.SelectionTablePopup model dispatch
                     Bulma.menu [ prop.style [ style.width sidebarWidth
                                               style.overflowX.hidden ]
-                                 prop.children [ Bulma.menuList menuItems ] ] ]
+                                 prop.children [ Bulma.menuList menuItems ] ]
+
+                     ]
