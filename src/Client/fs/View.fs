@@ -10,20 +10,6 @@ open Fable.React.Props
 open Feliz
 open Feliz.Bulma
 
-let tableRow (children: ReactElement list) =
-    Html.div [ prop.style [ style.display.tableRow ]
-               prop.children children ]
-
-let tableCell (children: ReactElement list) =
-    Html.div [ prop.style [ style.display.tableCell ]
-               prop.children children ]
-
-let tableCellWithWidth (width: int) (children: ReactElement list) =
-    Html.div [ prop.style [ style.display.tableCell
-                            style.maxWidth width
-                            style.width width ]
-               prop.children children ]
-
 let navbar model dispatch =
     Bulma.navbar [ navbar.isFixedTop
                    navbar.hasShadow
