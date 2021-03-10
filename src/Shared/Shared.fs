@@ -14,8 +14,19 @@ module Metadata =
     /// Base class for all metadata categories
     [<AbstractClass>]
     type Category(aName: string) =
+        /// Human-readable name
         member _.Name = aName
+        /// Short name, which is also the name of the database column for this category
         abstract member Code : string
+        /// The name of the database table where the values for this category are stored.
+        /// This is relevant for many-to-many relations such as author name for texts in
+        /// written corpora or birth place of informants in multi-informant recordings in
+        /// spoken corpora. For instance, for Author, there will be a table Author and a
+        /// join table AuthorText in addition to the standard Text table, and in that case
+        /// TableName should be 'Author'. A Value of None means that the category is stored
+        /// in a column in the Text table.
+        abstract member TableName : string option
+        default _.TableName = None
 
     /// Metadata category that can be presented as a metadata value list
     [<AbstractClass>]
