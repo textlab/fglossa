@@ -71,8 +71,8 @@ module CorpusStartPage =
             | None -> Html.none
 
         Bulma.box [ prop.style [ style.padding 20 ]
-                    prop.children [ Bulma.title config.Name
-                                    logo ] ]
+                    prop.children [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.title config.Name ]
+                                                                    Bulma.levelItem logo ] ] ] ]
 
     let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) =
         Html.span [ topRowButtons
