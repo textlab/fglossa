@@ -10,10 +10,13 @@ let serverApi =
     |> Remoting.withRouteBuilder Route.builder
     |> Remoting.buildProxy<IServerApi>
 
-type Msg =
-    | LoadedCorpusMsg of LoadedCorpus.Update.Msg
+type MainMsg =
     | FetchCorpusConfig of string
     | FetchedCorpusConfig of CorpusConfig
+
+type Msg =
+    | MainMsg of MainMsg
+    | LoadedCorpusMsg of LoadedCorpus.Update.Msg
 
 let init () : Model * Cmd<Msg> =
     let model = Model.Default
@@ -21,19 +24,10 @@ let init () : Model * Cmd<Msg> =
     let cmd =
         Cmd.OfAsync.perform serverApi.GetCorpusConfig "bokmal" FetchedCorpusConfig
 
-    model, cmd
+    model, Cmd.map MainMsg cmd
 
-let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
+let mainMsgUpdate (msg: MainMsg) (_model: Model) =
     match msg with
-    | LoadedCorpusMsg msg' ->
-        match model with
-        | LoadedCorpus loadedCorpusModel ->
-            let newModel, cmd =
-                LoadedCorpus.Update.update msg' loadedCorpusModel
-
-            LoadedCorpus newModel, Cmd.map LoadedCorpusMsg cmd
-        | _ -> failwith "Wrong model for LoadedCorpusMsg"
-
     | FetchCorpusConfig code ->
         let cmd =
             Cmd.OfAsync.perform serverApi.GetCorpusConfig code FetchedCorpusConfig
@@ -52,3 +46,13 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
               Substate = CorpusStartPage }
 
         LoadedCorpus m, Cmd.none
+
+let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
+    match msg, model with
+    | MainMsg msg', LoadingCorpus ->
+        let newModel, cmd = mainMsgUpdate msg' model
+        newModel, Cmd.map MainMsg cmd
+    | LoadedCorpusMsg msg', LoadedCorpus model' ->
+        let newModel, cmd = LoadedCorpus.Update.update msg' model'
+        LoadedCorpus newModel, Cmd.map LoadedCorpusMsg cmd
+    | _ -> failwithf $"Incompatible message and model: {msg}; {model}"
