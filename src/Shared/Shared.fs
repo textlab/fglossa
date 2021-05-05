@@ -90,14 +90,39 @@ type CorpusConfig =
           Name = name
           SearchEngine = defaultArg searchEngine Cwb }
 
+type CorpusCode = string
+type CorpusName = string
+
+type SearchParams =
+    { ContextSize: int
+      CorpusCode: string
+      LastCount: int
+      MetadataIds: int []
+      NumRandomHits: int
+      PageSize: int
+      Queries: string []
+      RandomHitsSeed: int
+      SearchId: int
+      SortKey: string
+      Step: int }
+
+type SearchResult =
+    { HasAudio: bool
+      HasVideo: bool
+      Text: string }
+
+type SearchResults =
+    { Count: uint32
+      CpuCounts: uint32 []
+      SearchId: int
+      Results: SearchResult [] }
+
 module Route =
     let builder typeName methodName =
         sprintf "/glossa3/api/%s/%s" typeName methodName
 
-type CorpusCode = string
-type CorpusName = string
-
 type IServerApi =
-    { GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
-      GetCorpusConfig: string -> Async<CorpusConfig>
-      GetMetadataForCategory: string * Metadata.Selection -> Async<string * string []> }
+    { GetCorpusConfig: string -> Async<CorpusConfig>
+      GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
+      GetMetadataForCategory: string * Metadata.Selection -> Async<string * string []>
+      SearchCorpus: SearchParams -> Async<SearchResults> }

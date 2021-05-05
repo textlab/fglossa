@@ -10,9 +10,13 @@ open Saturn
 open Shared
 
 let serverApi =
-    { GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
-      GetCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
-      GetMetadataForCategory = fun (code, selection) -> async { return "", [||] } }
+    { GetCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
+      GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
+      GetMetadataForCategory = fun (code, selection) -> async { return "", [||] }
+      SearchCorpus =
+          fun searchParams ->
+              Remoting.Search.searchCorpus searchParams
+              |> Async.AwaitTask }
 
 let remotingRouter =
     Remoting.createApi ()
@@ -56,7 +60,7 @@ let webApp =
 //     forward "" browserRouter
 // }
 
-let webAppWithLogging: HttpHandler = SerilogAdapter.Enable(webApp)
+let webAppWithLogging : HttpHandler = SerilogAdapter.Enable(webApp)
 
 // The default template does not include date, but we want that
 let outputTemplate =

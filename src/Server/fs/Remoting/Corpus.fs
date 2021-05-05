@@ -11,7 +11,7 @@ open Shared
 let getCorpusList () =
     async { return Corpora.Server.getCorpusList () }
 
-let getCorpusConfig code =
+let getCorpusConfig (code: string) =
     async {
         let corpus = Corpora.Server.getCorpus code
         return corpus.Config
