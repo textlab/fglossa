@@ -59,7 +59,11 @@ let searchInterface (model: LoadedCorpusModel) dispatch =
                prop.children [ Bulma.level [ prop.style [ style.paddingTop 20 ]
                                              prop.children [ Bulma.levelLeft [ Bulma.levelItem links ]
                                                              Bulma.levelRight [ Bulma.button.button [ color.isSuccess
-                                                                                                      prop.text "Search" ] ] ] ]
+                                                                                                      prop.text "Search"
+                                                                                                      prop.onClick
+                                                                                                          (fun _ ->
+                                                                                                              dispatch
+                                                                                                                  Search) ] ] ] ]
                                Bulma.field.div [ Bulma.control.div [ Bulma.input.search [] ] ]
                                Bulma.field.div [ Bulma.control.div [ Bulma.button.button "Or..." ] ] ] ]
 

@@ -63,7 +63,13 @@ module SelectionTable =
                                                                                                     prop.style [ style.width
                                                                                                                      60
                                                                                                                  style.textAlign.right ]
-                                                                                                    prop.value 1 ] ]
+                                                                                                    prop.value 1
+                                                                                                    prop.onChange
+                                                                                                        (fun (s: string) ->
+                                                                                                            printfn
+                                                                                                                $"New value: {
+                                                                                                                                  s
+                                                                                                                }") ] ]
                                                              Bulma.levelItem [ Bulma.buttons [ iconButton
                                                                                                    "fa-angle-right"
                                                                                                iconButton

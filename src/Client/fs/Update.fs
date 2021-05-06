@@ -1,14 +1,8 @@
 module Update
 
 open Elmish
-open Fable.Remoting.Client
 open Shared
 open Model
-
-let serverApi =
-    Remoting.createApi ()
-    |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.buildProxy<IServerApi>
 
 type MainMsg =
     | FetchCorpusConfig of string

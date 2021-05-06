@@ -1,6 +1,12 @@
 module Model
 
+open Fable.Remoting.Client
 open Shared
+
+let serverApi =
+    Remoting.createApi ()
+    |> Remoting.withRouteBuilder Route.builder
+    |> Remoting.buildProxy<IServerApi>
 
 type SearchInterface =
     | Simple

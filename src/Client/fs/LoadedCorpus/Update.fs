@@ -1,12 +1,14 @@
 module LoadedCorpus.Update
 
 open Elmish
+open Shared
 open Model
 
 type Msg =
     | MetadataMsg of Metadata.Update.Msg
     | SetSearchInterface of SearchInterface
-    | Search of Search
+    | Search
+    | SearchResultsReceived of SearchResults
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
     match msg with
@@ -19,4 +21,22 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                   { model.Search with
                         Interface = ``interface`` } },
         Cmd.none
-    | Search search -> model, Cmd.none
+    | Search ->
+        let searchParams =
+            { ContextSize = 15
+              CorpusCode = "bokmal"
+              LastCount = 0
+              MetadataIds = [||]
+              NumRandomHits = 0
+              PageSize = 25
+              Queries = [| "jeg" |]
+              RandomHitsSeed = 0
+              SearchId = 0
+              SortKey = "position"
+              Step = 1 }
+
+        let cmd =
+            Cmd.OfAsync.perform serverApi.SearchCorpus searchParams SearchResultsReceived
+
+        model, cmd
+    | SearchResultsReceived results -> model, Cmd.none
