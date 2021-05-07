@@ -124,7 +124,7 @@ module Route =
         sprintf "/glossa3/api/%s/%s" typeName methodName
 
 type IServerApi =
-    { GetCorpusConfig: string -> Async<CorpusConfig>
-      GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
-      GetMetadataForCategory: string * Metadata.Selection -> Async<string * string []>
-      SearchCorpus: SearchParams -> Async<SearchResults> }
+    { getCorpusConfig: string -> Async<CorpusConfig>
+      getCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
+      getMetadataForCategory: string * Metadata.Selection -> Async<string * string []>
+      searchCorpus: SearchParams -> Async<SearchResults> }

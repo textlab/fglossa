@@ -7,13 +7,14 @@ open Giraffe
 open Serilog
 open Saturn
 
+open Config
 open Shared
 
 let serverApi =
-    { GetCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
-      GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
-      GetMetadataForCategory = fun (code, selection) -> async { return "", [||] }
-      SearchCorpus =
+    { getCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
+      getCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
+      getMetadataForCategory = fun (code, selection) -> async { return "", [||] }
+      searchCorpus =
           fun searchParams ->
               Remoting.Search.searchCorpus searchParams
               |> Async.AwaitTask }

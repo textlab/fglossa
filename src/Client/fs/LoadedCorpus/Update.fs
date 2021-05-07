@@ -36,7 +36,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
               Step = 1 }
 
         let cmd =
-            Cmd.OfAsync.perform serverApi.SearchCorpus searchParams SearchResultsReceived
+            Cmd.OfAsync.perform serverApi.searchCorpus searchParams SearchResultsReceived
 
         model, cmd
     | SearchResultsReceived results -> model, Cmd.none

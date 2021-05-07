@@ -16,7 +16,7 @@ let init () : Model * Cmd<Msg> =
     let model = Model.Default
 
     let cmd =
-        Cmd.OfAsync.perform serverApi.GetCorpusConfig "bokmal" FetchedCorpusConfig
+        Cmd.OfAsync.perform serverApi.getCorpusConfig "bokmal" FetchedCorpusConfig
 
     model, Cmd.map MainMsg cmd
 
@@ -24,7 +24,7 @@ let mainMsgUpdate (msg: MainMsg) (_model: Model) =
     match msg with
     | FetchCorpusConfig code ->
         let cmd =
-            Cmd.OfAsync.perform serverApi.GetCorpusConfig code FetchedCorpusConfig
+            Cmd.OfAsync.perform serverApi.getCorpusConfig code FetchedCorpusConfig
 
         LoadingCorpus, cmd
     | FetchedCorpusConfig corpusConfig ->
