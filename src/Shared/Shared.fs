@@ -79,6 +79,7 @@ type CorpusConfig =
       IsParallel: bool
       IsSpoken: bool
       Logo: string option
+      MultiCpuBounds: uint32 array option
       Name: string
       SearchEngine: SearchEngine }
     static member Init(code, name, ?encoding, ?isSpoken, ?isParallel, ?logo, ?searchEngine) =
@@ -87,6 +88,7 @@ type CorpusConfig =
           IsParallel = defaultArg isParallel false
           IsSpoken = defaultArg isSpoken false
           Logo = logo
+          MultiCpuBounds = None
           Name = name
           SearchEngine = defaultArg searchEngine Cwb }
 
@@ -102,7 +104,7 @@ type SearchParams =
       PageSize: int
       Queries: string []
       RandomHitsSeed: int
-      SearchId: int
+      SearchId: int option
       SortKey: string
       Step: int }
 

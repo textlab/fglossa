@@ -31,7 +31,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
               PageSize = 25
               Queries = [| "jeg" |]
               RandomHitsSeed = 0
-              SearchId = 0
+              SearchId = None
               SortKey = "position"
               Step = 1 }
 
