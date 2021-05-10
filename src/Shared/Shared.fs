@@ -99,7 +99,7 @@ type SearchParams =
     { ContextSize: int
       CorpusCode: string
       LastCount: int
-      MetadataIds: int []
+      Metadata: string option
       NumRandomHits: int
       PageSize: int
       Queries: string []

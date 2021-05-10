@@ -10,19 +10,23 @@ open Saturn
 open Config
 open Shared
 
-let serverApi =
+let createServerApi ctx =
+    let cnf = Controller.getConfig ctx
+    let logger = ctx.Logger()
+    let connStr = cnf.connectionString
+
     { getCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
       getCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
       getMetadataForCategory = fun (code, selection) -> async { return "", [||] }
       searchCorpus =
           fun searchParams ->
-              Remoting.Search.searchCorpus searchParams
+              Remoting.Search.searchCorpus connStr logger searchParams
               |> Async.AwaitTask }
 
 let remotingRouter =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.fromValue serverApi
+    |> Remoting.fromContext createServerApi
     |> Remoting.buildHttpHandler
 
 let browserPipeline =
@@ -85,6 +89,7 @@ let app =
         memory_cache
         use_static "public"
         use_gzip
+        use_config (fun _ -> { connectionString = "DataSource=db/fglossa.sqlite" })
     }
 
 run app

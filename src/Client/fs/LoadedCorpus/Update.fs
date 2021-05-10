@@ -26,7 +26,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             { ContextSize = 15
               CorpusCode = "bokmal"
               LastCount = 0
-              MetadataIds = [||]
+              Metadata = None
               NumRandomHits = 0
               PageSize = 25
               Queries = [| "jeg" |]

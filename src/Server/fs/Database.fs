@@ -49,6 +49,7 @@ let toDisplayedSql (sql: string) (maybeParams: IDictionary<string, obj> option) 
 
                         let valueListString = String.concat "," vals
                         $"({valueListString})"
+                    | v when isNull v -> "NULL"
                     | v ->
                         // For non-enumerables (as well as strings), simply print the value quoted.
                         $"'{v}'"
@@ -57,10 +58,37 @@ let toDisplayedSql (sql: string) (maybeParams: IDictionary<string, obj> option) 
             sql
     | None -> sql
 
-let execute (connection: #DbConnection) (sql: string) (data: _) =
+let execute (logger: ILogger) (connection: #DbConnection) (sql: string) (parameters: IDictionary<string, obj> option) =
+    toDisplayedSql sql parameters
+    |> logger.Information
+
     task {
         try
-            let! res = connection.ExecuteAsync(sql, data)
+            let! res =
+                match parameters with
+                | Some p -> connection.ExecuteAsync(sql, p)
+                | None -> connection.ExecuteAsync(sql)
+
+            return Ok res
+        with ex -> return Error ex
+    }
+
+let executeScalar
+    (logger: ILogger)
+    (connection: #DbConnection)
+    (sql: string)
+    (parameters: IDictionary<string, obj> option)
+    =
+    toDisplayedSql sql parameters
+    |> logger.Information
+
+    task {
+        try
+            let! res =
+                match parameters with
+                | Some p -> connection.ExecuteScalarAsync<'T>(sql, p)
+                | None -> connection.ExecuteScalarAsync<'T>(sql)
+
             return Ok res
         with ex -> return Error ex
     }
