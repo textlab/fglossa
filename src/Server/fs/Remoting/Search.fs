@@ -3,35 +3,15 @@ module Remoting.Search
 open System.Threading.Tasks
 open FSharp.Control.Tasks
 open System.Data.SQLite
+open System.Text.RegularExpressions
+open Dapper
 open Serilog
 open Database
 open Shared
 
-let runCmd (cmd: string) (args: string) =
-    let proc =
-        System.Diagnostics.Process.Start(cmd, args)
-
-    proc.WaitForExit()
-
-let runCmdWithOutput (cmd: string) (args: string) =
-    let startInfo =
-        System.Diagnostics.ProcessStartInfo(cmd, args)
-
-    startInfo.UseShellExecute <- false
-    startInfo.RedirectStandardOutput <- true
-
-    let proc =
-        System.Diagnostics.Process.Start(startInfo)
-
-    let output = proc.StandardOutput.ReadToEnd()
-    proc.WaitForExit()
-    output
-
 // If the number of running CQP processes exceeds this number, we do not allow a new
 // search in a corpus that does parallel search using all cpus to be started.
 let maxCqpProcesses = 8
-
-open Dapper
 
 let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams) =
     let createSearch () =
