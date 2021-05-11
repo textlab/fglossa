@@ -9,5 +9,5 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
         Corpora.Server.getCorpus searchParams.CorpusCode
 
     match corpus.Config.SearchEngine with
-    | Cwb -> Remoting.Search.Cwb.Common.searchCorpus connStr logger searchParams corpus
+    | Cwb -> Cwb.Common.searchCorpus connStr logger searchParams corpus
     | Fcs -> failwith "Not implemented"
