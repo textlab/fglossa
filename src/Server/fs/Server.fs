@@ -20,7 +20,7 @@ let createServerApi ctx =
       getMetadataForCategory = fun (code, selection) -> async { return "", [||] }
       searchCorpus =
           fun searchParams ->
-              Remoting.Search.searchCorpus connStr logger searchParams
+              Remoting.Search.Core.searchCorpus connStr logger searchParams
               |> Async.AwaitTask }
 
 let remotingRouter =

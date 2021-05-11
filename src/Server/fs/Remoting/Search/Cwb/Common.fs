@@ -1,4 +1,4 @@
-module Remoting.Search
+module Remoting.Search.Cwb.Common
 
 open System.Threading.Tasks
 open FSharp.Control.Tasks
@@ -8,12 +8,13 @@ open Dapper
 open Serilog
 open Database
 open Shared
+open ServerTypes
 
 // If the number of running CQP processes exceeds this number, we do not allow a new
 // search in a corpus that does parallel search using all cpus to be started.
 let maxCqpProcesses = 8
 
-let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams) =
+let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams) (corpus: Corpus) =
     let createSearch () =
         task {
             try
@@ -53,9 +54,6 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
             Process.runCmdWithOutput "pgrep" "-f cqp"
 
         let nCqpProcs = cqpProcs.Split('\n').Length
-
-        let corpus =
-            Corpora.Server.getCorpus searchParams.CorpusCode
 
         // If we are searching in a corpus that does parallel search with multiple cpus and
         // this is the first search step, we check that we don't already exceed the max number

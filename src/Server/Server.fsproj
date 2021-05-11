@@ -17,7 +17,8 @@
     <Compile Include="../Corpora/corpora/*/Server.fs" />
     <Compile Include="../Corpora/Server.fs" />
     <Compile Include="fs/Remoting/Corpus.fs" />
-    <Compile Include="fs/Remoting/Search.fs" />
+    <Compile Include="fs/Remoting/Search/Cwb/Common.fs" />
+    <Compile Include="fs/Remoting/Search/Core.fs" />
     <Compile Include="fs/Server.fs" />
   </ItemGroup>
   <ItemGroup>
