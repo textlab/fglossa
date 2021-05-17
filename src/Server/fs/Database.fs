@@ -172,7 +172,8 @@ let insert (logger: ILogger) (connection: #DbConnection) (table: string) (data: 
         let sql =
             $"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
 
-        printfn $"{sql}"
+        toDisplayedSql sql (Some parameters)
+        |> logger.Information
 
         try
             if connection.State = Data.ConnectionState.Closed then
