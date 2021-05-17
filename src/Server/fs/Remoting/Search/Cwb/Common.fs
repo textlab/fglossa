@@ -31,9 +31,24 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
            || nCqpProcs < maxCqpProcesses
            || searchParams.Step > 1 then
 
+            let searchData =
+                [ "CorpusCode" => searchParams.CorpusCode
+                  "Queries" => searchParams.Queries
+                  "Metadata" => searchParams.Metadata ]
+
+            use connection = new SQLiteConnection(connStr)
+
             let searchId =
                 searchParams.SearchId
-                |> Option.defaultWith (fun () -> (createSearch connStr searchParams).Result)
+                |> Option.defaultWith
+                    (fun () ->
+                        let res =
+                            (insert logger connection "Search" searchData)
+                                .Result
+
+                        match res with
+                        | Ok id -> id
+                        | Error ex -> raise ex)
 
             let (output, error) =
                 [ "NDC;"

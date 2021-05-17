@@ -155,3 +155,44 @@ let queryDynamic
                     Ok(Some res)
         with ex -> return Error ex
     }
+
+let insert (logger: ILogger) (connection: #DbConnection) (table: string) (data: (string * obj) seq) =
+    task {
+        let columns =
+            data |> Seq.map fst |> String.concat ", "
+
+        let placeholders =
+            data
+            |> Seq.map fst
+            |> Seq.map (fun s -> $"@{s}")
+            |> String.concat ", "
+
+        let parameters = dict data
+
+        let sql =
+            $"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+
+        printfn $"{sql}"
+
+        try
+            if connection.State = Data.ConnectionState.Closed then
+                connection.Open()
+
+            // In order to make last_insert_rowid() work, we need to run the insert and the
+            // call to last_insert_rowid() inside a single transaction (according to the documentaion, simply
+            // using the same db connection should be sufficient, but it doesn't work here for some reason).
+            use transaction = connection.BeginTransaction()
+
+            connection.Execute(sql, parameters, transaction)
+            |> ignore
+
+            let lastInsertId =
+                unbox<int64> (connection.ExecuteScalar("SELECT last_insert_rowid()", transaction))
+                |> int
+
+            transaction.Commit()
+            connection.Close()
+
+            return Ok lastInsertId
+        with ex -> return Error ex
+    }
