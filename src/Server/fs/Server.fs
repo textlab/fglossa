@@ -1,5 +1,6 @@
 module Server
 
+open System
 open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
 open Giraffe.SerilogExtensions
@@ -23,9 +24,26 @@ let createServerApi ctx =
               Remoting.Search.Core.searchCorpus connStr logger searchParams
               |> Async.AwaitTask }
 
+let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =
+    // do some logging
+    printfn $"Error at {routeInfo.path} on method {routeInfo.methodName}"
+    printfn $"{ex}"
+    Ignore
+// decide whether or not you want to propagate the error to the client
+// match ex with
+// | :? System.IO.IOException as x ->
+//     let customError =
+//         { errorMsg = "Something terrible happened" }
+
+//     Propagate customError
+// | :? Exception as x ->
+//     // ignore error
+//     Ignore
+
 let remotingRouter =
     Remoting.createApi ()
     |> Remoting.withRouteBuilder Route.builder
+    |> Remoting.withErrorHandler errorHandler
     |> Remoting.fromContext createServerApi
     |> Remoting.buildHttpHandler
 
