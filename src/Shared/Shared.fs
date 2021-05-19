@@ -2,14 +2,6 @@ namespace Shared
 
 open System
 
-type SearchEngine =
-    | Cwb
-    | Fcs
-
-type TextEncoding =
-    | UTF8
-    | Latin1
-
 module Metadata =
     /// Base class for all metadata categories
     [<AbstractClass>]
@@ -73,20 +65,43 @@ module Metadata =
 
     type Value = string * string
 
+type SearchEngine =
+    | Cwb
+    | Fcs
+
+type TextEncoding =
+    | UTF8
+    | Latin1
+
+type CorpusModality =
+    | Spoken
+    | Written
+
+type TokenAttributes = string []
+
+type Language =
+    { Code: string
+      Name: string
+      TokenAttributes: TokenAttributes }
+
+type LanguageConfig =
+    | Monolingual of TokenAttributes
+    | Multilingual of Language []
+
 type CorpusConfig =
     { Code: string
       Encoding: TextEncoding
-      IsParallel: bool
-      IsSpoken: bool
+      LanguageConfig: LanguageConfig
+      Modality: CorpusModality
       Logo: string option
       MultiCpuBounds: uint32 array option
       Name: string
       SearchEngine: SearchEngine }
-    static member Init(code, name, ?encoding, ?isSpoken, ?isParallel, ?logo, ?searchEngine) =
+    static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?searchEngine) =
         { Code = code
           Encoding = defaultArg encoding UTF8
-          IsParallel = defaultArg isParallel false
-          IsSpoken = defaultArg isSpoken false
+          LanguageConfig = defaultArg languageConfig (Monolingual [||])
+          Modality = defaultArg modality Written
           Logo = logo
           MultiCpuBounds = None
           Name = name
@@ -95,6 +110,8 @@ type CorpusConfig =
 type CorpusCode = string
 type CorpusName = string
 
+type Query = { Language: string; Query: string }
+
 type SearchParams =
     { ContextSize: int
       CorpusCode: string
@@ -102,7 +119,7 @@ type SearchParams =
       Metadata: string option
       NumRandomHits: int
       PageSize: int
-      Queries: string []
+      Queries: Query []
       RandomHitsSeed: int
       SearchId: int option
       SortKey: string
