@@ -1,5 +1,6 @@
 module Remoting.Search.Cwb.Common
 
+open System
 open System.Threading.Tasks
 open FSharp.Control.Tasks
 open System.Data.SQLite
@@ -29,6 +30,44 @@ let cwbCorpusName (corpus: Corpus) (queries: Query seq) =
 
 let cwbQueryName (corpus: Corpus) (searchId: int) =
     $"{corpus.Config.Code.ToUpper()}{searchId}"
+
+let buildMonolingualQuery (queries: Query []) (sTag: string) =
+    // For monolingual queries, the query expressions should be joined together with '|' (i.e., "or")
+    let queryExpressions = queries |> Array.map (fun query -> query.Query)
+    let queryStr =
+        if queryExpressions.Length > 1
+            then (queryExpressions |> String.concat " | ")
+            else
+                match Seq.tryHead queryExpressions with
+                | Some head -> head
+                | None -> failwith "Empty query!"
+    $"{queryStr} with {sTag}"
+
+let buildMultilingualQuery (corpus: Corpus) (queries: Query []) (sTag: string) =
+    let corpusCode = corpus.Config.Code.ToUpper()
+    let mainQuery =
+        match Array.tryHead queries with
+        | Some head -> $"{head.Query} within {sTag}"
+        | None -> failwith "Empty query!"
+    let alignedQueries =
+        queries
+        |> Array.tail
+        |> Array.choose (fun query ->
+                            // TODO: In case of mandatory alignment, include even empty queries
+                            if String.IsNullOrWhiteSpace(query.Query)
+                                then None
+                                else Some $"{corpus.Config.Code}_{query.Language.ToUpper()} {query.Query}"
+                            )
+    (Array.append [| mainQuery |] alignedQueries) |> String.concat " :"
+
+let constructQueryCommands (corpus: Corpus) (searchParams: SearchParams) (maybeSTag: string option) =
+    let sTag = defaultArg maybeSTag "s"
+    let queryStr =
+        match corpus.Config.LanguageConfig with
+        | Monolingual _ -> buildMonolingualQuery searchParams.Queries maybeSTag
+        | Multilingual _ -> buildMultilingualQuery corpus searchParams.Queries maybeSTag
+    let positionsFilename = $"/tmp/glossa/positions_{searchId}"
+
 
 let runCqpCommands (logger: ILogger) (corpus: Corpus) (commands: string seq) isCounting =
     try

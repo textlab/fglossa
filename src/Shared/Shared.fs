@@ -94,17 +94,17 @@ type CorpusConfig =
       LanguageConfig: LanguageConfig
       Modality: CorpusModality
       Logo: string option
-      MultiCpuBounds: uint64 array option
+      MultiCpuBounds: uint64 [] [] option
       Name: string
       SearchEngine: SearchEngine
       Sizes: Map<string, uint64> }
-    static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?searchEngine) =
+    static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
         { Code = code
           Encoding = defaultArg encoding UTF8
           LanguageConfig = defaultArg languageConfig (Monolingual [||])
           Modality = defaultArg modality Written
           Logo = logo
-          MultiCpuBounds = None
+          MultiCpuBounds = defaultArg multiCpuBounds None
           Name = name
           SearchEngine = defaultArg searchEngine Cwb
           Sizes = Map.empty }
@@ -123,7 +123,7 @@ type SearchParams =
       PageSize: int
       Queries: Query []
       RandomHitsSeed: int
-      SearchId: int option
+      SearchId: int
       SortKey: string
       Step: int }
 
