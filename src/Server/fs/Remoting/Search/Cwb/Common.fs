@@ -15,6 +15,7 @@ let cwbCorpusName (corpus: Corpus) (queries: Query seq) =
     let uppercaseCode = corpus.Config.Code.ToUpper()
 
     match corpus.Config.LanguageConfig with
+    | Monolingual _ -> uppercaseCode
     | Multilingual _ ->
         // The CWB corpus we select before running our query will be the one named by the
         // code attribute of the corpus plus the name of the language of the first
@@ -25,7 +26,6 @@ let cwbCorpusName (corpus: Corpus) (queries: Query seq) =
             | None -> failwith $"Empty query!"
 
         $"{uppercaseCode}_{firstLanguageCode}"
-    | Monolingual _ -> uppercaseCode
 
 let cwbQueryName (corpus: Corpus) (searchId: int) =
     $"{corpus.Config.Code.ToUpper()}{searchId}"

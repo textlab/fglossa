@@ -94,9 +94,10 @@ type CorpusConfig =
       LanguageConfig: LanguageConfig
       Modality: CorpusModality
       Logo: string option
-      MultiCpuBounds: uint32 array option
+      MultiCpuBounds: uint64 array option
       Name: string
-      SearchEngine: SearchEngine }
+      SearchEngine: SearchEngine
+      Sizes: Map<string, uint64> }
     static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?searchEngine) =
         { Code = code
           Encoding = defaultArg encoding UTF8
@@ -105,7 +106,8 @@ type CorpusConfig =
           Logo = logo
           MultiCpuBounds = None
           Name = name
-          SearchEngine = defaultArg searchEngine Cwb }
+          SearchEngine = defaultArg searchEngine Cwb
+          Sizes = Map.empty }
 
 type CorpusCode = string
 type CorpusName = string
