@@ -54,8 +54,8 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                       SearchId = searchId }
 
             match corpus.Config.Modality with
-            | Spoken -> Spoken.runQueries corpus searchParamsWithSearchId
-            | Written -> Written.runQueries corpus searchParamsWithSearchId
+            | Spoken -> Spoken.runQueries corpus searchParamsWithSearchId None
+            | Written -> Written.runQueries corpus searchParamsWithSearchId None
 
             return
                 { Count = 1u

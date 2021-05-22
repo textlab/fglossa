@@ -25,14 +25,14 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         let searchParams =
             { ContextSize = 15
               CorpusCode = "bokmal"
-              LastCount = 0
+              LastCount = None
               Metadata = None
               NumRandomHits = 0
               PageSize = 25
               Queries = [| { Language = "no"; Query = "jeg" } |]
-              RandomHitsSeed = 0
+              RandomHitsSeed = None
               SearchId = 0
-              SortKey = "position"
+              SortKey = Position
               Step = 1 }
 
         let cmd =

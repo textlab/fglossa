@@ -77,7 +77,7 @@ type CorpusModality =
     | Spoken
     | Written
 
-type TokenAttributes = string []
+type TokenAttributes = string
 
 type Language =
     { Code: string
@@ -101,7 +101,7 @@ type CorpusConfig =
     static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
         { Code = code
           Encoding = defaultArg encoding UTF8
-          LanguageConfig = defaultArg languageConfig (Monolingual [||])
+          LanguageConfig = defaultArg languageConfig (Monolingual "")
           Modality = defaultArg modality Written
           Logo = logo
           MultiCpuBounds = defaultArg multiCpuBounds None
@@ -114,17 +114,23 @@ type CorpusName = string
 
 type Query = { Language: string; Query: string }
 
+type SortKey =
+    | Position
+    | Match
+    | Left
+    | Right
+
 type SearchParams =
     { ContextSize: int
       CorpusCode: string
-      LastCount: int
+      LastCount: int option
       Metadata: string option
       NumRandomHits: int
       PageSize: int
       Queries: Query []
-      RandomHitsSeed: int
+      RandomHitsSeed: int option
       SearchId: int
-      SortKey: string
+      SortKey: SortKey
       Step: int }
 
 type SearchResult =

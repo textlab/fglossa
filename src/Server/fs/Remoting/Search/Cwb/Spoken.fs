@@ -4,7 +4,7 @@ open ServerTypes
 open Shared
 open Remoting.Search.Cwb.Common
 
-let runQueries (corpus: Corpus) (searchParams: SearchParams) =
+let runQueries (corpus: Corpus) (searchParams: SearchParams) (command: string option) =
     let namedQuery =
         cwbQueryName corpus searchParams.SearchId
 
