@@ -13,7 +13,7 @@ open Database
 let maxCqpProcesses = 8
 
 let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams) (corpus: Corpus) =
-    task {
+    async {
         let cqpProcs =
             Process.runCmdWithOutput "pgrep" "-f cqp"
 
@@ -30,15 +30,17 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
 
             let searchData =
                 [ "CorpusCode" => searchParams.CorpusCode
-                  "Queries" => searchParams.Queries
+                  "Queries"
+                  => (searchParams.Queries
+                      |> Array.map (fun q -> q.Query))
                   "Metadata" => searchParams.Metadata ]
-
-            use connection = new SQLiteConnection(connStr)
 
             let searchId =
                 if searchParams.SearchId = 0 then
                     // a SearchId of 0 means a new, unsaved search, so save it
                     // and set the database ID of the search to be the SearchId
+                    use connection = new SQLiteConnection(connStr)
+
                     let res =
                         (insert logger connection "Search" searchData)
                             .Result
@@ -53,9 +55,10 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                 { searchParams with
                       SearchId = searchId }
 
-            match corpus.Config.Modality with
-            | Spoken -> Spoken.runQueries corpus searchParamsWithSearchId None
-            | Written -> Written.runQueries corpus searchParamsWithSearchId None
+            let! searchResults =
+                match corpus.Config.Modality with
+                | Spoken -> Spoken.runQueries logger corpus searchParamsWithSearchId None
+                | Written -> Written.runQueries logger corpus searchParamsWithSearchId None
 
             return
                 { Count = 1u

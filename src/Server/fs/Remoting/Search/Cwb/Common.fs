@@ -155,50 +155,65 @@ let constructQueryCommands
     initCommands @ [ $"{namedQuery} = {queryStr}" ]
 
 
-let runCqpCommands (logger: ILogger) (corpus: Corpus) (commands: string seq) isCounting =
-    try
-        let commandStr =
-            commands
-            |> Seq.map (fun s -> $"{s};")
-            |> String.concat "\n"
+let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: string seq) =
+    async {
+        try
+            let commandStr =
+                commands
+                |> Seq.map (fun s -> $"{s};")
+                |> String.concat "\n"
 
-        let (output, error) =
-            Process.runCmdWithInputOutputAndError "docker" "exec -i cwb cqp -c" commandStr
+            let (output, error) =
+                Process.runCmdWithInputOutputAndError "docker" "exec -i cwb cqp -c" commandStr
 
-        let isUndumpError =
-            Regex.IsMatch(error, "(?i)CQP Error:\s+Format error in undump file")
+            let isUndumpError =
+                Regex.IsMatch(error, "(?i)CQP Error:\s+Format error in undump file")
 
-        if (not isUndumpError) && (error.Length > 0) then
-            logger.Error(error)
+            if (not isUndumpError) && (error.Length > 0) then
+                logger.Error(error)
 
-        // Split into lines and throw away the first line, which contains the CQP version.
-        // If isCounting is true (which it is when we are searching, but not when retrieving
-        // results), the first line after that contains the number of results. Any following
-        // lines contain actual search results (only in the first step).
-        let results = output.Split('\n') |> Array.tail
+            // Split into lines and throw away the first line, which contains the CQP version.
+            // If isCounting is true (which it is when we are searching, but not when retrieving
+            // results), the first line after that contains the number of results. Any following
+            // lines contain actual search results (only in the first step).
+            let results = output.Split('\n') |> Array.tail
 
-        let count =
-            match isCounting with
-            | true ->
-                (if not isUndumpError then
-                     int results.[0]
-                 else
-                     0)
-                |> Some
-            | false -> None
+            let count =
+                match isCounting with
+                | true ->
+                    (if not isUndumpError then
+                         results |> Array.head |> int
+                     else
+                         0)
+                    |> Some
+                | false -> None
 
-        printfn $"OUTPUT: {output}"
-        printfn $"ERROR LENGTH: {error.Length}"
+            let searchResults =
+                if not isUndumpError then
+                    (if isCounting then
+                         (results |> Array.tail)
+                     else
+                         results)
+                    |> Some
+                else
+                    None
 
-        if
-            results.Length > 1
-            && Regex.IsMatch
-                (
-                    results.[0],
-                    "PARSE ERROR|CQP Error"
-                )
-        then
-            failwith $"CQP error: {results}"
-    with :? System.OutOfMemoryException ->
-        logger.Error $"Out of memory: killing all CQP processes at {System.DateTime.Now}"
-        Process.runCmd "killall" "cqp"
+            printfn $"OUTPUT: {output}"
+            printfn $"ERROR LENGTH: {error.Length}"
+
+            if
+                results.Length > 1
+                && Regex.IsMatch
+                    (
+                        results.[0],
+                        "PARSE ERROR|CQP Error"
+                    )
+            then
+                return failwith $"CQP error: {results}"
+            else
+                return (searchResults, count)
+        with :? OutOfMemoryException as ex ->
+            logger.Error $"Out of memory: killing all CQP processes at {DateTime.Now}"
+            Process.runCmd "killall" "cqp"
+            return raise ex
+    }

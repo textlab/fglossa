@@ -125,7 +125,7 @@ type SearchParams =
       CorpusCode: string
       LastCount: int option
       Metadata: string option
-      NumRandomHits: int
+      NumRandomHits: int option
       PageSize: int
       Queries: Query []
       RandomHitsSeed: int option

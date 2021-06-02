@@ -27,7 +27,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
               CorpusCode = "bokmal"
               LastCount = None
               Metadata = None
-              NumRandomHits = 0
+              NumRandomHits = None
               PageSize = 25
               Queries = [| { Language = "no"; Query = "jeg" } |]
               RandomHitsSeed = None
