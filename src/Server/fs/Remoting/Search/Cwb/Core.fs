@@ -61,13 +61,14 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                 | Written -> Written.runQueries logger corpus searchParamsWithSearchId None
 
             return
-                { Count = 1u
-                  CpuCounts = [| 1u |]
+                { Count = searchResults.Count
+                  CpuCounts = searchResults.CpuCounts
                   SearchId = searchId
                   Results =
-                      [| { HasAudio = false
-                           HasVideo = false
-                           Text = "heidu" } |] }
+                      [| for resultText in searchResults.Hits ->
+                             { HasAudio = false
+                               HasVideo = false
+                               Text = resultText } |] }
         else
             return failwith $"TOO MANY CQP PROCESSES: {nCqpProcs}; aborting search at {System.DateTime.Now}"
     }

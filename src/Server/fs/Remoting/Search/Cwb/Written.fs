@@ -50,7 +50,7 @@ let private randomReduceCommand
     (corpusSize: uint64)
     (startpos: uint64)
     (endpos: uint64)
-    (numRandomHits: int)
+    (numRandomHits: uint64)
     (maybeRandomHitsSeed: int option)
     (namedQuery: string)
     =
@@ -96,7 +96,7 @@ let private cqpInit
     [ "set DataDirectory \"tmp\""
       cwbCorpusName corpus searchParams.Queries
       yield! constructSaveCommands
-      $"str set Context {adjustedContextSize} word"
+      $"set Context {adjustedContextSize} word"
       "set PrintStructures \"s_id\""
       "set LD \"{{\""
       "set RD \"}}\""
@@ -125,7 +125,8 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
                         let namedQuery = $"{queryName}_{searchParams.Step}_{cpu}"
 
                         let cqpInitCommands =
-                            [ yield! constructQueryCommands corpus searchParams namedQuery None (Some cpu)
+                            [ yield!
+                                constructQueryCommands corpus searchParams namedQuery startpos endpos None (Some cpu)
                               match searchParams.NumRandomHits with
                               | Some numRandomHits ->
                                   yield!
@@ -144,16 +145,14 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
                             | Some command -> Regex.Replace(command, "QUERY", namedQuery)
                             | None ->
                                 match searchParams.LastCount with
-                                // No LastCount means this is the first request of this
-                                // search, in which case we return the first two pages of
-                                // search results (or as many as we found in this first
-                                // part of the corpus). If we got a LastCount value,
-                                // it means this is not the first request of this search.
-                                // In that case, we check to see if the previous request(s)
-                                // managed to fill those two pages, and if not we return
-                                // results in order to keep filling them.
+                                // No LastCount means this is the first request of this search, in which case we return
+                                // the first two pages of search results (or as many as we found in this first part of
+                                // the corpus).
+                                // If we got a LastCount value, it means this is not the first request of
+                                // this search.  In that case, we check to see if the previous request(s) managed to fill
+                                // those two pages, and if not we return results in order to keep filling them.
                                 | None -> $"cat {namedQuery} 0 {numToReturn - 1}"
-                                | Some _ when searchParams.LastCount.Value < numToReturn ->
+                                | Some lastCount when lastCount < (uint64 numToReturn) ->
                                     $"cat {namedQuery} 0 {numToReturn - 1}"
                                 | _ -> ""
 
@@ -168,8 +167,18 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
 
             let numToTake =
                 match searchParams.LastCount with
-                | Some lastCount -> numToReturn - lastCount
-                | None -> numToReturn
+                | Some lastCount when lastCount < (uint64 numToReturn) ->
+                    // Since numToReturn is an int (i.e., int32) and we now know that lastCount is smaller, converting
+                    // lastCount from uint64 to int should not be risky
+                    numToReturn - (int lastCount)
+                | Some _ ->
+                    // If the number of hits we have fetched so far (lastCount) is already bigger than or equal to numToReturn,
+                    // we don't need to return any more hits
+                    0
+                | None ->
+                    // If there is no last count, it means that this is the first request of this search, so return
+                    // numToReturn hits
+                    numToReturn
 
             let hits =
                 results
@@ -178,11 +187,11 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
                 |> Array.truncate numToTake
 
             // Number of hits found by each cpu in this search step
-            let counts = results |> Array.choose snd
+            let cpuCounts = results |> Array.choose snd
 
-            // Sum of the number of hits found by the different cpus in this search step
+            // Sum of the number of hits found by the different cpus in this and any previous search steps
             let count =
-                let sum = Array.sum counts
+                let sum = Array.sum cpuCounts
 
                 match searchParams.LastCount with
                 | Some lastCount -> sum + lastCount
@@ -195,13 +204,13 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
                     // random results we asked for, so remove the superfluous ones
                     let nExtra = count - numRandomHits
 
-                    {| Hits = hits |> Array.truncate count
-                       Count = count - nExtra
-                       Counts = counts |}
+                    {| Count = count - nExtra
+                       CpuCounts = cpuCounts
+                       Hits = hits |> Array.truncate (numToReturn - int nExtra) |}
                 | _ ->
-                    {| Hits = hits
-                       Count = count
-                       Counts = counts |}
+                    {| Count = count
+                       CpuCounts = cpuCounts
+                       Hits = hits |}
 
         | None -> return failwith $"No corpus size found for {cwbCorpus} in {corpus.Config.Sizes}!"
     }

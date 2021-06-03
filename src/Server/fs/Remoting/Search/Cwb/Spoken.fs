@@ -13,7 +13,7 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
         let startpos = 0
 
         return
-            {| Hits = [||]
-               Count = 0
-               Counts = [||] |}
+            {| Count = 0UL
+               CpuCounts = [||]
+               Hits = [||] |}
     }

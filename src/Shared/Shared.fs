@@ -123,9 +123,9 @@ type SortKey =
 type SearchParams =
     { ContextSize: int
       CorpusCode: string
-      LastCount: int option
+      LastCount: uint64 option
       Metadata: string option
-      NumRandomHits: int option
+      NumRandomHits: uint64 option
       PageSize: int
       Queries: Query []
       RandomHitsSeed: int option
@@ -139,8 +139,8 @@ type SearchResult =
       Text: string }
 
 type SearchResults =
-    { Count: uint32
-      CpuCounts: uint32 []
+    { Count: uint64
+      CpuCounts: uint64 []
       SearchId: int
       Results: SearchResult [] }
 

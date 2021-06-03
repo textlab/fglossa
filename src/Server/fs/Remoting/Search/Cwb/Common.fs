@@ -1,6 +1,7 @@
 module Remoting.Search.Cwb.Common
 
 open System
+open System.IO
 open System.Threading.Tasks
 open FSharp.Control.Tasks
 open System.Data.SQLite
@@ -44,11 +45,9 @@ let buildMonolingualQuery (queries: Query []) (sTag: string) =
             | Some head -> head
             | None -> failwith "Empty query!"
 
-    $"{queryStr} with {sTag}"
+    $"{queryStr} within {sTag}"
 
 let buildMultilingualQuery (corpus: Corpus) (queries: Query []) (sTag: string) =
-    let corpusCode = corpus.Config.Code.ToUpper()
-
     let mainQuery =
         match Array.tryHead queries with
         | Some head -> $"{head.Query} within {sTag}"
@@ -68,6 +67,46 @@ let buildMultilingualQuery (corpus: Corpus) (queries: Query []) (sTag: string) =
     (Array.append [| mainQuery |] alignedQueries)
     |> String.concat " :"
 
+// Prints to file the start and stop positions of all corpus texts that are associated with the
+// metadata values that have the given database ids, with an OR relationship between values within
+// the same category and an AND relationship between categories. Also restricts the positions to the start
+// and end positions provided in the request.
+let printPositionsMatchingMetadata
+    (corpus: Corpus)
+    (searchParams: SearchParams)
+    (startpos: uint64)
+    (endpos: uint64)
+    (positionsFilename: string)
+    =
+    File.Delete(positionsFilename)
+
+    match searchParams.Metadata with
+    | Some metadata ->
+        let positionFields =
+            match corpus.Config.Modality with
+            | Spoken -> $"replace(replace(`bounds`, '-', '\t'), ':', '\n')"
+            | Written -> $"startpos, endpos"
+
+        let sql = $"SELECT DISTINCT({positionFields})"
+        failwith "NOT IMPLEMENTED"
+    | None ->
+        // No metadata selected
+        match corpus.Config.Modality with
+        | Spoken -> failwith "NOT IMPLEMENTED"
+        | Written ->
+            // For written corpora, simply search the entire corpus by just printing the start and end
+            // positions specified in the request, making sure that the end position does not exceed the size
+            // of the corpus
+            let cwbCorpus =
+                (cwbCorpusName corpus searchParams.Queries)
+                    .ToLower()
+
+            match corpus.Config.Sizes.TryFind(cwbCorpus) with
+            | Some corpusSize ->
+                let endpos' = Math.Min(endpos, corpusSize - 1UL)
+                File.WriteAllText(positionsFilename, $"{startpos}\t{endpos'}\n")
+            | None -> failwith $"No corpus size found for {cwbCorpus} in {corpus.Config.Sizes}!"
+
 let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes: string [] option) =
     match maybeAttributes with
     | Some attributes ->
@@ -83,7 +122,7 @@ let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes:
             | Some head -> head.Language
             | None -> failwith "Empty query!"
         // TODO: Implement parsing of tagger attributes and corpus-specific attributes
-        ""
+        "show +word"
 
 let alignedLanguagesCommand (corpus: Corpus) (queries: Query []) =
     let languageCodes =
@@ -130,6 +169,8 @@ let constructQueryCommands
     (corpus: Corpus)
     (searchParams: SearchParams)
     (namedQuery: string)
+    (startpos: uint64)
+    (endpos: uint64)
     (maybeSTag: string option)
     (maybeCpuIndex: int option)
     =
@@ -151,7 +192,8 @@ let constructQueryCommands
     let initCommands =
         [ $"undump {namedQuery} < '{positionsFilename}'"
           namedQuery ]
-    // TODO: printPositionsMatchingMetadata
+
+    printPositionsMatchingMetadata corpus searchParams startpos endpos positionsFilename
     initCommands @ [ $"{namedQuery} = {queryStr}" ]
 
 
@@ -160,6 +202,7 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
         try
             let commandStr =
                 commands
+                |> Seq.filter (fun s -> not (String.IsNullOrWhiteSpace s))
                 |> Seq.map (fun s -> $"{s};")
                 |> String.concat "\n"
 
@@ -182,9 +225,9 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
                 match isCounting with
                 | true ->
                     (if not isUndumpError then
-                         results |> Array.head |> int
+                         results |> Array.head |> uint64
                      else
-                         0)
+                         0UL)
                     |> Some
                 | false -> None
 
@@ -197,9 +240,6 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
                     |> Some
                 else
                     None
-
-            printfn $"OUTPUT: {output}"
-            printfn $"ERROR LENGTH: {error.Length}"
 
             if
                 results.Length > 1
