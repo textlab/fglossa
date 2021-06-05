@@ -69,10 +69,6 @@ type SearchEngine =
     | Cwb
     | Fcs
 
-type TextEncoding =
-    | UTF8
-    | Latin1
-
 type CorpusModality =
     | Spoken
     | Written
@@ -90,7 +86,6 @@ type LanguageConfig =
 
 type CorpusConfig =
     { Code: string
-      Encoding: TextEncoding
       LanguageConfig: LanguageConfig
       Modality: CorpusModality
       Logo: string option
@@ -100,7 +95,6 @@ type CorpusConfig =
       Sizes: Map<string, uint64> }
     static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
         { Code = code
-          Encoding = defaultArg encoding UTF8
           LanguageConfig = defaultArg languageConfig (Monolingual "")
           Modality = defaultArg modality Written
           Logo = logo

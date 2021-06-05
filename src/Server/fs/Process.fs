@@ -39,7 +39,12 @@ let runCmdWithInputAndOutput (cmd: string) (args: string) (input: string) =
     proc.WaitForExit()
     output
 
-let runCmdWithInputOutputAndError (cmd: string) (args: string) (input: string) =
+let runCmdWithInputOutputErrorAndEncoding
+    (cmd: string)
+    (args: string)
+    (encoding: System.Text.Encoding)
+    (input: string)
+    =
     let startInfo =
         System.Diagnostics.ProcessStartInfo(cmd, args)
 
@@ -47,6 +52,7 @@ let runCmdWithInputOutputAndError (cmd: string) (args: string) (input: string) =
     startInfo.RedirectStandardInput <- true
     startInfo.RedirectStandardOutput <- true
     startInfo.RedirectStandardError <- true
+    startInfo.StandardOutputEncoding <- encoding
 
     use proc =
         System.Diagnostics.Process.Start(startInfo)
@@ -59,3 +65,6 @@ let runCmdWithInputOutputAndError (cmd: string) (args: string) (input: string) =
     let error = proc.StandardError.ReadToEnd()
     proc.WaitForExit()
     (output, error)
+
+let runCmdWithInputOutputAndError (cmd: string) (args: string) (input: string) =
+    runCmdWithInputOutputErrorAndEncoding cmd args System.Text.Encoding.UTF8 input

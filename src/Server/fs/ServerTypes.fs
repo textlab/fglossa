@@ -45,3 +45,4 @@ type Corpus(config: CorpusConfig) =
         | Fcs -> failwith "Not implemented"
 
     member _.Config = { config with Sizes = corpusSizes }
+    member val Encoding = System.Text.Encoding.UTF8 with get, set

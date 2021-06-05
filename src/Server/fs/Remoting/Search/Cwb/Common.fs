@@ -207,7 +207,7 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
                 |> String.concat "\n"
 
             let (output, error) =
-                Process.runCmdWithInputOutputAndError "docker" "exec -i cwb cqp -c" commandStr
+                Process.runCmdWithInputOutputErrorAndEncoding "docker" "exec -i cwb cqp -c" corpus.Encoding commandStr
 
             let isUndumpError =
                 Regex.IsMatch(error, "(?i)CQP Error:\s+Format error in undump file")
