@@ -92,9 +92,36 @@ module ResultsPage =
                                                Html.li [ Html.a [ prop.text "Statistics" ] ] ] ] ]
 
     let view (model: ShowingResultsModel) (search: Search) (dispatch: Update.Msg -> unit) =
+        let iconButton iconClass =
+            Bulma.button.button [ button.isSmall
+                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"; iconClass ] ] ] ] ]
+
         Html.span [ topRowButtons
                     searchInterface search dispatch
-                    tabs model dispatch ]
+                    Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ tabs model dispatch ] ]
+                                  Bulma.levelRight [ Bulma.levelItem [ prop.text "Found xxx matches (xxx pages)" ] ] ]
+                    Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.buttons [ Bulma.button.button [ prop.text
+                                                                                                                "Sort by position" ]
+                                                                                      Bulma.button.button [ prop.text
+                                                                                                                "Download" ] ] ] ]
+                                  Bulma.levelRight [ Bulma.levelItem [ prop.text "Context" ]
+                                                     Bulma.levelItem [ Bulma.input.text [ input.isSmall
+                                                                                          prop.style [ style.width 40 ] ] ]
+                                                     Bulma.levelItem [ prop.style [ style.marginRight 50 ]
+                                                                       prop.text "words" ]
+                                                     Bulma.levelItem [ Bulma.buttons [ iconButton "fa-angle-double-left"
+                                                                                       iconButton "fa-angle-left" ] ]
+                                                     Bulma.levelItem [ Bulma.input.text [ input.isSmall
+                                                                                          prop.style [ style.width 60
+                                                                                                       style.textAlign.right ]
+                                                                                          prop.value 1
+                                                                                          prop.onChange
+                                                                                              (fun (s: string) ->
+                                                                                                  printfn
+                                                                                                      $"New value: {s}") ] ]
+                                                     Bulma.levelItem [ Bulma.buttons [ iconButton "fa-angle-right"
+                                                                                       iconButton
+                                                                                           "fa-angle-double-right" ] ] ] ] ]
 
 let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) =
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
