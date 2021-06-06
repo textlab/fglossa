@@ -135,7 +135,7 @@ module MetadataMenu =
                 // regardless of window size.
                 match model.Substate with
                 | CorpusStartPage -> true
-                | ShowingResults -> not model.IsNarrowWindow
+                | ShowingResults _ -> not model.IsNarrowWindow
 
     let FixedSizeList : obj = importMember "react-window"
 

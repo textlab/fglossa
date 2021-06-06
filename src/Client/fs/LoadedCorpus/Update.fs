@@ -35,8 +35,18 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
               SortKey = Position
               Step = 1 }
 
+        let newModel =
+            { model with
+                  Substate = ShowingResults ShowingResultsModel.Default }
+
         let cmd =
             Cmd.OfAsync.perform serverApi.searchCorpus searchParams SearchResultsReceived
 
-        model, cmd
-    | SearchResultsReceived results -> model, Cmd.none
+        newModel, cmd
+    | SearchResultsReceived results ->
+        { model with
+              Substate =
+                  ShowingResults
+                      { ShowingResultsModel.Default with
+                            SearchResults = Some results } },
+        Cmd.none

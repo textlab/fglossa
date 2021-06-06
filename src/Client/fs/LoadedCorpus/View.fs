@@ -12,7 +12,7 @@ let topRowButtons =
                     Bulma.button.button [ color.isInfo
                                           prop.text "Reset form" ] ]
 
-let searchInterface (model: LoadedCorpusModel) dispatch =
+let searchInterface (search: Search) dispatch =
     let simpleHeading = "Simple"
     let extendedHeading = "Extended"
     let cqpHeading = "CQP query"
@@ -35,7 +35,7 @@ let searchInterface (model: LoadedCorpusModel) dispatch =
                     prop.text " | " ]
 
     let links =
-        match model.Search.Interface with
+        match search.Interface with
         | Simple ->
             [ Html.b simpleHeading
               separator
@@ -78,10 +78,23 @@ module CorpusStartPage =
                     prop.children [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.title config.Name ]
                                                                     Bulma.levelItem logo ] ] ] ]
 
-    let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) =
+    let view (corpus: Corpus) (search: Search) (dispatch: Update.Msg -> unit) =
         Html.span [ topRowButtons
-                    corpusNameBox model.Corpus.Config
-                    searchInterface model dispatch ]
+                    corpusNameBox corpus.Config
+                    searchInterface search dispatch ]
+
+module ResultsPage =
+    let tabs model dispatch =
+        Bulma.tabs [ prop.style [ style.marginTop 15 ]
+                     tabs.isBoxed
+                     prop.children [ Html.ul [ Html.li [ tab.isActive
+                                                         prop.children [ Html.a [ prop.text "Concordance" ] ] ]
+                                               Html.li [ Html.a [ prop.text "Statistics" ] ] ] ] ]
+
+    let view (model: ShowingResultsModel) (search: Search) (dispatch: Update.Msg -> unit) =
+        Html.span [ topRowButtons
+                    searchInterface search dispatch
+                    tabs model dispatch ]
 
 let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) =
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
@@ -90,4 +103,14 @@ let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) 
                                                                                                    model
                                                                                                    (MetadataMsg
                                                                                                     >> dispatch) ] ]
-                                                                Bulma.column [ CorpusStartPage.view model dispatch ] ] ] ] ]
+                                                                Bulma.column [ match model.Substate with
+                                                                               | CorpusStartPage ->
+                                                                                   CorpusStartPage.view
+                                                                                       model.Corpus
+                                                                                       model.Search
+                                                                                       dispatch
+                                                                               | ShowingResults showingResultsModel ->
+                                                                                   ResultsPage.view
+                                                                                       showingResultsModel
+                                                                                       model.Search
+                                                                                       dispatch ] ] ] ] ]

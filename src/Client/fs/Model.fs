@@ -27,9 +27,20 @@ type Corpus =
       MetadataMenu: Metadata.MenuItem list
       MetadataTable: Metadata.Category list }
 
+type ResultTabs =
+    | Concordance
+    | Statistics
+
+type ShowingResultsModel =
+    { ActiveTab: ResultTabs
+      SearchResults: SearchResults option }
+    static member Default =
+        { ActiveTab = Concordance
+          SearchResults = None }
+
 type LoadedCorpusSubstate =
     | CorpusStartPage
-    | ShowingResults
+    | ShowingResults of ShowingResultsModel
 
 type LoadedCorpusModel =
     { Corpus: Corpus
