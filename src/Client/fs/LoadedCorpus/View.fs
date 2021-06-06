@@ -91,10 +91,17 @@ module ResultsPage =
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
                                                Html.li [ Html.a [ prop.text "Statistics" ] ] ] ] ]
 
-    let view (model: ShowingResultsModel) (search: Search) (dispatch: Update.Msg -> unit) =
+    let view (model: ShowingResultsModel) (corpus: Corpus) (search: Search) (dispatch: Update.Msg -> unit) =
         let iconButton iconClass =
             Bulma.button.button [ button.isSmall
                                   prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"; iconClass ] ] ] ] ]
+
+        let contextSelector =
+            [ Bulma.levelItem [ prop.text "Context:" ]
+              Bulma.levelItem [ Bulma.input.text [ input.isSmall
+                                                   prop.style [ style.width 40 ] ] ]
+              Bulma.levelItem [ prop.style [ style.marginRight 50 ]
+                                prop.text "words" ] ]
 
         Html.span [ topRowButtons
                     searchInterface search dispatch
@@ -104,11 +111,8 @@ module ResultsPage =
                                                                                                                 "Sort by position" ]
                                                                                       Bulma.button.button [ prop.text
                                                                                                                 "Download" ] ] ] ]
-                                  Bulma.levelRight [ Bulma.levelItem [ prop.text "Context" ]
-                                                     Bulma.levelItem [ Bulma.input.text [ input.isSmall
-                                                                                          prop.style [ style.width 40 ] ] ]
-                                                     Bulma.levelItem [ prop.style [ style.marginRight 50 ]
-                                                                       prop.text "words" ]
+                                  Bulma.levelRight [ if corpus.Config.Modality <> Spoken then
+                                                         yield! contextSelector
                                                      Bulma.levelItem [ Bulma.buttons [ iconButton "fa-angle-double-left"
                                                                                        iconButton "fa-angle-left" ] ]
                                                      Bulma.levelItem [ Bulma.input.text [ input.isSmall
@@ -121,7 +125,10 @@ module ResultsPage =
                                                                                                       $"New value: {s}") ] ]
                                                      Bulma.levelItem [ Bulma.buttons [ iconButton "fa-angle-right"
                                                                                        iconButton
-                                                                                           "fa-angle-double-right" ] ] ] ] ]
+                                                                                           "fa-angle-double-right" ] ] ] ]
+                    match model.SearchResults with
+                    | Some results -> Written.concordanceTable results
+                    | None -> Html.none ]
 
 let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) =
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
@@ -139,5 +146,6 @@ let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) 
                                                                                | ShowingResults showingResultsModel ->
                                                                                    ResultsPage.view
                                                                                        showingResultsModel
+                                                                                       model.Corpus
                                                                                        model.Search
                                                                                        dispatch ] ] ] ] ]
