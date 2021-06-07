@@ -1,6 +1,11 @@
 namespace Shared
 
 open System
+open System.Text.RegularExpressions
+
+module StringUtils =
+    let replace (pattern: string) (replacement: string) input =
+        Regex.Replace(input, pattern, replacement)
 
 module Metadata =
     /// Base class for all metadata categories
@@ -130,7 +135,7 @@ type SearchParams =
 type SearchResult =
     { HasAudio: bool
       HasVideo: bool
-      Text: string }
+      Text: string [] }
 
 type SearchResults =
     { Count: uint64

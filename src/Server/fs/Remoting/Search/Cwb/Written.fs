@@ -6,6 +6,7 @@ open System.Text.RegularExpressions
 open Serilog
 open ServerTypes
 open Shared
+open Shared.StringUtils
 open Remoting.Search.Cwb.Common
 
 let private getParts (corpus: Corpus) (step: int) (corpusSize: uint64) (maybeCommand: string option) =
@@ -45,6 +46,7 @@ let private getParts (corpus: Corpus) (step: int) (corpusSize: uint64) (maybeCom
             [| (0UL, (corpusSize - 1UL)) |]
         else
             Array.empty
+
 
 let private randomReduceCommand
     (corpusSize: uint64)
@@ -104,6 +106,7 @@ let private cqpInit
       alignedLanguagesCommand corpus searchParams.Queries
       if sortCmd.IsSome then
           yield! sortCmd.Value ]
+
 
 let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (maybeCommand: string option) =
     async {
@@ -214,3 +217,35 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
 
         | None -> return failwith $"No corpus size found for {cwbCorpus} in {corpus.Config.Sizes}!"
     }
+
+
+let transformResults (queries: Query []) (hits: string []) =
+    let queriedLangs =
+        queries
+        |> Array.map (fun q -> q.Language)
+        |> Set.ofArray
+
+    let numLangs = queriedLangs.Count
+
+    [| for lines in hits |> Array.chunkBySize numLangs ->
+           let ls =
+               [| for line in lines ->
+                      line
+                      // When the match is the last token in a text, the </text> tag is
+                      // included within the braces due to a CQP bug, so we need to fix it
+                      |> replace "</text>\}\}" "}}</text>"
+                      // Remove any material from the previous or following text
+                      |> replace "^(.*\{\{.+)</text>.*" "$1"
+                      |> replace "^(\s*\d+:\s*<.+?>:\s*).*<text>(.*\{\{.+)" "$1$2"
+                      // Get rid of spaces in multiword expressions. Assuming that attribute values never contain spaces,
+                      // we can further assume that if we find several spaces between slashes, only the first one separates
+                      // tokens and the remaining ones are actually inside the token and should be replaced by underscores.
+                      // Fractions containing spaces (e.g. "1 / 2") need to be handled separately because the presence of a
+                      // slash confuses the normal regexes
+                      |> replace " (\d+) / (\d+)" " $1/$2"
+                      |> replace " ([^/<>\s]+) ([^/<>\s]+) ([^/<>\s]+)(/\S+/)" " $1_$2_$3$4"
+                      |> replace " ([^/<>\s]+) ([^/<>\s]+)(/\S+/)" " $1_$2$3" |]
+
+           { HasAudio = false
+             HasVideo = false
+             Text = ls } |]

@@ -65,10 +65,9 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                   CpuCounts = searchResults.CpuCounts
                   SearchId = searchId
                   Results =
-                      [| for resultText in searchResults.Hits ->
-                             { HasAudio = false
-                               HasVideo = false
-                               Text = resultText } |] }
+                      match corpus.Config.Modality with
+                      | Spoken -> failwith "NOT IMPLEMENTED"
+                      | Written -> Written.transformResults searchParams.Queries searchResults.Hits }
         else
             return failwith $"TOO MANY CQP PROCESSES: {nCqpProcs}; aborting search at {System.DateTime.Now}"
     }
