@@ -229,22 +229,22 @@ let transformResults (queries: Query []) (hits: string []) =
 
     [| for lines in hits |> Array.chunkBySize numLangs ->
            let ls =
-               [| for line in lines ->
-                      line
-                      // When the match is the last token in a text, the </text> tag is
-                      // included within the braces due to a CQP bug, so we need to fix it
-                      |> replace "</text>\}\}" "}}</text>"
-                      // Remove any material from the previous or following text
-                      |> replace "^(.*\{\{.+)</text>.*" "$1"
-                      |> replace "^(\s*\d+:\s*<.+?>:\s*).*<text>(.*\{\{.+)" "$1$2"
-                      // Get rid of spaces in multiword expressions. Assuming that attribute values never contain spaces,
-                      // we can further assume that if we find several spaces between slashes, only the first one separates
-                      // tokens and the remaining ones are actually inside the token and should be replaced by underscores.
-                      // Fractions containing spaces (e.g. "1 / 2") need to be handled separately because the presence of a
-                      // slash confuses the normal regexes
-                      |> replace " (\d+) / (\d+)" " $1/$2"
-                      |> replace " ([^/<>\s]+) ([^/<>\s]+) ([^/<>\s]+)(/\S+/)" " $1_$2_$3$4"
-                      |> replace " ([^/<>\s]+) ([^/<>\s]+)(/\S+/)" " $1_$2$3" |]
+               [ for line in lines ->
+                     line
+                     // When the match is the last token in a text, the </text> tag is
+                     // included within the braces due to a CQP bug, so we need to fix it
+                     |> replace "</text>\}\}" "}}</text>"
+                     // Remove any material from the previous or following text
+                     |> replace "^(.*\{\{.+)</text>.*" "$1"
+                     |> replace "^(\s*\d+:\s*<.+?>:\s*).*<text>(.*\{\{.+)" "$1$2"
+                     // Get rid of spaces in multiword expressions. Assuming that attribute values never contain spaces,
+                     // we can further assume that if we find several spaces between slashes, only the first one separates
+                     // tokens and the remaining ones are actually inside the token and should be replaced by underscores.
+                     // Fractions containing spaces (e.g. "1 / 2") need to be handled separately because the presence of a
+                     // slash confuses the normal regexes
+                     |> replace " (\d+) / (\d+)" " $1/$2"
+                     |> replace " ([^/<>\s]+) ([^/<>\s]+) ([^/<>\s]+)(/\S+/)" " $1_$2_$3$4"
+                     |> replace " ([^/<>\s]+) ([^/<>\s]+)(/\S+/)" " $1_$2$3" ]
 
            { HasAudio = false
              HasVideo = false

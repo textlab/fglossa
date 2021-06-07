@@ -44,9 +44,11 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         newModel, cmd
     | SearchResultsReceived results ->
-        { model with
-              Substate =
-                  ShowingResults
-                      { ShowingResultsModel.Default with
-                            SearchResults = Some results } },
-        Cmd.none
+        let newModel =
+            { model with
+                  Substate =
+                      ShowingResults
+                          { ShowingResultsModel.Default with
+                                SearchResults = Some results } }
+
+        newModel, Cmd.none

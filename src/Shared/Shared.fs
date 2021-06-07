@@ -91,6 +91,7 @@ type LanguageConfig =
 
 type CorpusConfig =
     { Code: string
+      FontFamily: string option
       LanguageConfig: LanguageConfig
       Modality: CorpusModality
       Logo: string option
@@ -100,6 +101,7 @@ type CorpusConfig =
       Sizes: Map<string, uint64> }
     static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
         { Code = code
+          FontFamily = None
           LanguageConfig = defaultArg languageConfig (Monolingual "")
           Modality = defaultArg modality Written
           Logo = logo
@@ -135,7 +137,7 @@ type SearchParams =
 type SearchResult =
     { HasAudio: bool
       HasVideo: bool
-      Text: string [] }
+      Text: string list }
 
 type SearchResults =
     { Count: uint64

@@ -127,7 +127,7 @@ module ResultsPage =
                                                                                        iconButton
                                                                                            "fa-angle-double-right" ] ] ] ]
                     match model.SearchResults with
-                    | Some results -> Written.concordanceTable results
+                    | Some results -> ResultViews.Cwb.Written.concordanceTable corpus.Config.FontFamily results
                     | None -> Html.none ]
 
 let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) =
