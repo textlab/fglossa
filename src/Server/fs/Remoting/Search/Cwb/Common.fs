@@ -24,7 +24,7 @@ let cwbCorpusName (corpus: Corpus) (queries: Query seq) =
         // submitted query row (e.g. RUN_EN).
         let firstLanguageCode =
             match queries |> Seq.tryHead with
-            | Some head -> head.Language.ToUpper()
+            | Some head -> head.LanguageCode.ToUpper()
             | None -> failwith $"Empty query!"
 
         $"{uppercaseCode}_{firstLanguageCode}"
@@ -62,7 +62,7 @@ let buildMultilingualQuery (corpus: Corpus) (queries: Query []) (sTag: string) =
                 if String.IsNullOrWhiteSpace(query.Query) then
                     None
                 else
-                    Some $"{corpus.Config.Code}_{query.Language.ToUpper()} {query.Query}")
+                    Some $"{corpus.Config.Code}_{query.LanguageCode.ToUpper()} {query.Query}")
 
     (Array.append [| mainQuery |] alignedQueries)
     |> String.concat " :"
@@ -107,26 +107,41 @@ let printPositionsMatchingMetadata
                 File.WriteAllText(positionsFilename, $"{startpos}\t{endpos'}\n")
             | None -> failwith $"No corpus size found for {cwbCorpus} in {corpus.Config.Sizes}!"
 
-let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes: string [] option) =
-    match maybeAttributes with
-    | Some attributes ->
-        let attrString =
-            attributes
-            |> Array.map (fun attr -> $"+{attr}")
-            |> String.concat " "
+let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes: TokenAttribute [] option) =
+    let createAttrString attributes =
+        attributes
+        |> Array.map fst
+        |> Array.map (fun attr -> $"+{attr}")
+        |> String.concat " "
 
+    match maybeAttributes with
+    // Given an explicit array of attributes, e.g. when exporting to Excel etc.
+    | Some attributes ->
+        let attrString = createAttrString attributes
         $"show -word; show {attrString}"
     | None ->
-        let firstQueryLanguage =
-            match Array.tryHead queries with
-            | Some head -> head.Language
-            | None -> failwith "Empty query!"
-        // TODO: Implement parsing of tagger attributes and corpus-specific attributes
-        "show +word"
+        match corpus.Config.LanguageConfig with
+        | Monolingual attributes ->
+            let attrString = createAttrString attributes
+            $"show {attrString}"
+        | Multilingual languages ->
+            let firstQueryLanguageCode =
+                match Array.tryHead queries with
+                | Some head -> head.LanguageCode
+                | None -> failwith "Empty query!"
+
+            let language =
+                languages
+                |> Array.find (fun lang -> lang.Code = firstQueryLanguageCode)
+
+            let attributes = language.TokenAttributes
+            let attrString = createAttrString attributes
+            $"show -word; show {attrString}"
+// TODO: Implement parsing of tagger attributes and corpus-specific attributes
 
 let alignedLanguagesCommand (corpus: Corpus) (queries: Query []) =
     let languageCodes =
-        queries |> Array.map (fun q -> q.Language)
+        queries |> Array.map (fun q -> q.LanguageCode)
 
     let firstLanguageCode =
         match Array.tryHead languageCodes with

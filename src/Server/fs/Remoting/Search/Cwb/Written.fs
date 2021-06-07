@@ -79,7 +79,7 @@ let private randomReduceCommand
 let private cqpInit
     (corpus: Corpus)
     (searchParams: SearchParams)
-    (maybeAttributes: string [] option)
+    (maybeAttributes: TokenAttribute [] option)
     (namedQuery: string)
     (constructSaveCommands: string list)
     =
@@ -222,7 +222,7 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
 let transformResults (queries: Query []) (hits: string []) =
     let queriedLangs =
         queries
-        |> Array.map (fun q -> q.Language)
+        |> Array.map (fun q -> q.LanguageCode)
         |> Set.ofArray
 
     let numLangs = queriedLangs.Count

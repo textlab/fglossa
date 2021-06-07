@@ -78,15 +78,18 @@ type CorpusModality =
     | Spoken
     | Written
 
-type TokenAttributes = string
+type AttributeCode = string
+type AttributeName = string
+
+type TokenAttribute = AttributeCode * AttributeName
 
 type Language =
     { Code: string
       Name: string
-      TokenAttributes: TokenAttributes }
+      TokenAttributes: TokenAttribute [] }
 
 type LanguageConfig =
-    | Monolingual of TokenAttributes
+    | Monolingual of TokenAttribute []
     | Multilingual of Language []
 
 type CorpusConfig =
@@ -102,7 +105,7 @@ type CorpusConfig =
     static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
         { Code = code
           FontFamily = None
-          LanguageConfig = defaultArg languageConfig (Monolingual "")
+          LanguageConfig = defaultArg languageConfig (Monolingual [||])
           Modality = defaultArg modality Written
           Logo = logo
           MultiCpuBounds = defaultArg multiCpuBounds None
@@ -113,7 +116,7 @@ type CorpusConfig =
 type CorpusCode = string
 type CorpusName = string
 
-type Query = { Language: string; Query: string }
+type Query = { LanguageCode: string; Query: string }
 
 type SortKey =
     | Position
