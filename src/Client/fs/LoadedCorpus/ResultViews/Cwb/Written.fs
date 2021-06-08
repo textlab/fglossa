@@ -57,7 +57,7 @@ let private processField displayedAttributeIndex maybeOrigCorrIndex maybeLemmaIn
                     |> String.concat " "
 
                 Html.span [ prop.key index
-                            prop.title tipText
+                            tooltip.text tipText
                             match maybeFontFamily with
                             | Some fontFamily -> prop.style [ style.fontFamily fontFamily ]
                             | None -> ignore None
