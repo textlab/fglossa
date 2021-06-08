@@ -29,7 +29,9 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
               Metadata = None
               NumRandomHits = None
               PageSize = 25
-              Queries = [| { Language = "no"; Query = "\"jeg\"" } |]
+              Queries =
+                  [| { LanguageCode = "no"
+                       Query = "\"jeg\"" } |]
               RandomHitsSeed = None
               SearchId = 0
               SortKey = Position

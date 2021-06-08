@@ -8,7 +8,7 @@ open LoadedCorpus.ResultViews.Cwb.Common
 
 /// Processes a pre-match, match, or post-match field.
 let private processField displayedAttributeIndex maybeOrigCorrIndex maybeLemmaIndex maybeFontFamily (field: string) =
-    field.Split("\s+")
+    Regex.Split(field, "\s+")
     |> Array.mapi
         (fun index token ->
             if token.Contains('/') then
@@ -61,7 +61,7 @@ let private processField displayedAttributeIndex maybeOrigCorrIndex maybeLemmaIn
                             match maybeFontFamily with
                             | Some fontFamily -> prop.style [ style.fontFamily fontFamily ]
                             | None -> ignore None
-                            prop.dangerouslySetInnerHTML attributes.[displayedAttributeIndex] ]
+                            prop.dangerouslySetInnerHTML (attributes.[displayedAttributeIndex] + " ") ]
             else
                 // With multi-word expressions, the non-last parts become simple strings
                 // without any attributes (i.e., no slashes) when we split the text on
