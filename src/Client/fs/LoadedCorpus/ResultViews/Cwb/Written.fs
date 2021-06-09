@@ -58,6 +58,7 @@ let private processField displayedAttributeIndex maybeOrigCorrIndex maybeLemmaIn
 
                 Html.span [ prop.key index
                             tooltip.text tipText
+                            prop.className "has-tooltip-arrow"
                             match maybeFontFamily with
                             | Some fontFamily -> prop.style [ style.fontFamily fontFamily ]
                             | None -> ignore None
@@ -187,4 +188,5 @@ let concordanceTable (maybeFontFamily: string option) (searchResults: SearchResu
                   table.isFullWidth
                   table.isBordered
                   table.isNarrow
+                  prop.className "concordance-table"
                   prop.children [ Html.tbody rows ] ]
