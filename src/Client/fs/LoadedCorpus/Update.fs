@@ -51,6 +51,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                   Substate =
                       ShowingResults
                           { ShowingResultsModel.Default with
+                                IsSearching = false
                                 SearchResults = Some results } }
 
         newModel, Cmd.none

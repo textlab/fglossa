@@ -128,9 +128,12 @@ module ResultsPage =
               | Some results -> ResultViews.Cwb.Written.concordanceTable corpus results
               | None -> Html.none ]
 
+        let shouldShowResultsTableSpinner =
+            model.IsSearching && model.SearchResults.IsNone
+
         Html.span [ topRowButtons
                     searchInterface search dispatch
-                    spinnerOverlay true (Some [ style.top 75 ]) resultsTable ]
+                    spinnerOverlay shouldShowResultsTableSpinner (Some [ style.top 75 ]) resultsTable ]
 
 
 let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) =
