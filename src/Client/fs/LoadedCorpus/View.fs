@@ -6,6 +6,7 @@ open Feliz.Bulma
 open Shared
 open Model
 open LoadedCorpus.Update
+open Common
 
 let topRowButtons =
     Bulma.buttons [ Bulma.button.button [ prop.text "Hide filters" ]
@@ -92,10 +93,6 @@ module ResultsPage =
                                                Html.li [ Html.a [ prop.text "Statistics" ] ] ] ] ]
 
     let view (model: ShowingResultsModel) (corpus: Corpus) (search: Search) (dispatch: Update.Msg -> unit) =
-        let iconButton iconClass =
-            Bulma.button.button [ button.isSmall
-                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"; iconClass ] ] ] ] ]
-
         let contextSelector =
             [ Bulma.levelItem [ prop.text "Context:" ]
               Bulma.levelItem [ Bulma.input.text [ input.isSmall

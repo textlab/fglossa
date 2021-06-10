@@ -6,6 +6,7 @@ open Feliz.Bulma
 open Shared.Metadata
 open Model
 open Metadata.Update
+open Common
 
 let fetchedMetadataValues =
     [| { Name = "Adresseavisen"
@@ -46,10 +47,6 @@ let dummyMetadataTableData =
 module SelectionTable =
     [<ReactComponent>]
     let SelectionTablePopup model dispatch =
-        let iconButton iconClass =
-            Bulma.button.button [ button.isSmall
-                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"; iconClass ] ] ] ] ]
-
         let header =
             Bulma.level [ prop.style [ style.padding 20
                                        style.marginBottom 0 ]
