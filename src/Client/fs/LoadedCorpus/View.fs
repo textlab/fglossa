@@ -13,6 +13,7 @@ let topRowButtons =
                     Bulma.button.button [ color.isInfo
                                           prop.text "Reset form" ] ]
 
+
 let searchInterface (search: Search) dispatch =
     let simpleHeading = "Simple"
     let extendedHeading = "Extended"
@@ -68,6 +69,7 @@ let searchInterface (search: Search) dispatch =
                                Bulma.field.div [ Bulma.control.div [ Bulma.input.search [] ] ]
                                Bulma.field.div [ Bulma.control.div [ Bulma.button.button "Or..." ] ] ] ]
 
+
 module CorpusStartPage =
     let corpusNameBox config =
         let logo =
@@ -84,6 +86,7 @@ module CorpusStartPage =
                     corpusNameBox corpus.Config
                     searchInterface search dispatch ]
 
+
 module ResultsPage =
     let tabs model dispatch =
         Bulma.tabs [ prop.style [ style.marginTop 15 ]
@@ -91,6 +94,7 @@ module ResultsPage =
                      prop.children [ Html.ul [ Html.li [ tab.isActive
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
                                                Html.li [ Html.a [ prop.text "Statistics" ] ] ] ] ]
+
 
     let view (model: ShowingResultsModel) (corpus: Corpus) (search: Search) (dispatch: Update.Msg -> unit) =
         let contextSelector =
