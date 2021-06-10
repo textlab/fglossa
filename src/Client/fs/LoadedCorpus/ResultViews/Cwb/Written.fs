@@ -4,6 +4,7 @@ open System.Text.RegularExpressions
 open Feliz
 open Feliz.Bulma
 open Shared
+open Model
 open LoadedCorpus.ResultViews.Cwb.Common
 
 /// Processes a pre-match, match, or post-match field.
@@ -177,12 +178,34 @@ let private singleResultRows
     | [] -> []
 
 
-let concordanceTable (maybeFontFamily: string option) (searchResults: SearchResults) =
+let concordanceTable (corpus: Corpus) (searchResults: SearchResults) =
+    let wordIndex = 0 // word form is always the first attribute
+
+    // We need to increment lemmaIndex and origIndex since the first attribute ('word') is
+    // not in the list because it is shown by default by CQP
+    let maybeLemmaIndex, maybeOrigIndex =
+        match corpus.Config.LanguageConfig with
+        | Monolingual attributes ->
+            let li =
+                attributes
+                |> Array.tryFindIndex (fun (attrCode, _) -> attrCode = "lemma")
+                |> Option.map (fun i -> i + 1)
+
+            let oi =
+                attributes
+                |> Array.tryFindIndex (fun (attrCode, _) -> attrCode = "orig")
+                |> Option.map (fun i -> i + 1)
+
+            (li, oi)
+        | Multilingual _ -> failwith "NOT IMPLEMENTED"
+
     let rows =
         searchResults.Results
         |> Array.toList
         |> List.indexed
-        |> List.collect (fun (index, result) -> singleResultRows 0 None None maybeFontFamily result index)
+        |> List.collect
+            (fun (index, result) ->
+                singleResultRows wordIndex maybeOrigIndex maybeLemmaIndex corpus.Config.FontFamily result index)
 
     Bulma.table [ table.isStriped
                   table.isFullWidth
