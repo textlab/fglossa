@@ -4,17 +4,36 @@ open Elmish
 open Shared
 open Model
 
+type ShowingResultsMsg = SelectResultTab of ResultTab
+
 type Msg =
     | MetadataMsg of Metadata.Update.Msg
+    | ShowingResultsMsg of ShowingResultsMsg
     | SetSearchInterface of SearchInterface
     | Search
     | SearchResultsReceived of SearchResults
+
+
+let showingResultsUpdate (msg: ShowingResultsMsg) (model: ShowingResultsModel) =
+    match msg with
+    | SelectResultTab tab -> { model with ActiveTab = tab }, Cmd.none
+
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
     match msg with
     | MetadataMsg msg' ->
         let model', cmd = Metadata.Update.update msg' model
         model', Cmd.map MetadataMsg cmd
+    | ShowingResultsMsg msg' ->
+        match model.Substate with
+        | ShowingResults showingResultsModel ->
+            let newShowingResultsModel, cmd =
+                showingResultsUpdate msg' showingResultsModel
+
+            { model with
+                  Substate = ShowingResults newShowingResultsModel },
+            Cmd.map ShowingResultsMsg cmd
+        | otherSubstate -> failwith $"Invalid substate for ShowingResultsMsg: {otherSubstate}"
     | SetSearchInterface ``interface`` ->
         { model with
               Search =

@@ -88,15 +88,27 @@ module CorpusStartPage =
 
 
 module ResultsPage =
-    let tabs model dispatch =
+    let tabs (model: ShowingResultsModel) dispatch =
         Bulma.tabs [ prop.style [ style.marginTop 15 ]
-                     tabs.isBoxed
-                     prop.children [ Html.ul [ Html.li [ tab.isActive
+                     tabs.isToggle
+                     tabs.isToggleRounded
+                     prop.children [ Html.ul [ Html.li [ if model.ActiveTab = Concordance then
+                                                             tab.isActive
+                                                         prop.onClick (fun _ -> dispatch (SelectResultTab Concordance))
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
-                                               Html.li [ Html.a [ prop.text "Statistics" ] ] ] ] ]
+                                               Html.li [ if model.ActiveTab = Statistics then
+                                                             tab.isActive
+                                                         prop.onClick (fun _ -> dispatch (SelectResultTab Statistics))
+                                                         prop.children [ Html.a [ prop.text "Statistics" ] ] ] ] ] ]
 
 
-    let view (model: ShowingResultsModel) (corpus: Corpus) (search: Search) (dispatch: Update.Msg -> unit) =
+    let view
+        (model: ShowingResultsModel)
+        (corpus: Corpus)
+        (search: Search)
+        (parentDispatch: Update.Msg -> unit)
+        (dispatch: Update.ShowingResultsMsg -> unit)
+        =
         let contextSelector =
             [ Bulma.levelItem [ prop.text "Context:" ]
               Bulma.levelItem [ Bulma.input.text [ input.isSmall
@@ -132,7 +144,7 @@ module ResultsPage =
             model.IsSearching && model.SearchResults.IsNone
 
         Html.span [ topRowButtons
-                    searchInterface search dispatch
+                    searchInterface search parentDispatch
                     spinnerOverlay shouldShowResultsTableSpinner (Some [ style.top 75 ]) resultsTable ]
 
 
@@ -154,4 +166,5 @@ let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) 
                                                                                        showingResultsModel
                                                                                        model.Corpus
                                                                                        model.Search
-                                                                                       dispatch ] ] ] ] ]
+                                                                                       dispatch
+                                                                                       (dispatch << ShowingResultsMsg) ] ] ] ] ]
