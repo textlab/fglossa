@@ -55,8 +55,44 @@ module ResultsPage =
         (corpus: Corpus)
         (search: Search)
         (parentDispatch: Update.LoadedCorpus.Msg -> unit)
-        (dispatch: Update.LoadedCorpus.ShowingResults.Msg -> unit)
+        (dispatch: ShowingResults.Msg -> unit)
         =
+        let resultsInfo =
+            let text =
+                match model.SearchResults with
+                | Some results ->
+                    if results.Count > 0UL then
+                        // We have received a non-zero number of results
+                        let numPages =
+                            float results.Count
+                            / float model.SearchParams.PageSize
+                            |> ceil
+                            |> int
+
+                        let pagesStr = if numPages = 1 then "page" else "pages"
+
+                        if model.IsSearching then
+                            $"Showing {results.Count} matches ({numPages} {pagesStr}); searching..."
+                        else
+                            $"Found {results.Count} matches ({numPages} pages)"
+                    else
+                        // We have received results, but the count was zero
+                        "No matches found"
+                | None ->
+                    // We have not yet received any results
+                    if model.IsSearching then
+                        "Searching..."
+                    else
+                        ""
+
+            Html.span [ Html.div [ prop.style [ style.position.absolute
+                                                style.top 11
+                                                style.right 0
+                                                style.width 400
+                                                style.textAlign.right
+                                                style.color "#555" ]
+                                   prop.text text ] ]
+
         let contextSelector =
             [ Bulma.levelItem [ prop.text "Context:" ]
               Bulma.levelItem [ Bulma.input.text [ input.isSmall
@@ -66,7 +102,7 @@ module ResultsPage =
 
         let resultsTable =
             [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ tabs model dispatch ] ]
-                            Bulma.levelRight [ Bulma.levelItem [ prop.text "Found xxx matches (xxx pages)" ] ] ]
+                            Bulma.levelRight [ Bulma.levelItem resultsInfo ] ]
               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.buttons [ Bulma.button.button [ prop.text
                                                                                                           "Sort by position" ]
                                                                                 Bulma.button.button [ prop.text

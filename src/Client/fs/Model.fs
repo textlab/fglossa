@@ -16,11 +16,11 @@ type SearchInterface =
 type Search =
     { Interface: SearchInterface
       MetadataSelection: Metadata.Selection
-      Query: string }
+      Params: SearchParams option }
     static member Default =
         { Interface = Simple
           MetadataSelection = Map.empty
-          Query = "" }
+          Params = None }
 
 type Corpus =
     { Config: CorpusConfig
@@ -34,10 +34,12 @@ type ResultTab =
 type ShowingResultsModel =
     { ActiveTab: ResultTab
       IsSearching: bool
+      SearchParams: SearchParams
       SearchResults: SearchResults option }
-    static member Default =
+    static member Init(searchParams) =
         { ActiveTab = Concordance
           IsSearching = true
+          SearchParams = searchParams
           SearchResults = None }
 
 type LoadedCorpusSubstate =

@@ -43,11 +43,21 @@ module LoadedCorpus =
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults
         ///////////////////////////////////////////
-        type Msg = SelectResultTab of ResultTab
+        type Msg =
+            | SelectResultTab of ResultTab
+            | SearchResultsReceived of SearchResults
 
         let update (msg: Msg) (model: ShowingResultsModel) : ShowingResultsModel * Cmd<Msg> =
             match msg with
             | SelectResultTab tab -> { model with ActiveTab = tab }, Cmd.none
+
+            | SearchResultsReceived results ->
+                let newModel =
+                    { model with
+                          IsSearching = false
+                          SearchResults = Some results }
+
+                newModel, Cmd.none
 
 
     ////////////////////////////////
@@ -59,7 +69,6 @@ module LoadedCorpus =
 
         | SetSearchInterface of SearchInterface
         | Search
-        | SearchResultsReceived of SearchResults
 
 
     let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
@@ -92,7 +101,7 @@ module LoadedCorpus =
                   LastCount = None
                   Metadata = None
                   NumRandomHits = None
-                  PageSize = 25
+                  PageSize = 50
                   Queries =
                       [| { LanguageCode = "no"
                            Query = "\"jeg\"" } |]
@@ -103,23 +112,16 @@ module LoadedCorpus =
 
             let newModel =
                 { model with
-                      Substate = ShowingResults ShowingResultsModel.Default }
+                      Substate = ShowingResults(ShowingResultsModel.Init(searchParams)) }
 
             let cmd =
-                Cmd.OfAsync.perform serverApi.searchCorpus searchParams SearchResultsReceived
+                Cmd.OfAsync.perform
+                    serverApi.searchCorpus
+                    searchParams
+                    (ShowingResultsMsg
+                     << ShowingResults.SearchResultsReceived)
 
             newModel, cmd
-
-        | SearchResultsReceived results ->
-            let newModel =
-                { model with
-                      Substate =
-                          ShowingResults
-                              { ShowingResultsModel.Default with
-                                    IsSearching = false
-                                    SearchResults = Some results } }
-
-            newModel, Cmd.none
 
 
 ////////////////////////////////
