@@ -5,7 +5,7 @@ open Feliz
 open Feliz.Bulma
 open Shared.Metadata
 open Model
-open Metadata.Update
+open Update.Metadata
 open Common
 
 let fetchedMetadataValues =
@@ -308,7 +308,7 @@ module MetadataMenu =
                      ]
 
     /// The main view of the metadata menu on the left hand side of the interface
-    let view (model: LoadedCorpusModel) (dispatch: Metadata.Update.Msg -> unit) =
+    let view (model: LoadedCorpusModel) (dispatch: Update.Metadata.Msg -> unit) =
         let sidebarWidth =
             if shouldShowMetadataMenu model then
                 170

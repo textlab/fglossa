@@ -11,14 +11,13 @@
         <Compile Include="../Corpora/corpora/*/Shared/*.fs" />
         <Compile Include="../Corpora/corpora/*/Client.fs" />
         <Compile Include="../Corpora/Client.fs" />
-        <Compile Include="fs/Common.fs" />
         <Compile Include="fs/Metadata/Update.fs" />
+        <Compile Include="fs/Update.fs" />
+        <Compile Include="fs/Common.fs" />
         <Compile Include="fs/Metadata/View.fs" />
-        <Compile Include="fs/LoadedCorpus/Update.fs" />
         <Compile Include="fs/LoadedCorpus/ResultViews/Cwb/Common.fs" />
         <Compile Include="fs/LoadedCorpus/ResultViews/Cwb/Written.fs" />
         <Compile Include="fs/LoadedCorpus/View.fs" />
-        <Compile Include="fs/Update.fs" />
         <Compile Include="fs/View.fs" />
         <Compile Include="fs/App.fs" />
     </ItemGroup>

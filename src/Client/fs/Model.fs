@@ -56,4 +56,3 @@ type LoadedCorpusModel =
 type Model =
     | LoadingCorpus
     | LoadedCorpus of LoadedCorpusModel
-    static member Default = LoadingCorpus

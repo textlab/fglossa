@@ -5,7 +5,7 @@ open Feliz
 open Feliz.Bulma
 open Shared
 open Model
-open LoadedCorpus.Update
+open Update.LoadedCorpus
 open Common
 
 let topRowButtons =
@@ -14,7 +14,7 @@ let topRowButtons =
                                           prop.text "Reset form" ] ]
 
 
-let searchInterface (search: Search) dispatch =
+let searchInterface (search: Search) (dispatch: Msg -> unit) =
     let simpleHeading = "Simple"
     let extendedHeading = "Extended"
     let cqpHeading = "CQP query"
@@ -81,24 +81,28 @@ module CorpusStartPage =
                     prop.children [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.title config.Name ]
                                                                     Bulma.levelItem logo ] ] ] ]
 
-    let view (corpus: Corpus) (search: Search) (dispatch: Update.Msg -> unit) =
+    let view (corpus: Corpus) (search: Search) (dispatch: Update.LoadedCorpus.Msg -> unit) =
         Html.span [ topRowButtons
                     corpusNameBox corpus.Config
                     searchInterface search dispatch ]
 
 
 module ResultsPage =
-    let tabs (model: ShowingResultsModel) dispatch =
+    let tabs (model: ShowingResultsModel) (dispatch: ShowingResults.Msg -> unit) =
         Bulma.tabs [ prop.style [ style.marginTop 15 ]
                      tabs.isToggle
                      tabs.isToggleRounded
                      prop.children [ Html.ul [ Html.li [ if model.ActiveTab = Concordance then
                                                              tab.isActive
-                                                         prop.onClick (fun _ -> dispatch (SelectResultTab Concordance))
+                                                         prop.onClick
+                                                             (fun _ ->
+                                                                 dispatch (ShowingResults.SelectResultTab Concordance))
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
                                                Html.li [ if model.ActiveTab = Statistics then
                                                              tab.isActive
-                                                         prop.onClick (fun _ -> dispatch (SelectResultTab Statistics))
+                                                         prop.onClick
+                                                             (fun _ ->
+                                                                 dispatch (ShowingResults.SelectResultTab Statistics))
                                                          prop.children [ Html.a [ prop.text "Statistics" ] ] ] ] ] ]
 
 
@@ -106,8 +110,8 @@ module ResultsPage =
         (model: ShowingResultsModel)
         (corpus: Corpus)
         (search: Search)
-        (parentDispatch: Update.Msg -> unit)
-        (dispatch: Update.ShowingResultsMsg -> unit)
+        (parentDispatch: Update.LoadedCorpus.Msg -> unit)
+        (dispatch: Update.LoadedCorpus.ShowingResults.Msg -> unit)
         =
         let contextSelector =
             [ Bulma.levelItem [ prop.text "Context:" ]
@@ -148,7 +152,7 @@ module ResultsPage =
                     spinnerOverlay shouldShowResultsTableSpinner (Some [ style.top 75 ]) resultsTable ]
 
 
-let view (model: LoadedCorpusModel) (dispatch: LoadedCorpus.Update.Msg -> unit) =
+let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) =
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
                                 prop.children [ Bulma.columns [ Bulma.column [ column.isNarrow
                                                                                prop.children [ Metadata.View.MetadataMenu.view

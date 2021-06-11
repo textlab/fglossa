@@ -1,4 +1,4 @@
-module Metadata.Update
+module Update.Metadata
 
 open Elmish
 open Shared
