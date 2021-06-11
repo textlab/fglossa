@@ -1,4 +1,4 @@
-module Metadata.View
+module View.Metadata
 
 open Fable.Core.JsInterop
 open Feliz

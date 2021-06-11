@@ -1,11 +1,11 @@
-module LoadedCorpus.ResultViews.Cwb.Written
+module View.LoadedCorpus.ResultViews.Cwb.Written
 
 open System.Text.RegularExpressions
 open Feliz
 open Feliz.Bulma
 open Shared
 open Model
-open LoadedCorpus.ResultViews.Cwb.Common
+open View.LoadedCorpus.ResultViews.Cwb.Common
 
 /// Processes a pre-match, match, or post-match field.
 let private processField displayedAttributeIndex maybeOrigCorrIndex maybeLemmaIndex maybeFontFamily (field: string) =

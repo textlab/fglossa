@@ -1,4 +1,4 @@
-module Index
+module View.Index
 
 open Elmish
 open Shared
@@ -37,4 +37,4 @@ let view (model: Model) (dispatch: Msg -> unit) =
     | LoadingCorpus -> Html.none
     | LoadedCorpus loadedCorpusModel ->
         Html.span [ navbar model dispatch
-                    LoadedCorpus.View.view loadedCorpusModel (LoadedCorpusMsg >> dispatch) ]
+                    LoadedCorpus.view loadedCorpusModel (LoadedCorpusMsg >> dispatch) ]

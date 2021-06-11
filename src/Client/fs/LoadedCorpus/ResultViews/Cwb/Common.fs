@@ -1,4 +1,4 @@
-module LoadedCorpus.ResultViews.Cwb.Common
+module View.LoadedCorpus.ResultViews.Cwb.Common
 
 open System.Text.RegularExpressions
 open Feliz

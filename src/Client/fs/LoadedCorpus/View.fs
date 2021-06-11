@@ -1,4 +1,4 @@
-module LoadedCorpus.View
+module View.LoadedCorpus
 
 open Elmish
 open Feliz
@@ -12,62 +12,6 @@ let topRowButtons =
     Bulma.buttons [ Bulma.button.button [ prop.text "Hide filters" ]
                     Bulma.button.button [ color.isInfo
                                           prop.text "Reset form" ] ]
-
-
-let searchInterface (search: Search) (dispatch: Msg -> unit) =
-    let simpleHeading = "Simple"
-    let extendedHeading = "Extended"
-    let cqpHeading = "CQP query"
-
-    let link title (heading: string) ``interface`` =
-        Html.a [ prop.href "#"
-                 prop.title title
-                 prop.onClick (fun _ -> dispatch (SetSearchInterface ``interface``))
-                 prop.text heading ]
-
-    let simpleLink = link "Simple search box" "Simple" Simple
-
-    let extendedLink =
-        link "Search for grammatical categories etc." "Extended" Extended
-
-    let cqpLink = link "CQP expressions" "CQP query" Cqp
-
-    let separator =
-        Html.span [ prop.style [ style.whitespace.pre ]
-                    prop.text " | " ]
-
-    let links =
-        match search.Interface with
-        | Simple ->
-            [ Html.b simpleHeading
-              separator
-              extendedLink
-              separator
-              cqpLink ]
-        | Extended ->
-            [ simpleLink
-              separator
-              Html.b extendedHeading
-              separator
-              cqpLink ]
-        | Cqp ->
-            [ simpleLink
-              separator
-              extendedLink
-              separator
-              Html.b cqpHeading ]
-
-    Html.div [ prop.style [ style.width 500 ]
-               prop.children [ Bulma.level [ prop.style [ style.paddingTop 20 ]
-                                             prop.children [ Bulma.levelLeft [ Bulma.levelItem links ]
-                                                             Bulma.levelRight [ Bulma.button.button [ color.isSuccess
-                                                                                                      prop.text "Search"
-                                                                                                      prop.onClick
-                                                                                                          (fun _ ->
-                                                                                                              dispatch
-                                                                                                                  Search) ] ] ] ]
-                               Bulma.field.div [ Bulma.control.div [ Bulma.input.search [] ] ]
-                               Bulma.field.div [ Bulma.control.div [ Bulma.button.button "Or..." ] ] ] ]
 
 
 module CorpusStartPage =
@@ -84,7 +28,7 @@ module CorpusStartPage =
     let view (corpus: Corpus) (search: Search) (dispatch: Update.LoadedCorpus.Msg -> unit) =
         Html.span [ topRowButtons
                     corpusNameBox corpus.Config
-                    searchInterface search dispatch ]
+                    View.SearchInterface.view search dispatch ]
 
 
 module ResultsPage =
@@ -141,21 +85,21 @@ module ResultsPage =
                                                Bulma.levelItem [ Bulma.buttons [ iconButton "fa-angle-right"
                                                                                  iconButton "fa-angle-double-right" ] ] ] ]
               match model.SearchResults with
-              | Some results -> ResultViews.Cwb.Written.concordanceTable corpus results
+              | Some results -> LoadedCorpus.ResultViews.Cwb.Written.concordanceTable corpus results
               | None -> Html.none ]
 
         let shouldShowResultsTableSpinner =
             model.IsSearching && model.SearchResults.IsNone
 
         Html.span [ topRowButtons
-                    searchInterface search parentDispatch
+                    SearchInterface.view search parentDispatch
                     spinnerOverlay shouldShowResultsTableSpinner (Some [ style.top 75 ]) resultsTable ]
 
 
 let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) =
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
                                 prop.children [ Bulma.columns [ Bulma.column [ column.isNarrow
-                                                                               prop.children [ Metadata.View.MetadataMenu.view
+                                                                               prop.children [ Metadata.MetadataMenu.view
                                                                                                    model
                                                                                                    (MetadataMsg
                                                                                                     >> dispatch) ] ]
