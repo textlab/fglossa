@@ -54,8 +54,12 @@ module SelectionTable =
                                                                                   "All 123 texts (123,456,789 tokens) selected" ] ]
                                           Bulma.levelRight [ Bulma.levelItem [ Bulma.buttons [ iconButton
                                                                                                    "fa-angle-double-left"
+                                                                                                   false
+                                                                                                   (fun e -> ())
                                                                                                iconButton
-                                                                                                   "fa-angle-left" ] ]
+                                                                                                   "fa-angle-left"
+                                                                                                   false
+                                                                                                   (fun e -> ()) ] ]
                                                              Bulma.levelItem [ Bulma.input.number [ input.isSmall
                                                                                                     prop.style [ style.width
                                                                                                                      60
@@ -69,8 +73,12 @@ module SelectionTable =
                                                                                                                 }") ] ]
                                                              Bulma.levelItem [ Bulma.buttons [ iconButton
                                                                                                    "fa-angle-right"
+                                                                                                   false
+                                                                                                   (fun e -> ())
                                                                                                iconButton
-                                                                                                   "fa-angle-double-right" ] ]
+                                                                                                   "fa-angle-double-right"
+                                                                                                   false
+                                                                                                   (fun e -> ()) ] ]
                                                              Bulma.levelItem [ Bulma.delete [ delete.isMedium
                                                                                               prop.title "Close"
                                                                                               prop.style [ style.marginLeft
@@ -131,7 +139,7 @@ module MetadataMenu =
                 // window is narrow; if instead we are showing the start page, we show the metadata
                 // regardless of window size.
                 match model.Substate with
-                | CorpusStartPage -> true
+                | CorpusStart -> true
                 | ShowingResults _ -> not model.IsNarrowWindow
 
     let FixedSizeList : obj = importMember "react-window"

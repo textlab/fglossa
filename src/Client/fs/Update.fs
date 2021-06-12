@@ -31,7 +31,7 @@ module LoadingCorpus =
                   OpenMetadataCategoryCode = None
                   Search = Search.Default
                   ShouldShowMetadataMenu = None
-                  Substate = CorpusStartPage }
+                  Substate = CorpusStart }
 
             LoadedCorpus m, Cmd.none
 

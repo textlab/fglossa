@@ -3,8 +3,10 @@ module Common
 open Feliz
 open Feliz.Bulma
 
-let iconButton iconClass =
+let iconButton iconClass isDisabled onClick =
     Bulma.button.button [ button.isSmall
+                          prop.disabled isDisabled
+                          prop.onClick onClick
                           prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"; iconClass ] ] ] ] ]
 
 

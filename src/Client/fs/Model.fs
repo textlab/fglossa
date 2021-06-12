@@ -27,23 +27,32 @@ type Corpus =
       MetadataMenu: Metadata.MenuItem list
       MetadataTable: Metadata.Category list }
 
+type ConcordanceModel =
+    { PaginatorPageNo: int
+      ResultPages: Map<int, SearchResult []> }
+    static member Default =
+        { PaginatorPageNo = 1
+          ResultPages = Map.empty }
+
 type ResultTab =
-    | Concordance
+    | Concordance of ConcordanceModel
     | Statistics
 
 type ShowingResultsModel =
     { ActiveTab: ResultTab
       IsSearching: bool
+      FetchingPages: int [] option
       SearchParams: SearchParams
       SearchResults: SearchResults option }
     static member Init(searchParams) =
-        { ActiveTab = Concordance
+        { ActiveTab = Concordance ConcordanceModel.Default
+          FetchingPages = None
           IsSearching = true
           SearchParams = searchParams
           SearchResults = None }
 
 type LoadedCorpusSubstate =
-    | CorpusStartPage
+    | CorpusStart
     | ShowingResults of ShowingResultsModel
 
 type LoadedCorpusModel =
