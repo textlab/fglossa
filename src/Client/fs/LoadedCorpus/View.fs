@@ -134,13 +134,25 @@ module ResultsView =
                         else
                             ""
 
-                Html.span [ Html.div [ prop.style [ style.position.absolute
-                                                    style.top 11
-                                                    style.right 0
-                                                    style.width 400
+                // Only show the spinner when we are fetching result pages or when we are searching
+                // AND have already found some results so as to avoid showing spinners both here and
+                // over the result table at the same time (since we show a spinner over the result
+                // table until we have found some results)
+                let shouldShowSpnner =
+                    model.FetchingPages.IsSome
+                    || (model.IsSearching
+                        && concordanceModel.ResultPages.Count > 0)
+
+                Html.span [ Html.div [ prop.style [ style.width 400
                                                     style.textAlign.right
                                                     style.color "#555" ]
-                                       prop.text text ] ]
+                                       prop.text text ]
+                            Html.div [ prop.style [ style.position.absolute
+                                                    style.top 10
+                                                    style.left 350 ]
+                                       prop.children (
+                                           spinnerOverlay shouldShowSpnner (Some [ style.width 40; style.height 40 ]) []
+                                       ) ] ]
 
             let contextSelector =
                 [ Bulma.levelItem [ prop.text "Context:" ]
@@ -152,8 +164,8 @@ module ResultsView =
             [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.buttons [ Bulma.button.button [ prop.text
                                                                                                           "Sort by position" ]
                                                                                 Bulma.button.button [ prop.text
-                                                                                                          "Download" ] ] ] ]
-                            Bulma.levelLeft [ Bulma.levelItem resultsInfo ]
+                                                                                                          "Download" ] ] ]
+                                              Bulma.levelItem resultsInfo ]
                             Bulma.levelRight [ if corpus.Config.Modality <> Spoken then
                                                    yield! contextSelector
                                                yield! pagination model concordanceModel numPages dispatch ] ]
