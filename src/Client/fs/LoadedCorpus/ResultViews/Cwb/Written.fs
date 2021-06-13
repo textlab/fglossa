@@ -173,7 +173,7 @@ let private singleResultRows
             otherLines
             |> List.map (nonFirstMultilingualRow maybeOrigCorrIndex maybeLemmaIndex index maybeFontFamily)
 
-        [ mainTableRow ] @ otherTableRows
+        mainTableRow :: otherTableRows
 
     | [] -> []
 

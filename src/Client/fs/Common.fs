@@ -37,7 +37,7 @@ let spinnerOverlay (spin: bool) maybeStyles children =
                                                       | None -> ignore None
                                                       prop.text "Loading..." ] ] ]
 
-            [ spinner ] @ children
+            spinner :: children
         else
             children
 
