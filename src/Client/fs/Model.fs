@@ -28,10 +28,24 @@ type Corpus =
       MetadataTable: Metadata.Category list }
 
 type ConcordanceModel =
-    { PaginatorPageNo: int
+    { // The page numbers of the result pages currently being fetched from the server
+      PagesBeingFetched: int []
+      PageSize: int
+      // The page number shown in the paginator, which may differ from the actual
+      // result page being shown until a the page has been fetched from the server
+      PaginatorPageNo: int
+      // The text in the paginator input box, which may differ from the paginator page number
+      // while the user is editing the text
+      PaginatorTextValue: string
+      // The nmber of the result page actually being shown at the moment
+      ResultPageNo: int
       ResultPages: Map<int, SearchResult []> }
     static member Default =
-        { PaginatorPageNo = 1
+        { PagesBeingFetched = [||]
+          PageSize = 50
+          PaginatorPageNo = 1
+          PaginatorTextValue = ""
+          ResultPageNo = 1
           ResultPages = Map.empty }
 
 type ResultTab =
@@ -41,12 +55,13 @@ type ResultTab =
 type ShowingResultsModel =
     { ActiveTab: ResultTab
       IsSearching: bool
-      FetchingPages: int [] option
       SearchParams: SearchParams
       SearchResults: SearchResults option }
-    static member Init(searchParams) =
-        { ActiveTab = Concordance ConcordanceModel.Default
-          FetchingPages = None
+    static member Init((searchParams: SearchParams)) =
+        { ActiveTab =
+              Concordance
+                  { ConcordanceModel.Default with
+                        PageSize = searchParams.PageSize }
           IsSearching = true
           SearchParams = searchParams
           SearchResults = None }

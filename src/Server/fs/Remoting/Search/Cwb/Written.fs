@@ -110,7 +110,8 @@ let private cqpInit
 
 let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (maybeCommand: string option) =
     async {
-        let numToReturn = searchParams.PageSize * 2 // number of results to return initially
+        let numToReturn =
+            searchParams.End - searchParams.Start + 1UL // number of results to return initially
 
         let cwbCorpus =
             (cwbCorpusName corpus searchParams.Queries)
@@ -154,9 +155,9 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
                                 // If we got a LastCount value, it means this is not the first request of
                                 // this search.  In that case, we check to see if the previous request(s) managed to fill
                                 // those two pages, and if not we return results in order to keep filling them.
-                                | None -> $"cat {namedQuery} 0 {numToReturn - 1}"
-                                | Some lastCount when lastCount < (uint64 numToReturn) ->
-                                    $"cat {namedQuery} 0 {numToReturn - 1}"
+                                | None -> $"cat {namedQuery} {searchParams.Start} {searchParams.End}"
+                                | Some lastCount when lastCount < numToReturn ->
+                                    $"cat {namedQuery} {searchParams.Start} {searchParams.End}"
                                 | _ -> ""
 
                         [ yield! cqpInit corpus searchParams None namedQuery cqpInitCommands
@@ -170,18 +171,20 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
 
             let numToTake =
                 match searchParams.LastCount with
-                | Some lastCount when lastCount < (uint64 numToReturn) ->
-                    // Since numToReturn is an int (i.e., int32) and we now know that lastCount is smaller, converting
-                    // lastCount from uint64 to int should not be risky
-                    numToReturn - (int lastCount)
+                | Some lastCount when lastCount < numToReturn ->
+                    // If we have already fetched a number of hits, but fewer than numToReturn, return any hits we may
+                    // have found up to the numToReturn limit
+                    numToReturn - lastCount
                 | Some _ ->
                     // If the number of hits we have fetched so far (lastCount) is already bigger than or equal to numToReturn,
                     // we don't need to return any more hits
-                    0
+                    0UL
                 | None ->
                     // If there is no last count, it means that this is the first request of this search, so return
                     // numToReturn hits
                     numToReturn
+                // We know that numToTake will be a small number, so converting to int32 should be OK
+                |> int
 
             let hits =
                 results
@@ -209,7 +212,9 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
 
                     {| Count = count - nExtra
                        CpuCounts = cpuCounts
-                       Hits = hits |> Array.truncate (numToReturn - int nExtra) |}
+                       Hits =
+                           hits
+                           |> Array.truncate (int (numToReturn - nExtra)) |}
                 | _ ->
                     {| Count = count
                        CpuCounts = cpuCounts

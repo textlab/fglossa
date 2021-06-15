@@ -38,9 +38,10 @@ module ResultsView =
             (model: ShowingResultsModel)
             (concordanceModel: ConcordanceModel)
             (numPages: int)
-            (dispatch: ShowingResults.Msg -> unit)
+            (dispatch: ShowingResults.Concordance.Msg -> unit)
             =
-            let isFetching = model.FetchingPages.IsSome
+            let isFetching =
+                concordanceModel.PagesBeingFetched.Length > 0
 
             let setPage (e: Browser.Types.MouseEvent) (pageNo: int) =
                 e.preventDefault ()
@@ -51,18 +52,7 @@ module ResultsView =
                 if not isFetching
                    && pageNo >= 1
                    && pageNo <= numPages then
-                    // Set the value of the page number shown in the paginator; it may
-                    // differ from the page shown in the result table until we have
-                    // actually fetched the data from the server
-                    let newPaginatorPageNo = pageNo
-                    let newTextVal = string pageNo
-
-                    // if concordanceModel.ResultPages.ContainsKey(pageNo) then
-                    //     // If the selected result page has already been fetched from the
-                    //     // server, it can be shown in the result table immediately
-                    //     dispatch (ShowPageImmediately pageNo)
-                    // TODO!!!!
-                    ()
+                    dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage pageNo)
 
             match model.SearchResults with
             | Some results when results.Count > uint64 model.SearchParams.PageSize ->
@@ -99,9 +89,7 @@ module ResultsView =
             (model: ShowingResultsModel)
             (concordanceModel: ConcordanceModel)
             (corpus: Corpus)
-            (search: Search)
-            (parentDispatch: Update.LoadedCorpus.Msg -> unit)
-            (dispatch: ShowingResults.Msg -> unit)
+            (dispatch: ShowingResults.Concordance.Msg -> unit)
             =
             let numPages =
                 match model.SearchResults with
@@ -139,7 +127,7 @@ module ResultsView =
                 // over the result table at the same time (since we show a spinner over the result
                 // table until we have found some results)
                 let shouldShowSpnner =
-                    model.FetchingPages.IsSome
+                    concordanceModel.PagesBeingFetched.Length > 0
                     || (model.IsSearching
                         && concordanceModel.ResultPages.Count > 0)
 
@@ -208,7 +196,7 @@ module ResultsView =
             [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ tabs model dispatch ] ] ]
               match model.ActiveTab with
               | Concordance concordanceModel ->
-                  yield! Concordance.view model concordanceModel corpus search parentDispatch dispatch
+                  yield! Concordance.view model concordanceModel corpus (ShowingResults.ConcordanceMsg >> dispatch)
               | Statistics -> failwith "NOT IMPLEMENTED" ]
 
         let shouldShowResultsTableSpinner =
@@ -241,4 +229,4 @@ let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) 
                                                                                        model.Corpus
                                                                                        model.Search
                                                                                        dispatch
-                                                                                       (dispatch << ShowingResultsMsg) ] ] ] ] ]
+                                                                                       (ShowingResultsMsg >> dispatch) ] ] ] ] ]

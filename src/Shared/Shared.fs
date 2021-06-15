@@ -127,6 +127,7 @@ type SortKey =
 type SearchParams =
     { ContextSize: int
       CorpusCode: string
+      End: uint64
       LastCount: uint64 option
       Metadata: string option
       NumRandomHits: uint64 option
@@ -135,6 +136,7 @@ type SearchParams =
       RandomHitsSeed: int option
       SearchId: int
       SortKey: SortKey
+      Start: uint64
       Step: int }
 
 type SearchResult =

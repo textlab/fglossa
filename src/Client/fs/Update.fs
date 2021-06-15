@@ -40,15 +40,109 @@ module LoadedCorpus =
 
     module ShowingResults =
 
+        module Concordance =
+            //////////////////////////////////////////////////
+            // Update.LoadedCorpus.ShowingResults.Concordance
+            //////////////////////////////////////////////////
+            type Msg =
+                | FetchResultWindow of int
+                | SetPaginatorPage of int
+
+            let update (msg: Msg) (model: ConcordanceModel) : ConcordanceModel * Cmd<Msg> =
+                match msg with
+                // Fetch a window of search result pages centred on centrePageNo. Ignores pages that have
+                // already been fetched or that are currently being fetched in another request (note that such
+                // pages can only be located at the edges of the window, and not as 'holes' within the window,
+                // since they must have been fetched as part of an earlier window).
+                | FetchResultWindow centrePageNo ->
+                    // Make sure the edges of the window are between 1 and the last page number
+                    let startPage = max (centrePageNo - 1) 1
+
+                    let endPage =
+                        min (centrePageNo + 1) model.ResultPages.Count
+
+                    let pageNumbers =
+                        [| startPage .. endPage |]
+                        // Ignore pages currently being fetched by another request
+                        |> Array.filter
+                            (fun page ->
+                                model.PagesBeingFetched
+                                |> Array.contains page
+                                |> not)
+                        // Ignore pages that have already been fetched
+                        |> Array.filter (fun page -> model.ResultPages |> Map.containsKey page |> not)
+                        // Create a new sequence to make sure we didn't create any "holes" in
+                        // it (although that should not really happen in practice since we
+                        // always fetch whole windows of pages)
+                        |> fun pageNos ->
+                            if Array.isEmpty pageNos then
+                                pageNos
+                            else
+                                [| (Array.head pageNos) .. (Array.last pageNos) |]
+
+                    if Array.isEmpty pageNumbers then
+                        // All pages are either being fetched or already fetched, so there is nothing to do
+                        model, Cmd.none
+                    else
+                        // Calculate the first and last result index (zero-based) to request from the server
+                        let firstResult = (pageNumbers.[0] - 1) * model.PageSize
+
+                        let lastResult =
+                            ((pageNumbers |> Array.last) * model.PageSize) - 1
+
+                        { model with
+                              // Register the pages as being fetched
+                              PagesBeingFetched = Array.append model.PagesBeingFetched pageNumbers },
+                        Cmd.none
+
+                | SetPaginatorPage pageNo ->
+                    let newModel =
+                        { model with
+                              // Set the value of the page number shown in the paginator; it may
+                              // differ from the page shown in the result table until we have
+                              // actually fetched the data from the server
+                              PaginatorPageNo = pageNo
+                              PaginatorTextValue = string pageNo
+                              ResultPageNo =
+                                  if model.ResultPages.ContainsKey(pageNo) then
+                                      // If the newly selected result page has already been fetched from the
+                                      // server, it can be shown in the result table immediately
+                                      pageNo
+                                  else
+                                      // Otherwise, we need to wait until the results from the server
+                                      // arrive before changing the page to be shown in the result
+                                      // table
+                                      model.PaginatorPageNo }
+
+                    let cmd =
+                        // If necessary, fetch any result pages in a window centred
+                        // around the selected page in order to speed up pagination
+                        // to nearby pages. No need to wait for it to finish though.
+                        Cmd.ofMsg (FetchResultWindow pageNo)
+
+                    newModel, cmd
+
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults
         ///////////////////////////////////////////
         type Msg =
+            | ConcordanceMsg of Concordance.Msg
+
             | SelectResultTab of ResultTab
             | SearchResultsReceived of SearchResults
 
         let update (msg: Msg) (model: ShowingResultsModel) : ShowingResultsModel * Cmd<Msg> =
             match msg with
+            | ConcordanceMsg msg' ->
+                match model.ActiveTab with
+                | Concordance m ->
+                    let newM, cmd = Concordance.update msg' m
+
+                    { model with
+                          ActiveTab = Concordance newM },
+                    Cmd.map ConcordanceMsg cmd
+                | otherSubstate -> failwith $"Invalid substate for ConcordanceMsg: {otherSubstate}"
+
             | SelectResultTab tab -> { model with ActiveTab = tab }, Cmd.none
 
             | SearchResultsReceived results ->
@@ -98,6 +192,7 @@ module LoadedCorpus =
             let searchParams =
                 { ContextSize = 15
                   CorpusCode = "bokmal"
+                  End = 99UL
                   LastCount = None
                   Metadata = None
                   NumRandomHits = None
@@ -108,6 +203,7 @@ module LoadedCorpus =
                   RandomHitsSeed = None
                   SearchId = 0
                   SortKey = Position
+                  Start = 0UL
                   Step = 1 }
 
             let newModel =
