@@ -3,6 +3,28 @@ module Update
 open Elmish
 open Shared
 open Model
+open Shared.StringUtils
+
+let cleanupResult (result: SearchResult) =
+    let cleanLines =
+        result.Text
+        |> List.map
+            (fun line ->
+                line
+                // Remove the beginning of the search result, which will be a position
+                // number in the case of a monolingual result or the first language of a
+                // multilingual result, or an arrow in the case of subsequent languages
+                // in a multilingual result.
+                |> replace "^\s*\d+:\s*" ""
+                |> replace "^-->.+?:\s*" ""
+                // When the match includes the first or last token of the s unit, the XML
+                // tag surrounding the s unit is included inside the match braces (this
+                // should probably be considered a bug in CQP). We need to fix that.
+                |> replace "\{\{(<s_id\s+.+?>)" "$1{{"
+                |> replace "(</s_id>)\}\}" "}}$1"
+                |> replace "&nbsp;" "_")
+
+    { result with Text = cleanLines }
 
 module LoadingCorpus =
 
@@ -46,6 +68,7 @@ module LoadedCorpus =
             //////////////////////////////////////////////////
             type Msg =
                 | FetchResultWindow of int
+                | FetchedResultWindow of SearchResultPage []
                 | SetPaginatorPage of int
 
             let update (msg: Msg) (model: ConcordanceModel) : ConcordanceModel * Cmd<Msg> =
@@ -85,15 +108,57 @@ module LoadedCorpus =
                         model, Cmd.none
                     else
                         // Calculate the first and last result index (zero-based) to request from the server
-                        let firstResult = (pageNumbers.[0] - 1) * model.PageSize
+                        let firstResult =
+                            (pageNumbers.[0] - 1)
+                            * model.SearchParams.PageSize
+                            |> uint64
 
                         let lastResult =
-                            ((pageNumbers |> Array.last) * model.PageSize) - 1
+                            ((pageNumbers |> Array.last)
+                             * model.SearchParams.PageSize)
+                            - 1
+                            |> uint64
 
+                        let searchParams =
+                            { model.SearchParams with
+                                  Start = firstResult
+                                  End = lastResult }
+
+                        let newModel =
+                            { model with
+                                  // Register the pages as being fetched
+                                  PagesBeingFetched = Array.append model.PagesBeingFetched pageNumbers }
+
+                        let cmd =
+                            Cmd.OfAsync.perform serverApi.getSearchResults searchParams FetchedResultWindow
+
+                        newModel, cmd
+
+                | FetchedResultWindow results ->
+                    // TODO: Check if we get a 401 Unauthorized
+
+                    let fetchedPages =
+                        results |> Array.map (fun page -> page.PageNumber)
+
+                    // Remove the fetched pages from the set of pages currently being fetched...
+                    let pagesBeingFetched =
+                        model.PagesBeingFetched
+                        |> Array.except fetchedPages
+
+                    // ...and add them to the map of fetched pages
+                    let resultPages =
+                        results
+                        |> Array.fold
+                            (fun (pageMap: Map<int, SearchResult []>) result ->
+                                pageMap.Add(result.PageNumber, result.Results |> Array.map cleanupResult))
+                            model.ResultPages
+
+                    let newModel =
                         { model with
-                              // Register the pages as being fetched
-                              PagesBeingFetched = Array.append model.PagesBeingFetched pageNumbers },
-                        Cmd.none
+                              PagesBeingFetched = pagesBeingFetched
+                              ResultPages = resultPages }
+
+                    newModel, Cmd.none
 
                 | SetPaginatorPage pageNo ->
                     let newModel =
@@ -129,7 +194,7 @@ module LoadedCorpus =
             | ConcordanceMsg of Concordance.Msg
 
             | SelectResultTab of ResultTab
-            | SearchResultsReceived of SearchResults
+            | SearchResultsReceived of SearchResultInfo
 
         let update (msg: Msg) (model: ShowingResultsModel) : ShowingResultsModel * Cmd<Msg> =
             match msg with
@@ -149,7 +214,10 @@ module LoadedCorpus =
                 let newModel =
                     { model with
                           IsSearching = false
-                          SearchResults = Some results }
+                          SearchResults =
+                              Some
+                                  { results with
+                                        Results = results.Results |> Array.map cleanupResult } }
 
                 newModel, Cmd.none
 

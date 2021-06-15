@@ -19,6 +19,7 @@ let createServerApi ctx =
     { getCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
       getCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
       getMetadataForCategory = fun (code, selection) -> async { return "", [||] }
+      getSearchResults = fun searchParams -> Remoting.Search.Core.getSearchResults connStr logger searchParams
       searchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =

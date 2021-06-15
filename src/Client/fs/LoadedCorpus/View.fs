@@ -177,7 +177,9 @@ module ResultsView =
                                                              (fun _ ->
                                                                  dispatch (
                                                                      ShowingResults.SelectResultTab(
-                                                                         Concordance ConcordanceModel.Default
+                                                                         Concordance(
+                                                                             ConcordanceModel.Init(model.SearchParams)
+                                                                         )
                                                                      )
                                                                  ))
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]

@@ -144,10 +144,14 @@ type SearchResult =
       HasVideo: bool
       Text: string list }
 
-type SearchResults =
+type SearchResultInfo =
     { Count: uint64
       CpuCounts: uint64 []
       SearchId: int
+      Results: SearchResult [] }
+
+type SearchResultPage =
+    { PageNumber: int
       Results: SearchResult [] }
 
 module Route =
@@ -158,4 +162,5 @@ type IServerApi =
     { getCorpusConfig: string -> Async<CorpusConfig>
       getCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
       getMetadataForCategory: string * Metadata.Selection -> Async<string * string []>
-      searchCorpus: SearchParams -> Async<SearchResults> }
+      getSearchResults: SearchParams -> Async<SearchResultPage []>
+      searchCorpus: SearchParams -> Async<SearchResultInfo> }

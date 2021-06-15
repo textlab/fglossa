@@ -8,6 +8,16 @@ open ServerTypes
 open Shared
 open Database
 
+let getSearchResults (connStr: string) (logger: ILogger) (searchParams: SearchParams) (corpus: Corpus) =
+    async {
+        return
+            [| { PageNumber = 1
+                 Results =
+                     [| { HasAudio = false
+                          HasVideo = false
+                          Text = [] } |] } |]
+    }
+
 // If the number of running CQP processes exceeds this number, we do not allow a new
 // search in a corpus that does parallel search using all cpus to be started.
 let maxCqpProcesses = 8

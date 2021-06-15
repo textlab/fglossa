@@ -97,7 +97,7 @@ let private extractFields resultText =
         Regex
             .Match(
                 resultText,
-                "<s_id\s+(.*?)>:\s+(.*)\{\{(.+?)\}\}(.*?)$"
+                "^<s_id\s+(.*?)>:\s+(.*)\{\{(.+?)\}\}(.*?)$"
             )
             .Groups
 
@@ -178,7 +178,7 @@ let private singleResultRows
     | [] -> []
 
 
-let concordanceTable (corpus: Corpus) (searchResults: SearchResults) =
+let concordanceTable (corpus: Corpus) (searchResults: SearchResultInfo) =
     let wordIndex = 0 // word form is always the first attribute
 
     // We need to increment lemmaIndex and origIndex since the first attribute ('word') is
