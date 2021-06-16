@@ -232,7 +232,7 @@ module LoadedCorpus =
         | ShowingResultsMsg of ShowingResults.Msg
 
         | SetSearchInterface of SearchInterface
-        | SetQueryText of string
+        | SetQueryText of query: string * hasFinalSpace: bool
         | Search
 
 
@@ -259,10 +259,13 @@ module LoadedCorpus =
                             Interface = ``interface`` } },
             Cmd.none
 
-        | SetQueryText text ->
+        | SetQueryText (text, hasFinalSpace) ->
             let newSearchParams =
                 { model.Search.Params with
-                      Queries = [| { LanguageCode = ""; Query = text } |] }
+                      Queries =
+                          [| { HasFinalSpace = hasFinalSpace
+                               LanguageCode = ""
+                               Query = text } |] }
 
             let newModel =
                 { model with

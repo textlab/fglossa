@@ -116,7 +116,10 @@ type CorpusConfig =
 type CorpusCode = string
 type CorpusName = string
 
-type Query = { LanguageCode: string; Query: string }
+type Query =
+    { HasFinalSpace: bool
+      LanguageCode: string
+      Query: string }
 
 type SortKey =
     | Position

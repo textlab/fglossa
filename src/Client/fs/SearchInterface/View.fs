@@ -1,5 +1,6 @@
 module View.SearchInterface
 
+open System.Text.RegularExpressions
 open Feliz
 open Feliz.Bulma
 open Model
@@ -48,21 +49,41 @@ let view (search: Search) (dispatch: Msg -> unit) =
               separator
               Html.b cqpHeading ]
 
-    let inputValue =
+    let queryText =
         match search.Interface with
         | Simple ->
             search.Params.Queries
             |> Array.tryHead
-            |> Option.map (fun query -> query.Query)
+            |> Option.map
+                (fun query ->
+                    [ for m in Regex.Matches(query.Query, "word=\"(.+?)\"") -> m.Groups.[1].Value ]
+                    |> String.concat " "
+                    |> fun text ->
+                        if query.HasFinalSpace then
+                            text + " "
+                        else
+                            text)
             |> Option.defaultValue ""
         | Extended -> ""
         | Cqp -> ""
 
-    let convertQuery value =
+    let textInputToQuery (inputValue: string) =
         match search.Interface with
-        | Simple -> $"[word=\"{value}\" %%c]"
-        | Extended -> $"[word=\"{value}\" %%c]"
-        | Cqp -> value
+        | Simple ->
+            let query =
+                Regex.Split(inputValue.Trim(), "\s+")
+                |> Array.map
+                    (fun token ->
+                        // We need to use sprintf instead of string interpolation here
+                        // because the latter actually outputs the extra percentage sign
+                        // that is needed to escape the one in '%c'.
+                        sprintf "[word=\"%s\" %%c]" token)
+                |> String.concat " "
+
+            let hasFinalSpace = Regex.IsMatch(inputValue, "\s+$")
+            (query, hasFinalSpace)
+        | Extended -> (sprintf "[word=\"%s\" %%c]" inputValue, false)
+        | Cqp -> (inputValue, false)
 
     Html.div [ prop.style [ style.width 500 ]
                prop.children [ Bulma.level [ prop.style [ style.paddingTop 20 ]
@@ -73,12 +94,13 @@ let view (search: Search) (dispatch: Msg -> unit) =
                                                                                                           (fun _ ->
                                                                                                               dispatch
                                                                                                                   Search) ] ] ] ]
-                               Bulma.field.div [ Bulma.control.div [ Bulma.input.search [ prop.value inputValue
+                               Bulma.field.div [ Bulma.control.div [ Bulma.input.search [ prop.value queryText
                                                                                           prop.onChange
                                                                                               (fun (v: string) ->
                                                                                                   dispatch (
                                                                                                       SetQueryText(
-                                                                                                          convertQuery v
+                                                                                                          textInputToQuery
+                                                                                                              v
                                                                                                       )
                                                                                                   )) ] ] ]
                                Bulma.field.div [ Bulma.control.div [ Bulma.button.button "Or..." ] ] ] ]
