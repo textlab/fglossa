@@ -138,6 +138,20 @@ type SearchParams =
       SortKey: SortKey
       Start: uint64
       Step: int }
+    static member Init(corpusCode) =
+        { ContextSize = 15
+          CorpusCode = corpusCode
+          End = 99UL
+          LastCount = None
+          Metadata = None
+          NumRandomHits = None
+          PageSize = 50
+          Queries = [||]
+          RandomHitsSeed = None
+          SearchId = 0
+          SortKey = Position
+          Start = 0UL
+          Step = 1 }
 
 type SearchResult =
     { HasAudio: bool

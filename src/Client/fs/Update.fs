@@ -1,5 +1,7 @@
 module Update
 
+open System
+open System.Text.RegularExpressions
 open Elmish
 open Shared
 open Model
@@ -51,7 +53,7 @@ module LoadingCorpus =
                   IsNarrowWindow = false
                   IsShowSelectionOpen = false
                   OpenMetadataCategoryCode = None
-                  Search = Search.Default
+                  Search = Search.Init(corpus.Config.Code)
                   ShouldShowMetadataMenu = None
                   Substate = CorpusStart }
 
@@ -230,6 +232,7 @@ module LoadedCorpus =
         | ShowingResultsMsg of ShowingResults.Msg
 
         | SetSearchInterface of SearchInterface
+        | SetQueryText of string
         | Search
 
 
@@ -256,23 +259,64 @@ module LoadedCorpus =
                             Interface = ``interface`` } },
             Cmd.none
 
+        | SetQueryText text ->
+            let newSearchParams =
+                { model.Search.Params with
+                      Queries = [| { LanguageCode = ""; Query = text } |] }
+
+            let newModel =
+                { model with
+                      Search =
+                          { model.Search with
+                                Params = newSearchParams } }
+
+            newModel, Cmd.none
+
         | Search ->
+            // Do three search steps only if multicpu_bounds is defined for this corpus
+            let numSteps =
+                if model.Corpus.Config.MultiCpuBounds.IsSome then
+                    3
+                else
+                    1
+
+            // If we have a blank query, don't do the search
+            let shouldSearch =
+                let firstQuery =
+                    model.Search.Params.Queries
+                    |> Array.tryHead
+                    |> Option.map (fun query -> query.Query.Trim())
+
+                match firstQuery with
+                | None -> false
+                | Some query ->
+                    if
+                        String.IsNullOrWhiteSpace(query) || query = "\"\""
+                        // Check for one or more empty terms possibly separated by intervals
+                        || Regex.IsMatch
+                            (
+                                query,
+                                "\[\](\s*\[\](\{\d*,\d*\})?)*"
+                            )
+                    then
+                        false
+                    else
+                        true
+
+            // TODO: Implement cancellation of searches. In the Clojure version, we simply cancel
+            // any HTTP request which is already running when we start a new search, but what we
+            // should do instead is to cancel the actual search that is running on the server.
+
+            let queries =
+                model.Search.Params.Queries
+                |> Array.map
+                    (fun query ->
+                        { query with
+                              Query = query.Query |> replace "\"__QUOTE__\"" "'\"'" })
+
             let searchParams =
-                { ContextSize = 15
-                  CorpusCode = "bokmal"
-                  End = 99UL
-                  LastCount = None
-                  Metadata = None
-                  NumRandomHits = None
-                  PageSize = 50
-                  Queries =
-                      [| { LanguageCode = "no"
-                           Query = "\"jeg\"" } |]
-                  RandomHitsSeed = None
-                  SearchId = 0
-                  SortKey = Position
-                  Start = 0UL
-                  Step = 1 }
+                { model.Search.Params with
+                      Queries = queries }
 
             let newModel =
                 { model with

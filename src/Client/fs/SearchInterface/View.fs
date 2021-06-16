@@ -48,6 +48,22 @@ let view (search: Search) (dispatch: Msg -> unit) =
               separator
               Html.b cqpHeading ]
 
+    let inputValue =
+        match search.Interface with
+        | Simple ->
+            search.Params.Queries
+            |> Array.tryHead
+            |> Option.map (fun query -> query.Query)
+            |> Option.defaultValue ""
+        | Extended -> ""
+        | Cqp -> ""
+
+    let convertQuery value =
+        match search.Interface with
+        | Simple -> $"[word=\"{value}\" %%c]"
+        | Extended -> $"[word=\"{value}\" %%c]"
+        | Cqp -> value
+
     Html.div [ prop.style [ style.width 500 ]
                prop.children [ Bulma.level [ prop.style [ style.paddingTop 20 ]
                                              prop.children [ Bulma.levelLeft [ Bulma.levelItem links ]
@@ -57,5 +73,12 @@ let view (search: Search) (dispatch: Msg -> unit) =
                                                                                                           (fun _ ->
                                                                                                               dispatch
                                                                                                                   Search) ] ] ] ]
-                               Bulma.field.div [ Bulma.control.div [ Bulma.input.search [] ] ]
+                               Bulma.field.div [ Bulma.control.div [ Bulma.input.search [ prop.value inputValue
+                                                                                          prop.onChange
+                                                                                              (fun (v: string) ->
+                                                                                                  dispatch (
+                                                                                                      SetQueryText(
+                                                                                                          convertQuery v
+                                                                                                      )
+                                                                                                  )) ] ] ]
                                Bulma.field.div [ Bulma.control.div [ Bulma.button.button "Or..." ] ] ] ]
