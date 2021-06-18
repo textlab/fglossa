@@ -3,6 +3,7 @@ module View.SearchViews.Cwb
 open System.Text.RegularExpressions
 open Feliz
 open Feliz.Bulma
+open Shared
 open Shared.StringUtils
 open Model
 open Update.LoadedCorpus
@@ -84,12 +85,23 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
         | Simple ->
             let query =
                 Regex.Split(inputValue.Trim(), "\s+")
+                // Replace literal quotes with __QUOTE__ to prevent them from confusing
+                // our regexes later on
+                |> Array.map (replace "\"" "__QUOTE__")
+                // Escape other special characters using a regex from
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+                |> Array.map (replace @"[\.\+\?\^\$\{\}\(\)\|\[\]\\]" "\$&")
+                // Convert truncation to its regex equivalent
+                |> Array.map (replace "\*" ".*")
                 |> Array.map
                     (fun token ->
-                        // We need to use sprintf instead of string interpolation here
-                        // because the latter actually outputs the extra percentage sign
-                        // that is needed to escape the one in '%c'.
-                        sprintf "[word=\"%s\" %%c]" token)
+                        if token = "" then
+                            ""
+                        else
+                            // We need to use sprintf instead of string interpolation here
+                            // because the latter actually outputs the extra percentage sign
+                            // that is needed to escape the one in '%c'.
+                            sprintf "[word=\"%s\" %%c]" token)
                 |> String.concat " "
 
             let hasFinalSpace = Regex.IsMatch(inputValue, "\s+$")
