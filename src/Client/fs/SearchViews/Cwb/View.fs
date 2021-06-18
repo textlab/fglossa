@@ -106,7 +106,21 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
 
             let hasFinalSpace = Regex.IsMatch(inputValue, "\s+$")
             (query, hasFinalSpace)
-        | Extended -> (sprintf "[word=\"%s\" %%c]" inputValue, false)
+        | Extended ->
+            let sTag =
+                match corpus.Config.Modality with
+                | Spoken -> "who"
+                | Written -> "s"
+
+            let isPhonetic = inputValue.Contains("phon=")
+            let isOriginal = inputValue.Contains("orig=")
+
+            let mainAttr =
+                if isPhonetic then "phon"
+                elif isOriginal then "orig"
+                else "word"
+
+            (sprintf "[word=\"%s\" %%c]" inputValue, false)
         | Cqp -> (inputValue, false)
 
     Html.div [ prop.style [ style.width 500 ]
