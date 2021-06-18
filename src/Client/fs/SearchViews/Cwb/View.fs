@@ -7,7 +7,7 @@ open Shared.StringUtils
 open Model
 open Update.LoadedCorpus
 
-let view (search: Search) (dispatch: Msg -> unit) =
+let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
     let simpleHeading = "Simple"
     let extendedHeading = "Extended"
     let cqpHeading = "CQP query"
@@ -79,7 +79,7 @@ let view (search: Search) (dispatch: Msg -> unit) =
         | Extended -> ""
         | Cqp -> ""
 
-    let textInputToQuery (inputValue: string) =
+    let textInputToQuery (corpus: Corpus) (inputValue: string) =
         match search.Interface with
         | Simple ->
             let query =
@@ -112,6 +112,7 @@ let view (search: Search) (dispatch: Msg -> unit) =
                                                                                                   dispatch (
                                                                                                       SetQueryText(
                                                                                                           textInputToQuery
+                                                                                                              corpus
                                                                                                               v
                                                                                                       )
                                                                                                   )) ] ] ]

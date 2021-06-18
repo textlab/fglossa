@@ -16,8 +16,8 @@ let topRowButtons =
 
 let selectSearchView (corpus: Corpus) (search: Search) dispatch =
     match corpus.Config.SearchEngine with
-    | Cwb -> SearchViews.Cwb.view search dispatch
-    | Fcs -> SearchViews.Fcs.view search dispatch
+    | Cwb -> SearchViews.Cwb.view corpus search dispatch
+    | Fcs -> SearchViews.Fcs.view corpus search dispatch
 
 
 module CorpusStartView =
