@@ -3,6 +3,7 @@ module View.SearchInterface
 open System.Text.RegularExpressions
 open Feliz
 open Feliz.Bulma
+open Shared.StringUtils
 open Model
 open Update.LoadedCorpus
 
@@ -56,8 +57,19 @@ let view (search: Search) (dispatch: Msg -> unit) =
             |> Array.tryHead
             |> Option.map
                 (fun query ->
-                    [ for m in Regex.Matches(query.Query, "word=\"(.+?)\"") -> m.Groups.[1].Value ]
-                    |> String.concat " "
+                    query.Query
+                    |> replace @"</?(?:s|who)?>" ""
+                    // Unescape any escaped chars, since we don't want the backslashes
+                    // to show in the text input
+                    |> replace @"\\(.)" "$1"
+                    |> replace @"\[\(?\w+=\""(.*?)\""(?:\s+%c)?\)?\]" "$1"
+                    |> replace @"\""([^\s=]+)\""" "$1"
+                    |> replace @"\s*\[\]\s*" " .* "
+                    |> replace @"^\s*\.\*\s*$" ""
+                    |> replace @"^!" ""
+                    |> replace @"__QUOTE__" "\""
+                    // Replace .* or .+ by a single asterisk, used for truncation in the simple view
+                    |> replace @"\.[\*\+]" "*"
                     |> fun text ->
                         if query.HasFinalSpace then
                             text + " "
@@ -96,7 +108,7 @@ let view (search: Search) (dispatch: Msg -> unit) =
                                                                                                                   Search) ] ] ] ]
                                Bulma.field.div [ Bulma.control.div [ Bulma.input.search [ prop.value queryText
                                                                                           prop.onChange
-                                                                                              (fun (v: string) ->
+                                                                                              (fun v ->
                                                                                                   dispatch (
                                                                                                       SetQueryText(
                                                                                                           textInputToQuery
