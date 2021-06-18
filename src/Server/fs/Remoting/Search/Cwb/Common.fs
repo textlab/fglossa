@@ -234,7 +234,10 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
             // If isCounting is true (which it is when we are searching, but not when retrieving
             // results), the first line after that contains the number of results. Any following
             // lines contain actual search results (only in the first step).
-            let results = output.Split('\n') |> Array.tail
+            let results =
+                output.Split('\n')
+                |> Array.tail
+                |> Array.filter (fun line -> not (String.IsNullOrWhiteSpace(line)))
 
             let count =
                 match isCounting with
