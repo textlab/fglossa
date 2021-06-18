@@ -14,6 +14,12 @@ let topRowButtons =
                                           prop.text "Reset form" ] ]
 
 
+let selectSearchView (corpus: Corpus) (search: Search) dispatch =
+    match corpus.Config.SearchEngine with
+    | Cwb -> SearchViews.Cwb.view search dispatch
+    | Fcs -> SearchViews.Fcs.view search dispatch
+
+
 module CorpusStartView =
     let corpusNameBox config =
         let logo =
@@ -28,7 +34,7 @@ module CorpusStartView =
     let view (corpus: Corpus) (search: Search) (dispatch: Update.LoadedCorpus.Msg -> unit) =
         Html.span [ topRowButtons
                     corpusNameBox corpus.Config
-                    View.SearchViews.view search dispatch ]
+                    selectSearchView corpus search dispatch ]
 
 
 module ResultsView =
@@ -205,7 +211,7 @@ module ResultsView =
             model.IsSearching && model.SearchResults.IsNone
 
         Html.span [ topRowButtons
-                    SearchViews.view search parentDispatch
+                    selectSearchView corpus search parentDispatch
                     spinnerOverlay shouldShowResultsTableSpinner (Some [ style.top 75 ]) resultsView ]
 
 

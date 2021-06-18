@@ -15,7 +15,8 @@
         <Compile Include="fs/Update.fs" />
         <Compile Include="fs/Common.fs" />
         <Compile Include="fs/Metadata/View.fs" />
-        <Compile Include="fs/SearchViews/View.fs" />
+        <Compile Include="fs/SearchViews/Cwb/View.fs" />
+        <Compile Include="fs/SearchViews/Fcs/View.fs" />
         <Compile Include="fs/LoadedCorpus/ResultViews/Cwb/Common.fs" />
         <Compile Include="fs/LoadedCorpus/ResultViews/Cwb/Written.fs" />
         <Compile Include="fs/LoadedCorpus/View.fs" />

@@ -1,4 +1,4 @@
-module View.SearchViews
+module View.SearchViews.Cwb
 
 open System.Text.RegularExpressions
 open Feliz
