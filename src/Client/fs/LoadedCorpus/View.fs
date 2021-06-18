@@ -28,7 +28,7 @@ module CorpusStartView =
     let view (corpus: Corpus) (search: Search) (dispatch: Update.LoadedCorpus.Msg -> unit) =
         Html.span [ topRowButtons
                     corpusNameBox corpus.Config
-                    View.SearchInterface.view search dispatch ]
+                    View.SearchViews.view search dispatch ]
 
 
 module ResultsView =
@@ -205,7 +205,7 @@ module ResultsView =
             model.IsSearching && model.SearchResults.IsNone
 
         Html.span [ topRowButtons
-                    SearchInterface.view search parentDispatch
+                    SearchViews.view search parentDispatch
                     spinnerOverlay shouldShowResultsTableSpinner (Some [ style.top 75 ]) resultsView ]
 
 
