@@ -69,12 +69,51 @@ module LoadedCorpus =
             // Update.LoadedCorpus.ShowingResults.Concordance
             //////////////////////////////////////////////////
             type Msg =
+                | PerformSearchStep
+                | SearchResultsReceived of SearchResultInfo
                 | FetchResultWindow of int
                 | FetchedResultWindow of SearchResultPage []
                 | SetPaginatorPage of int
 
             let update (msg: Msg) (model: ConcordanceModel) : ConcordanceModel * Cmd<Msg> =
+                let registerResultPages results =
+                    let fetchedPages =
+                        results |> Array.map (fun page -> page.PageNumber)
+
+                    // Remove the fetched pages from the set of pages currently being fetched...
+                    let pagesBeingFetched =
+                        model.PagesBeingFetched
+                        |> Array.except fetchedPages
+
+                    // ...and add them to the map of fetched pages
+                    let resultPages =
+                        results
+                        |> Array.fold
+                            (fun (pageMap: Map<int, SearchResult []>) result ->
+                                pageMap.Add(result.PageNumber, result.Results |> Array.map cleanupResult))
+                            model.ResultPages
+
+                    { model with
+                          PagesBeingFetched = pagesBeingFetched
+                          ResultPages = resultPages }
+
                 match msg with
+                | PerformSearchStep ->
+                    let cmd =
+                        Cmd.OfAsync.perform serverApi.searchCorpus model.SearchParams SearchResultsReceived
+
+                    model, cmd
+
+                | SearchResultsReceived results ->
+                    let modelWithResultPages = registerResultPages results.ResultPages
+
+                    let newModel =
+                        { modelWithResultPages with
+                              IsSearching = false
+                              NumResults = Some results.Count }
+
+                    newModel, Cmd.none
+
                 // Fetch a window of search result pages centred on centrePageNo. Ignores pages that have
                 // already been fetched or that are currently being fetched in another request (note that such
                 // pages can only be located at the edges of the window, and not as 'holes' within the window,
@@ -138,27 +177,7 @@ module LoadedCorpus =
 
                 | FetchedResultWindow results ->
                     // TODO: Check if we get a 401 Unauthorized
-
-                    let fetchedPages =
-                        results |> Array.map (fun page -> page.PageNumber)
-
-                    // Remove the fetched pages from the set of pages currently being fetched...
-                    let pagesBeingFetched =
-                        model.PagesBeingFetched
-                        |> Array.except fetchedPages
-
-                    // ...and add them to the map of fetched pages
-                    let resultPages =
-                        results
-                        |> Array.fold
-                            (fun (pageMap: Map<int, SearchResult []>) result ->
-                                pageMap.Add(result.PageNumber, result.Results |> Array.map cleanupResult))
-                            model.ResultPages
-
-                    let newModel =
-                        { model with
-                              PagesBeingFetched = pagesBeingFetched
-                              ResultPages = resultPages }
+                    let newModel = registerResultPages results
 
                     newModel, Cmd.none
 
@@ -196,7 +215,6 @@ module LoadedCorpus =
             | ConcordanceMsg of Concordance.Msg
 
             | SelectResultTab of ResultTab
-            | SearchResultsReceived of SearchResultInfo
 
         let update (msg: Msg) (model: ShowingResultsModel) : ShowingResultsModel * Cmd<Msg> =
             match msg with
@@ -211,17 +229,6 @@ module LoadedCorpus =
                 | otherSubstate -> failwith $"Invalid substate for ConcordanceMsg: {otherSubstate}"
 
             | SelectResultTab tab -> { model with ActiveTab = tab }, Cmd.none
-
-            | SearchResultsReceived results ->
-                let newModel =
-                    { model with
-                          IsSearching = false
-                          SearchResults =
-                              Some
-                                  { results with
-                                        Results = results.Results |> Array.map cleanupResult } }
-
-                newModel, Cmd.none
 
 
     ////////////////////////////////
@@ -283,56 +290,44 @@ module LoadedCorpus =
                 else
                     1
 
-            // If we have a blank query, don't do the search
+            // If we have an empty query, don't do the search
             let shouldSearch =
                 let firstQuery =
-                    model.Search.Params.Queries
-                    |> Array.tryHead
-                    |> Option.map (fun query -> query.Query.Trim())
+                    model.Search.Params.Queries |> Array.tryHead
 
                 match firstQuery with
                 | None -> false
-                | Some query ->
-                    if
-                        String.IsNullOrWhiteSpace(query) || query = "\"\""
-                        // Check for one or more empty terms possibly separated by intervals
-                        || Regex.IsMatch
-                            (
-                                query,
-                                "\[\](\s*\[\](\{\d*,\d*\})?)*"
-                            )
-                    then
-                        false
-                    else
-                        true
+                | Some query -> not query.IsEmpty
 
             // TODO: Implement cancellation of searches. In the Clojure version, we simply cancel
             // any HTTP request which is already running when we start a new search, but what we
             // should do instead is to cancel the actual search that is running on the server.
 
-            let queries =
-                model.Search.Params.Queries
-                |> Array.map
-                    (fun query ->
-                        { query with
-                              Query = query.Query |> replace "\"__QUOTE__\"" "'\"'" })
+            if shouldSearch then
+                let queries =
+                    model.Search.Params.Queries
+                    |> Array.map
+                        (fun query ->
+                            { query with
+                                  Query = query.Query |> replace "\"__QUOTE__\"" "'\"'" })
 
-            let searchParams =
-                { model.Search.Params with
-                      Queries = queries }
+                let searchParams =
+                    { model.Search.Params with
+                          Queries = queries }
 
-            let newModel =
-                { model with
-                      Substate = ShowingResults(ShowingResultsModel.Init(searchParams)) }
+                let newModel =
+                    { model with
+                          Substate = ShowingResults(ShowingResultsModel.Init(searchParams, numSteps)) }
 
-            let cmd =
-                Cmd.OfAsync.perform
-                    serverApi.searchCorpus
-                    searchParams
-                    (ShowingResultsMsg
-                     << ShowingResults.SearchResultsReceived)
+                newModel,
+                Cmd.ofMsg (
+                    ShowingResultsMsg(ShowingResults.ConcordanceMsg(ShowingResults.Concordance.PerformSearchStep))
+                )
+            else
+                printfn "Empty query!"
+                model, Cmd.none
 
-            newModel, cmd
+
 
 
 ////////////////////////////////

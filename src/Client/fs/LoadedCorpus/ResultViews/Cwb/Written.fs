@@ -178,7 +178,7 @@ let private singleResultRows
     | [] -> []
 
 
-let concordanceTable (corpus: Corpus) (searchResults: SearchResultInfo) =
+let concordanceTable (corpus: Corpus) (pageResults: SearchResult [] option) =
     let wordIndex = 0 // word form is always the first attribute
 
     // We need to increment lemmaIndex and origIndex since the first attribute ('word') is
@@ -200,12 +200,15 @@ let concordanceTable (corpus: Corpus) (searchResults: SearchResultInfo) =
         | Multilingual _ -> failwith "NOT IMPLEMENTED"
 
     let rows =
-        searchResults.Results
-        |> Array.toList
-        |> List.indexed
-        |> List.collect
-            (fun (index, result) ->
-                singleResultRows wordIndex maybeOrigIndex maybeLemmaIndex corpus.Config.FontFamily result index)
+        match pageResults with
+        | Some results ->
+            results
+            |> Array.toList
+            |> List.indexed
+            |> List.collect
+                (fun (index, result) ->
+                    singleResultRows wordIndex maybeOrigIndex maybeLemmaIndex corpus.Config.FontFamily result index)
+        | None -> []
 
     Bulma.table [ table.isStriped
                   table.isFullWidth

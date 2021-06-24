@@ -74,10 +74,18 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                 { Count = searchResults.Count
                   CpuCounts = searchResults.CpuCounts
                   SearchId = searchId
-                  Results =
+                  SearchStep = searchParams.Step
+                  ResultPages =
                       match corpus.Config.Modality with
                       | Spoken -> failwith "NOT IMPLEMENTED"
-                      | Written -> Written.transformResults searchParams.Queries searchResults.Hits }
+                      | Written ->
+                          searchResults.Hits
+                          |> Written.transformResults searchParams.Queries
+                          |> Array.chunkBySize searchParams.PageSize
+                          |> Array.mapi
+                              (fun index results ->
+                                  { PageNumber = index + 1
+                                    Results = results }) }
         else
             return failwith $"TOO MANY CQP PROCESSES: {nCqpProcs}; aborting search at {System.DateTime.Now}"
     }

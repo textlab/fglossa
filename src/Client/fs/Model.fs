@@ -28,7 +28,10 @@ type Corpus =
       MetadataTable: Metadata.Category list }
 
 type ConcordanceModel =
-    { // The page numbers of the result pages currently being fetched from the server
+    { IsSearching: bool
+      // The page numbers of the result pages currently being fetched from the server
+      NumResults: uint64 option
+      NumSteps: int
       PagesBeingFetched: int []
       // The page number shown in the paginator, which may differ from the actual
       // result page being shown until a the page has been fetched from the server
@@ -40,8 +43,11 @@ type ConcordanceModel =
       ResultPageNo: int
       ResultPages: Map<int, SearchResult []>
       SearchParams: SearchParams }
-    static member Init(searchParams) =
-        { PagesBeingFetched = [||]
+    static member Init(searchParams, numSteps) =
+        { IsSearching = true
+          NumResults = None
+          NumSteps = numSteps
+          PagesBeingFetched = [||]
           PaginatorPageNo = 1
           PaginatorTextValue = ""
           ResultPageNo = 1
@@ -54,14 +60,14 @@ type ResultTab =
 
 type ShowingResultsModel =
     { ActiveTab: ResultTab
-      IsSearching: bool
       SearchParams: SearchParams
-      SearchResults: SearchResultInfo option }
-    static member Init((searchParams: SearchParams)) =
-        { ActiveTab = Concordance(ConcordanceModel.Init(searchParams))
-          IsSearching = true
+      SearchResults: SearchResultInfo option
+      NumSteps: int }
+    static member Init((searchParams: SearchParams, numSteps: int)) =
+        { ActiveTab = Concordance(ConcordanceModel.Init(searchParams, numSteps))
           SearchParams = searchParams
-          SearchResults = None }
+          SearchResults = None
+          NumSteps = numSteps }
 
 type LoadedCorpusSubstate =
     | CorpusStart

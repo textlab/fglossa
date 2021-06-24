@@ -120,6 +120,13 @@ type Query =
     { HasFinalSpace: bool
       LanguageCode: string
       Query: string }
+    member this.IsEmpty =
+        let query = this.Query.Trim()
+
+        String.IsNullOrWhiteSpace(query)
+        || query = "\"\""
+        // Check for one or more empty terms possibly separated by intervals
+        || Regex.IsMatch(query, "\[\](\s*\[\](\{\d*,\d*\})?)*")
 
 type SortKey =
     | Position
@@ -161,15 +168,16 @@ type SearchResult =
       HasVideo: bool
       Text: string list }
 
+type SearchResultPage =
+    { PageNumber: int
+      Results: SearchResult [] }
+
 type SearchResultInfo =
     { Count: uint64
       CpuCounts: uint64 []
       SearchId: int
-      Results: SearchResult [] }
-
-type SearchResultPage =
-    { PageNumber: int
-      Results: SearchResult [] }
+      SearchStep: int
+      ResultPages: SearchResultPage [] }
 
 module Route =
     let builder typeName methodName =
