@@ -33,18 +33,10 @@ module LoadingCorpus =
     ////////////////////////////////
     // Update.LoadingCorpus
     ////////////////////////////////
-    type Msg =
-        | FetchCorpusConfig of string
-        | FetchedCorpusConfig of CorpusConfig
+    type Msg = FetchedCorpusConfig of CorpusConfig
 
     let update (msg: Msg) (_model: Model) =
         match msg with
-        | FetchCorpusConfig code ->
-            let cmd =
-                Cmd.OfAsync.perform serverApi.getCorpusConfig code FetchedCorpusConfig
-
-            LoadingCorpus, cmd
-
         | FetchedCorpusConfig corpusConfig ->
             let corpus = Corpora.Client.getCorpus corpusConfig
 
