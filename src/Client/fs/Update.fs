@@ -97,14 +97,38 @@ module LoadedCorpus =
                     model, cmd
 
                 | SearchResultsReceived results ->
+                    let shouldRunMoreSteps = model.NumSteps > results.SearchStep
+
+                    let newSearchParams =
+                        model.SearchParams
+                        |> fun p ->
+                            let lastCount = results.Count
+
+                            let step =
+                                if shouldRunMoreSteps then
+                                    p.Step + 1
+                                else
+                                    p.Step
+
+                            { p with
+                                  LastCount = Some lastCount
+                                  Step = step }
+
+                    let cmd =
+                        if shouldRunMoreSteps then
+                            Cmd.ofMsg PerformSearchStep
+                        else
+                            Cmd.none
+
                     let modelWithResultPages = registerResultPages results.ResultPages
 
                     let newModel =
                         { modelWithResultPages with
-                              IsSearching = false
-                              NumResults = Some results.Count }
+                              IsSearching = shouldRunMoreSteps
+                              NumResults = Some results.Count
+                              SearchParams = newSearchParams }
 
-                    newModel, Cmd.none
+                    newModel, cmd
 
                 // Fetch a window of search result pages centred on centrePageNo. Ignores pages that have
                 // already been fetched or that are currently being fetched in another request (note that such
