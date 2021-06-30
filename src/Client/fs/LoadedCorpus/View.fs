@@ -84,14 +84,7 @@ module ResultsView =
         /// View.LoadedCorpus.ResultsView.Concordance.view
         ////////////////////////////////////////////////////
         let view (model: ConcordanceModel) (corpus: Corpus) (dispatch: ShowingResults.Concordance.Msg -> unit) =
-            let numPages =
-                match model.NumResults with
-                | Some numResults ->
-                    float numResults
-                    / float model.SearchParams.PageSize
-                    |> ceil
-                    |> int
-                | None -> 0
+            let numPages = model.NumResultPages()
 
             let resultsInfo =
                 let text =

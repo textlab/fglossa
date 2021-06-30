@@ -54,6 +54,15 @@ type ConcordanceModel =
           ResultPages = Map.empty
           SearchParams = searchParams }
 
+    member this.NumResultPages() =
+        match this.NumResults with
+        | Some numResults ->
+            float numResults
+            / float this.SearchParams.PageSize
+            |> ceil
+            |> int
+        | None -> 0
+
 type ResultTab =
     | Concordance of ConcordanceModel
     | Statistics

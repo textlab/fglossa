@@ -139,7 +139,7 @@ module LoadedCorpus =
                     let startPage = max (centrePageNo - 1) 1
 
                     let endPage =
-                        min (centrePageNo + 1) model.ResultPages.Count
+                        min (centrePageNo + 1) (model.NumResultPages())
 
                     let pageNumbers =
                         [| startPage .. endPage |]
