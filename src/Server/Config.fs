@@ -1,4 +1,3 @@
 module Config
 
-type Config =
-    { connectionString: string }
+type Config = { connectionString: string }
