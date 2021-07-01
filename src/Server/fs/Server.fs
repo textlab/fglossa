@@ -16,11 +16,11 @@ let createServerApi ctx =
     let logger = ctx.Logger()
     let connStr = cnf.connectionString
 
-    { getCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
-      getCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
-      getMetadataForCategory = fun (code, selection) -> async { return "", [||] }
-      getSearchResults = fun searchParams -> Remoting.Search.Core.getSearchResults connStr logger searchParams
-      searchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams }
+    { GetCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
+      GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
+      GetMetadataForCategory = fun (code, selection) -> async { return "", [||] }
+      GetSearchResults = fun searchParams -> Remoting.Search.Core.getSearchResults connStr logger searchParams
+      SearchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =
     // do some logging

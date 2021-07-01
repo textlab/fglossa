@@ -92,7 +92,7 @@ module LoadedCorpus =
                 match msg with
                 | PerformSearchStep ->
                     let cmd =
-                        Cmd.OfAsync.perform serverApi.searchCorpus model.SearchParams SearchResultsReceived
+                        Cmd.OfAsync.perform serverApi.SearchCorpus model.SearchParams SearchResultsReceived
 
                     model, cmd
 
@@ -187,7 +187,7 @@ module LoadedCorpus =
                                   PagesBeingFetched = Array.append model.PagesBeingFetched pageNumbers }
 
                         let cmd =
-                            Cmd.OfAsync.perform serverApi.getSearchResults searchParams FetchedResultWindow
+                            Cmd.OfAsync.perform serverApi.GetSearchResults searchParams FetchedResultWindow
 
                         newModel, cmd
 
@@ -357,7 +357,7 @@ let init () : Model * Cmd<Msg> =
     let model = LoadingCorpus
 
     let cmd =
-        Cmd.OfAsync.perform serverApi.getCorpusConfig "bokmal" LoadingCorpus.FetchedCorpusConfig
+        Cmd.OfAsync.perform serverApi.GetCorpusConfig "bokmal" LoadingCorpus.FetchedCorpusConfig
 
     model, Cmd.map LoadingCorpusMsg cmd
 
