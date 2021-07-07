@@ -110,8 +110,7 @@ let printPositionsMatchingMetadata
 let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes: TokenAttribute [] option) =
     let createAttrString attributes =
         attributes
-        |> Array.map fst
-        |> Array.map (fun attr -> $"+{attr}")
+        |> Array.map (fst >> fun attr -> $"+{attr}")
         |> String.concat " "
 
     match maybeAttributes with
@@ -217,7 +216,7 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
         try
             let commandStr =
                 commands
-                |> Seq.filter (fun s -> not (String.IsNullOrWhiteSpace s))
+                |> Seq.filter (String.IsNullOrWhiteSpace >> not)
                 |> Seq.map (fun s -> $"{s};")
                 |> String.concat "\n"
 
@@ -237,7 +236,7 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
             let results =
                 output.Split('\n')
                 |> Array.tail
-                |> Array.filter (fun line -> not (String.IsNullOrWhiteSpace(line)))
+                |> Array.filter (String.IsNullOrWhiteSpace >> not)
 
             let count =
                 match isCounting with

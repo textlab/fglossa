@@ -10,21 +10,20 @@ open Shared.StringUtils
 let cleanupResult (result: SearchResult) =
     let cleanLines =
         result.Text
-        |> List.map
-            (fun line ->
-                line
-                // Remove the beginning of the search result, which will be a position
-                // number in the case of a monolingual result or the first language of a
-                // multilingual result, or an arrow in the case of subsequent languages
-                // in a multilingual result.
-                |> replace "^\s*\d+:\s*" ""
-                |> replace "^-->.+?:\s*" ""
-                // When the match includes the first or last token of the s unit, the XML
-                // tag surrounding the s unit is included inside the match braces (this
-                // should probably be considered a bug in CQP). We need to fix that.
-                |> replace "\{\{(<s_id\s+.+?>)" "$1{{"
-                |> replace "(</s_id>)\}\}" "}}$1"
-                |> replace "&nbsp;" "_")
+        |> List.map (
+            // Remove the beginning of the search result, which will be a position
+            // number in the case of a monolingual result or the first language of a
+            // multilingual result, or an arrow in the case of subsequent languages
+            // in a multilingual result.
+            replace "^\s*\d+:\s*" ""
+            >> replace "^-->.+?:\s*" ""
+            // When the match includes the first or last token of the s unit, the XML
+            // tag surrounding the s unit is included inside the match braces (this
+            // should probably be considered a bug in CQP). We need to fix that.
+            >> replace "\{\{(<s_id\s+.+?>)" "$1{{"
+            >> replace "(</s_id>)\}\}" "}}$1"
+            >> replace "&nbsp;" "_"
+        )
 
     { result with Text = cleanLines }
 
