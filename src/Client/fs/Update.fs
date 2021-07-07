@@ -111,7 +111,12 @@ module LoadedCorpus =
                                     p.Step
 
                             { p with
-                                  CpuCounts = Some results.CpuCounts
+                                  CpuCounts =
+                                      match p.CpuCounts with
+                                      | Some existingCounts ->
+                                          Array.append existingCounts results.CpuCounts
+                                          |> Some
+                                      | None -> Some results.CpuCounts
                                   LastCount = Some lastCount
                                   Step = step }
 
