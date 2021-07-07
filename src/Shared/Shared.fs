@@ -137,6 +137,7 @@ type SortKey =
 type SearchParams =
     { ContextSize: int
       CorpusCode: string
+      CpuCounts: uint64 [] option
       End: uint64
       LastCount: uint64 option
       Metadata: string option
@@ -151,6 +152,7 @@ type SearchParams =
     static member Init(corpusCode) =
         { ContextSize = 15
           CorpusCode = corpusCode
+          CpuCounts = None
           End = 99UL
           LastCount = None
           Metadata = None
@@ -179,6 +181,8 @@ type SearchResultInfo =
       SearchStep: int
       ResultPages: SearchResultPage [] }
 
+type ResultPageNumbers = int []
+
 module Route =
     let builder typeName methodName =
         sprintf "/glossa3/api/%s/%s" typeName methodName
@@ -187,5 +191,5 @@ type IServerApi =
     { GetCorpusConfig: string -> Async<CorpusConfig>
       GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
       GetMetadataForCategory: string * Metadata.Selection -> Async<string * string []>
-      GetSearchResults: SearchParams -> Async<SearchResultPage []>
+      GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       SearchCorpus: SearchParams -> Async<SearchResultInfo> }

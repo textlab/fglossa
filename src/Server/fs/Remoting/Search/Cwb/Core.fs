@@ -10,12 +10,13 @@ open Database
 
 let getSearchResults (connStr: string) (logger: ILogger) (searchParams: SearchParams) (corpus: Corpus) =
     async {
-        return
-            [| { PageNumber = 1
-                 Results =
-                     [| { HasAudio = false
-                          HasVideo = false
-                          Text = [] } |] } |]
+        return!
+            match corpus.Config.Modality with
+            | Spoken -> failwith "NOT IMPLEMENTED"
+            | Written ->
+                match corpus.Config.SearchEngine with
+                | Cwb -> Written.getSearchResults connStr logger corpus searchParams
+                | Fcs -> failwith "NOT IMPLMENTED"
     }
 
 // If the number of running CQP processes exceeds this number, we do not allow a new
@@ -85,7 +86,13 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                           |> Array.mapi
                               (fun index results ->
                                   { PageNumber = index + 1
-                                    Results = results }) }
+                                    Results =
+                                        results
+                                        |> Array.map
+                                            (fun resultLines ->
+                                                { HasAudio = false
+                                                  HasVideo = false
+                                                  Text = resultLines }) }) }
         else
             return failwith $"TOO MANY CQP PROCESSES: {nCqpProcs}; aborting search at {System.DateTime.Now}"
     }

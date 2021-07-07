@@ -1,5 +1,6 @@
 module Remoting.Search.Cwb.Written
 
+open System.IO
 open System.Threading.Tasks
 open FSharp.Control.Tasks
 open System.Text.RegularExpressions
@@ -233,24 +234,250 @@ let transformResults (queries: Query []) (hits: string []) =
     let numLangs = queriedLangs.Count
 
     [| for lines in hits |> Array.chunkBySize numLangs ->
-           let ls =
-               [ for line in lines ->
-                     line
-                     // When the match is the last token in a text, the </text> tag is
-                     // included within the braces due to a CQP bug, so we need to fix it
-                     |> replace "</text>\}\}" "}}</text>"
-                     // Remove any material from the previous or following text
-                     |> replace "^(.*\{\{.+)</text>.*" "$1"
-                     |> replace "^(\s*\d+:\s*<.+?>:\s*).*<text>(.*\{\{.+)" "$1$2"
-                     // Get rid of spaces in multiword expressions. Assuming that attribute values never contain spaces,
-                     // we can further assume that if we find several spaces between slashes, only the first one separates
-                     // tokens and the remaining ones are actually inside the token and should be replaced by underscores.
-                     // Fractions containing spaces (e.g. "1 / 2") need to be handled separately because the presence of a
-                     // slash confuses the normal regexes
-                     |> replace " (\d+) / (\d+)" " $1/$2"
-                     |> replace " ([^/<>\s]+) ([^/<>\s]+) ([^/<>\s]+)(/\S+/)" " $1_$2_$3$4"
-                     |> replace " ([^/<>\s]+) ([^/<>\s]+)(/\S+/)" " $1_$2$3" ]
+           [ for line in lines ->
+                 line
+                 // When the match is the last token in a text, the </text> tag is
+                 // included within the braces due to a CQP bug, so we need to fix it
+                 |> replace "</text>\}\}" "}}</text>"
+                 // Remove any material from the previous or following text
+                 |> replace "^(.*\{\{.+)</text>.*" "$1"
+                 |> replace "^(\s*\d+:\s*<.+?>:\s*).*<text>(.*\{\{.+)" "$1$2"
+                 // Get rid of spaces in multiword expressions. Assuming that attribute values never contain spaces,
+                 // we can further assume that if we find several spaces between slashes, only the first one separates
+                 // tokens and the remaining ones are actually inside the token and should be replaced by underscores.
+                 // Fractions containing spaces (e.g. "1 / 2") need to be handled separately because the presence of a
+                 // slash confuses the normal regexes
+                 |> replace " (\d+) / (\d+)" " $1/$2"
+                 |> replace " ([^/<>\s]+) ([^/<>\s]+) ([^/<>\s]+)(/\S+/)" " $1_$2_$3$4"
+                 |> replace " ([^/<>\s]+) ([^/<>\s]+)(/\S+/)" " $1_$2$3" ] |]
 
-           { HasAudio = false
-             HasVideo = false
-             Text = ls } |]
+
+let getFileStartEnd (searchParams: SearchParams) =
+    match searchParams.CpuCounts with
+    | Some cpuCounts ->
+        let firstFileIndex, firstFileStart =
+            let rec sumCountsFirst sum fileIndex =
+                let newSum = sum + cpuCounts.[fileIndex]
+
+                if newSum > searchParams.Start then
+                    // We found the first result file to fetch results from. Return the index of that file as well as the first
+                    // result index to fetch from this file; e.g. if we want to fetch results starting at index 100 and the sum of
+                    // counts up to this file is 93, we should start fetching from index 7 in this file.
+                    (fileIndex, searchParams.Start - sum)
+                else
+                    sumCountsFirst newSum (fileIndex + 1)
+
+            sumCountsFirst 0UL 0
+
+        let lastFileIndex =
+            let rec sumCountsLast sum fileIndex =
+                let newSum = sum + cpuCounts.[fileIndex]
+                // If either the end index can be found in the current file (meaning
+                // that if we add the current count to the sum, we exceed the end
+                // index) or there are no more files, the current file should be the
+                // last one we fetch results from.
+                if newSum > searchParams.End
+                   || fileIndex = (cpuCounts.Length - 1) then
+                    fileIndex
+                else
+                    // Otherwise, continue with the next file
+                    sumCountsLast newSum (fileIndex + 1)
+
+            sumCountsLast 0UL 0
+
+        (firstFileIndex, firstFileStart, lastFileIndex)
+    | None -> failwith "No cpu counts found!"
+
+// Generates the names of the files containing saved CQP queries
+let getNonzeroFiles
+    (corpus: Corpus)
+    (searchParams: SearchParams)
+    (namedQuery: string)
+    (firstFile: int)
+    (maybeLastFile: int option)
+    =
+    match (corpus.Config.MultiCpuBounds, searchParams.CpuCounts) with
+    | (Some multiCpuBounds, Some cpuCounts) ->
+        let files =
+            multiCpuBounds
+            |> Array.indexed
+            |> Array.collect
+                (fun (index, cpuBounds) ->
+                    [| for cpuIndex in 0 .. cpuBounds.Length -> $"{namedQuery}_{index + 1}_{cpuIndex}" |])
+
+        let lastFile =
+            maybeLastFile |> Option.defaultValue firstFile
+
+        let filesAndCounts = Array.zip files cpuCounts
+
+        // Select the range of files that contains the range of results we are asking for
+        // and remove files that don't actually contain any results
+        [ for (file, count) in filesAndCounts.[firstFile..lastFile] do
+              if count > 0UL then file ]
+    | _ -> []
+
+
+let getFilesIndexes corpus searchParams namedQuery (maybeNumResultsMinusOne: uint64 option) =
+    let _, firstFileStart, _ = getFileStartEnd searchParams
+
+    let nonZeroFiles =
+        getNonzeroFiles corpus searchParams namedQuery 0 None
+        |> List.toSeq
+    // For the first result file, we need to adjust the start and end index according to
+    // the number of hits that were found in previous files. For the remaining files, we
+    // set the start index to 0, and we might as well set the end index to [number of
+    // desired results minus one], since CQP won't actually mind if we ask for results
+    // beyond those available. If the end position is set to 0, we will return
+    // all hits (typically used for exporting results to file etc.)
+    let indexes =
+        match maybeNumResultsMinusOne with
+        | Some numResultsMinusOne ->
+            Seq.append
+                (Seq.singleton (firstFileStart, firstFileStart + numResultsMinusOne))
+                (Seq.initInfinite (fun _ -> (0UL, numResultsMinusOne)))
+        | None -> Seq.initInfinite (fun _ -> (0UL, 0UL))
+
+    (nonZeroFiles, indexes)
+
+
+let runCqpScripts logger corpus scripts =
+    async {
+        let! cwbResults =
+            scripts
+            |> Seq.map (fun script -> runCqpCommands logger corpus false script)
+            |> Async.Parallel
+
+        return cwbResults |> Array.choose fst |> Array.concat
+    }
+
+
+let getSortedPositions (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) =
+    let namedQuery =
+        cwbQueryName corpus searchParams.SearchId
+
+    let resultPositionsFilename = $"tmp/result_positions_{namedQuery}"
+
+    if not (File.Exists(resultPositionsFilename)) then
+        let nonzeroFiles =
+            getNonzeroFiles corpus searchParams namedQuery 0 None
+
+        let firstCommands =
+            cqpInit corpus searchParams None namedQuery []
+
+        let moreCommands =
+            nonzeroFiles
+            |> List.mapi
+                (fun index resultFile ->
+                    let redirectOperator = if index = 0 then " >" else " >>"
+
+                    $"tabulate {resultFile} match[-1] word, match word, match[1] word, match, matchend
+                                 {redirectOperator} {resultPositionsFilename}")
+
+        let commands = firstCommands @ moreCommands
+
+        runCqpCommands logger corpus false commands
+        |> ignore
+
+    let sortOpt =
+        match searchParams.SortKey with
+        | Position -> failwith "No need to call getSortedPositions when 'position' is selected!"
+        | Left -> "-k1"
+        | Match -> "-k2"
+        | Right -> "-k3"
+
+    let sortedResultPositions =
+        $"{resultPositionsFilename}_sort_by_{searchParams.SortKey}"
+
+    if not (File.Exists(sortedResultPositions)) then
+        Process.runCmd
+            "sh"
+            $"-c util/multisort.sh {resultPositionsFilename} -t '\t' {sortOpt} |LC_ALL=C cut -f 4,5 > {
+                                                                                                           sortedResultPositions
+            }"
+
+    sortedResultPositions
+
+
+let getSearchResults (onnStr: string) (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) =
+    async {
+        let queryName =
+            cwbQueryName corpus searchParams.SearchId
+
+        let! rawResults =
+            if corpus.Config.MultiCpuBounds.IsSome then
+                match searchParams.SortKey with
+                | Position ->
+                    let namedQuery =
+                        cwbQueryName corpus searchParams.SearchId
+
+                    let maybeNumResultsMinusOne =
+                        if searchParams.End > 0UL then
+                            Some(searchParams.End - searchParams.Start)
+                        else
+                            None
+
+                    let nonzeroFiles, indexes =
+                        getFilesIndexes corpus searchParams namedQuery maybeNumResultsMinusOne
+
+                    let scripts =
+                        (nonzeroFiles, indexes)
+                        ||> Seq.map2
+                                (fun resultFile (start, ``end``) ->
+                                    [ yield! cqpInit corpus searchParams None namedQuery []
+                                      $"cat {resultFile} {start} {``end``}" ])
+
+                    async {
+                        let! allResults = runCqpScripts logger corpus scripts
+
+                        // Since we asked for 'end' number of results even from the last file, we may have got
+                        // more than we asked for (when adding up all results from all files), so make sure we
+                        // only return the desired number of results if it was specified.
+                        let results =
+                            match maybeNumResultsMinusOne with
+                            | Some numResultsMinusOne ->
+                                allResults
+                                |> Array.truncate (int numResultsMinusOne + 1)
+                            | None -> allResults
+
+                        return results
+                    }
+
+                | _ ->
+                    let namedQuery =
+                        $"{queryName}_sort_by_{searchParams.SortKey}"
+
+                    let undumpSaveCommands =
+                        if File.Exists($"tmp/{cwbCorpusName corpus searchParams.Queries}:{namedQuery}") then
+                            []
+                        else
+                            let sortedPositions =
+                                getSortedPositions logger corpus searchParams
+
+                            [ $"undump {namedQuery} < '{sortedPositions}'"
+                              namedQuery
+                              $"save {namedQuery}" ]
+
+                    let commands =
+                        [ yield! cqpInit corpus searchParams None namedQuery undumpSaveCommands
+                          $"cat {namedQuery} {searchParams.Start} {searchParams.End}" ]
+
+                    async {
+                        let! output = runCqpCommands logger corpus false commands
+                        return fst output |> Option.defaultValue [||]
+                    }
+            else
+                let namedQuery = $"{queryName}_1_o"
+
+                let commands =
+                    [ yield! cqpInit corpus searchParams None namedQuery []
+                      $"cat {namedQuery} {searchParams.Start} {searchParams.End}" ]
+
+                async {
+                    let! output = runCqpCommands logger corpus false commands
+                    return fst output |> Option.defaultValue [||]
+                }
+
+        return
+            rawResults
+            |> transformResults searchParams.Queries
+    }

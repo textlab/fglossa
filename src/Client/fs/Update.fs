@@ -111,6 +111,7 @@ module LoadedCorpus =
                                     p.Step
 
                             { p with
+                                  CpuCounts = Some results.CpuCounts
                                   LastCount = Some lastCount
                                   Step = step }
 
@@ -187,7 +188,10 @@ module LoadedCorpus =
                                   PagesBeingFetched = Array.append model.PagesBeingFetched pageNumbers }
 
                         let cmd =
-                            Cmd.OfAsync.perform serverApi.GetSearchResults searchParams FetchedResultWindow
+                            Cmd.OfAsync.perform
+                                serverApi.GetSearchResults
+                                (searchParams, pageNumbers)
+                                FetchedResultWindow
 
                         newModel, cmd
 
