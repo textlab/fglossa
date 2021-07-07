@@ -303,7 +303,7 @@ let getNonzeroFiles
             |> Array.indexed
             |> Array.collect
                 (fun (index, cpuBounds) ->
-                    [| for cpuIndex in 0 .. cpuBounds.Length -> $"{namedQuery}_{index + 1}_{cpuIndex}" |])
+                    [| for cpuIndex in 0 .. cpuBounds.Length - 1 -> $"{namedQuery}_{index + 1}_{cpuIndex}" |])
 
         let lastFile =
             maybeLastFile |> Option.defaultValue firstFile
