@@ -118,6 +118,7 @@ module LoadedCorpus =
                                           |> Some
                                       | None -> Some results.CpuCounts
                                   LastCount = Some lastCount
+                                  SearchId = results.SearchId
                                   Step = step }
 
                     let cmd =
