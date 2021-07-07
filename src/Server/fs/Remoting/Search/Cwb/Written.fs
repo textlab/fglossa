@@ -10,7 +10,7 @@ open Shared
 open Shared.StringUtils
 open Remoting.Search.Cwb.Common
 
-let private getParts (corpus: Corpus) (step: int) (corpusSize: uint64) (maybeCommand: string option) =
+let getParts (corpus: Corpus) (step: int) (corpusSize: uint64) (maybeCommand: string option) =
     let stepIndex = step - 1
 
     match corpus.Config.MultiCpuBounds with
@@ -49,7 +49,7 @@ let private getParts (corpus: Corpus) (step: int) (corpusSize: uint64) (maybeCom
             Array.empty
 
 
-let private randomReduceCommand
+let randomReduceCommand
     (corpusSize: uint64)
     (startpos: uint64)
     (endpos: uint64)
@@ -77,7 +77,7 @@ let private randomReduceCommand
       $"reduce {namedQuery} to {nRandom}" ]
 
 
-let private cqpInit
+let cqpInit
     (corpus: Corpus)
     (searchParams: SearchParams)
     (maybeAttributes: TokenAttribute [] option)
@@ -96,7 +96,7 @@ let private cqpInit
     let sortCmd =
         sortCommand namedQuery searchParams.SortKey
 
-    [ "set DataDirectory \"tmp\""
+    [ "set DataDirectory \"/tmp/glossa\""
       cwbCorpusName corpus searchParams.Queries
       yield! constructSaveCommands
       $"set Context {adjustedContextSize} word"
