@@ -40,6 +40,29 @@ module CorpusStartView =
 module ResultsView =
 
     module Concordance =
+        [<ReactComponent>]
+        let PaginationTextInput (textValue: string, dispatch: ShowingResults.Concordance.Msg -> unit) : ReactElement =
+            let inputRef = React.useInputRef ()
+
+            let selectTextInput () =
+                inputRef.current
+                |> Option.iter (fun inputElement -> inputElement.select ())
+
+            Bulma.input.text [ input.isSmall
+                               prop.ref inputRef
+                               prop.style [ style.width 60
+                                            style.textAlign.right ]
+                               prop.value textValue
+                               prop.onClick (fun _ -> selectTextInput ())
+                               prop.onChange (
+                                   ShowingResults.Concordance.Msg.SetPaginatorTextValue
+                                   >> dispatch
+                               )
+                               prop.onKeyUp (
+                                   key.enter,
+                                   (fun _ -> dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage None))
+                               ) ]
+
         let pagination (model: ConcordanceModel) (numPages: int) (dispatch: ShowingResults.Concordance.Msg -> unit) =
             let isFetching = model.PagesBeingFetched.Length > 0
 
@@ -64,21 +87,7 @@ module ResultsView =
                                                         "fa-angle-left"
                                                         (model.PaginatorPageNo = 1 || isFetching)
                                                         (fun e -> setPage e (model.PaginatorPageNo - 1)) ] ]
-                  Bulma.levelItem [ Bulma.input.text [ input.isSmall
-                                                       prop.style [ style.width 60
-                                                                    style.textAlign.right ]
-                                                       prop.value model.PaginatorTextValue
-                                                       prop.onChange (
-                                                           ShowingResults.Concordance.Msg.SetPaginatorTextValue
-                                                           >> dispatch
-                                                       )
-                                                       prop.onKeyUp (
-                                                           key.enter,
-                                                           (fun _ ->
-                                                               dispatch (
-                                                                   ShowingResults.Concordance.Msg.SetPaginatorPage None
-                                                               ))
-                                                       ) ] ]
+                  Bulma.levelItem [ PaginationTextInput(model.PaginatorTextValue, dispatch) ]
                   Bulma.levelItem [ Bulma.buttons [ iconButton
                                                         "fa-angle-right"
                                                         (model.PaginatorPageNo = numPages || isFetching)
