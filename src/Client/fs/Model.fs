@@ -28,7 +28,8 @@ type Corpus =
       MetadataTable: Metadata.Category list }
 
 type ConcordanceModel =
-    { IsSearching: bool
+    { ContextSizeTextValue: string
+      IsSearching: bool
       // The page numbers of the result pages currently being fetched from the server
       NumResults: uint64 option
       NumSteps: int
@@ -43,8 +44,9 @@ type ConcordanceModel =
       ResultPageNo: int
       ResultPages: Map<int, SearchResult []>
       SearchParams: SearchParams }
-    static member Init(searchParams, numSteps) =
-        { IsSearching = true
+    static member Init(searchParams, numSteps, contextSizeTextValue) =
+        { ContextSizeTextValue = contextSizeTextValue
+          IsSearching = true
           NumResults = None
           NumSteps = numSteps
           PagesBeingFetched = [||]
@@ -72,8 +74,8 @@ type ShowingResultsModel =
       SearchParams: SearchParams
       SearchResults: SearchResultInfo option
       NumSteps: int }
-    static member Init((searchParams: SearchParams, numSteps: int)) =
-        { ActiveTab = Concordance(ConcordanceModel.Init(searchParams, numSteps))
+    static member Init((searchParams: SearchParams, numSteps: int, contextSizeTextValue: string)) =
+        { ActiveTab = Concordance(ConcordanceModel.Init(searchParams, numSteps, contextSizeTextValue))
           SearchParams = searchParams
           SearchResults = None
           NumSteps = numSteps }

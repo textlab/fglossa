@@ -66,6 +66,8 @@ module LoadedCorpus =
                 | FetchedResultWindow of SearchResultPage []
                 | SetPaginatorTextValue of string
                 | SetPaginatorPage of int option
+                | SetContextSizeTextValue of string
+                | SetContextSize of int
 
             let update (msg: Msg) (model: ConcordanceModel) : ConcordanceModel * Cmd<Msg> =
                 let registerResultPages results =
@@ -136,6 +138,10 @@ module LoadedCorpus =
                               SearchParams = newSearchParams }
 
                     newModel, cmd
+
+                | SetContextSizeTextValue v -> { model with ContextSizeTextValue = v }, Cmd.none
+
+                | SetContextSize _ -> failwith "The SetContextSize message should be handled by a parent!"
 
                 // Fetch a window of search result pages centred on centrePageNo. Ignores pages that have
                 // already been fetched or that are currently being fetched in another request (note that such
@@ -295,6 +301,21 @@ module LoadedCorpus =
             let model', cmd = Update.Metadata.update msg' model
             model', Cmd.map MetadataMsg cmd
 
+        // The SetContextSize message is dispatched from the concordance view, but needs to be handled here
+        // where the search params are available in the model and the Search message is also available
+        | ShowingResultsMsg (ShowingResults.ConcordanceMsg (ShowingResults.Concordance.SetContextSize size)) ->
+            let newSearchParams =
+                { model.Search.Params with
+                      ContextSize = size }
+
+            let newModel =
+                { model with
+                      Search =
+                          { model.Search with
+                                Params = newSearchParams } }
+
+            newModel, Cmd.ofMsg Search
+
         | ShowingResultsMsg msg' ->
             match model.Substate with
             | ShowingResults m ->
@@ -363,7 +384,14 @@ module LoadedCorpus =
 
                 let newModel =
                     { model with
-                          Substate = ShowingResults(ShowingResultsModel.Init(searchParams, numSteps)) }
+                          Substate =
+                              ShowingResults(
+                                  ShowingResultsModel.Init(
+                                      searchParams,
+                                      numSteps,
+                                      string model.Search.Params.ContextSize
+                                  )
+                              ) }
 
                 newModel,
                 Cmd.ofMsg (

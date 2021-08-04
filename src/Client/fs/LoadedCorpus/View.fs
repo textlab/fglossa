@@ -1,5 +1,6 @@
 module View.LoadedCorpus
 
+open System
 open Elmish
 open Feliz
 open Feliz.Bulma
@@ -98,6 +99,33 @@ module ResultsView =
                                                         (fun e -> setPage e numPages) ] ] ]
             | _ -> []
 
+        [<ReactComponent>]
+        let ContextTextInput (textValue: string, dispatch: ShowingResults.Concordance.Msg -> unit) : ReactElement =
+            let inputRef = React.useInputRef ()
+
+            let selectTextInput () =
+                inputRef.current
+                |> Option.iter (fun inputElement -> inputElement.select ())
+
+            Bulma.input.text [ input.isSmall
+                               prop.ref inputRef
+                               prop.style [ style.width 40
+                                            style.textAlign.right ]
+                               prop.value textValue
+                               prop.onClick (fun _ -> selectTextInput ())
+                               prop.onChange (
+                                   ShowingResults.Concordance.Msg.SetContextSizeTextValue
+                                   >> dispatch
+                               )
+                               prop.onKeyUp (
+                                   key.enter,
+                                   (fun _ ->
+                                       match Int32.TryParse(textValue) with
+                                       | (true, size) -> dispatch (ShowingResults.Concordance.Msg.SetContextSize size)
+                                       | (false, _) -> ignore None)
+                               ) ]
+
+
 
         ////////////////////////////////////////////////////
         /// View.LoadedCorpus.ResultsView.Concordance.view
@@ -148,8 +176,7 @@ module ResultsView =
 
             let contextSelector =
                 [ Bulma.levelItem [ prop.text "Context:" ]
-                  Bulma.levelItem [ Bulma.input.text [ input.isSmall
-                                                       prop.style [ style.width 40 ] ] ]
+                  Bulma.levelItem [ ContextTextInput(model.ContextSizeTextValue, dispatch) ]
                   Bulma.levelItem [ prop.style [ style.marginRight 50 ]
                                     prop.text "words" ] ]
 
@@ -185,7 +212,8 @@ module ResultsView =
                                                                          Concordance(
                                                                              ConcordanceModel.Init(
                                                                                  model.SearchParams,
-                                                                                 model.NumSteps
+                                                                                 model.NumSteps,
+                                                                                 string model.SearchParams.ContextSize
                                                                              )
                                                                          )
                                                                      )
