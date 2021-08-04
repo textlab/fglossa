@@ -46,13 +46,13 @@ module ResultsView =
             let setPage (e: Browser.Types.MouseEvent) (pageNo: int) =
                 e.preventDefault ()
 
-                // Don't allow switching to a new page while we are in the processing of
+                // Don't allow switching to a new page while we are in the process of
                 // fetching one or more pages, since the user may start clicking lots of
                 // times, generating lots of concurrent requests
                 if not isFetching
                    && pageNo >= 1
                    && pageNo <= numPages then
-                    dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage pageNo)
+                    dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage(Some pageNo))
 
             match model.NumResults with
             | Some results when results > uint64 model.SearchParams.PageSize ->
@@ -67,8 +67,18 @@ module ResultsView =
                   Bulma.levelItem [ Bulma.input.text [ input.isSmall
                                                        prop.style [ style.width 60
                                                                     style.textAlign.right ]
-                                                       prop.value 1
-                                                       prop.onChange (fun (s: string) -> printfn $"New value: {s}") ] ]
+                                                       prop.value model.PaginatorTextValue
+                                                       prop.onChange (
+                                                           ShowingResults.Concordance.Msg.SetPaginatorTextValue
+                                                           >> dispatch
+                                                       )
+                                                       prop.onKeyUp (
+                                                           key.enter,
+                                                           (fun _ ->
+                                                               dispatch (
+                                                                   ShowingResults.Concordance.Msg.SetPaginatorPage None
+                                                               ))
+                                                       ) ] ]
                   Bulma.levelItem [ Bulma.buttons [ iconButton
                                                         "fa-angle-right"
                                                         (model.PaginatorPageNo = numPages || isFetching)
@@ -194,7 +204,9 @@ module ResultsView =
             match model.ActiveTab with
             | Concordance concordanceModel when
                 concordanceModel.IsSearching
-                && concordanceModel.NumResults.IsNone -> true
+                && concordanceModel.NumResults.IsNone
+                ->
+                true
             | _ -> false
 
         Html.span [ topRowButtons

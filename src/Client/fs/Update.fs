@@ -64,7 +64,8 @@ module LoadedCorpus =
                 | SearchResultsReceived of SearchResultInfo
                 | FetchResultWindow of int
                 | FetchedResultWindow of SearchResultPage []
-                | SetPaginatorPage of int
+                | SetPaginatorTextValue of string
+                | SetPaginatorPage of int option
 
             let update (msg: Msg) (model: ConcordanceModel) : ConcordanceModel * Cmd<Msg> =
                 let registerResultPages results =
@@ -202,11 +203,31 @@ module LoadedCorpus =
 
                 | FetchedResultWindow results ->
                     // TODO: Check if we get a 401 Unauthorized
-                    let newModel = registerResultPages results
+                    let newModel =
+                        results
+                        |> registerResultPages
+                        // Now that result pages have been fetched, make sure we actually show the page that was
+                        // selected in the paginator
+                        |> fun m ->
+                            { m with
+                                  ResultPageNo = m.PaginatorPageNo }
 
                     newModel, Cmd.none
 
-                | SetPaginatorPage pageNo ->
+                | SetPaginatorTextValue s -> { model with PaginatorTextValue = s }, Cmd.none
+
+                | SetPaginatorPage maybePageNo ->
+                    let pageNo =
+                        match maybePageNo with
+                        // If we got an explicit page number, use that
+                        | Some p -> p
+                        // If we didn't get an explicit page number, try to parse the current PaginatorTextValue
+                        // as an int. If successful, use the result of that, otherwise keep the current page number
+                        | None ->
+                            match Int32.TryParse(model.PaginatorTextValue) with
+                            | (true, v) -> v
+                            | (false, _) -> model.PaginatorPageNo
+
                     let newModel =
                         { model with
                               // Set the value of the page number shown in the paginator; it may
