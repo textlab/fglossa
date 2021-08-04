@@ -172,13 +172,11 @@ module ResultsView =
                         else
                             ""
 
-                // Only show the spinner when we are fetching result pages or when we are searching
-                // AND have already found some results so as to avoid showing spinners both here and
-                // over the result table at the same time (since we show a spinner over the result
-                // table until we have found some results)
+                // Only show the spinner when we are searching AND have already found some results so as to
+                // avoid showing spinners both here and over the result table at the same time (since we show
+                // a spinner over the result table until we have found some results)
                 let shouldShowSpnner =
-                    model.PagesBeingFetched.Length > 0
-                    || (model.IsSearching && model.ResultPages.Count > 0)
+                    model.IsSearching && model.ResultPages.Count > 0
 
                 Html.span [ Html.div [ prop.style [ style.width 400
                                                     style.textAlign.right
