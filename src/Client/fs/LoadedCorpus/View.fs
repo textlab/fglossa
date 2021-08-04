@@ -42,7 +42,12 @@ module ResultsView =
 
     module Concordance =
         [<ReactComponent>]
-        let PaginationTextInput (textValue: string, dispatch: ShowingResults.Concordance.Msg -> unit) : ReactElement =
+        let PaginationTextInput
+            (
+                textValue: string,
+                isDisabled: bool,
+                dispatch: ShowingResults.Concordance.Msg -> unit
+            ) : ReactElement =
             let inputRef = React.useInputRef ()
 
             let selectTextInput () =
@@ -51,6 +56,7 @@ module ResultsView =
 
             Bulma.input.text [ input.isSmall
                                prop.ref inputRef
+                               prop.disabled isDisabled
                                prop.style [ style.width 60
                                             style.textAlign.right ]
                                prop.value textValue
@@ -64,16 +70,19 @@ module ResultsView =
                                    (fun _ -> dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage None))
                                ) ]
 
-        let pagination (model: ConcordanceModel) (numPages: int) (dispatch: ShowingResults.Concordance.Msg -> unit) =
-            let isFetching = model.PagesBeingFetched.Length > 0
-
+        let pagination
+            (model: ConcordanceModel)
+            (isSearchingOrFetching: bool)
+            (numPages: int)
+            (dispatch: ShowingResults.Concordance.Msg -> unit)
+            =
             let setPage (e: Browser.Types.MouseEvent) (pageNo: int) =
                 e.preventDefault ()
 
                 // Don't allow switching to a new page while we are in the process of
                 // fetching one or more pages, since the user may start clicking lots of
                 // times, generating lots of concurrent requests
-                if not isFetching
+                if not isSearchingOrFetching
                    && pageNo >= 1
                    && pageNo <= numPages then
                     dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage(Some pageNo))
@@ -82,25 +91,32 @@ module ResultsView =
             | Some results when results > uint64 model.SearchParams.PageSize ->
                 [ Bulma.levelItem [ Bulma.buttons [ iconButton
                                                         "fa-angle-double-left"
-                                                        (model.PaginatorPageNo = 1 || isFetching)
+                                                        (model.PaginatorPageNo = 1 || isSearchingOrFetching)
                                                         (fun e -> setPage e 1)
                                                     iconButton
                                                         "fa-angle-left"
-                                                        (model.PaginatorPageNo = 1 || isFetching)
+                                                        (model.PaginatorPageNo = 1 || isSearchingOrFetching)
                                                         (fun e -> setPage e (model.PaginatorPageNo - 1)) ] ]
-                  Bulma.levelItem [ PaginationTextInput(model.PaginatorTextValue, dispatch) ]
+                  Bulma.levelItem [ PaginationTextInput(model.PaginatorTextValue, isSearchingOrFetching, dispatch) ]
                   Bulma.levelItem [ Bulma.buttons [ iconButton
                                                         "fa-angle-right"
-                                                        (model.PaginatorPageNo = numPages || isFetching)
+                                                        (model.PaginatorPageNo = numPages
+                                                         || isSearchingOrFetching)
                                                         (fun e -> setPage e (model.PaginatorPageNo + 1))
                                                     iconButton
                                                         "fa-angle-double-right"
-                                                        (model.PaginatorPageNo = numPages || isFetching)
+                                                        (model.PaginatorPageNo = numPages
+                                                         || isSearchingOrFetching)
                                                         (fun e -> setPage e numPages) ] ] ]
             | _ -> []
 
         [<ReactComponent>]
-        let ContextTextInput (textValue: string, dispatch: ShowingResults.Concordance.Msg -> unit) : ReactElement =
+        let ContextSizeTextInput
+            (
+                textValue: string,
+                isDisabled: bool,
+                dispatch: ShowingResults.Concordance.Msg -> unit
+            ) : ReactElement =
             let inputRef = React.useInputRef ()
 
             let selectTextInput () =
@@ -109,6 +125,7 @@ module ResultsView =
 
             Bulma.input.text [ input.isSmall
                                prop.ref inputRef
+                               prop.disabled isDisabled
                                prop.style [ style.width 40
                                             style.textAlign.right ]
                                prop.value textValue
@@ -174,9 +191,13 @@ module ResultsView =
                                            spinnerOverlay shouldShowSpnner (Some [ style.width 40; style.height 40 ]) []
                                        ) ] ]
 
+            let isSearchingOrFetching =
+                model.PagesBeingFetched.Length > 0
+                || model.IsSearching
+
             let contextSelector =
                 [ Bulma.levelItem [ prop.text "Context:" ]
-                  Bulma.levelItem [ ContextTextInput(model.ContextSizeTextValue, dispatch) ]
+                  Bulma.levelItem [ ContextSizeTextInput(model.ContextSizeTextValue, isSearchingOrFetching, dispatch) ]
                   Bulma.levelItem [ prop.style [ style.marginRight 50 ]
                                     prop.text "words" ] ]
 
@@ -190,7 +211,7 @@ module ResultsView =
                                               Bulma.levelItem resultsInfo ]
                             Bulma.levelRight [ if corpus.Config.Modality <> Spoken then
                                                    yield! contextSelector
-                                               yield! pagination model numPages dispatch ] ]
+                                               yield! pagination model isSearchingOrFetching numPages dispatch ] ]
               LoadedCorpus.ResultViews.Cwb.Written.concordanceTable corpus resultPage ]
 
 
