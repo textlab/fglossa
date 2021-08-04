@@ -391,9 +391,7 @@ let getSortedPositions (logger: ILogger) (corpus: Corpus) (searchParams: SearchP
     if not (File.Exists(sortedResultPositions)) then
         Process.runCmd
             "sh"
-            $"-c util/multisort.sh {resultPositionsFilename} -t '\t' {sortOpt} |LC_ALL=C cut -f 4,5 > {
-                                                                                                           sortedResultPositions
-            }"
+            $"-c util/multisort.sh {resultPositionsFilename} -t '\t' {sortOpt} |LC_ALL=C cut -f 4,5 > {sortedResultPositions}"
 
     sortedResultPositions
 
