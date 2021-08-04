@@ -318,11 +318,12 @@ let getNonzeroFiles
 
 
 let getFilesIndexes corpus searchParams namedQuery (maybeNumResultsMinusOne: uint64 option) =
-    let _, firstFileStart, _ = getFileStartEnd searchParams
+    let firstFileIndex, firstFileStart, lastFileIndex = getFileStartEnd searchParams
 
     let nonZeroFiles =
-        getNonzeroFiles corpus searchParams namedQuery 0 None
+        getNonzeroFiles corpus searchParams namedQuery firstFileIndex (Some lastFileIndex)
         |> List.toSeq
+
     // For the first result file, we need to adjust the start and end index according to
     // the number of hits that were found in previous files. For the remaining files, we
     // set the start index to 0, and we might as well set the end index to [number of
