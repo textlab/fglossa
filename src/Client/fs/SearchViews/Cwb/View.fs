@@ -80,7 +80,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
         | Extended -> ""
         | Cqp -> ""
 
-    let textInputToQuery (corpus: Corpus) (inputValue: string) =
+    let textInputToQuery (inputValue: string) : (string * bool) =
         match search.Interface with
         | Simple ->
             let query =
@@ -122,7 +122,29 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                 else "word"
 
             (sprintf "[word=\"%s\" %%c]" inputValue, false)
-        | Cqp -> (inputValue, false)
+        | Cqp ->
+            let query =
+                // Replace literal quotes with __QUOTE__ to prevent
+                // them from confusing our regexes later on
+                inputValue
+                |> (replace "word=\"\\\"\"" "word=\"__QUOTE__\""
+                    >> replace "^\\\"$" "[word=\"__QUOTE__\"]")
+
+            (query, false)
+
+    let simpleView =
+        Bulma.input.search [ prop.value queryText
+                             prop.onChange (textInputToQuery >> SetQueryText >> dispatch) ]
+
+    let cqpView =
+        Bulma.input.search [ prop.value queryText
+                             prop.onChange (textInputToQuery >> SetQueryText >> dispatch) ]
+
+    let searchInterface =
+        match search.Interface with
+        | Simple -> simpleView
+        | Extended -> Cwb.Extended.view corpus search dispatch
+        | Cqp -> cqpView
 
     Html.div [ prop.style [ style.width 500 ]
                prop.children [ Bulma.level [ prop.style [ style.paddingTop 20 ]
@@ -133,14 +155,5 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                                                           (fun _ ->
                                                                                                               dispatch
                                                                                                                   Search) ] ] ] ]
-                               Bulma.field.div [ Bulma.control.div [ Bulma.input.search [ prop.value queryText
-                                                                                          prop.onChange
-                                                                                              (fun v ->
-                                                                                                  dispatch (
-                                                                                                      SetQueryText(
-                                                                                                          textInputToQuery
-                                                                                                              corpus
-                                                                                                              v
-                                                                                                      )
-                                                                                                  )) ] ] ]
+                               Bulma.field.div [ Bulma.control.div [ searchInterface ] ]
                                Bulma.field.div [ Bulma.control.div [ Bulma.button.button "Or..." ] ] ] ]

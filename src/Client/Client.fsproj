@@ -7,7 +7,8 @@
     <ItemGroup>
         <None Include="index.html" />
         <None Include="paket.references" />
-        <Compile Include="fs/Model.fs" />
+        <Compile Include="fs/Model/CwbExtended.fs" />
+        <Compile Include="fs/Model/Model.fs" />
         <Compile Include="../Corpora/corpora/*/Shared/*.fs" />
         <Compile Include="../Corpora/corpora/*/Client.fs" />
         <Compile Include="../Corpora/Client.fs" />
@@ -15,6 +16,7 @@
         <Compile Include="fs/Update.fs" />
         <Compile Include="fs/Common.fs" />
         <Compile Include="fs/Metadata/View.fs" />
+        <Compile Include="fs/SearchViews/Cwb/Extended.fs" />
         <Compile Include="fs/SearchViews/Cwb/View.fs" />
         <Compile Include="fs/SearchViews/Fcs/View.fs" />
         <Compile Include="fs/LoadedCorpus/ResultViews/Cwb/Common.fs" />

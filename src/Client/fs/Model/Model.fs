@@ -2,6 +2,7 @@ module Model
 
 open Fable.Remoting.Client
 open Shared
+open Shared.StringUtils
 
 let serverApi =
     Remoting.createApi ()
