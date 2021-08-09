@@ -10,7 +10,7 @@ type AttrOperator =
 type AttrExpr =
     { Attr: string
       Operator: AttrOperator
-      Value: string }
+      Values: Set<string> }
 
 type Interval = { Min: int option; Max: int option }
 
@@ -43,9 +43,10 @@ type MainCategory =
 
 type QueryTerm =
     { MainStringValue: string option
-      AdditionalExpressions: AttrExpr []
+      ExtraForms: Map<string, Set<string>>
+      IsLemma: bool
       IsPhon: bool
-      IsOrt: bool
+      IsOrig: bool
       IsStart: bool
       IsEnd: bool
       IsMiddle: bool
@@ -54,9 +55,10 @@ type QueryTerm =
       PrecedingInterval: Interval option }
     static member Default =
         { MainStringValue = None
-          AdditionalExpressions = [||]
+          ExtraForms = Map.empty
+          IsLemma = false
           IsPhon = false
-          IsOrt = false
+          IsOrig = false
           IsStart = false
           IsEnd = false
           IsMiddle = false
@@ -86,7 +88,71 @@ let handleInterval intervalStr =
     else
         None
 
-let handleAttributeValue (termStr: string) interval = QueryTerm.Default
+let handleAttributeValue (inputStr: string) interval =
+    /// Unescapes any escaped chars, since we don't want the backslashes to show in the text input
+    let unescapeForm form =
+        form
+        |> (replace "\\(.)" "$1"
+            >> replace "^(?:\.\*)?(.+?)" "$1"
+            >> replace "(.+?)(?:\.\*)?$" "$1")
+
+    let processFirstForm name value =
+        let isLemma = name = "lemma"
+        let isPhon = name = "phon"
+        let isOrig = name = "orig"
+        let isStart = Regex.IsMatch(value, ".+\.\*$")
+        let isEnd = Regex.IsMatch(value, "^\.\*.+")
+        let isMiddle = isStart && isEnd
+
+        { QueryTerm.Default with
+              MainStringValue = Some(unescapeForm value)
+              IsLemma = isLemma
+              IsPhon = isPhon
+              IsOrig = isOrig
+              IsStart = if isMiddle then false else isStart
+              IsEnd = if isMiddle then false else isEnd
+              IsMiddle = isMiddle }
+
+    let processOtherForms (term: QueryTerm) name value =
+        let newValues =
+            match term.ExtraForms |> Map.tryFind name with
+            | Some values -> values.Add(value)
+            | None -> Set.singleton value
+
+        { term with
+              ExtraForms = term.ExtraForms.Add(name, newValues) }
+
+    let processForms (term: QueryTerm) input =
+        let forms =
+            [ for m in Regex.Matches(input, "(word|lemma|phon|orig)\s*(!?=)\s*\"(.+?)\"") ->
+                  let name = m.Groups.[1].Value
+                  let operator = m.Groups.[2].Value
+
+                  let value =
+                      m.Groups.[3].Value
+                      |> fun v -> if operator = "!=" then "!" + v else v
+
+                  (name, operator, value) ]
+
+        forms
+        |> List.fold
+            (fun acc (name, operator, value) ->
+                // If the attribute value starts with &&, it should be a special
+                // code (e.g. for marking errors in text, inserted as "tokens"
+                // to ensure alignment between original and corrected text) and
+                // should not be shown in the text input box
+                if name.StartsWith("&&") then
+                    acc
+                else
+                // Only the first non-negative word/lemma/phon/orig form
+                // goes into the main string value; the rest are additional expressions
+                if acc.MainStringValue.IsNone && operator = "=" then
+                    processFirstForm name value
+                else
+                    processOtherForms acc name value)
+            term
+
+    QueryTerm.Default
 
 let handleQuotedOrEmptyTerm (termStr: string) interval =
     if termStr.Length > 2 then
@@ -140,10 +206,10 @@ type Query =
             |> List.iter
                 (fun (termStr, groups) ->
                     if Regex.IsMatch(termStr, intervalRx) then
-                        latestInterval <- handleInterval termStr
+                        latestInterval <- handleInterval groups.[1]
                     elif Regex.IsMatch(termStr, attributeValueRx) then
                         let term =
-                            handleAttributeValue termStr latestInterval
+                            handleAttributeValue (List.last groups) latestInterval
 
                         terms <- Array.append terms [| term |]
                     elif Regex.IsMatch(termStr, quotedOrEmptyTermRx) then
