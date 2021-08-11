@@ -260,16 +260,13 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
 
             if
                 results.Length > 1
-                && Regex.IsMatch
-                    (
-                        results.[0],
-                        "PARSE ERROR|CQP Error"
-                    )
+                && Regex.IsMatch(results.[0], "PARSE ERROR|CQP Error")
             then
                 return failwith $"CQP error: {results}"
             else
                 return (searchResults, count)
-        with :? OutOfMemoryException as ex ->
+        with
+        | :? OutOfMemoryException as ex ->
             logger.Error $"Out of memory: killing all CQP processes at {DateTime.Now}"
             Process.runCmd "killall" "cqp"
             return raise ex
