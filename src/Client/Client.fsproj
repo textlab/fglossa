@@ -10,7 +10,7 @@
         <Compile Include="fs/Model/CwbExtended.fs" />
         <Compile Include="fs/Model/Model.fs" />
         <Compile Include="../Corpora/corpora/*/Shared/*.fs" />
-        <Compile Include="../Corpora/corpora/*/Client.fs" />
+        <Compile Include="../Corpora/corpora/*/Client/*.fs" />
         <Compile Include="../Corpora/Client.fs" />
         <Compile Include="fs/Metadata/Update.fs" />
         <Compile Include="fs/Update.fs" />
