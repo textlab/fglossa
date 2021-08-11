@@ -48,8 +48,14 @@ type Search =
 
 type Corpus =
     { Config: CorpusConfig
+      CwbAttributeMenu: Cwb.AttributeStructure list option
       MetadataMenu: Metadata.MenuItem list
       MetadataTable: Metadata.Category list }
+    static member Init(config) =
+        { Config = config
+          CwbAttributeMenu = None
+          MetadataMenu = []
+          MetadataTable = [] }
 
 type ConcordanceModel =
     { ContextSizeTextValue: string
