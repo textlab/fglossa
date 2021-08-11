@@ -7,6 +7,15 @@ module StringUtils =
     let replace (pattern: string) (replacement: string) input =
         Regex.Replace(input, pattern, replacement)
 
+module Cwb =
+    /// Positional CWB attribute
+    type PositionalAttribute =
+        {
+          // Short name, which is also the name of the attribute in CWB
+          Code: string
+          // Human-readable name
+          Name: string }
+
 module Metadata =
     /// Base class for all metadata categories
     [<AbstractClass>]
@@ -78,18 +87,13 @@ type CorpusModality =
     | Spoken
     | Written
 
-type AttributeCode = string
-type AttributeName = string
-
-type TokenAttribute = AttributeCode * AttributeName
-
 type Language =
     { Code: string
       Name: string
-      TokenAttributes: TokenAttribute [] }
+      TokenAttributes: Cwb.PositionalAttribute list option }
 
 type LanguageConfig =
-    | Monolingual of TokenAttribute []
+    | Monolingual of Cwb.PositionalAttribute list option
     | Multilingual of Language []
 
 type CorpusConfig =
@@ -105,7 +109,7 @@ type CorpusConfig =
     static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
         { Code = code
           FontFamily = None
-          LanguageConfig = defaultArg languageConfig (Monolingual [||])
+          LanguageConfig = defaultArg languageConfig (Monolingual None)
           Modality = defaultArg modality Written
           Logo = logo
           MultiCpuBounds = defaultArg multiCpuBounds None

@@ -107,10 +107,10 @@ let printPositionsMatchingMetadata
                 File.WriteAllText(positionsFilename, $"{startpos}\t{endpos'}\n")
             | None -> failwith $"No corpus size found for {cwbCorpus} in {corpus.Config.Sizes}!"
 
-let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes: TokenAttribute [] option) =
-    let createAttrString attributes =
+let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes: Cwb.PositionalAttribute list option) =
+    let createAttrString (attributes: Cwb.PositionalAttribute list) =
         attributes
-        |> Array.map (fst >> fun attr -> $"+{attr}")
+        |> List.map (fun attr -> $"+{attr.Code}")
         |> String.concat " "
 
     match maybeAttributes with
@@ -120,9 +120,12 @@ let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes:
         $"show -word; show {attrString}"
     | None ->
         match corpus.Config.LanguageConfig with
-        | Monolingual attributes ->
-            let attrString = createAttrString attributes
-            $"show {attrString}"
+        | Monolingual maybeLangAttributes ->
+            match maybeLangAttributes with
+            | Some attributes ->
+                let attrString = createAttrString attributes
+                $"show {attrString}"
+            | None -> ""
         | Multilingual languages ->
             let firstQueryLanguageCode =
                 match Array.tryHead queries with
@@ -133,9 +136,13 @@ let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes:
                 languages
                 |> Array.find (fun lang -> lang.Code = firstQueryLanguageCode)
 
-            let attributes = language.TokenAttributes
-            let attrString = createAttrString attributes
-            $"show -word; show {attrString}"
+            let maybeLangAttributes = language.TokenAttributes
+
+            match maybeLangAttributes with
+            | Some attributes ->
+                let attrString = createAttrString attributes
+                $"show {attrString}"
+            | None -> ""
 // TODO: Implement parsing of tagger attributes and corpus-specific attributes
 
 let alignedLanguagesCommand (corpus: Corpus) (queries: Query []) =

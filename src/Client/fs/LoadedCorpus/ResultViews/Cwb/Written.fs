@@ -185,18 +185,21 @@ let concordanceTable (corpus: Corpus) (pageResults: SearchResult [] option) =
     // not in the list because it is shown by default by CQP
     let maybeLemmaIndex, maybeOrigIndex =
         match corpus.Config.LanguageConfig with
-        | Monolingual attributes ->
-            let li =
-                attributes
-                |> Array.tryFindIndex (fun (attrCode, _) -> attrCode = "lemma")
-                |> Option.map (fun i -> i + 1)
+        | Monolingual maybeLangAttributes ->
+            match maybeLangAttributes with
+            | Some attributes ->
+                let li =
+                    attributes
+                    |> List.tryFindIndex (fun attr -> attr.Code = "lemma")
+                    |> Option.map (fun i -> i + 1)
 
-            let oi =
-                attributes
-                |> Array.tryFindIndex (fun (attrCode, _) -> attrCode = "orig")
-                |> Option.map (fun i -> i + 1)
+                let oi =
+                    attributes
+                    |> List.tryFindIndex (fun attr -> attr.Code = "orig")
+                    |> Option.map (fun i -> i + 1)
 
-            (li, oi)
+                (li, oi)
+            | None -> (None, None)
         | Multilingual _ -> failwith "NOT IMPLEMENTED"
 
     let rows =

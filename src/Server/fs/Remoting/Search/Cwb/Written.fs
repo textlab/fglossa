@@ -80,7 +80,7 @@ let randomReduceCommand
 let cqpInit
     (corpus: Corpus)
     (searchParams: SearchParams)
-    (maybeAttributes: TokenAttribute [] option)
+    (maybeAttributes: Cwb.PositionalAttribute list option)
     (namedQuery: string)
     (constructSaveCommands: string list)
     =

@@ -9,6 +9,29 @@ let serverApi =
     |> Remoting.withRouteBuilder Route.builder
     |> Remoting.buildProxy<IServerApi>
 
+module Cwb =
+    open Shared.Cwb
+
+    type Heading = string
+    type AttributeValue = string
+    type AttributeValueDescription = string
+
+    // e.g. (number, "sg", "singular")
+    type SubcategoryValue = PositionalAttribute * AttributeValue * AttributeValueDescription
+
+    // e.g. ("Number", [ (number, "sg", "singular"); (number, "pl", "plural")])
+    type Subcategory = Heading * SubcategoryValue list
+
+    // e.g. (pos, "adj", "adjective",
+    //          [ ("Number", [ (number, "sg", "singular"); (number, "pl", "plural") ])
+    //            ("Degree", [ (degr, "pos", "positive"); (degr, "comp", "comparative"); (degr, "sup", "superlative") ])])
+    type MainCategoryValue = PositionalAttribute * AttributeValue * AttributeValueDescription * Subcategory list
+
+    type AttributeStructure =
+        { Heading: string
+          SubcategoryHeading: string
+          Values: MainCategoryValue list }
+
 type SearchInterface =
     | Simple
     | Extended
