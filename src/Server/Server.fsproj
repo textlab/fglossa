@@ -14,7 +14,7 @@
     <Compile Include="fs/Templates/Index.fs" />
     <Compile Include="fs/Templates/NotFound.fs" />
     <Compile Include="../Corpora/corpora/*/Shared/*.fs" />
-    <Compile Include="../Corpora/corpora/*/Server.fs" />
+    <Compile Include="../Corpora/corpora/*/Server/*.fs" />
     <Compile Include="../Corpora/Server.fs" />
     <Compile Include="fs/Remoting/Corpus.fs" />
     <Compile Include="fs/Remoting/Search/Common.fs" />
