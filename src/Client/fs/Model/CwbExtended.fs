@@ -122,9 +122,9 @@ let handleAttributeValue (inputStr: string) interval =
         { term with
               ExtraForms = term.ExtraForms.Add(name, newValues) }
 
-    let processForms (term: QueryTerm) input =
+    let processForms (term: QueryTerm) =
         let forms =
-            [ for m in Regex.Matches(input, "(word|lemma|phon|orig)\s*(!?=)\s*\"(.+?)\"") ->
+            [ for m in Regex.Matches(inputStr, "(word|lemma|phon|orig)\s*(!?=)\s*\"(.+?)\"") ->
                   let name = m.Groups.[1].Value
                   let operator = m.Groups.[2].Value
 
@@ -152,7 +152,10 @@ let handleAttributeValue (inputStr: string) interval =
                     processOtherForms acc name value)
             term
 
-    QueryTerm.Default
+    let posExpressions =
+        Regex.Matches(inputStr, "\(pos\s*(!?=)\s*\"(.+?)\"(.*?)\)")
+
+    QueryTerm.Default |> processForms
 
 let handleQuotedOrEmptyTerm (termStr: string) interval =
     if termStr.Length > 2 then
