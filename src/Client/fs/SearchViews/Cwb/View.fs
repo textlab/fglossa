@@ -77,7 +77,19 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                             text)
             |> Option.defaultValue ""
         | Extended -> ""
-        | Cqp -> ""
+        | Cqp ->
+            search.Params.Queries
+            |> Array.tryHead
+            |> Option.map
+                (fun query ->
+                    query.Query
+                    |> replace "__QUOTE__" "\""
+                    |> fun text ->
+                        if query.HasFinalSpace then
+                            text + " "
+                        else
+                            text)
+            |> Option.defaultValue ""
 
     let textInputToQuery (inputValue: string) : (string * bool) =
         match search.Interface with
@@ -125,11 +137,12 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
             let query =
                 // Replace literal quotes with __QUOTE__ to prevent
                 // them from confusing our regexes later on
-                inputValue
+                inputValue.Trim()
                 |> (replace "word=\"\\\"\"" "word=\"__QUOTE__\""
                     >> replace "^\\\"$" "[word=\"__QUOTE__\"]")
 
-            (query, false)
+            let hasFinalSpace = Regex.IsMatch(inputValue, "\s+$")
+            (query, hasFinalSpace)
 
     let simpleView =
         Bulma.input.search [ prop.value queryText
