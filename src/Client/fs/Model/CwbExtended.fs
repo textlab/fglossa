@@ -5,28 +5,31 @@ open Shared.StringUtils
 
 type AttrOperator =
     | Equals
+    | NotEquals
     | Contains
+    static member OfString(s) =
+        match s with
+        | "=" -> Equals
+        | "!=" -> NotEquals
+        | "contains" -> Contains
+        | _ -> failwith $"Unrecognized operator: {s}"
 
 type AttrExpr =
     { Attr: string
       Operator: AttrOperator
       Values: Set<string> }
-
-type Interval = { Min: int option; Max: int option }
-
-/// Used for e.g. morphosyntacic categories
-type Subcategory =
-    { Attr: string
-      Values: string list }
     member this.ToCqp() =
         let valueStr = this.Values |> String.concat "|"
         $"{this.Attr} = \"{valueStr}\""
 
+type Interval = { Min: int option; Max: int option }
+
 /// Used for e.g. parts of speech with their morphosyntactic categories as subcategories
 type MainCategory =
     { Attr: string
+      Operator: AttrOperator
       Value: string
-      Subcategories: Subcategory list option }
+      Subcategories: AttrExpr list option }
     member this.ToCqp() =
         let mainExpr = $"{this.Attr} = \"{this.Value}\""
 
@@ -52,6 +55,7 @@ type QueryTerm =
       IsMiddle: bool
       IsInitial: bool
       IsFinal: bool
+      Categories: MainCategory list
       PrecedingInterval: Interval option }
     static member Default =
         { MainStringValue = None
@@ -64,7 +68,8 @@ type QueryTerm =
           IsMiddle = false
           IsInitial = false
           IsFinal = false
-          PrecedingInterval = None }
+          PrecedingInterval = None
+          Categories = [] }
 
 let handleInterval intervalStr =
     let min =
@@ -111,15 +116,15 @@ let handleAttributeValue (inputStr: string) interval =
     let unescapeForm form =
         form
         |> (replace "\\\(.)" "$1"
-            >> replace "^\"(?:\.\*)?(.+?)" "$1"
-            >> replace "(.+?)(?:\.\*)\"$" "$1")
+            >> replace "^(?:\.\*)?(.+?)" "$1"
+            >> replace "(.+?)(?:\.\*)$" "$1")
 
-    let processFirstForm (name, value) =
+    let processFirstForm (name, operator, value) =
         let isLemma = name = "lemma"
         let isPhon = name = "phon"
         let isOrig = name = "orig"
-        let isStart = Regex.IsMatch(value, ".+\.\*\"$")
-        let isEnd = Regex.IsMatch(value, "^\"\.\*.+")
+        let isStart = Regex.IsMatch(value, ".+\.\*$")
+        let isEnd = Regex.IsMatch(value, "^\.\*.+")
         let isMiddle = isStart && isEnd
 
         { QueryTerm.Default with
@@ -131,7 +136,7 @@ let handleAttributeValue (inputStr: string) interval =
               IsEnd = if isMiddle then false else isEnd
               IsMiddle = isMiddle }
 
-    let processOtherForms (term: QueryTerm) (name, value) =
+    let processOtherForms (term: QueryTerm) (name, operator, value) =
         let newValues =
             match term.ExtraForms |> Map.tryFind name with
             | Some values -> values.Add(value)
@@ -147,8 +152,8 @@ let handleAttributeValue (inputStr: string) interval =
         // (potentially hierarchical) categories like grammatical features and corpus-specific attributes presented
         // in the attribute popup, the former should be listed first in the CQP expression without parentheses,
         // while the latter should be parenthesised, e.g.
-        // [lemma="han" & phon="hann" & ((pos="pron" & case="nom|acc") | (pos="noun"))]
-        let nonCategories =
+        // [lemma="han" & phon="hann" & (((pos="pron" & case="nom|acc") | (pos="noun")) & ((desc="laughing")))]
+        let termWithNonCategories =
             let m = Regex.Match(inputStr, "(.+)\(?")
 
             if m.Success then
@@ -157,50 +162,65 @@ let handleAttributeValue (inputStr: string) interval =
                     |> Array.map (
                         replace "%c" ""
                         >> fun s ->
-                            let elms = s.Split("=")
-                            (elms.[0], elms.[1])
+                            let m = Regex.Match(s, "(.+)(!?=)\"(.+)\"")
+                            (m.Groups.[1].Value, m.Groups.[2].Value, m.Groups.[3].Value)
                     )
 
-                let t =
-                    processFirstForm (Array.head attrValuePairs)
+                let h = Array.head attrValuePairs
+                let (_, firstOperator, _) = h
 
                 let term =
-                    Array.fold processOtherForms t (Array.tail attrValuePairs)
+                    match firstOperator with
+                    | "=" ->
+                        // Only set the value of the text box and checkboxes if the operator is = and not !=.
+                        let t = processFirstForm h
+                        Array.fold processOtherForms t (Array.tail attrValuePairs)
+                    | _ ->
+                        let t = QueryTerm.Default
+                        Array.fold processOtherForms t attrValuePairs
 
                 term
             else
                 QueryTerm.Default
 
-        // let forms =
-        //     [ for m in Regex.Matches(inputStr, "(word|lemma|phon|orig)\s*(!?=)\s*\"(.+?)\"") ->
-        //           let name = m.Groups.[1].Value
-        //           let operator = m.Groups.[2].Value
+        let categories =
+            // As mentioned above, categories are found within parentheses as in the following expression:
+            // [lemma="han" & phon="hann" & (((pos="pron" & case="nom|acc") | (pos="noun")) & ((desc="laughing")))]
+            let m = Regex.Match(inputStr, "\((.+)\)")
 
-        //           let value =
-        //               m.Groups.[3].Value
-        //               |> fun v -> if operator = "!=" then "!" + v else v
+            if m.Success then
+                let matches =
+                    Regex.Matches(m.Groups.[1].Value, "\(\((.+?)\)\)")
 
-        //           (name, operator, value) ]
+                [ for m in matches ->
+                      let attributeValuePairs =
+                          [ for pair in Regex.Matches(m.Value, "(\w+)(!?=)\"(.+?)\"") ->
+                                { Attr = pair.Groups.[1].Value
+                                  Operator = pair.Groups.[2].Value |> AttrOperator.OfString
+                                  Values = pair.Groups.[3].Value.Split('|') |> Set.ofArray } ]
 
-        // forms
-        // |> List.fold
-        //     (fun acc (name, operator, value) ->
-        //         // If the attribute value starts with &&, it should be a special
-        //         // code (e.g. for marking errors in text, inserted as "tokens"
-        //         // to ensure alignment between original and corrected text) and
-        //         // should not be shown in the text input box
-        //         if name.StartsWith("&&") then
-        //             acc
-        //         else
-        //         // Only the first non-negative word/lemma/phon/orig form
-        //         // goes into the main string value; the rest are additional expressions
-        //         if acc.MainStringValue.IsNone && operator = "=" then
-        //             processFirstForm name value
-        //         else
-        //             processOtherForms acc name value)
-        //     term
-        printfn $"{nonCategories}"
-        nonCategories
+                      let p = List.head attributeValuePairs
+
+                      { Attr = p.Attr
+                        Operator = p.Operator
+                        Value =
+                            if p.Values.Count <> 1 then
+                                failwith $"Main category should not have pipe in value: {p.Values}"
+
+                            p.Values.MinimumElement
+                        Subcategories =
+                            match List.tail attributeValuePairs with
+                            | [] -> None
+                            | pairs -> Some pairs } ]
+            else
+                []
+
+        let term =
+            { termWithNonCategories with
+                  Categories = categories }
+
+        printfn $"{term}"
+        term
 
     QueryTerm.Default |> processForms
 
