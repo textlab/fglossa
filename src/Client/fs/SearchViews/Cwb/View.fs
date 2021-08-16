@@ -59,18 +59,17 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
             |> Option.map
                 (fun query ->
                     query.Query
-                    |> replace @"</?(?:s|who)?>" ""
+                    |> replace "</?(?:s|who)?>" ""
                     // Unescape any escaped chars, since we don't want the backslashes
                     // to show in the text input
-                    |> replace @"\\(.)" "$1"
-                    |> replace @"\[\(?\w+=\""(.*?)\""(?:\s+%c)?\)?\]" "$1"
-                    |> replace @"\""([^\s=]+)\""" "$1"
-                    |> replace @"\s*\[\]\s*" " .* "
-                    |> replace @"^\s*\.\*\s*$" ""
-                    |> replace @"^!" ""
-                    |> replace @"__QUOTE__" "\""
+                    |> replace "\\\(.)" "$1"
+                    |> replace "\[\(?\w+=\"(.*?)\"(?:\s+%c)?\)?\]" "$1"
+                    |> replace "\"([^\s=]+)\"" "$1"
+                    |> replace "\s*\[\]\s*" " .* "
+                    |> replace "^!" ""
+                    |> replace "__QUOTE__" "\""
                     // Replace .* or .+ by a single asterisk, used for truncation in the simple view
-                    |> replace @"\.[\*\+]" "*"
+                    |> replace "\.[\*\+]" "*"
                     |> fun text ->
                         if query.HasFinalSpace then
                             text + " "
@@ -91,7 +90,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                     replace "\"" "__QUOTE__"
                     // Escape other special characters using a regex from
                     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-                    >> replace @"[\.\+\?\^\$\{\}\(\)\|\[\]\\]" "\$&"
+                    >> replace "[\.\+\?\^\$\{\}\(\)\|\[\]\\\]" "\$&"
                     // Convert truncation to its regex equivalent
                     >> replace "\*" ".*"
                     >> fun token ->
