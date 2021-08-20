@@ -145,7 +145,7 @@ let handleAttributeValue (inputStr: string) interval =
         { term with
               ExtraForms = term.ExtraForms.Add(name, newValues) }
 
-    let processForms (term: QueryTerm) =
+    let processForms =
         // In order to distinguish between, on the one hand, standard attributes such as word form, lemma,
         // phonetic form and original form, all of which are handled by check boxes in the main extended view,
         // as well as forms included or excluded at the bottom of the attribute popup, and on the other hand,
@@ -222,7 +222,8 @@ let handleAttributeValue (inputStr: string) interval =
         printfn $"{term}"
         term
 
-    QueryTerm.Default |> processForms
+    { processForms with
+          PrecedingInterval = interval }
 
 type Query =
     { Terms: QueryTerm [] }
@@ -267,10 +268,12 @@ type Query =
                             handleAttributeValue (List.last groups) latestInterval
 
                         terms <- Array.append terms [| term |]
+                        latestInterval <- None
                     elif Regex.IsMatch(termStr, quotedOrEmptyTermRx) then
                         let term =
                             handleQuotedOrEmptyTerm termStr latestInterval
 
-                        terms <- Array.append terms [| term |])
+                        terms <- Array.append terms [| term |]
+                        latestInterval <- None)
 
             { Terms = terms }
