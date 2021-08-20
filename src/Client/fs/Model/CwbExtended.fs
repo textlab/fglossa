@@ -226,6 +226,8 @@ let handleAttributeValue (inputStr: string) interval =
 
 type Query =
     { Terms: QueryTerm [] }
+    static member Default = { Terms = [||] }
+
     static member OfCqp(cqpQuery) =
         // An interval, e.g. []{1,2}
         let intervalRx = "\[\]\{(.+?)\}"
