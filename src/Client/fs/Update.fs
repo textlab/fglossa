@@ -339,7 +339,7 @@ module LoadedCorpus =
                       Queries =
                           [| { HasFinalSpace = hasFinalSpace
                                LanguageCode = ""
-                               Query = text } |] }
+                               QueryString = text } |] }
 
             let newModel =
                 { model with
@@ -376,7 +376,9 @@ module LoadedCorpus =
                     |> Array.map
                         (fun query ->
                             { query with
-                                  Query = query.Query |> replace "\"__QUOTE__\"" "'\"'" })
+                                  QueryString =
+                                      query.QueryString
+                                      |> replace "\"__QUOTE__\"" "'\"'" })
 
                 let searchParams =
                     { model.Search.Params with

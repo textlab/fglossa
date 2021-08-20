@@ -35,7 +35,8 @@ let cwbQueryName (corpus: Corpus) (searchId: int) =
 let buildMonolingualQuery (queries: Query []) (sTag: string) =
     // For monolingual queries, the query expressions should be joined together with '|' (i.e., "or")
     let queryExpressions =
-        queries |> Array.map (fun query -> query.Query)
+        queries
+        |> Array.map (fun query -> query.QueryString)
 
     let queryStr =
         if queryExpressions.Length > 1 then
@@ -50,7 +51,7 @@ let buildMonolingualQuery (queries: Query []) (sTag: string) =
 let buildMultilingualQuery (corpus: Corpus) (queries: Query []) (sTag: string) =
     let mainQuery =
         match Array.tryHead queries with
-        | Some head -> $"{head.Query} within {sTag}"
+        | Some head -> $"{head.QueryString} within {sTag}"
         | None -> failwith "Empty query!"
 
     let alignedQueries =
@@ -59,10 +60,10 @@ let buildMultilingualQuery (corpus: Corpus) (queries: Query []) (sTag: string) =
         |> Array.choose
             (fun query ->
                 // TODO: In case of mandatory alignment, include even empty queries
-                if String.IsNullOrWhiteSpace(query.Query) then
+                if String.IsNullOrWhiteSpace(query.QueryString) then
                     None
                 else
-                    Some $"{corpus.Config.Code}_{query.LanguageCode.ToUpper()} {query.Query}")
+                    Some $"{corpus.Config.Code}_{query.LanguageCode.ToUpper()} {query.QueryString}")
 
     (Array.append [| mainQuery |] alignedQueries)
     |> String.concat " :"

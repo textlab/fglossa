@@ -58,7 +58,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
             |> Array.tryHead
             |> Option.map
                 (fun query ->
-                    query.Query
+                    query.QueryString
                     |> replace "</?(?:s|who)?>" ""
                     // Unescape any escaped chars, since we don't want the backslashes
                     // to show in the text input
@@ -82,7 +82,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
             |> Array.tryHead
             |> Option.map
                 (fun query ->
-                    query.Query
+                    query.QueryString
                     |> replace "__QUOTE__" "\""
                     |> fun text ->
                         if query.HasFinalSpace then

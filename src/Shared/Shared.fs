@@ -123,9 +123,9 @@ type CorpusName = string
 type Query =
     { HasFinalSpace: bool
       LanguageCode: string
-      Query: string }
+      QueryString: string }
     member this.IsEmpty =
-        let query = this.Query.Trim()
+        let query = this.QueryString.Trim()
 
         String.IsNullOrWhiteSpace(query)
         || query = "\"\""

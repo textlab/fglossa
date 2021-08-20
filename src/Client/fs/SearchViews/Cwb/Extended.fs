@@ -4,12 +4,13 @@ open Feliz
 open Feliz.Bulma
 open Shared
 open Model
+open CwbExtended
 open Update.LoadedCorpus
 
 let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
     let query =
         if search.Params.Queries.Length > 0 then
-            CwbExtended.Query.OfCqp(search.Params.Queries.[0].Query)
+            Query.OfCqp(search.Params.Queries.[0].QueryString)
         else
             CwbExtended.Query.Default
 
