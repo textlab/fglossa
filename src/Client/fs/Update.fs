@@ -293,6 +293,12 @@ module LoadedCorpus =
 
         | SetSearchInterface of SearchInterface
         | SetQueryText of query: string * hasFinalSpace: bool
+        | CwbExtendedSetMainString of
+            query: Query *
+            queryIndex: int *
+            term: QueryTerm *
+            termIndex: int *
+            value: string option
         | CwbExtendedSetIntervalValue of
             query: Query *
             queryIndex: int *
@@ -354,6 +360,37 @@ module LoadedCorpus =
                       Search =
                           { model.Search with
                                 Params = newSearchParams } }
+
+            newModel, Cmd.none
+
+        | CwbExtendedSetMainString (query, queryIndex, term, termIndex, maybeValue) ->
+            let newTerm =
+                { term with
+                      MainStringValue = maybeValue }
+
+            let newQueryTerms =
+                query.Terms
+                |> Array.mapi (fun i t -> if i = termIndex then newTerm else t)
+
+            let newQuery = { query with Terms = newQueryTerms }
+            let newQueryCqp = newQuery.ToCqp(model.Corpus)
+
+            let newQueries =
+                model.Search.Params.Queries
+                |> Array.mapi
+                    (fun i q ->
+                        if i = queryIndex then
+                            { q with QueryString = newQueryCqp }
+                        else
+                            q)
+
+            let newModel =
+                { model with
+                      Search =
+                          { model.Search with
+                                Params =
+                                    { model.Search.Params with
+                                          Queries = newQueries } } }
 
             newModel, Cmd.none
 

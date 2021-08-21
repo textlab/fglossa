@@ -81,6 +81,15 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                )
                                                            | (false, _) -> ignore None) ] ]
 
+        let mainStringInput =
+            Bulma.input.text [ prop.value (term.MainStringValue |> Option.defaultValue "")
+                               prop.onChange
+                                   (fun (s: string) ->
+                                       let v = if s = "" then None else Some s
+
+                                       dispatch (CwbExtendedSetMainString(query, 0, term, termIndex, v)))
+                               prop.style [ style.width 108 ] ]
+
         [ if termIndex > 0 then
               let minMaxField (minMax: MinMax) =
                   Bulma.field.div [ field.isGrouped
@@ -101,8 +110,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                                                                                                "fas fa-list" ] ] ] ] ]
                                                            Bulma.control.div [ prop.children [ Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
                                                                                                                                                "fas fa-chevron-down" ] ] ] ] ]
-                                                           Bulma.control.div [ prop.children [ Bulma.input.text [ prop.style [ style.width
-                                                                                                                                   108 ] ] ] ]
+                                                           Bulma.control.div [ prop.children [ mainStringInput ] ]
                                                            if query.Terms.Length > 1 then
                                                                Bulma.control.div [ prop.children [ Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
                                                                                                                                                    "fas fa-minus" ] ] ] ] ] ] ]
