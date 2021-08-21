@@ -1,5 +1,6 @@
 module View.SearchViews.Cwb.Extended
 
+open System
 open Feliz
 open Feliz.Bulma
 open Shared
@@ -12,12 +13,12 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
         if search.Params.Queries.Length > 0 then
             Query.OfCqp(search.Params.Queries.[0].QueryString)
         else
-            CwbExtended.Query.Default
+            Query.Default
 
-    let checkbox label title =
+    let checkbox label title isChecked =
         Html.label [ prop.title title
                      prop.style [ style.marginRight 15 ]
-                     prop.children [ Bulma.input.checkbox []
+                     prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked ]
                                      Bulma.text.span $" {label}" ] ]
 
     let (hasLemma, hasOrig) =
@@ -35,9 +36,64 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
         | Spoken -> "Utterance"
         | Written -> "Sentence"
 
-    let termView index term =
-        [ if index > 0 then
-              Bulma.column [ Bulma.field.div [ Bulma.input.text [] ] ]
+    let termView termIndex (term: QueryTerm) =
+        let minMaxInput (minMax: MinMax) =
+            Bulma.control.div [ Bulma.input.text [ prop.className "has-text-right"
+                                                   prop.style [ style.width 38 ]
+                                                   prop.value (
+                                                       match term.PrecedingInterval with
+                                                       | Some interval ->
+                                                           let valueStr value =
+                                                               value
+                                                               |> Option.map string
+                                                               |> Option.defaultValue ""
+
+                                                           match minMax with
+                                                           | Min -> valueStr interval.Min
+                                                           | Max -> valueStr interval.Max
+                                                       | None -> ""
+                                                   )
+                                                   prop.onChange
+                                                       (fun (s: string) ->
+                                                           if s = "" then
+                                                               dispatch (
+                                                                   CwbExtendedSetIntervalValue(
+                                                                       query,
+                                                                       0,
+                                                                       term,
+                                                                       termIndex,
+                                                                       minMax,
+                                                                       None
+                                                                   )
+                                                               )
+
+                                                           match Int32.TryParse(s) with
+                                                           | (true, v) ->
+                                                               dispatch (
+                                                                   CwbExtendedSetIntervalValue(
+                                                                       query,
+                                                                       0,
+                                                                       term,
+                                                                       termIndex,
+                                                                       minMax,
+                                                                       Some v
+                                                                   )
+                                                               )
+                                                           | (false, _) -> ignore None) ] ]
+
+        [ if termIndex > 0 then
+              let minMaxField (minMax: MinMax) =
+                  Bulma.field.div [ field.isGrouped
+                                    prop.className "is-align-items-center"
+                                    prop.children [ minMaxInput (minMax)
+                                                    Bulma.control.div [ Bulma.text.div (
+                                                                            match minMax with
+                                                                            | Min -> "min"
+                                                                            | Max -> "max"
+                                                                        ) ] ] ]
+
+              Bulma.column [ minMaxField Min
+                             minMaxField Max ]
           Bulma.column [ Bulma.field.div [ field.hasAddons
                                            if query.Terms.Length > 1 then
                                                field.hasAddonsRight
@@ -53,17 +109,18 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                          Bulma.field.div [ field.isGrouped
                                            field.isGroupedMultiline
                                            prop.children [ if hasLemma then
-                                                               checkbox "Lemma" "Lemma"
-                                                           checkbox "Start" "Start of word"
-                                                           checkbox "End" "End of word"
-                                                           checkbox "Middle" "Middle of word"
+                                                               checkbox "Lemma" "Lemma" term.IsLemma
+                                                           checkbox "Start" "Start of word" term.IsStart
+                                                           checkbox "End" "End of word" term.IsEnd
+                                                           checkbox "Middle" "Middle of word" term.IsMiddle
                                                            if hasOrig then
-                                                               checkbox "Original" "Original form"
-                                                           if index = 0 then
+                                                               checkbox "Original" "Original form" term.IsOriginal
+                                                           if termIndex = 0 then
                                                                checkbox
                                                                    $"{segmentType} initial"
                                                                    $"{segmentType} initial"
-                                                           elif index = query.Terms.Length - 1 then
+                                                                   term.IsInitial
+                                                           elif termIndex = query.Terms.Length - 1 then
                                                                // TODO: Add optional sentence final punctuation to query
                                                                // to make this work in written text as well
                                                                match corpus.Config.Modality with
@@ -71,6 +128,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                    checkbox
                                                                        $"{segmentType} final"
                                                                        $"{segmentType} final"
+                                                                       term.IsFinal
                                                                | Written -> Html.none ] ] ]
 
 

@@ -5,6 +5,7 @@ open System.Text.RegularExpressions
 open Elmish
 open Shared
 open Model
+open CwbExtended
 open Shared.StringUtils
 
 let cleanupResult (result: SearchResult) =
@@ -292,6 +293,13 @@ module LoadedCorpus =
 
         | SetSearchInterface of SearchInterface
         | SetQueryText of query: string * hasFinalSpace: bool
+        | CwbExtendedSetIntervalValue of
+            query: Query *
+            queryIndex: int *
+            term: QueryTerm *
+            termIndex: int *
+            minMax: MinMax *
+            value: int option
         | Search
 
 
@@ -346,6 +354,51 @@ module LoadedCorpus =
                       Search =
                           { model.Search with
                                 Params = newSearchParams } }
+
+            newModel, Cmd.none
+
+        | CwbExtendedSetIntervalValue (query, queryIndex, term, termIndex, minMax, maybeValue) ->
+            let maybeNewInterval =
+                let i =
+                    term.PrecedingInterval
+                    |> Option.defaultValue { Min = None; Max = None }
+
+                match minMax with
+                | Min -> { i with Min = maybeValue }
+                | Max -> { i with Max = maybeValue }
+                |> fun newI ->
+                    if newI = { Min = None; Max = None } then
+                        None
+                    else
+                        Some newI
+
+            let newTerm =
+                { term with
+                      PrecedingInterval = maybeNewInterval }
+
+            let newQueryTerms =
+                query.Terms
+                |> Array.mapi (fun i t -> if i = termIndex then newTerm else t)
+
+            let newQuery = { query with Terms = newQueryTerms }
+            let newQueryCqp = newQuery.ToCqp(model.Corpus)
+
+            let newQueries =
+                model.Search.Params.Queries
+                |> Array.mapi
+                    (fun i q ->
+                        if i = queryIndex then
+                            { q with QueryString = newQueryCqp }
+                        else
+                            q)
+
+            let newModel =
+                { model with
+                      Search =
+                          { model.Search with
+                                Params =
+                                    { model.Search.Params with
+                                          Queries = newQueries } } }
 
             newModel, Cmd.none
 

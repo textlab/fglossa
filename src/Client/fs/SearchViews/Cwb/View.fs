@@ -119,11 +119,6 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
             let hasFinalSpace = Regex.IsMatch(inputValue, "\s+$")
             (query, hasFinalSpace)
         | Extended ->
-            let sTag =
-                match corpus.Config.Modality with
-                | Spoken -> "who"
-                | Written -> "s"
-
             let isPhonetic = inputValue.Contains("phon=")
             let isOriginal = inputValue.Contains("orig=")
 

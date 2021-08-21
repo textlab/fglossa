@@ -1,7 +1,9 @@
 module CwbExtended
 
 open System.Text.RegularExpressions
+open Shared
 open Shared.StringUtils
+open Model
 
 type AttrOperator =
     | Equals
@@ -21,6 +23,10 @@ type AttrExpr =
     member this.ToCqp() =
         let valueStr = this.Values |> String.concat "|"
         $"{this.Attr} = \"{valueStr}\""
+
+type MinMax =
+    | Min
+    | Max
 
 type Interval = { Min: int option; Max: int option }
 
@@ -48,8 +54,8 @@ type QueryTerm =
     { MainStringValue: string option
       ExtraForms: Map<string, Set<string>>
       IsLemma: bool
-      IsPhon: bool
-      IsOrig: bool
+      IsPhonetic: bool
+      IsOriginal: bool
       IsStart: bool
       IsEnd: bool
       IsMiddle: bool
@@ -61,8 +67,8 @@ type QueryTerm =
         { MainStringValue = None
           ExtraForms = Map.empty
           IsLemma = false
-          IsPhon = false
-          IsOrig = false
+          IsPhonetic = false
+          IsOriginal = false
           IsStart = false
           IsEnd = false
           IsMiddle = false
@@ -70,6 +76,71 @@ type QueryTerm =
           IsFinal = false
           PrecedingInterval = None
           Categories = [] }
+
+    member this.ToCqp(corpus: Corpus) =
+        let intervalString =
+            match this.PrecedingInterval with
+            | Some interval ->
+                let min =
+                    interval.Min
+                    |> Option.map string
+                    |> Option.defaultValue ""
+
+                let max =
+                    interval.Max
+                    |> Option.map string
+                    |> Option.defaultValue ""
+
+                if min <> "" || max <> "" then
+                    $"[]{{{min},{max}}} "
+                else
+                    ""
+            | None -> ""
+
+        let maybeMainString =
+            match this.MainStringValue with
+            | Some form ->
+                let mainAttr =
+                    if this.IsLemma then "lemma"
+                    elif this.IsPhonetic then "phon"
+                    elif this.IsOriginal then "orig"
+                    else "word"
+
+                let caseInsensitiveStr = if this.IsPhonetic then "" else " %c"
+
+                Some $"{mainAttr}=\"{form}\"{caseInsensitiveStr}"
+            | None -> None
+
+        let maybeExtraForms =
+            if this.ExtraForms.Count > 0 then
+                [ for pair in this.ExtraForms ->
+                      let values =
+                          pair.Value
+                          |> Set.toArray
+                          |> Array.sort
+                          |> String.concat "|"
+
+                      $"{pair.Key}=\"{values}\"" ]
+                |> String.concat " & "
+                |> Some
+            else
+                None
+
+        let forms =
+            [ maybeMainString; maybeExtraForms ]
+            |> List.choose id
+            |> String.concat " & "
+            |> fun s ->
+                let sTag =
+                    match corpus.Config.Modality with
+                    | Spoken -> "who"
+                    | Written -> "s"
+
+                if this.IsInitial then $"<{sTag}>[{s}]"
+                elif this.IsFinal then $"[{s}]</{sTag}>"
+                else $"[{s}]"
+
+        $"{intervalString}{forms}"
 
 let handleInterval intervalStr =
     let min =
@@ -130,8 +201,8 @@ let handleAttributeValue (inputStr: string) interval =
         { QueryTerm.Default with
               MainStringValue = Some(unescapeForm value)
               IsLemma = isLemma
-              IsPhon = isPhon
-              IsOrig = isOrig
+              IsPhonetic = isPhon
+              IsOriginal = isOrig
               IsStart = if isMiddle then false else isStart
               IsEnd = if isMiddle then false else isEnd
               IsMiddle = isMiddle }
@@ -215,12 +286,8 @@ let handleAttributeValue (inputStr: string) interval =
             else
                 []
 
-        let term =
-            { termWithNonCategories with
-                  Categories = categories }
-
-        printfn $"{term}"
-        term
+        { termWithNonCategories with
+              Categories = categories }
 
     { processForms with
           PrecedingInterval = interval }
@@ -277,3 +344,8 @@ type Query =
                         latestInterval <- None)
 
             { Terms = terms }
+
+    member this.ToCqp(corpus: Corpus) =
+        this.Terms
+        |> Array.map (fun term -> term.ToCqp(corpus))
+        |> String.concat " "
