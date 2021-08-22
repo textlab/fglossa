@@ -194,7 +194,8 @@ let handleQuotedOrEmptyTerm (termStr: string) interval =
               PrecedingInterval = interval }
     else
         // empty term
-        QueryTerm.Default
+        { QueryTerm.Default with
+              PrecedingInterval = interval }
 
 let handleAttributeValue (inputStr: string) interval isSegmentInitial isSegmentFinal =
     /// Unescapes any escaped chars, since we don't want the backslashes to show in the text input
@@ -331,7 +332,7 @@ type Query =
         let quotedOrEmptyTermRx = "\".*?\"|\[\]"
 
         let termsRegex =
-            $"{intervalRx}|{attributeValueRx}|{quotedOrEmptyTermRx}"
+            $"{intervalRx}|{quotedOrEmptyTermRx}|{attributeValueRx}"
 
         cqpQuery
         // remove all whitespace so we don't have to allow for that everywhere in our later regexes
