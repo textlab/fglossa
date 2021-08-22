@@ -158,37 +158,42 @@ let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes:
 // TODO: Implement parsing of tagger attributes and corpus-specific attributes
 
 let alignedLanguagesCommand (corpus: Corpus) (queries: Query []) =
-    let languageCodes =
-        queries |> Array.map (fun q ->
-            match q.LanguageCode with
-            | Some code -> code
-            | None -> failwith "Missing language code!")
+    match corpus.Config.LanguageConfig with
+    | Monolingual _ -> ""
+    | Multilingual _ ->
+        let languageCodes =
+            queries
+            |> Array.map
+                (fun q ->
+                    match q.LanguageCode with
+                    | Some code -> code
+                    | None -> failwith "Missing language code!")
 
-    let firstLanguageCode =
-        match Array.tryHead languageCodes with
-        | Some head -> head
-        | None -> failwith "Empty query!"
+        let firstLanguageCode =
+            match Array.tryHead languageCodes with
+            | Some head -> head
+            | None -> failwith "Empty query!"
 
-    let nonFirstLanguageCodes =
-        match firstLanguageCode with
-        | "org" -> [ "korr" ]
-        | "korr" -> [ "org" ]
-        | code when languageCodes.Length > 1 ->
-            languageCodes
-            |> Set.ofArray
-            |> Set.remove code
-            |> Set.toList
-        | _ -> []
-    // Only show alignment attributes if we have actually asked for aligned languages
-    if not nonFirstLanguageCodes.IsEmpty then
-        let codes =
-            nonFirstLanguageCodes
-            |> List.map (fun code -> $"+{corpus.Config.Code}_{code}")
-            |> String.concat " "
+        let nonFirstLanguageCodes =
+            match firstLanguageCode with
+            | "org" -> [ "korr" ]
+            | "korr" -> [ "org" ]
+            | code when languageCodes.Length > 1 ->
+                languageCodes
+                |> Set.ofArray
+                |> Set.remove code
+                |> Set.toList
+            | _ -> []
+        // Only show alignment attributes if we have actually asked for aligned languages
+        if not nonFirstLanguageCodes.IsEmpty then
+            let codes =
+                nonFirstLanguageCodes
+                |> List.map (fun code -> $"+{corpus.Config.Code}_{code}")
+                |> String.concat " "
 
-        $"show ${codes}"
-    else
-        ""
+            $"show ${codes}"
+        else
+            ""
 
 let sortCommand (namedQuery: string) (sortKey: SortKey) =
     match sortKey with
