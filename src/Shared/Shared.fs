@@ -122,8 +122,13 @@ type CorpusName = string
 
 type Query =
     { HasFinalSpace: bool
-      LanguageCode: string
+      LanguageCode: string option
       QueryString: string }
+    static member Init(languageCode: string option) =
+        { HasFinalSpace = false
+          LanguageCode = languageCode
+          QueryString = "[]" }
+
     member this.IsEmpty =
         let query = this.QueryString.Trim()
 
@@ -153,16 +158,24 @@ type SearchParams =
       SortKey: SortKey
       Start: uint64
       Step: int }
-    static member Init(corpusCode) =
+    static member Init(corpusConfig: CorpusConfig) =
+        let languageCode =
+            match corpusConfig.LanguageConfig with
+            | Monolingual _ -> None
+            | Multilingual languages ->
+                match languages |> Array.tryHead with
+                | Some language -> Some language.Code
+                | None -> None
+
         { ContextSize = 15
-          CorpusCode = corpusCode
+          CorpusCode = corpusConfig.Code
           CpuCounts = None
           End = 99UL
           LastCount = None
           Metadata = None
           NumRandomHits = None
           PageSize = 50
-          Queries = [||]
+          Queries = [| Query.Init(languageCode) |]
           RandomHitsSeed = None
           SearchId = 0
           SortKey = Position

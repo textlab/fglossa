@@ -24,8 +24,11 @@ let cwbCorpusName (corpus: Corpus) (queries: Query seq) =
         // submitted query row (e.g. RUN_EN).
         let firstLanguageCode =
             match queries |> Seq.tryHead with
-            | Some head -> head.LanguageCode.ToUpper()
-            | None -> failwith $"Empty query!"
+            | Some head ->
+                match head.LanguageCode with
+                | Some code -> code.ToUpper()
+                | None -> failwith "Missing language code!"
+            | None -> failwith "Empty query!"
 
         $"{uppercaseCode}_{firstLanguageCode}"
 
@@ -63,7 +66,12 @@ let buildMultilingualQuery (corpus: Corpus) (queries: Query []) (sTag: string) =
                 if String.IsNullOrWhiteSpace(query.QueryString) then
                     None
                 else
-                    Some $"{corpus.Config.Code}_{query.LanguageCode.ToUpper()} {query.QueryString}")
+                    let languageCode =
+                        match query.LanguageCode with
+                        | Some code -> code.ToUpper()
+                        | None -> failwith "Missing language code!"
+
+                    Some $"{corpus.Config.Code}_{languageCode} {query.QueryString}")
 
     (Array.append [| mainQuery |] alignedQueries)
     |> String.concat " :"
@@ -130,7 +138,10 @@ let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes:
         | Multilingual languages ->
             let firstQueryLanguageCode =
                 match Array.tryHead queries with
-                | Some head -> head.LanguageCode
+                | Some head ->
+                    match head.LanguageCode with
+                    | Some code -> code
+                    | None -> failwith "Missing language code!"
                 | None -> failwith "Empty query!"
 
             let language =
@@ -148,7 +159,10 @@ let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes:
 
 let alignedLanguagesCommand (corpus: Corpus) (queries: Query []) =
     let languageCodes =
-        queries |> Array.map (fun q -> q.LanguageCode)
+        queries |> Array.map (fun q ->
+            match q.LanguageCode with
+            | Some code -> code
+            | None -> failwith "Missing language code!")
 
     let firstLanguageCode =
         match Array.tryHead languageCodes with

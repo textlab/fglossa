@@ -45,7 +45,7 @@ module LoadingCorpus =
                   IsNarrowWindow = false
                   IsShowSelectionOpen = false
                   OpenMetadataCategoryCode = None
-                  Search = Search.Init(corpus.Config.Code)
+                  Search = Search.Init(corpus.Config)
                   ShouldShowMetadataMenu = None
                   Substate = CorpusStart }
 
@@ -355,11 +355,13 @@ module LoadedCorpus =
             Cmd.none
 
         | SetQueryText (text, hasFinalSpace) ->
+            printfn $"query: {text}"
+
             let newSearchParams =
                 { model.Search.Params with
                       Queries =
                           [| { HasFinalSpace = hasFinalSpace
-                               LanguageCode = ""
+                               LanguageCode = model.Search.Params.Queries.[0].LanguageCode
                                QueryString = text } |] }
 
             let newModel =

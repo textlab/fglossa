@@ -167,4 +167,10 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                     prop.children [ yield!
                                         [ for (index, term) in query.Terms |> Array.indexed do
                                               yield! termView index term ]
-                                    Bulma.column [ Bulma.field.div [] ] ] ]
+                                    Bulma.column [ Bulma.field.div (
+                                                       Bulma.control.div (
+                                                           Bulma.button.button [ color.isInfo
+                                                                                 prop.children [ Bulma.icon [ Html.i [ prop.className
+                                                                                                                           "fas fa-plus" ] ] ] ]
+                                                       )
+                                                   ) ] ] ]

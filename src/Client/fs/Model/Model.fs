@@ -41,10 +41,10 @@ type Search =
     { Interface: SearchInterface
       MetadataSelection: Metadata.Selection
       Params: SearchParams }
-    static member Init(corpusCode) =
+    static member Init(corpusConfig: CorpusConfig) =
         { Interface = Simple
           MetadataSelection = Map.empty
-          Params = SearchParams.Init(corpusCode) }
+          Params = SearchParams.Init(corpusConfig) }
 
 type Corpus =
     { Config: CorpusConfig
