@@ -299,6 +299,13 @@ module LoadedCorpus =
             term: QueryTerm *
             termIndex: int *
             value: string option
+        | CwbExtendedSetQueryProperty of
+            query: Query *
+            queryIndex: int *
+            term: QueryTerm *
+            termIndex: int *
+            property: QueryProperty *
+            value: bool
         | CwbExtendedSetIntervalValue of
             query: Query *
             queryIndex: int *
@@ -367,6 +374,84 @@ module LoadedCorpus =
             let newTerm =
                 { term with
                       MainStringValue = maybeValue }
+
+            let newQueryTerms =
+                query.Terms
+                |> Array.mapi (fun i t -> if i = termIndex then newTerm else t)
+
+            let newQuery = { query with Terms = newQueryTerms }
+            let newQueryCqp = newQuery.ToCqp(model.Corpus)
+
+            let newQueries =
+                model.Search.Params.Queries
+                |> Array.mapi
+                    (fun i q ->
+                        if i = queryIndex then
+                            { q with QueryString = newQueryCqp }
+                        else
+                            q)
+
+            let newModel =
+                { model with
+                      Search =
+                          { model.Search with
+                                Params =
+                                    { model.Search.Params with
+                                          Queries = newQueries } } }
+
+            newModel, Cmd.none
+
+        | CwbExtendedSetQueryProperty (query, queryIndex, term, termIndex, property, isChecked) ->
+            let newTerm =
+                match property with
+                | IsLemma -> { term with IsLemma = isChecked }
+                | IsPhonetic -> { term with IsPhonetic = isChecked }
+                | IsOriginal -> { term with IsOriginal = isChecked }
+                | IsStart ->
+                    let isEnd = if isChecked then false else term.IsEnd
+
+                    let isMiddle =
+                        if isChecked then
+                            false
+                        else
+                            term.IsMiddle
+
+                    { term with
+                          IsStart = isChecked
+                          IsEnd = isEnd
+                          IsMiddle = isMiddle }
+                | IsEnd ->
+                    let isStart =
+                        if isChecked then
+                            false
+                        else
+                            term.IsStart
+
+                    let isMiddle =
+                        if isChecked then
+                            false
+                        else
+                            term.IsMiddle
+
+                    { term with
+                          IsStart = isStart
+                          IsEnd = isChecked
+                          IsMiddle = isMiddle }
+                | IsMiddle ->
+                    let isStart =
+                        if isChecked then
+                            false
+                        else
+                            term.IsStart
+
+                    let isEnd = if isChecked then false else term.IsEnd
+
+                    { term with
+                          IsStart = isStart
+                          IsEnd = isEnd
+                          IsMiddle = isChecked }
+                | IsInitial -> { term with IsInitial = isChecked }
+                | IsFinal -> { term with IsFinal = isChecked }
 
             let newQueryTerms =
                 query.Terms

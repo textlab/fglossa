@@ -11,15 +11,9 @@ open Update.LoadedCorpus
 let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
     let query =
         if search.Params.Queries.Length > 0 then
-            Query.OfCqp(search.Params.Queries.[0].QueryString)
+            Query.OfCqp(corpus, search.Params.Queries.[0].QueryString)
         else
             Query.Default
-
-    let checkbox label title isChecked =
-        Html.label [ prop.title title
-                     prop.style [ style.marginRight 15 ]
-                     prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked ]
-                                     Bulma.text.span $" {label}" ] ]
 
     let (hasLemma, hasOrig) =
         match corpus.Config.LanguageConfig with
@@ -90,6 +84,24 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                        dispatch (CwbExtendedSetMainString(query, 0, term, termIndex, v)))
                                prop.style [ style.width 108 ] ]
 
+        let checkbox label title isChecked (property: QueryProperty) =
+            Html.label [ prop.title title
+                         prop.style [ style.marginRight 15 ]
+                         prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
+                                                                prop.onCheckedChange
+                                                                    (fun isChecked ->
+                                                                        dispatch (
+                                                                            CwbExtendedSetQueryProperty(
+                                                                                query,
+                                                                                0,
+                                                                                term,
+                                                                                termIndex,
+                                                                                property,
+                                                                                isChecked
+                                                                            )
+                                                                        )) ]
+                                         Bulma.text.span $" {label}" ] ]
+
         [ if termIndex > 0 then
               let minMaxField (minMax: MinMax) =
                   Bulma.field.div [ field.isGrouped
@@ -117,17 +129,22 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                          Bulma.field.div [ field.isGrouped
                                            field.isGroupedMultiline
                                            prop.children [ if hasLemma then
-                                                               checkbox "Lemma" "Lemma" term.IsLemma
-                                                           checkbox "Start" "Start of word" term.IsStart
-                                                           checkbox "End" "End of word" term.IsEnd
-                                                           checkbox "Middle" "Middle of word" term.IsMiddle
+                                                               checkbox "Lemma" "Lemma" term.IsLemma IsLemma
+                                                           checkbox "Start" "Start of word" term.IsStart IsStart
+                                                           checkbox "End" "End of word" term.IsEnd IsEnd
+                                                           checkbox "Middle" "Middle of word" term.IsMiddle IsMiddle
                                                            if hasOrig then
-                                                               checkbox "Original" "Original form" term.IsOriginal
+                                                               checkbox
+                                                                   "Original"
+                                                                   "Original form"
+                                                                   term.IsOriginal
+                                                                   IsOriginal
                                                            if termIndex = 0 then
                                                                checkbox
                                                                    $"{segmentType} initial"
                                                                    $"{segmentType} initial"
                                                                    term.IsInitial
+                                                                   IsInitial
                                                            elif termIndex = query.Terms.Length - 1 then
                                                                // TODO: Add optional sentence final punctuation to query
                                                                // to make this work in written text as well
@@ -137,6 +154,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                        $"{segmentType} final"
                                                                        $"{segmentType} final"
                                                                        term.IsFinal
+                                                                       IsFinal
                                                                | Written -> Html.none ] ] ]
 
 

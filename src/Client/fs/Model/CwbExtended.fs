@@ -50,6 +50,16 @@ type MainCategory =
 
         $"({expressions})"
 
+type QueryProperty =
+    | IsLemma
+    | IsPhonetic
+    | IsOriginal
+    | IsStart
+    | IsEnd
+    | IsMiddle
+    | IsInitial
+    | IsFinal
+
 type QueryTerm =
     { MainStringValue: string option
       ExtraForms: Map<string, Set<string>>
@@ -77,7 +87,7 @@ type QueryTerm =
           PrecedingInterval = None
           Categories = [] }
 
-    member this.ToCqp(corpus: Corpus) =
+    member this.ToCqp(sTag: string) =
         let intervalString =
             match this.PrecedingInterval with
             | Some interval ->
@@ -108,7 +118,16 @@ type QueryTerm =
 
                 let caseInsensitiveStr = if this.IsPhonetic then "" else " %c"
 
-                Some $"{mainAttr}=\"{form}\"{caseInsensitiveStr}"
+                let processedForm =
+                    form
+                    |> replace "[\.\*\+\?\^\$\{\}\(\)\|\[\]\\\]" "\\$&"
+                    |> fun f ->
+                        if this.IsStart then $"{f}.*"
+                        elif this.IsEnd then $".*{f}"
+                        elif this.IsMiddle then $".*{f}.*"
+                        else f
+
+                Some $"{mainAttr}=\"{processedForm}\"{caseInsensitiveStr}"
             | None -> None
 
         let maybeExtraForms =
@@ -131,11 +150,6 @@ type QueryTerm =
             |> List.choose id
             |> String.concat " & "
             |> fun s ->
-                let sTag =
-                    match corpus.Config.Modality with
-                    | Spoken -> "who"
-                    | Written -> "s"
-
                 if this.IsInitial then $"<{sTag}>[{s}]"
                 elif this.IsFinal then $"[{s}]</{sTag}>"
                 else $"[{s}]"
@@ -182,7 +196,7 @@ let handleQuotedOrEmptyTerm (termStr: string) interval =
         // empty term
         QueryTerm.Default
 
-let handleAttributeValue (inputStr: string) interval =
+let handleAttributeValue (inputStr: string) interval isSegmentInitial isSegmentFinal =
     /// Unescapes any escaped chars, since we don't want the backslashes to show in the text input
     let unescapeForm form =
         form
@@ -290,19 +304,28 @@ let handleAttributeValue (inputStr: string) interval =
               Categories = categories }
 
     { processForms with
-          PrecedingInterval = interval }
+          PrecedingInterval = interval
+          IsInitial = isSegmentInitial
+          IsFinal = isSegmentFinal }
 
 type Query =
     { Terms: QueryTerm [] }
     static member Default = { Terms = [||] }
 
-    static member OfCqp(cqpQuery) =
+    static member STag(corpus: Corpus) =
+        match corpus.Config.Modality with
+        | Spoken -> "who"
+        | Written -> "s"
+
+    static member OfCqp(corpus: Corpus, cqpQuery: string) =
+        let sTag = Query.STag(corpus)
+
         // An interval, e.g. []{1,2}
         let intervalRx = "\[\]\{(.+?)\}"
 
         // An attribute/value expression such as [lemma="car" %c] or [(lemma="car" & pos="n")].
         // Treat quoted strings separately; they may contain right brackets
-        let attributeValueRx = "\[(.+?)\]"
+        let attributeValueRx = $"(?:<{sTag}>)?\[(.+?)\](?:</{sTag}>)?"
 
         // A quoted string or a single unspecified token
         let quotedOrEmptyTermRx = "\".*?\"|\[\]"
@@ -331,8 +354,11 @@ type Query =
                     if Regex.IsMatch(termStr, intervalRx) then
                         latestInterval <- handleInterval groups.[1]
                     elif Regex.IsMatch(termStr, attributeValueRx) then
+                        let isSegmentInitial = Regex.IsMatch(termStr, $"<{sTag}>")
+                        let isSegmentFinal = Regex.IsMatch(termStr, $"</{sTag}>")
+
                         let term =
-                            handleAttributeValue (List.last groups) latestInterval
+                            handleAttributeValue (List.last groups) latestInterval isSegmentInitial isSegmentFinal
 
                         terms <- Array.append terms [| term |]
                         latestInterval <- None
@@ -347,5 +373,5 @@ type Query =
 
     member this.ToCqp(corpus: Corpus) =
         this.Terms
-        |> Array.map (fun term -> term.ToCqp(corpus))
+        |> Array.map (fun term -> term.ToCqp(Query.STag(corpus)))
         |> String.concat " "
