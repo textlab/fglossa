@@ -313,6 +313,7 @@ module LoadedCorpus =
             termIndex: int *
             minMax: MinMax *
             value: int option
+        | CwbExtendedRemoveTerm of query: Query * queryIndex: int * termIndex: int
         | Search
 
 
@@ -460,6 +461,17 @@ module LoadedCorpus =
 
             let newModel =
                 updateQueryTerm model query queryIndex newTerm termIndex
+
+            newModel, Cmd.none
+
+        | CwbExtendedRemoveTerm (query, queryIndex, termIndex) ->
+            let newQueryTerms =
+                query.Terms
+                |> Array.indexed
+                |> Array.choose (fun (i, t) -> if i <> termIndex then Some t else None)
+
+            let newModel =
+                updateQuery model query queryIndex newQueryTerms
 
             newModel, Cmd.none
 

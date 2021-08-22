@@ -97,6 +97,10 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                         )) ]
                                          Bulma.text.span $" {label}" ] ]
 
+        let removeTermButton =
+            Bulma.button.button [ prop.onClick (fun _ -> dispatch (CwbExtendedRemoveTerm(query, 0, termIndex)))
+                                  prop.children [ Bulma.icon [ Html.i [ prop.className "fas fa-minus" ] ] ] ]
+
         [ if termIndex > 0 then
               let minMaxField (minMax: MinMax) =
                   Bulma.field.div [ field.isGrouped
@@ -125,10 +129,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                            )
                                                            Bulma.control.div (mainStringInput)
                                                            if query.Terms.Length > 1 then
-                                                               Bulma.control.div (
-                                                                   Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
-                                                                                                                   "fas fa-minus" ] ] ]
-                                                               ) ] ]
+                                                               Bulma.control.div (removeTermButton) ] ]
                          Bulma.field.div [ field.isGrouped
                                            field.isGroupedMultiline
                                            prop.children [ if hasLemma then

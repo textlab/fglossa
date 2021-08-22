@@ -381,11 +381,7 @@ type Query =
 // Helpers for Elimish update function
 ///////////////////////////////////////
 
-let updateQueryTerm model query queryIndex newTerm termIndex =
-    let newQueryTerms =
-        query.Terms
-        |> Array.mapi (fun i t -> if i = termIndex then newTerm else t)
-
+let updateQuery model query queryIndex newQueryTerms =
     let newQuery = { query with Terms = newQueryTerms }
     let newQueryCqp = newQuery.ToCqp(model.Corpus)
 
@@ -404,3 +400,11 @@ let updateQueryTerm model query queryIndex newTerm termIndex =
                     Params =
                         { model.Search.Params with
                               Queries = newQueries } } }
+
+
+let updateQueryTerm model query queryIndex newTerm termIndex =
+    let newQueryTerms =
+        query.Terms
+        |> Array.mapi (fun i t -> if i = termIndex then newTerm else t)
+
+    updateQuery model query queryIndex newQueryTerms
