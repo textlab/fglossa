@@ -71,10 +71,9 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                     // Replace .* or .+ by a single asterisk, used for truncation in the simple view
                     |> replace "\.[\*\+]" "*"
                     |> fun text ->
-                        if query.HasFinalSpace then
-                            text + " "
-                        else
-                            text)
+                        if text = " * " then ""
+                        elif query.HasFinalSpace then text + " "
+                        else text)
             |> Option.defaultValue ""
         | Extended -> ""
         | Cqp ->
@@ -107,7 +106,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                     >> replace "\*" ".*"
                     >> fun token ->
                         if token = "" then
-                            ""
+                            "[]"
                         else
                             // We need to use sprintf instead of string interpolation here
                             // because the latter actually outputs the extra percentage sign
