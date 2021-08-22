@@ -32,48 +32,43 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
 
     let termView termIndex (term: QueryTerm) =
         let minMaxInput (minMax: MinMax) =
-            Bulma.control.div [ Bulma.input.text [ prop.className "has-text-right"
-                                                   prop.style [ style.width 38 ]
-                                                   prop.value (
-                                                       match term.PrecedingInterval with
-                                                       | Some interval ->
-                                                           let valueStr value =
-                                                               value
-                                                               |> Option.map string
-                                                               |> Option.defaultValue ""
+            Bulma.control.div (
+                Bulma.input.text [ prop.className "has-text-right"
+                                   prop.style [ style.width 38 ]
+                                   prop.value (
+                                       match term.PrecedingInterval with
+                                       | Some interval ->
+                                           let valueStr value =
+                                               value
+                                               |> Option.map string
+                                               |> Option.defaultValue ""
 
-                                                           match minMax with
-                                                           | Min -> valueStr interval.Min
-                                                           | Max -> valueStr interval.Max
-                                                       | None -> ""
+                                           match minMax with
+                                           | Min -> valueStr interval.Min
+                                           | Max -> valueStr interval.Max
+                                       | None -> ""
+                                   )
+                                   prop.onChange
+                                       (fun (s: string) ->
+                                           if s = "" then
+                                               dispatch (
+                                                   CwbExtendedSetIntervalValue(query, 0, term, termIndex, minMax, None)
+                                               )
+
+                                           match Int32.TryParse(s) with
+                                           | (true, v) ->
+                                               dispatch (
+                                                   CwbExtendedSetIntervalValue(
+                                                       query,
+                                                       0,
+                                                       term,
+                                                       termIndex,
+                                                       minMax,
+                                                       Some v
                                                    )
-                                                   prop.onChange
-                                                       (fun (s: string) ->
-                                                           if s = "" then
-                                                               dispatch (
-                                                                   CwbExtendedSetIntervalValue(
-                                                                       query,
-                                                                       0,
-                                                                       term,
-                                                                       termIndex,
-                                                                       minMax,
-                                                                       None
-                                                                   )
-                                                               )
-
-                                                           match Int32.TryParse(s) with
-                                                           | (true, v) ->
-                                                               dispatch (
-                                                                   CwbExtendedSetIntervalValue(
-                                                                       query,
-                                                                       0,
-                                                                       term,
-                                                                       termIndex,
-                                                                       minMax,
-                                                                       Some v
-                                                                   )
-                                                               )
-                                                           | (false, _) -> ignore None) ] ]
+                                               )
+                                           | (false, _) -> ignore None) ]
+            )
 
         let mainStringInput =
             Bulma.input.text [ prop.value (term.MainStringValue |> Option.defaultValue "")
@@ -107,25 +102,33 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                   Bulma.field.div [ field.isGrouped
                                     prop.className "is-align-items-center"
                                     prop.children [ minMaxInput (minMax)
-                                                    Bulma.control.div [ Bulma.text.div (
-                                                                            match minMax with
-                                                                            | Min -> "min"
-                                                                            | Max -> "max"
-                                                                        ) ] ] ]
+                                                    Bulma.control.div (
+                                                        Bulma.text.div (
+                                                            match minMax with
+                                                            | Min -> "min"
+                                                            | Max -> "max"
+                                                        )
+                                                    ) ] ]
 
               Bulma.column [ minMaxField Min
                              minMaxField Max ]
           Bulma.column [ Bulma.field.div [ field.hasAddons
                                            if query.Terms.Length > 1 then
                                                field.hasAddonsRight
-                                           prop.children [ Bulma.control.div [ prop.children [ Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
-                                                                                                                                               "fas fa-list" ] ] ] ] ]
-                                                           Bulma.control.div [ prop.children [ Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
-                                                                                                                                               "fas fa-chevron-down" ] ] ] ] ]
-                                                           Bulma.control.div [ prop.children [ mainStringInput ] ]
+                                           prop.children [ Bulma.control.div (
+                                                               Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
+                                                                                                               "fas fa-list" ] ] ]
+                                                           )
+                                                           Bulma.control.div (
+                                                               Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
+                                                                                                               "fas fa-chevron-down" ] ] ]
+                                                           )
+                                                           Bulma.control.div (mainStringInput)
                                                            if query.Terms.Length > 1 then
-                                                               Bulma.control.div [ prop.children [ Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
-                                                                                                                                                   "fas fa-minus" ] ] ] ] ] ] ]
+                                                               Bulma.control.div (
+                                                                   Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
+                                                                                                                   "fas fa-minus" ] ] ]
+                                                               ) ] ]
                          Bulma.field.div [ field.isGrouped
                                            field.isGroupedMultiline
                                            prop.children [ if hasLemma then
