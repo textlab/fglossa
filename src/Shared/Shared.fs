@@ -135,7 +135,7 @@ type Query =
         String.IsNullOrWhiteSpace(query)
         || query = "\"\""
         // Check for one or more empty terms possibly separated by intervals
-        || Regex.IsMatch(query, "\[\](\s*\[\](\{\d*,\d*\})?)*")
+        || Regex.IsMatch(query, "^\[\](\s*\[\](\{\d*,\d*\})?)*$")
 
 type SortKey =
     | Position
