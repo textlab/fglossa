@@ -316,6 +316,7 @@ module LoadedCorpus =
         | CwbExtendedAddTerm of query: Query * queryIndex: int
         | CwbExtendedRemoveTerm of query: Query * queryIndex: int * termIndex: int
         | Search
+        | ResetForm
 
 
     let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
@@ -538,6 +539,12 @@ module LoadedCorpus =
             else
                 printfn "Empty query!"
                 model, Cmd.none
+
+        | ResetForm ->
+            { model with
+                  Search = Search.Init(model.Corpus.Config)
+                  Substate = CorpusStart },
+            Cmd.none
 
 
 

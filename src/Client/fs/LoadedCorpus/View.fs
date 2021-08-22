@@ -9,9 +9,10 @@ open Model
 open Update.LoadedCorpus
 open Common
 
-let topRowButtons =
+let topRowButtons dispatch =
     Bulma.buttons [ Bulma.button.button [ prop.text "Hide filters" ]
                     Bulma.button.button [ color.isInfo
+                                          prop.onClick (fun _ -> dispatch ResetForm)
                                           prop.text "Reset form" ] ]
 
 
@@ -33,7 +34,7 @@ module CorpusStartView =
                                                                     Bulma.levelItem logo ] ] ] ]
 
     let view (corpus: Corpus) (search: Search) (dispatch: Update.LoadedCorpus.Msg -> unit) =
-        Html.span [ topRowButtons
+        Html.span [ topRowButtons dispatch
                     corpusNameBox corpus.Config
                     selectSearchView corpus search dispatch ]
 
@@ -265,7 +266,7 @@ module ResultsView =
                 true
             | _ -> false
 
-        Html.span [ topRowButtons
+        Html.span [ topRowButtons parentDispatch
                     selectSearchView corpus search parentDispatch
                     spinnerOverlay shouldShowResultsTableSpinner (Some [ style.top 75 ]) resultsView ]
 
