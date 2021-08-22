@@ -377,29 +377,8 @@ module LoadedCorpus =
                 { term with
                       MainStringValue = maybeValue }
 
-            let newQueryTerms =
-                query.Terms
-                |> Array.mapi (fun i t -> if i = termIndex then newTerm else t)
-
-            let newQuery = { query with Terms = newQueryTerms }
-            let newQueryCqp = newQuery.ToCqp(model.Corpus)
-
-            let newQueries =
-                model.Search.Params.Queries
-                |> Array.mapi
-                    (fun i q ->
-                        if i = queryIndex then
-                            { q with QueryString = newQueryCqp }
-                        else
-                            q)
-
             let newModel =
-                { model with
-                      Search =
-                          { model.Search with
-                                Params =
-                                    { model.Search.Params with
-                                          Queries = newQueries } } }
+                updateQueryTerm model query queryIndex newTerm termIndex
 
             newModel, Cmd.none
 
@@ -455,29 +434,8 @@ module LoadedCorpus =
                 | IsInitial -> { term with IsInitial = isChecked }
                 | IsFinal -> { term with IsFinal = isChecked }
 
-            let newQueryTerms =
-                query.Terms
-                |> Array.mapi (fun i t -> if i = termIndex then newTerm else t)
-
-            let newQuery = { query with Terms = newQueryTerms }
-            let newQueryCqp = newQuery.ToCqp(model.Corpus)
-
-            let newQueries =
-                model.Search.Params.Queries
-                |> Array.mapi
-                    (fun i q ->
-                        if i = queryIndex then
-                            { q with QueryString = newQueryCqp }
-                        else
-                            q)
-
             let newModel =
-                { model with
-                      Search =
-                          { model.Search with
-                                Params =
-                                    { model.Search.Params with
-                                          Queries = newQueries } } }
+                updateQueryTerm model query queryIndex newTerm termIndex
 
             newModel, Cmd.none
 
@@ -500,29 +458,8 @@ module LoadedCorpus =
                 { term with
                       PrecedingInterval = maybeNewInterval }
 
-            let newQueryTerms =
-                query.Terms
-                |> Array.mapi (fun i t -> if i = termIndex then newTerm else t)
-
-            let newQuery = { query with Terms = newQueryTerms }
-            let newQueryCqp = newQuery.ToCqp(model.Corpus)
-
-            let newQueries =
-                model.Search.Params.Queries
-                |> Array.mapi
-                    (fun i q ->
-                        if i = queryIndex then
-                            { q with QueryString = newQueryCqp }
-                        else
-                            q)
-
             let newModel =
-                { model with
-                      Search =
-                          { model.Search with
-                                Params =
-                                    { model.Search.Params with
-                                          Queries = newQueries } } }
+                updateQueryTerm model query queryIndex newTerm termIndex
 
             newModel, Cmd.none
 

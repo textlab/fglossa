@@ -376,3 +376,31 @@ type Query =
         this.Terms
         |> Array.map (fun term -> term.ToCqp(Query.STag(corpus)))
         |> String.concat " "
+
+///////////////////////////////////////
+// Helpers for Elimish update function
+///////////////////////////////////////
+
+let updateQueryTerm model query queryIndex newTerm termIndex =
+    let newQueryTerms =
+        query.Terms
+        |> Array.mapi (fun i t -> if i = termIndex then newTerm else t)
+
+    let newQuery = { query with Terms = newQueryTerms }
+    let newQueryCqp = newQuery.ToCqp(model.Corpus)
+
+    let newQueries =
+        model.Search.Params.Queries
+        |> Array.mapi
+            (fun i q ->
+                if i = queryIndex then
+                    { q with QueryString = newQueryCqp }
+                else
+                    q)
+
+    { model with
+          Search =
+              { model.Search with
+                    Params =
+                        { model.Search.Params with
+                              Queries = newQueries } } }
