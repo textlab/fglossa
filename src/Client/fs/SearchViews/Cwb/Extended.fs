@@ -171,6 +171,14 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                     Bulma.column [ Bulma.field.div (
                                                        Bulma.control.div (
                                                            Bulma.button.button [ color.isInfo
+                                                                                 prop.onClick
+                                                                                     (fun _ ->
+                                                                                         dispatch (
+                                                                                             CwbExtendedAddTerm(
+                                                                                                 query,
+                                                                                                 0
+                                                                                             )
+                                                                                         ))
                                                                                  prop.children [ Bulma.icon [ Html.i [ prop.className
                                                                                                                            "fas fa-plus" ] ] ] ]
                                                        )
