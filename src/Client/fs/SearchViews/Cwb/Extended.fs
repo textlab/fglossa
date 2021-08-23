@@ -40,7 +40,11 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                                                                                                      term.MainStringValue
                                                                                                      |> Option.defaultValue
                                                                                                          "hei"
-                                                                                                 ) ] ] ] ] ]
+                                                                                                 ) ] ] ]
+
+                                          Bulma.modalClose [ button.isLarge
+                                                             prop.onClick
+                                                                 (fun _ -> dispatch (CwbExtendedToggleAttrModal None)) ] ] ]
 
         let minMaxInput (minMax: MinMax) =
             Bulma.control.div (
