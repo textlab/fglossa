@@ -147,7 +147,8 @@ type QueryTerm =
                 None
 
         let maybeCategoryStrings =
-            if this.CategorySections.Length > 0 then
+            if this.CategorySections
+               |> List.exists (fun sectionCategories -> not sectionCategories.IsEmpty) then
                 [ for categorySection in this.CategorySections ->
                       [ for category in categorySection ->
                             // yields e.g. (pos="noun" & num="sg")
@@ -199,7 +200,17 @@ let handleInterval intervalStr =
     else
         None
 
-let handleQuotedOrEmptyTerm (termStr: string) interval =
+let handleQuotedOrEmptyTerm (termStr: string) interval (maybeCwbAttributeMenu: CwbAttributeMenu option) =
+    let categorySections =
+        match maybeCwbAttributeMenu with
+        | Some cwbAttributeMenu ->
+            // The corpus has an attribute menu, but no attribute category selections were
+            // found the CQP expression.
+            List.replicate cwbAttributeMenu.Length Set.empty
+        | None ->
+            // The corpus does not have an attribute menu
+            []
+
     if termStr.Length > 2 then
         // quoted term
         let form = termStr.[1..(termStr.Length - 2)]
@@ -212,10 +223,12 @@ let handleQuotedOrEmptyTerm (termStr: string) interval =
               IsStart = if isMiddle then false else isStart
               IsEnd = if isMiddle then false else isEnd
               IsMiddle = isMiddle
+              CategorySections = categorySections
               PrecedingInterval = interval }
     else
         // empty term
         { QueryTerm.Default with
+              CategorySections = categorySections
               PrecedingInterval = interval }
 
 let handleAttributeValue
@@ -267,11 +280,25 @@ let handleAttributeValue
         // while the latter should be parenthesised, e.g.
         // [lemma="han" & phon="hann" & (((pos="pron" & case="nom|acc") | (pos="noun")) & ((desc="laughing")))]
         let termWithNonCategories =
-            let m = Regex.Match(inputStr, "(.+)\(?")
+            let mabyeNonCatStr =
+                if inputStr.Contains('(') then
+                    // The term contains categories, so grab everything before that
+                    let m = Regex.Match(inputStr, "^([^\(]+)&")
 
-            if m.Success then
+                    if m.Success then
+                        // The term contains something besides categories
+                        Some m.Groups.[1].Value
+                    else
+                        // The term does NOT contain anything besides categories
+                        None
+                else
+                    // The term does not contain any categories, so use the whole string
+                    Some inputStr
+
+            match mabyeNonCatStr with
+            | Some nonCatStr ->
                 let attrValuePairs =
-                    m.Groups.[1].Value.Split('&')
+                    nonCatStr.Split('&')
                     |> Array.map (
                         replace "%c" ""
                         >> fun s ->
@@ -293,8 +320,7 @@ let handleAttributeValue
                         Array.fold processOtherForms t attrValuePairs
 
                 term
-            else
-                QueryTerm.Default
+            | None -> QueryTerm.Default
 
         let categories =
             match maybeCwbAttributeMenu with
@@ -310,7 +336,7 @@ let handleAttributeValue
                     let sectionsByAttributeMenuIndex =
                         [ for categorySection in categorySections ->
                               let categoryStrings =
-                                  Regex.Split(categorySection.Groups.[0].Value, "\)\s+\|\s+\(")
+                                  Regex.Split(categorySection.Groups.[0].Value, "\)\|\(")
 
                               let categories =
                                   [ for category in categoryStrings ->
@@ -363,8 +389,12 @@ let handleAttributeValue
                           else
                               Set.empty ]
                 else
-                    []
-            | None -> []
+                    // The corpus has an attribute menu, but no attribute category selections were
+                    // found the CQP expression.
+                    List.replicate cwbAttributeMenu.Length Set.empty
+            | None ->
+                // The corpus does not contain an attribute menu
+                []
 
         { termWithNonCategories with
               CategorySections = categories }
@@ -435,7 +465,7 @@ type Query =
                         latestInterval <- None
                     elif Regex.IsMatch(termStr, quotedOrEmptyTermRx) then
                         let term =
-                            handleQuotedOrEmptyTerm termStr latestInterval
+                            handleQuotedOrEmptyTerm termStr latestInterval corpus.CwbAttributeMenu
 
                         terms <- Array.append terms [| term |]
                         latestInterval <- None)
