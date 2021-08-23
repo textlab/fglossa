@@ -91,7 +91,8 @@ module SelectionTable =
         let table =
             Bulma.tableContainer [ Bulma.table [ table.isStriped
                                                  table.isFullWidth
-                                                 prop.children [ Html.thead [ Html.tr [ for category in model.Corpus.MetadataTable ->
+                                                 prop.children [ Html.thead [ Html.tr [ for category in
+                                                                                            model.Corpus.MetadataTable ->
                                                                                             Html.th category.Name ] ]
                                                                  Html.tbody [ for row in dummyMetadataTableData ->
                                                                                   Html.tr [ for column in row ->
@@ -142,7 +143,7 @@ module MetadataMenu =
                 | CorpusStart -> true
                 | ShowingResults _ -> not model.IsNarrowWindow
 
-    let FixedSizeList : obj = importMember "react-window"
+    let FixedSizeList: obj = importMember "react-window"
 
     // The components in react-window expect a `children` prop, which should be a
     // component function or class. However, all React functions in Fable.React and
@@ -153,7 +154,7 @@ module MetadataMenu =
     // React.createElement directly, since it allows us to provide function components as
     // the `children` argument and leaves them uninstantiated.
 
-    let ReactBare : obj = importAll "react"
+    let ReactBare: obj = importAll "react"
 
     let selectDropdown category categorySelection (dispatch: Msg -> unit) : ReactElement =
         /// A single item in a metadata category dropdown list
