@@ -32,15 +32,62 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
 
     let termView termIndex (term: QueryTerm) =
         let showAttributeModal () =
+            let mainButtons
+                sectionIndex
+                (menuSectionCategories: Cwb.MainCategoryValue list)
+                (termSectionSelection: Set<MainCategory>)
+                =
+                Bulma.buttons [ for (attr, attrValue, description, _) in menuSectionCategories ->
+                                    let isSelected =
+                                        termSectionSelection
+                                        |> Set.exists
+                                            (fun selectedCat ->
+                                                printfn $"selectedCat: {selectedCat}"
+
+                                                selectedCat.Attr = attr.Code
+                                                && selectedCat.Value = attrValue)
+
+                                    Bulma.button.button [ if isSelected then color.isSuccess
+                                                          prop.onClick
+                                                              (fun _ ->
+                                                                  let category =
+                                                                      { Attr = attr.Code
+                                                                        Operator = Equals
+                                                                        Value = attrValue
+                                                                        Subcategories = None }
+
+                                                                  dispatch (
+                                                                      CwbExtendedSetAttributeCategory(
+                                                                          query,
+                                                                          0,
+                                                                          term,
+                                                                          termIndex,
+                                                                          sectionIndex,
+                                                                          category
+                                                                      )
+                                                                  ))
+                                                          prop.text description ] ]
+
+            let attrMenu =
+                match corpus.CwbAttributeMenu with
+                | Some menuSections ->
+                    List.zip menuSections term.CategorySections
+                    |> List.mapi
+                        (fun sectionIndex (menuSection, termSectionSelection) ->
+                            Bulma.message [ color.isInfo
+                                            prop.children [ Bulma.messageHeader [ Html.p menuSection.Heading ]
+                                                            Bulma.messageBody [ mainButtons
+                                                                                    sectionIndex
+                                                                                    menuSection.Values
+                                                                                    termSectionSelection ] ] ])
+                | None -> []
+
             Bulma.modal [ modal.isActive
                           prop.children [ Bulma.modalBackground [ prop.onClick
                                                                       (fun _ ->
                                                                           dispatch (CwbExtendedToggleAttrModal None)) ]
-                                          Bulma.modalContent [ Bulma.box [ Bulma.button.button [ prop.text (
-                                                                                                     term.MainStringValue
-                                                                                                     |> Option.defaultValue
-                                                                                                         "hei"
-                                                                                                 ) ] ] ]
+                                          Bulma.modalContent [ prop.style [ style.width 900 ]
+                                                               prop.children [ Bulma.box attrMenu ] ]
 
                                           Bulma.modalClose [ button.isLarge
                                                              prop.onClick

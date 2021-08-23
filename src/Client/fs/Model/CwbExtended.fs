@@ -30,14 +30,15 @@ type MinMax =
 
 type Interval = { Min: int option; Max: int option }
 
-/// Used for e.g. parts of speech with their morphosyntactic categories as subcategories
+/// Used to represent CWB attribute selections in a query such as parts of speech
+/// with their morphosyntactic categories as subcategories
 type MainCategory =
     { Attr: string
       Operator: AttrOperator
       Value: string
       Subcategories: AttrExpr list option }
     member this.ToCqp() =
-        let mainExpr = $"{this.Attr} = \"{this.Value}\""
+        let mainExpr = $"{this.Attr}=\"{this.Value}\""
 
         let expressions =
             match this.Subcategories with
@@ -71,7 +72,7 @@ type QueryTerm =
       IsMiddle: bool
       IsInitial: bool
       IsFinal: bool
-      Categories: MainCategory list
+      CategorySections: Set<MainCategory> list
       PrecedingInterval: Interval option }
     static member Default =
         { MainStringValue = None
@@ -85,7 +86,7 @@ type QueryTerm =
           IsInitial = false
           IsFinal = false
           PrecedingInterval = None
-          Categories = [] }
+          CategorySections = [] }
 
     member this.ToCqp(sTag: string) =
         let intervalString =
@@ -145,8 +146,28 @@ type QueryTerm =
             else
                 None
 
+        let maybeCategoryStrings =
+            if this.CategorySections.Length > 0 then
+                [ for categorySection in this.CategorySections ->
+                      [ for category in categorySection ->
+                            // yields e.g. (pos="noun" & num="sg")
+                            category.ToCqp() ]
+                      // yields e.g. (pos="noun" & num="sg") | (pos="pron" & num="sg")
+                      |> String.concat " | "
+                      // yields e.g. ((pos="noun" & num="sg") | (pos="pron" & num="sg"))
+                      |> fun s -> $"({s})" ]
+                // yields e.g. ((pos="noun" & num="sg") | (pos="pron" & num="sg")) & ((desc="laughing"))
+                |> String.concat " & "
+                // yields e.g. (((pos="noun" & num="sg") | (pos="pron" & num="sg")) & ((desc="laughing")))
+                |> fun s -> $"({s})"
+                |> Some
+            else
+                None
+
         let forms =
-            [ maybeMainString; maybeExtraForms ]
+            [ maybeMainString
+              maybeExtraForms
+              maybeCategoryStrings ]
             |> List.choose id
             |> String.concat " & "
             |> fun s ->
@@ -197,7 +218,13 @@ let handleQuotedOrEmptyTerm (termStr: string) interval =
         { QueryTerm.Default with
               PrecedingInterval = interval }
 
-let handleAttributeValue (inputStr: string) interval isSegmentInitial isSegmentFinal =
+let handleAttributeValue
+    (inputStr: string)
+    interval
+    isSegmentInitial
+    isSegmentFinal
+    (maybeCwbAttributeMenu: CwbAttributeMenu option)
+    =
     /// Unescapes any escaped chars, since we don't want the backslashes to show in the text input
     let unescapeForm form =
         form
@@ -270,39 +297,77 @@ let handleAttributeValue (inputStr: string) interval isSegmentInitial isSegmentF
                 QueryTerm.Default
 
         let categories =
-            // As mentioned above, categories are found within parentheses as in the following expression:
-            // [lemma="han" & phon="hann" & (((pos="pron" & case="nom|acc") | (pos="noun")) & ((desc="laughing")))]
-            let m = Regex.Match(inputStr, "\((.+)\)")
+            match maybeCwbAttributeMenu with
+            | Some cwbAttributeMenu ->
+                // As mentioned above, categories are found within parentheses as in the following expression:
+                // [lemma="han" & phon="hann" & (((pos="pron" & case="nom|acc") | (pos="noun")) & ((desc="laughing")))]
+                let m = Regex.Match(inputStr, "\((.+)\)")
 
-            if m.Success then
-                let matches =
-                    Regex.Matches(m.Groups.[1].Value, "\(\((.+?)\)\)")
+                if m.Success then
+                    let categorySections =
+                        Regex.Matches(m.Groups.[1].Value, "\(\((.+?)\)\)")
 
-                [ for m in matches ->
-                      let attributeValuePairs =
-                          [ for pair in Regex.Matches(m.Value, "(\w+)(!?=)\"(.+?)\"") ->
-                                { Attr = pair.Groups.[1].Value
-                                  Operator = pair.Groups.[2].Value |> AttrOperator.OfString
-                                  Values = pair.Groups.[3].Value.Split('|') |> Set.ofArray } ]
+                    let sectionsByAttributeMenuIndex =
+                        [ for categorySection in categorySections ->
+                              let categoryStrings =
+                                  Regex.Split(categorySection.Groups.[0].Value, "\)\s+\|\s+\(")
 
-                      let p = List.head attributeValuePairs
+                              let categories =
+                                  [ for category in categoryStrings ->
+                                        let attributeValuePairs =
+                                            [ for pair in Regex.Matches(category, "(\w+)(!?=)\"(.+?)\"") ->
+                                                  { Attr = pair.Groups.[1].Value
+                                                    Operator = pair.Groups.[2].Value |> AttrOperator.OfString
+                                                    Values = pair.Groups.[3].Value.Split('|') |> Set.ofArray } ]
 
-                      { Attr = p.Attr
-                        Operator = p.Operator
-                        Value =
-                            if p.Values.Count <> 1 then
-                                failwith $"Main category should not have pipe in value: {p.Values}"
+                                        let firstPair = List.head attributeValuePairs
 
-                            p.Values.MinimumElement
-                        Subcategories =
-                            match List.tail attributeValuePairs with
-                            | [] -> None
-                            | pairs -> Some pairs } ]
-            else
-                []
+                                        { Attr = firstPair.Attr
+                                          Operator = firstPair.Operator
+                                          Value =
+                                              if firstPair.Values.Count <> 1 then
+                                                  failwith
+                                                      $"Main category should not have pipe in value: {firstPair.Values}"
+
+                                              firstPair.Values.MinimumElement
+                                          Subcategories =
+                                              match List.tail attributeValuePairs with
+                                              | [] -> None
+                                              | pairs -> Some pairs } ]
+
+                              // Look at the first main category in this section and find the first (which should also be the
+                              // only) section in the CwbAttributeMenu for this corpus that contains the same combination of
+                              // attribute name and value
+                              let firstCategory = categories.Head
+
+                              let menuSectionIndex =
+                                  cwbAttributeMenu
+                                  |> List.findIndex
+                                      (fun menuSection ->
+                                          menuSection.Values
+                                          |> List.exists
+                                              (fun ((attr, attrValue, _, _): Cwb.MainCategoryValue) ->
+                                                  attr.Code = firstCategory.Attr
+                                                  && attrValue = firstCategory.Value))
+
+                              (menuSectionIndex, categories |> Set.ofList) ]
+                        |> Map.ofList
+
+                    // Return a list that contains an item for each section in the CwbAttributeMenu for this corpus,
+                    // where the item contains the info extracted from the CQP expression if any, and an empty set
+                    // otherwise. This way, we can easily map the returned list of selected category values to the sections
+                    // shown in the attribute popup in the CWB extended search view.
+                    [ for i in 0 .. cwbAttributeMenu.Length - 1 ->
+                          if sectionsByAttributeMenuIndex.ContainsKey(i) then
+                              sectionsByAttributeMenuIndex.[i]
+                          else
+                              Set.empty ]
+                else
+                    []
+            | None -> []
 
         { termWithNonCategories with
-              Categories = categories }
+              CategorySections = categories }
 
     { processForms with
           PrecedingInterval = interval
@@ -359,7 +424,12 @@ type Query =
                         let isSegmentFinal = Regex.IsMatch(termStr, $"</{sTag}>")
 
                         let term =
-                            handleAttributeValue (List.last groups) latestInterval isSegmentInitial isSegmentFinal
+                            handleAttributeValue
+                                (List.last groups)
+                                latestInterval
+                                isSegmentInitial
+                                isSegmentFinal
+                                corpus.CwbAttributeMenu
 
                         terms <- Array.append terms [| term |]
                         latestInterval <- None

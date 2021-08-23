@@ -12,6 +12,11 @@ let serverApi =
 module Cwb =
     open Shared.Cwb
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    /// A set of types used to represent the list of tree structures (e.g. grammatical information
+    /// and corpus-specific attributes) shown in the attribute popup
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
     type Heading = string
     type AttributeValue = string
     type AttributeValueDescription = string
@@ -27,10 +32,11 @@ module Cwb =
     //            ("Degree", [ (degr, "pos", "positive"); (degr, "comp", "comparative"); (degr, "sup", "superlative") ])])
     type MainCategoryValue = PositionalAttribute * AttributeValue * AttributeValueDescription * Subcategory list
 
-    type AttributeStructure =
+    type AttributeSection =
         { Heading: string
           SubcategoryHeading: string
           Values: MainCategoryValue list }
+
 
 type SearchInterface =
     | Simple
@@ -46,9 +52,11 @@ type Search =
           MetadataSelection = Map.empty
           Params = SearchParams.Init(corpusConfig) }
 
+type CwbAttributeMenu = Cwb.AttributeSection list
+
 type Corpus =
     { Config: CorpusConfig
-      CwbAttributeMenu: Cwb.AttributeStructure list option
+      CwbAttributeMenu: CwbAttributeMenu option
       MetadataMenu: Metadata.MenuItem list
       MetadataTable: Metadata.Category list }
     static member Init(config) =

@@ -306,6 +306,13 @@ module LoadedCorpus =
             termIndex: int *
             property: QueryProperty *
             value: bool
+        | CwbExtendedSetAttributeCategory of
+            query: Query *
+            queryIndex: int *
+            term: QueryTerm *
+            termIndex: int *
+            categorySectionIndex: int *
+            category: MainCategory
         | CwbExtendedSetIntervalValue of
             query: Query *
             queryIndex: int *
@@ -437,6 +444,25 @@ module LoadedCorpus =
                           IsMiddle = isChecked }
                 | IsInitial -> { term with IsInitial = isChecked }
                 | IsFinal -> { term with IsFinal = isChecked }
+
+            let newModel =
+                updateQueryTerm model query queryIndex newTerm termIndex
+
+            newModel, Cmd.none
+
+        | CwbExtendedSetAttributeCategory (query, queryIndex, term, termIndex, categorySectionIndex, category) ->
+            let newCategorySections =
+                term.CategorySections
+                |> List.mapi
+                    (fun i section ->
+                        if i = categorySectionIndex then
+                            section.Add(category)
+                        else
+                            section)
+
+            let newTerm =
+                { term with
+                      CategorySections = newCategorySections }
 
             let newModel =
                 updateQueryTerm model query queryIndex newTerm termIndex
