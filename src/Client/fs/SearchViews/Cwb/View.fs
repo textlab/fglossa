@@ -22,7 +22,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
     let simpleLink = link "Simple search box" "Simple" Simple
 
     let extendedLink =
-        link "Search for grammatical categories etc." "Extended" Extended
+        link "Search for grammatical categories etc." "Extended" (Extended None)
 
     let cqpLink = link "CQP expressions" "CQP query" Cqp
 
@@ -38,7 +38,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
               extendedLink
               separator
               cqpLink ]
-        | Extended ->
+        | Extended _ ->
             [ simpleLink
               separator
               Html.b extendedHeading
@@ -75,7 +75,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                         elif query.HasFinalSpace then text + " "
                         else text)
             |> Option.defaultValue ""
-        | Extended -> ""
+        | Extended _ -> ""
         | Cqp ->
             search.Params.Queries
             |> Array.tryHead
@@ -117,16 +117,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
 
             let hasFinalSpace = Regex.IsMatch(inputValue, "\s+$")
             (query, hasFinalSpace)
-        | Extended ->
-            let isPhonetic = inputValue.Contains("phon=")
-            let isOriginal = inputValue.Contains("orig=")
-
-            let mainAttr =
-                if isPhonetic then "phon"
-                elif isOriginal then "orig"
-                else "word"
-
-            (sprintf "[word=\"%s\" %%c]" inputValue, false)
+        | Extended _ -> failwith "Unused!"
         | Cqp ->
             let query =
                 // Replace literal quotes with __QUOTE__ to prevent
@@ -149,7 +140,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
     let searchInterface =
         match search.Interface with
         | Simple -> simpleView
-        | Extended -> Cwb.Extended.view corpus search dispatch
+        | Extended maybeTermIndexWithAttrModal -> Cwb.Extended.view corpus search maybeTermIndexWithAttrModal dispatch
         | Cqp -> cqpView
 
     Html.div [ prop.style [ style.width 500 ]

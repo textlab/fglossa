@@ -315,6 +315,7 @@ module LoadedCorpus =
             value: int option
         | CwbExtendedAddTerm of query: Query * queryIndex: int
         | CwbExtendedRemoveTerm of query: Query * queryIndex: int * termIndex: int
+        | CwbExtendedToggleAttrModal of maybeTermIndex: int option
         | Search
         | ResetForm
 
@@ -485,6 +486,13 @@ module LoadedCorpus =
                 updateQuery model query queryIndex newQueryTerms
 
             newModel, Cmd.none
+
+        | CwbExtendedToggleAttrModal maybeTermIndex ->
+            { model with
+                  Search =
+                      { model.Search with
+                            Interface = Extended maybeTermIndex } },
+            Cmd.none
 
         | Search ->
             // Do three search steps only if multicpu_bounds is defined for this corpus

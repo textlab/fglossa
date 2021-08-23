@@ -34,7 +34,7 @@ module Cwb =
 
 type SearchInterface =
     | Simple
-    | Extended
+    | Extended of maybeTermIndexWithAttrModal: int option
     | Cqp
 
 type Search =

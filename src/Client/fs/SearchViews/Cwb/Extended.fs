@@ -8,7 +8,7 @@ open Model
 open CwbExtended
 open Update.LoadedCorpus
 
-let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
+let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int option) (dispatch: Msg -> unit) =
     let query =
         if search.Params.Queries.Length > 0 then
             Query.OfCqp(corpus, search.Params.Queries.[0].QueryString)
@@ -31,6 +31,17 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
         | Written -> "Sentence"
 
     let termView termIndex (term: QueryTerm) =
+        let showAttributeModal () =
+            Bulma.modal [ modal.isActive
+                          prop.children [ Bulma.modalBackground [ prop.onClick
+                                                                      (fun _ ->
+                                                                          dispatch (CwbExtendedToggleAttrModal None)) ]
+                                          Bulma.modalContent [ Bulma.box [ Bulma.button.button [ prop.text (
+                                                                                                     term.MainStringValue
+                                                                                                     |> Option.defaultValue
+                                                                                                         "hei"
+                                                                                                 ) ] ] ] ] ]
+
         let minMaxInput (minMax: MinMax) =
             Bulma.control.div (
                 Bulma.input.text [ prop.className "has-text-right"
@@ -101,7 +112,11 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
             Bulma.button.button [ prop.onClick (fun _ -> dispatch (CwbExtendedRemoveTerm(query, 0, termIndex)))
                                   prop.children [ Bulma.icon [ Html.i [ prop.className "fas fa-minus" ] ] ] ]
 
-        [ if termIndex > 0 then
+        [ match maybeTermIndexWithAttrModal with
+          | Some index when index = termIndex -> showAttributeModal ()
+          | _ -> ignore None
+
+          if termIndex > 0 then
               let minMaxField (minMax: MinMax) =
                   Bulma.field.div [ field.isGrouped
                                     prop.className "is-align-items-center"
@@ -120,8 +135,15 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                            if query.Terms.Length > 1 then
                                                field.hasAddonsRight
                                            prop.children [ Bulma.control.div (
-                                                               Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
-                                                                                                               "fas fa-list" ] ] ]
+                                                               Bulma.button.button [ prop.onClick
+                                                                                         (fun _ ->
+                                                                                             dispatch (
+                                                                                                 CwbExtendedToggleAttrModal(
+                                                                                                     Some termIndex
+                                                                                                 )
+                                                                                             ))
+                                                                                     prop.children [ Bulma.icon [ Html.i [ prop.className
+                                                                                                                               "fas fa-list" ] ] ] ]
                                                            )
                                                            Bulma.control.div (
                                                                Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
