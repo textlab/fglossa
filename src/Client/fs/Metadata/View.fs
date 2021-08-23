@@ -47,46 +47,27 @@ let dummyMetadataTableData =
 module SelectionTable =
     [<ReactComponent>]
     let SelectionTablePopup model dispatch =
+        let pagination =
+            [ Bulma.levelItem [ Bulma.buttons [ iconButton "fa-angle-double-left" false (fun e -> ())
+                                                iconButton "fa-angle-left" false (fun e -> ()) ] ]
+              Bulma.levelItem [ Bulma.input.number [ input.isSmall
+                                                     prop.style [ style.width 60
+                                                                  style.textAlign.right ]
+                                                     prop.value 1
+                                                     prop.onChange (fun (s: string) -> printfn $"New value: {s}") ] ]
+              Bulma.levelItem [ Bulma.buttons [ iconButton "fa-angle-right" false (fun e -> ())
+                                                iconButton "fa-angle-double-right" false (fun e -> ()) ] ]
+              Bulma.levelItem [ Bulma.delete [ delete.isMedium
+                                               prop.title "Close"
+                                               prop.style [ style.marginLeft 40 ]
+                                               prop.onClick (fun _ -> dispatch ToggleShowSelectionOpen) ] ] ]
+
         let header =
             Bulma.level [ prop.style [ style.padding 20
                                        style.marginBottom 0 ]
                           prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle
                                                                                   "All 123 texts (123,456,789 tokens) selected" ] ]
-                                          Bulma.levelRight [ Bulma.levelItem [ Bulma.buttons [ iconButton
-                                                                                                   "fa-angle-double-left"
-                                                                                                   false
-                                                                                                   (fun e -> ())
-                                                                                               iconButton
-                                                                                                   "fa-angle-left"
-                                                                                                   false
-                                                                                                   (fun e -> ()) ] ]
-                                                             Bulma.levelItem [ Bulma.input.number [ input.isSmall
-                                                                                                    prop.style [ style.width
-                                                                                                                     60
-                                                                                                                 style.textAlign.right ]
-                                                                                                    prop.value 1
-                                                                                                    prop.onChange
-                                                                                                        (fun (s: string) ->
-                                                                                                            printfn
-                                                                                                                $"New value: {
-                                                                                                                                  s
-                                                                                                                }") ] ]
-                                                             Bulma.levelItem [ Bulma.buttons [ iconButton
-                                                                                                   "fa-angle-right"
-                                                                                                   false
-                                                                                                   (fun e -> ())
-                                                                                               iconButton
-                                                                                                   "fa-angle-double-right"
-                                                                                                   false
-                                                                                                   (fun e -> ()) ] ]
-                                                             Bulma.levelItem [ Bulma.delete [ delete.isMedium
-                                                                                              prop.title "Close"
-                                                                                              prop.style [ style.marginLeft
-                                                                                                               40 ]
-                                                                                              prop.onClick
-                                                                                                  (fun _ ->
-                                                                                                      dispatch
-                                                                                                          ToggleShowSelectionOpen) ] ] ] ] ]
+                                          Bulma.levelRight pagination ] ]
 
         let table =
             Bulma.tableContainer [ Bulma.table [ table.isStriped
