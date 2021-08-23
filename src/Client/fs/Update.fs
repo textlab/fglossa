@@ -306,7 +306,7 @@ module LoadedCorpus =
             termIndex: int *
             property: QueryProperty *
             value: bool
-        | CwbExtendedSetAttributeCategory of
+        | CwbExtendedToggleAttributeCategory of
             query: Query *
             queryIndex: int *
             term: QueryTerm *
@@ -450,13 +450,16 @@ module LoadedCorpus =
 
             newModel, Cmd.none
 
-        | CwbExtendedSetAttributeCategory (query, queryIndex, term, termIndex, categorySectionIndex, category) ->
+        | CwbExtendedToggleAttributeCategory (query, queryIndex, term, termIndex, categorySectionIndex, category) ->
             let newCategorySections =
                 term.CategorySections
                 |> List.mapi
                     (fun i section ->
                         if i = categorySectionIndex then
-                            section.Add(category)
+                            if section.Contains(category) then
+                                section.Remove(category)
+                            else
+                                section.Add(category)
                         else
                             section)
 

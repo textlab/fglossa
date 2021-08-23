@@ -57,7 +57,7 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                                                                         Subcategories = None }
 
                                                                   dispatch (
-                                                                      CwbExtendedSetAttributeCategory(
+                                                                      CwbExtendedToggleAttributeCategory(
                                                                           query,
                                                                           0,
                                                                           term,
