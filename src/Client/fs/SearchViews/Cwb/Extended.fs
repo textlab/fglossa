@@ -4,6 +4,7 @@ open System
 open Feliz
 open Feliz.Bulma
 open Shared
+open Shared.StringUtils
 open Model
 open CwbExtended
 open Update.LoadedCorpus
@@ -32,20 +33,22 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
 
     let termView termIndex (term: QueryTerm) =
         let showAttributeModal () =
-            let mainButtons
+            let selectionContainsCategory (attr: Cwb.PositionalAttribute) attrValue selection =
+                selection
+                |> Set.exists
+                    (fun selectedCat ->
+                        selectedCat.Attr = attr.Code
+                        && selectedCat.Value = attrValue)
+
+            let mainCategoryButtons
                 sectionIndex
                 (menuSectionCategories: Cwb.MainCategoryValue list)
                 (termSectionSelection: Set<MainCategory>)
                 =
-                Bulma.buttons [ for (attr, attrValue, description, _) in menuSectionCategories ->
+                Bulma.buttons [ for (attr, attrValue, humanReadableName, _) in menuSectionCategories ->
                                     let isSelected =
                                         termSectionSelection
-                                        |> Set.exists
-                                            (fun selectedCat ->
-                                                printfn $"selectedCat: {selectedCat}"
-
-                                                selectedCat.Attr = attr.Code
-                                                && selectedCat.Value = attrValue)
+                                        |> selectionContainsCategory attr attrValue
 
                                     Bulma.button.button [ if isSelected then color.isSuccess
                                                           prop.onClick
@@ -66,7 +69,24 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                                                                           category
                                                                       )
                                                                   ))
-                                                          prop.text description ] ]
+                                                          prop.text humanReadableName ] ]
+
+            let subcategoryButtons (subcategories: Cwb.Subcategory list) =
+                Bulma.columns (
+                    Bulma.column [ for (heading, values) in subcategories ->
+                                       Bulma.level [ Bulma.levelLeft [ Bulma.levelItem (
+                                                                           Bulma.title [ title.is6
+                                                                                         prop.text heading ]
+                                                                       )
+                                                                       Bulma.levelItem (
+                                                                           Bulma.buttons [ for (attr,
+                                                                                                attrValue,
+                                                                                                humanReadableName) in
+                                                                                               values ->
+                                                                                               Bulma.button.button [ prop.text
+                                                                                                                         humanReadableName ] ]
+                                                                       ) ] ] ]
+                )
 
             let attrMenu =
                 match corpus.CwbAttributeMenu with
@@ -74,12 +94,26 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                     List.zip menuSections term.CategorySections
                     |> List.mapi
                         (fun sectionIndex (menuSection, termSectionSelection) ->
-                            Bulma.message [ color.isInfo
-                                            prop.children [ Bulma.messageHeader [ Html.p menuSection.Heading ]
-                                                            Bulma.messageBody [ mainButtons
-                                                                                    sectionIndex
-                                                                                    menuSection.Values
-                                                                                    termSectionSelection ] ] ])
+                            let subcategoryPanels =
+                                [ for (attr, attrValue, humanReadableName, subcategories) in menuSection.Values do
+                                      if termSectionSelection
+                                         |> selectionContainsCategory attr attrValue then
+                                          let heading =
+                                              menuSection.SubcategoryHeading.Replace("@category", humanReadableName)
+
+                                          Bulma.message [ color.isInfo
+                                                          prop.children [ Bulma.messageHeader [ Html.p heading ]
+                                                                          Bulma.messageBody (
+                                                                              subcategoryButtons subcategories
+                                                                          ) ] ] ]
+
+                            Html.span [ Bulma.message [ color.isInfo
+                                                        prop.children [ Bulma.messageHeader [ Html.p menuSection.Heading ]
+                                                                        Bulma.messageBody [ mainCategoryButtons
+                                                                                                sectionIndex
+                                                                                                menuSection.Values
+                                                                                                termSectionSelection ] ] ]
+                                        yield! subcategoryPanels ])
                 | None -> []
 
             Bulma.modal [ modal.isActive
