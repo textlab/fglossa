@@ -313,6 +313,14 @@ module LoadedCorpus =
             termIndex: int *
             categorySectionIndex: int *
             category: MainCategory
+        | CwbExtendedToggleAttributeSubcategory of
+            query: Query *
+            queryIndex: int *
+            term: QueryTerm *
+            termIndex: int *
+            categorySectionIndex: int *
+            mainCategory: MainCategory *
+            subcategory: Subcategory
         | CwbExtendedSetIntervalValue of
             query: Query *
             queryIndex: int *
@@ -456,12 +464,67 @@ module LoadedCorpus =
                 |> List.mapi
                     (fun i section ->
                         if i = categorySectionIndex then
-                            if section.Contains(category) then
-                                section.Remove(category)
-                            else
-                                section.Add(category)
+                            section
+                            |> Set.toArray
+                            |> Array.tryFind (fun s -> s.Attr = category.Attr && s.Value = category.Value)
+                            |> function
+                                | Some existingCat -> section.Remove(existingCat)
+                                | None -> section.Add(category)
                         else
                             section)
+
+            let newTerm =
+                { term with
+                      CategorySections = newCategorySections }
+
+            let newModel =
+                updateQueryTerm model query queryIndex newTerm termIndex
+
+            newModel, Cmd.none
+
+        | CwbExtendedToggleAttributeSubcategory (query,
+                                                 queryIndex,
+                                                 term,
+                                                 termIndex,
+                                                 categorySectionIndex,
+                                                 mainCategory,
+                                                 subcategory) ->
+            let newCategorySections =
+                term.CategorySections
+                |> List.mapi
+                    (fun i sectionMainCategories ->
+                        if i = categorySectionIndex then
+                            // This is the section we want to change. Find the given main category
+                            // and modify the given subcategory inside it.
+                            sectionMainCategories
+                            |> Set.map
+                                (fun cat ->
+                                    if cat = mainCategory then
+                                        let subcategories =
+                                            match cat.Subcategories with
+                                            | Some subcats ->
+                                                subcats
+                                                |> Set.toArray
+                                                |> Array.tryFind (fun sc -> sc.Attr = subcategory.Attr)
+                                                |> function
+                                                    | Some existingSubcat ->
+                                                        let scs = subcats.Remove(existingSubcat)
+
+                                                        if subcategory.Values.IsEmpty then
+                                                            // All values in this subcategory have been deselected in the new version,
+                                                            // so don't add it to the list of subcategories for this main category
+                                                            scs
+                                                        else
+                                                            scs.Add(subcategory)
+                                                    | None -> subcats.Add(subcategory)
+                                            | None -> Set.singleton (subcategory)
+
+                                        { cat with
+                                              Subcategories = Some subcategories }
+                                    else
+                                        cat)
+                        else
+                            sectionMainCategories)
 
             let newTerm =
                 { term with

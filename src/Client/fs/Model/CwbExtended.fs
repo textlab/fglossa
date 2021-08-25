@@ -16,13 +16,18 @@ type AttrOperator =
         | "contains" -> Contains
         | _ -> failwith $"Unrecognized operator: {s}"
 
-type AttrExpr =
+type Subcategory =
     { Attr: string
       Operator: AttrOperator
       Values: Set<string> }
     member this.ToCqp() =
-        let valueStr = this.Values |> String.concat "|"
-        $"{this.Attr} = \"{valueStr}\""
+        let valueStr =
+            this.Values
+            |> Set.toArray
+            |> Array.sort
+            |> String.concat "|"
+
+        $"{this.Attr}=\"{valueStr}\""
 
 type MinMax =
     | Min
@@ -36,7 +41,7 @@ type MainCategory =
     { Attr: string
       Operator: AttrOperator
       Value: string
-      Subcategories: AttrExpr list option }
+      Subcategories: Set<Subcategory> option }
     member this.ToCqp() =
         let mainExpr = $"{this.Attr}=\"{this.Value}\""
 
@@ -44,6 +49,8 @@ type MainCategory =
             match this.Subcategories with
             | Some cats ->
                 cats
+                |> Set.toList
+                |> List.sort
                 |> List.map (fun cat -> cat.ToCqp())
                 |> String.concat " & "
                 |> fun subcatExpressions -> $"{mainExpr} & {subcatExpressions}"
@@ -359,7 +366,7 @@ let handleAttributeValue
                                           Subcategories =
                                               match List.tail attributeValuePairs with
                                               | [] -> None
-                                              | pairs -> Some pairs } ]
+                                              | pairs -> pairs |> Set.ofList |> Some } ]
 
                               // Look at the first main category in this section and find the first (which should also be the
                               // only) section in the CwbAttributeMenu for this corpus that contains the same combination of

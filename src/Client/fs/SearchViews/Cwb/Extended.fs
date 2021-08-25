@@ -71,20 +71,63 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                                                                   ))
                                                           prop.text humanReadableName ] ]
 
-            let subcategoryButtons (subcategories: Cwb.Subcategory list) =
+            let subcategoryButtons
+                sectionIndex
+                (selectedMainCategory: MainCategory)
+                (subcategories: Cwb.Subcategory list)
+                =
+                let buttonList (subcatValues: Cwb.SubcategoryValue list) =
+                    [ for ((attr: Cwb.PositionalAttribute), attrValue, humanReadableName) in subcatValues ->
+                          let subCategory =
+                              let attrWithoutValues =
+                                  { Attr = attr.Code
+                                    Operator = AttrOperator.OfString("=")
+                                    Values = Set.empty }
+
+                              match selectedMainCategory.Subcategories with
+                              | Some subcats ->
+                                  subcats
+                                  |> Set.toArray
+                                  |> Array.tryFind (fun subcat -> subcat.Attr = attr.Code)
+                                  |> function
+                                      | Some subcat -> subcat
+                                      | None -> attrWithoutValues
+                              | None -> attrWithoutValues
+
+                          let isSelected = subCategory.Values.Contains(attrValue)
+
+                          Bulma.button.button [ if isSelected then color.isSuccess
+                                                prop.onClick
+                                                    (fun _ ->
+                                                        let newSubcategory =
+                                                            if isSelected then
+                                                                { subCategory with
+                                                                      Values = subCategory.Values.Remove(attrValue) }
+                                                            else
+                                                                { subCategory with
+                                                                      Values = subCategory.Values.Add(attrValue) }
+
+                                                        dispatch (
+                                                            CwbExtendedToggleAttributeSubcategory(
+                                                                query,
+                                                                0,
+                                                                term,
+                                                                termIndex,
+                                                                sectionIndex,
+                                                                selectedMainCategory,
+                                                                newSubcategory
+                                                            )
+                                                        ))
+                                                prop.text humanReadableName ] ]
+
                 Bulma.columns (
-                    Bulma.column [ for (heading, values) in subcategories ->
+                    Bulma.column [ for (heading, subcatValues) in subcategories ->
                                        Bulma.level [ Bulma.levelLeft [ Bulma.levelItem (
                                                                            Bulma.title [ title.is6
-                                                                                         prop.text heading ]
+                                                                                         prop.text (heading + ":") ]
                                                                        )
                                                                        Bulma.levelItem (
-                                                                           Bulma.buttons [ for (attr,
-                                                                                                attrValue,
-                                                                                                humanReadableName) in
-                                                                                               values ->
-                                                                                               Bulma.button.button [ prop.text
-                                                                                                                         humanReadableName ] ]
+                                                                           Bulma.buttons (buttonList subcatValues)
                                                                        ) ] ] ]
                 )
 
@@ -96,16 +139,30 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                         (fun sectionIndex (menuSection, termSectionSelection) ->
                             let subcategoryPanels =
                                 [ for (attr, attrValue, humanReadableName, subcategories) in menuSection.Values do
-                                      if termSectionSelection
-                                         |> selectionContainsCategory attr attrValue then
-                                          let heading =
-                                              menuSection.SubcategoryHeading.Replace("@category", humanReadableName)
+                                      if subcategories.IsEmpty then
+                                          Html.none
+                                      else
+                                          termSectionSelection
+                                          |> Set.toArray
+                                          |> Array.tryFind (fun cat -> cat.Attr = attr.Code && cat.Value = attrValue)
+                                          |> function
+                                              // If the main category has been selected, we show all its subcategories
+                                              | Some cat ->
+                                                  let heading =
+                                                      menuSection.SubcategoryHeading.Replace(
+                                                          "@category",
+                                                          humanReadableName
+                                                      )
 
-                                          Bulma.message [ color.isInfo
-                                                          prop.children [ Bulma.messageHeader [ Html.p heading ]
-                                                                          Bulma.messageBody (
-                                                                              subcategoryButtons subcategories
-                                                                          ) ] ] ]
+                                                  Bulma.message [ color.isInfo
+                                                                  prop.children [ Bulma.messageHeader [ Html.p heading ]
+                                                                                  Bulma.messageBody (
+                                                                                      subcategoryButtons
+                                                                                          sectionIndex
+                                                                                          cat
+                                                                                          subcategories
+                                                                                  ) ] ]
+                                              | None -> Html.none ]
 
                             Html.span [ Bulma.message [ color.isInfo
                                                         prop.children [ Bulma.messageHeader [ Html.p menuSection.Heading ]
