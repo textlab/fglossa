@@ -321,6 +321,7 @@ module LoadedCorpus =
             categorySectionIndex: int *
             mainCategory: MainCategory *
             subcategory: Subcategory
+        | CwbExtendedClearAttributeCategories of query: Query * queryIndex: int * term: QueryTerm * termIndex: int
         | CwbExtendedSetIntervalValue of
             query: Query *
             queryIndex: int *
@@ -535,6 +536,13 @@ module LoadedCorpus =
 
             newModel, Cmd.none
 
+        | CwbExtendedClearAttributeCategories (query, queryIndex, term, termIndex) ->
+            let newTerm = { term with CategorySections = [] }
+
+            let newModel =
+                updateQueryTerm model query queryIndex newTerm termIndex
+
+            newModel, Cmd.none
         | CwbExtendedSetIntervalValue (query, queryIndex, term, termIndex, minMax, maybeValue) ->
             let maybeNewInterval =
                 let i =
@@ -632,10 +640,15 @@ module LoadedCorpus =
                                   )
                               ) }
 
-                newModel,
-                Cmd.ofMsg (
-                    ShowingResultsMsg(ShowingResults.ConcordanceMsg(ShowingResults.Concordance.PerformSearchStep))
-                )
+                let cmds =
+                    [ Cmd.ofMsg (CwbExtendedToggleAttrModal None)
+                      Cmd.ofMsg (
+                          ShowingResultsMsg(ShowingResults.ConcordanceMsg(ShowingResults.Concordance.PerformSearchStep))
+                      ) ]
+                    |> Cmd.batch
+
+                newModel, cmds
+
             else
                 printfn "Empty query!"
                 model, Cmd.none

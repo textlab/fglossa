@@ -170,7 +170,38 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                                                                                                 sectionIndex
                                                                                                 menuSection.Values
                                                                                                 termSectionSelection ] ] ]
-                                        yield! subcategoryPanels ])
+                                        yield! subcategoryPanels
+                                        Bulma.level [ Bulma.levelLeft (
+                                                          Bulma.levelItem [ prop.text
+                                                                                "Click to select; shift-click to exclude" ]
+                                                      )
+                                                      Bulma.levelRight (
+                                                          Bulma.buttons [ Bulma.button.button [ color.isDanger
+                                                                                                prop.onClick
+                                                                                                    (fun _ ->
+                                                                                                        dispatch (
+                                                                                                            CwbExtendedClearAttributeCategories(
+                                                                                                                query,
+                                                                                                                0,
+                                                                                                                term,
+                                                                                                                termIndex
+                                                                                                            )
+                                                                                                        ))
+                                                                                                prop.text "Clear" ]
+                                                                          Bulma.button.button [ color.isSuccess
+                                                                                                prop.onClick
+                                                                                                    (fun _ ->
+                                                                                                        dispatch Search)
+                                                                                                prop.text "Search" ]
+                                                                          Bulma.button.button [ color.isInfo
+                                                                                                prop.onClick
+                                                                                                    (fun _ ->
+                                                                                                        dispatch (
+                                                                                                            CwbExtendedToggleAttrModal
+                                                                                                                None
+                                                                                                        ))
+                                                                                                prop.text "Close" ] ]
+                                                      ) ] ])
                 | None -> []
 
             Bulma.modal [ modal.isActive
