@@ -9,6 +9,203 @@ open Model
 open CwbExtended
 open Update.LoadedCorpus
 
+[<ReactComponent>]
+let AttributeModal
+    (
+        corpus: Corpus,
+        query: Query,
+        term: QueryTerm,
+        termIndex: int,
+        dispatch: Msg -> unit
+    ) : ReactElement =
+
+    let selectionContainsCategory (attr: Cwb.PositionalAttribute) attrValue selection =
+        selection
+        |> Set.exists
+            (fun selectedCat ->
+                selectedCat.Attr = attr.Code
+                && selectedCat.Value = attrValue)
+
+    let mainCategoryButtons
+        sectionIndex
+        (menuSectionCategories: Cwb.MainCategoryValue list)
+        (termSectionSelection: Set<MainCategory>)
+        =
+        Bulma.buttons [ for (attr, attrValue, humanReadableName, _) in menuSectionCategories ->
+                            let isSelected =
+                                termSectionSelection
+                                |> selectionContainsCategory attr attrValue
+
+                            Bulma.button.button [ if isSelected then color.isSuccess
+                                                  prop.onClick
+                                                      (fun _ ->
+                                                          let category =
+                                                              { Attr = attr.Code
+                                                                Operator = Equals
+                                                                Value = attrValue
+                                                                Subcategories = None }
+
+                                                          dispatch (
+                                                              CwbExtendedToggleAttributeCategory(
+                                                                  query,
+                                                                  0,
+                                                                  term,
+                                                                  termIndex,
+                                                                  sectionIndex,
+                                                                  category
+                                                              )
+                                                          ))
+                                                  prop.text humanReadableName ] ]
+
+    let subcategoryButtons sectionIndex (selectedMainCategory: MainCategory) (subcategories: Cwb.Subcategory list) =
+        let buttonList (subcatValues: Cwb.SubcategoryValue list) =
+            [ for ((attr: Cwb.PositionalAttribute), attrValue, humanReadableName) in subcatValues ->
+                  let subCategory =
+                      let attrWithoutValues =
+                          { Attr = attr.Code
+                            Operator = AttrOperator.OfString("=")
+                            Values = Set.empty }
+
+                      match selectedMainCategory.Subcategories with
+                      | Some subcats ->
+                          subcats
+                          |> Set.toArray
+                          |> Array.tryFind (fun subcat -> subcat.Attr = attr.Code)
+                          |> function
+                              | Some subcat -> subcat
+                              | None -> attrWithoutValues
+                      | None -> attrWithoutValues
+
+                  let isSelected = subCategory.Values.Contains(attrValue)
+
+                  Bulma.button.button [ if isSelected then color.isSuccess
+                                        prop.onClick
+                                            (fun _ ->
+                                                let newSubcategory =
+                                                    if isSelected then
+                                                        { subCategory with
+                                                              Values = subCategory.Values.Remove(attrValue) }
+                                                    else
+                                                        { subCategory with
+                                                              Values = subCategory.Values.Add(attrValue) }
+
+                                                dispatch (
+                                                    CwbExtendedToggleAttributeSubcategory(
+                                                        query,
+                                                        0,
+                                                        term,
+                                                        termIndex,
+                                                        sectionIndex,
+                                                        selectedMainCategory,
+                                                        newSubcategory
+                                                    )
+                                                ))
+                                        prop.text humanReadableName ] ]
+
+        Bulma.columns (
+            Bulma.column [ for (heading, subcatValues) in subcategories ->
+                               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem (
+                                                                   Bulma.title [ title.is6
+                                                                                 prop.text (heading + ":") ]
+                                                               )
+                                                               Bulma.levelItem (Bulma.buttons (buttonList subcatValues)) ] ] ]
+        )
+
+    let attrMenu =
+        match corpus.CwbAttributeMenu with
+        | Some menuSections ->
+            List.zip menuSections term.CategorySections
+            |> List.mapi
+                (fun sectionIndex (menuSection, termSectionSelection) ->
+                    let subcategoryPanels =
+                        [ for (attr, attrValue, humanReadableName, subcategories) in menuSection.Values do
+                              if subcategories.IsEmpty then
+                                  Html.none
+                              else
+                                  termSectionSelection
+                                  |> Set.toArray
+                                  |> Array.tryFind (fun cat -> cat.Attr = attr.Code && cat.Value = attrValue)
+                                  |> function
+                                      // If the main category has been selected, we show all its subcategories
+                                      | Some cat ->
+                                          let heading =
+                                              menuSection.SubcategoryHeading.Replace("@category", humanReadableName)
+
+                                          Bulma.message [ color.isInfo
+                                                          prop.children [ Bulma.messageHeader [ Html.p heading ]
+                                                                          Bulma.messageBody (
+                                                                              subcategoryButtons
+                                                                                  sectionIndex
+                                                                                  cat
+                                                                                  subcategories
+                                                                          ) ] ]
+                                      | None -> Html.none ]
+
+                    Html.span [ Bulma.message [ color.isInfo
+                                                prop.children [ Bulma.messageHeader [ Html.p menuSection.Heading ]
+                                                                Bulma.messageBody [ mainCategoryButtons
+                                                                                        sectionIndex
+                                                                                        menuSection.Values
+                                                                                        termSectionSelection ] ] ]
+                                yield! subcategoryPanels
+                                Bulma.level [ Bulma.levelLeft (
+                                                  Bulma.levelItem [ prop.text "Click to select; shift-click to exclude" ]
+                                              )
+                                              Bulma.levelRight (
+                                                  Bulma.buttons [ Bulma.button.button [ color.isDanger
+                                                                                        prop.onClick
+                                                                                            (fun _ ->
+                                                                                                dispatch (
+                                                                                                    CwbExtendedClearAttributeCategories(
+                                                                                                        query,
+                                                                                                        0,
+                                                                                                        term,
+                                                                                                        termIndex
+                                                                                                    )
+                                                                                                ))
+                                                                                        prop.text "Clear" ]
+                                                                  Bulma.button.button [ color.isSuccess
+                                                                                        prop.onClick
+                                                                                            (fun _ -> dispatch Search)
+                                                                                        prop.text "Search" ]
+                                                                  Bulma.button.button [ color.isInfo
+                                                                                        prop.onClick
+                                                                                            (fun _ ->
+                                                                                                dispatch (
+                                                                                                    CwbExtendedToggleAttrModal
+                                                                                                        None
+                                                                                                ))
+                                                                                        prop.text "Close" ] ]
+                                              ) ] ])
+        | None -> []
+
+    let elementRef = React.useElementRef ()
+
+    let focusModal () =
+        elementRef.current
+        |> Option.iter (fun modalElement -> modalElement.focus ())
+
+    // Focus the modal when mounted to enable it to receive keyboard events
+    React.useEffectOnce (focusModal)
+
+    Bulma.modal [ modal.isActive
+                  // Set elementRef in order to apply the focusModal() function to this element
+                  prop.ref elementRef
+                  // Set tabIndex so that the lement receives keyboard events
+                  prop.tabIndex 0
+                  prop.onKeyUp
+                      (fun e ->
+                          if e.key = "Escape" then
+                              dispatch (CwbExtendedToggleAttrModal None))
+                  prop.children [ Bulma.modalBackground [ prop.onClick
+                                                              (fun _ -> dispatch (CwbExtendedToggleAttrModal None)) ]
+                                  Bulma.modalContent [ prop.style [ style.width 900 ]
+                                                       prop.children [ Bulma.box attrMenu ] ]
+
+                                  Bulma.modalClose [ button.isLarge
+                                                     prop.onClick (fun _ -> dispatch (CwbExtendedToggleAttrModal None)) ] ] ]
+
+
 let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int option) (dispatch: Msg -> unit) =
     let query =
         if search.Params.Queries.Length > 0 then
@@ -31,189 +228,8 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
         | Spoken -> "Utterance"
         | Written -> "Sentence"
 
+
     let termView termIndex (term: QueryTerm) =
-        let showAttributeModal () =
-            let selectionContainsCategory (attr: Cwb.PositionalAttribute) attrValue selection =
-                selection
-                |> Set.exists
-                    (fun selectedCat ->
-                        selectedCat.Attr = attr.Code
-                        && selectedCat.Value = attrValue)
-
-            let mainCategoryButtons
-                sectionIndex
-                (menuSectionCategories: Cwb.MainCategoryValue list)
-                (termSectionSelection: Set<MainCategory>)
-                =
-                Bulma.buttons [ for (attr, attrValue, humanReadableName, _) in menuSectionCategories ->
-                                    let isSelected =
-                                        termSectionSelection
-                                        |> selectionContainsCategory attr attrValue
-
-                                    Bulma.button.button [ if isSelected then color.isSuccess
-                                                          prop.onClick
-                                                              (fun _ ->
-                                                                  let category =
-                                                                      { Attr = attr.Code
-                                                                        Operator = Equals
-                                                                        Value = attrValue
-                                                                        Subcategories = None }
-
-                                                                  dispatch (
-                                                                      CwbExtendedToggleAttributeCategory(
-                                                                          query,
-                                                                          0,
-                                                                          term,
-                                                                          termIndex,
-                                                                          sectionIndex,
-                                                                          category
-                                                                      )
-                                                                  ))
-                                                          prop.text humanReadableName ] ]
-
-            let subcategoryButtons
-                sectionIndex
-                (selectedMainCategory: MainCategory)
-                (subcategories: Cwb.Subcategory list)
-                =
-                let buttonList (subcatValues: Cwb.SubcategoryValue list) =
-                    [ for ((attr: Cwb.PositionalAttribute), attrValue, humanReadableName) in subcatValues ->
-                          let subCategory =
-                              let attrWithoutValues =
-                                  { Attr = attr.Code
-                                    Operator = AttrOperator.OfString("=")
-                                    Values = Set.empty }
-
-                              match selectedMainCategory.Subcategories with
-                              | Some subcats ->
-                                  subcats
-                                  |> Set.toArray
-                                  |> Array.tryFind (fun subcat -> subcat.Attr = attr.Code)
-                                  |> function
-                                      | Some subcat -> subcat
-                                      | None -> attrWithoutValues
-                              | None -> attrWithoutValues
-
-                          let isSelected = subCategory.Values.Contains(attrValue)
-
-                          Bulma.button.button [ if isSelected then color.isSuccess
-                                                prop.onClick
-                                                    (fun _ ->
-                                                        let newSubcategory =
-                                                            if isSelected then
-                                                                { subCategory with
-                                                                      Values = subCategory.Values.Remove(attrValue) }
-                                                            else
-                                                                { subCategory with
-                                                                      Values = subCategory.Values.Add(attrValue) }
-
-                                                        dispatch (
-                                                            CwbExtendedToggleAttributeSubcategory(
-                                                                query,
-                                                                0,
-                                                                term,
-                                                                termIndex,
-                                                                sectionIndex,
-                                                                selectedMainCategory,
-                                                                newSubcategory
-                                                            )
-                                                        ))
-                                                prop.text humanReadableName ] ]
-
-                Bulma.columns (
-                    Bulma.column [ for (heading, subcatValues) in subcategories ->
-                                       Bulma.level [ Bulma.levelLeft [ Bulma.levelItem (
-                                                                           Bulma.title [ title.is6
-                                                                                         prop.text (heading + ":") ]
-                                                                       )
-                                                                       Bulma.levelItem (
-                                                                           Bulma.buttons (buttonList subcatValues)
-                                                                       ) ] ] ]
-                )
-
-            let attrMenu =
-                match corpus.CwbAttributeMenu with
-                | Some menuSections ->
-                    List.zip menuSections term.CategorySections
-                    |> List.mapi
-                        (fun sectionIndex (menuSection, termSectionSelection) ->
-                            let subcategoryPanels =
-                                [ for (attr, attrValue, humanReadableName, subcategories) in menuSection.Values do
-                                      if subcategories.IsEmpty then
-                                          Html.none
-                                      else
-                                          termSectionSelection
-                                          |> Set.toArray
-                                          |> Array.tryFind (fun cat -> cat.Attr = attr.Code && cat.Value = attrValue)
-                                          |> function
-                                              // If the main category has been selected, we show all its subcategories
-                                              | Some cat ->
-                                                  let heading =
-                                                      menuSection.SubcategoryHeading.Replace(
-                                                          "@category",
-                                                          humanReadableName
-                                                      )
-
-                                                  Bulma.message [ color.isInfo
-                                                                  prop.children [ Bulma.messageHeader [ Html.p heading ]
-                                                                                  Bulma.messageBody (
-                                                                                      subcategoryButtons
-                                                                                          sectionIndex
-                                                                                          cat
-                                                                                          subcategories
-                                                                                  ) ] ]
-                                              | None -> Html.none ]
-
-                            Html.span [ Bulma.message [ color.isInfo
-                                                        prop.children [ Bulma.messageHeader [ Html.p menuSection.Heading ]
-                                                                        Bulma.messageBody [ mainCategoryButtons
-                                                                                                sectionIndex
-                                                                                                menuSection.Values
-                                                                                                termSectionSelection ] ] ]
-                                        yield! subcategoryPanels
-                                        Bulma.level [ Bulma.levelLeft (
-                                                          Bulma.levelItem [ prop.text
-                                                                                "Click to select; shift-click to exclude" ]
-                                                      )
-                                                      Bulma.levelRight (
-                                                          Bulma.buttons [ Bulma.button.button [ color.isDanger
-                                                                                                prop.onClick
-                                                                                                    (fun _ ->
-                                                                                                        dispatch (
-                                                                                                            CwbExtendedClearAttributeCategories(
-                                                                                                                query,
-                                                                                                                0,
-                                                                                                                term,
-                                                                                                                termIndex
-                                                                                                            )
-                                                                                                        ))
-                                                                                                prop.text "Clear" ]
-                                                                          Bulma.button.button [ color.isSuccess
-                                                                                                prop.onClick
-                                                                                                    (fun _ ->
-                                                                                                        dispatch Search)
-                                                                                                prop.text "Search" ]
-                                                                          Bulma.button.button [ color.isInfo
-                                                                                                prop.onClick
-                                                                                                    (fun _ ->
-                                                                                                        dispatch (
-                                                                                                            CwbExtendedToggleAttrModal
-                                                                                                                None
-                                                                                                        ))
-                                                                                                prop.text "Close" ] ]
-                                                      ) ] ])
-                | None -> []
-
-            Bulma.modal [ modal.isActive
-                          prop.children [ Bulma.modalBackground [ prop.onClick
-                                                                      (fun _ ->
-                                                                          dispatch (CwbExtendedToggleAttrModal None)) ]
-                                          Bulma.modalContent [ prop.style [ style.width 900 ]
-                                                               prop.children [ Bulma.box attrMenu ] ]
-
-                                          Bulma.modalClose [ button.isLarge
-                                                             prop.onClick
-                                                                 (fun _ -> dispatch (CwbExtendedToggleAttrModal None)) ] ] ]
 
         let minMaxInput (minMax: MinMax) =
             Bulma.control.div (
@@ -286,7 +302,7 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                                   prop.children [ Bulma.icon [ Html.i [ prop.className "fas fa-minus" ] ] ] ]
 
         [ match maybeTermIndexWithAttrModal with
-          | Some index when index = termIndex -> showAttributeModal ()
+          | Some index when index = termIndex -> AttributeModal(corpus, query, term, termIndex, dispatch)
           | _ -> ignore None
 
           if termIndex > 0 then
