@@ -19,10 +19,10 @@ module Cwb =
 
     type Heading = string
     type AttributeValue = string
-    type AttributeValueDescription = string
+    type AttributeValueHumanReadable = string
 
     // e.g. (number, "sg", "singular")
-    type SubcategoryValue = PositionalAttribute * AttributeValue * AttributeValueDescription
+    type SubcategoryValue = PositionalAttribute * AttributeValue * AttributeValueHumanReadable
 
     // e.g. ("Number", [ (number, "sg", "singular"); (number, "pl", "plural")])
     type Subcategory = Heading * SubcategoryValue list
@@ -30,7 +30,7 @@ module Cwb =
     // e.g. (pos, "adj", "adjective",
     //          [ ("Number", [ (number, "sg", "singular"); (number, "pl", "plural") ])
     //            ("Degree", [ (degr, "pos", "positive"); (degr, "comp", "comparative"); (degr, "sup", "superlative") ])])
-    type MainCategoryValue = PositionalAttribute * AttributeValue * AttributeValueDescription * Subcategory list
+    type MainCategoryValue = PositionalAttribute * AttributeValue * AttributeValueHumanReadable * Subcategory list
 
     type AttributeSection =
         { Heading: string
