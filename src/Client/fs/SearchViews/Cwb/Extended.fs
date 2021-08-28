@@ -9,6 +9,13 @@ open Model
 open CwbExtended
 open Update.LoadedCorpus
 
+let selectionContainsCategory (attr: Cwb.PositionalAttribute) attrValue selection =
+    selection
+    |> Set.exists
+        (fun selectedCat ->
+            selectedCat.Attr = attr.Code
+            && selectedCat.Value = attrValue)
+
 [<ReactComponent>]
 let AttributeModal
     (
@@ -18,13 +25,6 @@ let AttributeModal
         termIndex: int,
         dispatch: Msg -> unit
     ) : ReactElement =
-
-    let selectionContainsCategory (attr: Cwb.PositionalAttribute) attrValue selection =
-        selection
-        |> Set.exists
-            (fun selectedCat ->
-                selectedCat.Attr = attr.Code
-                && selectedCat.Value = attrValue)
 
     let mainCategoryButtons
         sectionIndex
@@ -301,6 +301,24 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
             Bulma.button.button [ prop.onClick (fun _ -> dispatch (CwbExtendedRemoveTerm(query, 0, termIndex)))
                                   prop.children [ Bulma.icon [ Html.i [ prop.className "fas fa-minus" ] ] ] ]
 
+        let attributeTag (mainCategory: MainCategory) =
+            Bulma.tag [ color.isInfo
+                        prop.children [ Html.span mainCategory.Value
+                                        Html.button [ prop.className "delete is-small" ] ] ]
+
+        let attributeTags =
+            match corpus.CwbAttributeMenu with
+            | Some attributeMenu ->
+                [ for (menuSection, selectionSection) in List.zip attributeMenu term.CategorySections do
+                      yield!
+                          [ for (attr, attrValue, humanReadable, subcategories) in menuSection.Values do
+                                if selectionSection
+                                   |> selectionContainsCategory attr attrValue then
+                                    Bulma.tag [ color.isInfo
+                                                prop.children [ Html.span humanReadable
+                                                                Html.button [ prop.className "delete is-small" ] ] ] ] ]
+            | None -> []
+
         [ match maybeTermIndexWithAttrModal with
           | Some index when index = termIndex -> AttributeModal(corpus, query, term, termIndex, dispatch)
           | _ -> ignore None
@@ -370,7 +388,9 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                                                                        $"{segmentType} final"
                                                                        term.IsFinal
                                                                        IsFinal
-                                                               | Written -> Html.none ] ] ]
+                                                               | Written -> Html.none ] ]
+                         Bulma.field.div [ prop.style [ style.marginTop 10 ]
+                                           prop.children [ Bulma.tags attributeTags ] ] ]
 
 
           ]
