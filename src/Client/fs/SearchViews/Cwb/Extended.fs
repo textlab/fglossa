@@ -307,16 +307,48 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                                         Html.button [ prop.className "delete is-small" ] ] ]
 
         let attributeTags =
+            let checkForSubcatValues selectedMainCat (subcategories: Cwb.Subcategory list) =
+                [ for (_, subcatValues) in subcategories ->
+                      [ for (menuSubcatAttr, menuSubcatAttrValue, subcatHumanReadable) in subcatValues do
+                            match selectedMainCat.Subcategories with
+                            | Some selectedSubcats ->
+                                if selectedSubcats
+                                   |> Set.exists
+                                       (fun selectedSubcat ->
+                                           selectedSubcat.Attr = menuSubcatAttr.Code
+                                           && selectedSubcat.Values.Contains(menuSubcatAttrValue)) then
+                                    Some subcatHumanReadable
+                            | None -> None ]
+                      |> List.choose id
+                      |> String.concat " or " ]
+                |> String.concat " "
+
             match corpus.CwbAttributeMenu with
             | Some attributeMenu ->
                 [ for (menuSection, selectionSection) in List.zip attributeMenu term.CategorySections do
                       yield!
-                          [ for (attr, attrValue, humanReadable, subcategories) in menuSection.Values do
-                                if selectionSection
-                                   |> selectionContainsCategory attr attrValue then
+                          [ for (mainAttr, mainAttrValue, mainHumanReadable, subcategories) in menuSection.Values do
+                                let maybeCatStr =
+                                    selectionSection
+                                    |> Set.toList
+                                    |> List.tryFind
+                                        (fun selectedCat ->
+                                            selectedCat.Attr = mainAttr.Code
+                                            && selectedCat.Value = mainAttrValue)
+                                    |> function
+                                        | Some selectedMainCat ->
+                                            let subcatStr =
+                                                checkForSubcatValues selectedMainCat subcategories
+
+                                            Some $"{mainHumanReadable} {subcatStr}"
+                                        | None -> None
+
+                                match maybeCatStr with
+                                | Some catStr ->
                                     Bulma.tag [ color.isInfo
-                                                prop.children [ Html.span humanReadable
-                                                                Html.button [ prop.className "delete is-small" ] ] ] ] ]
+                                                prop.children [ Html.span catStr
+                                                                Html.button [ prop.className "delete is-small" ] ] ]
+                                | None -> Html.none ] ]
             | None -> []
 
         [ match maybeTermIndexWithAttrModal with
