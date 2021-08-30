@@ -152,6 +152,12 @@ let AttributeModal
                                                                                         menuSection.Values
                                                                                         termSectionSelection ] ] ]
                                 yield! subcategoryPanels
+                                Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.input.text [ prop.style [ style.width
+                                                                                                                      200 ] ] ]
+                                                                Bulma.levelItem [ Bulma.select [ Html.option [ prop.value
+                                                                                                                   "hei"
+                                                                                                               prop.text
+                                                                                                                   "hallo" ] ] ] ] ]
                                 Bulma.level [ Bulma.levelLeft (
                                                   Bulma.levelItem [ prop.text "Click to select; shift-click to exclude" ]
                                               )
@@ -204,28 +210,20 @@ let AttributeModal
                   prop.children [ Bulma.modalBackground [ prop.onClick
                                                               (fun _ -> dispatch (CwbExtendedToggleAttrModal None)) ]
                                   Bulma.modalContent [ prop.style [ style.width 900 ]
-                                                       prop.children [ Bulma.box attrMenu ] ]
+                                                       prop.children [ Bulma.box attrMenu
+                                                                       Bulma.level [ Bulma.levelLeft [ Bulma.levelItem
+                                                                                                           "hei" ] ] ] ]
 
                                   Bulma.modalClose [ button.isLarge
                                                      prop.onClick (fun _ -> dispatch (CwbExtendedToggleAttrModal None)) ] ] ]
 
 
-let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int option) (dispatch: Msg -> unit) =
+let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalModel option) (dispatch: Msg -> unit) =
     let query =
         if search.Params.Queries.Length > 0 then
             Query.OfCqp(corpus, search.Params.Queries.[0].QueryString)
         else
             Query.Default
-
-    let (hasLemma, hasOrig) =
-        match corpus.Config.LanguageConfig with
-        | Monolingual (Some attributes) ->
-            let hasAttr attrCode =
-                attributes
-                |> List.exists (fun a -> a.Code = attrCode)
-
-            (hasAttr "lemma", hasAttr "orig")
-        | _ -> (false, false)
 
     let segmentType =
         match corpus.Config.Modality with
@@ -368,8 +366,8 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                                   | None -> Html.none ])
             | None -> []
 
-        [ match maybeTermIndexWithAttrModal with
-          | Some index when index = termIndex -> AttributeModal(corpus, query, term, termIndex, dispatch)
+        [ match maybeAttrModalModel with
+          | Some am when am.TermIndex = termIndex -> AttributeModal(corpus, query, term, termIndex, dispatch)
           | _ -> ignore None
 
           if termIndex > 0 then
@@ -410,12 +408,12 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                                                                Bulma.control.div (removeTermButton) ] ]
                          Bulma.field.div [ field.isGrouped
                                            field.isGroupedMultiline
-                                           prop.children [ if hasLemma then
+                                           prop.children [ if corpus.Config.HasAttribute("lemma") then
                                                                checkbox "Lemma" "Lemma" term.IsLemma IsLemma
                                                            checkbox "Start" "Start of word" term.IsStart IsStart
                                                            checkbox "End" "End of word" term.IsEnd IsEnd
                                                            checkbox "Middle" "Middle of word" term.IsMiddle IsMiddle
-                                                           if hasOrig then
+                                                           if corpus.Config.HasAttribute("orig") then
                                                                checkbox
                                                                    "Original"
                                                                    "Original form"

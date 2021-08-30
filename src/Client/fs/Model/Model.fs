@@ -38,9 +38,18 @@ module CwbAttributeMenu =
           Values: MainCategoryValue list }
 
 
+type AttributeModalModel =
+    { TermIndex: int
+      IncludeExcludeInput: string
+      IncludeExcludeSelectDisabled: bool }
+    static member Init(termIndex: int) =
+        { TermIndex = termIndex
+          IncludeExcludeInput = ""
+          IncludeExcludeSelectDisabled = true }
+
 type SearchInterface =
     | Simple
-    | Extended of maybeTermIndexWithAttrModal: int option
+    | Extended of AttributeModalModel option
     | Cqp
 
 type Search =

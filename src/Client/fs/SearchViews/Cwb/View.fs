@@ -140,7 +140,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
     let searchInterface =
         match search.Interface with
         | Simple -> simpleView
-        | Extended maybeTermIndexWithAttrModal -> Cwb.Extended.view corpus search maybeTermIndexWithAttrModal dispatch
+        | Extended maybeAttrModalModel -> Cwb.Extended.view corpus search maybeAttrModalModel dispatch
         | Cqp -> cqpView
 
     Html.div [ prop.style [ style.width 500 ]

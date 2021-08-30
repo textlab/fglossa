@@ -591,7 +591,10 @@ module LoadedCorpus =
             { model with
                   Search =
                       { model.Search with
-                            Interface = Extended maybeTermIndex } },
+                            Interface =
+                                match maybeTermIndex with
+                                | Some termIndex -> Extended(Some(AttributeModalModel.Init(termIndex)))
+                                | None -> Extended None } },
             Cmd.none
 
         | Search ->

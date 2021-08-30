@@ -117,6 +117,13 @@ type CorpusConfig =
           SearchEngine = defaultArg searchEngine Cwb
           Sizes = Map.empty }
 
+    member this.HasAttribute(attrCode: string) =
+        match this.LanguageConfig with
+        | Monolingual (Some attributes) ->
+            attributes
+            |> List.exists (fun a -> a.Code = attrCode)
+        | _ -> failwith "NOT IMPLEMENTED!"
+
 type CorpusCode = string
 type CorpusName = string
 
