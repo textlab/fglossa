@@ -5,6 +5,12 @@ open Shared
 open Shared.StringUtils
 open Model
 
+type MinMax =
+    | Min
+    | Max
+
+type Interval = { Min: int option; Max: int option }
+
 type AttrOperator =
     | Equals
     | NotEquals
@@ -15,6 +21,11 @@ type AttrOperator =
         | "!=" -> NotEquals
         | "contains" -> Contains
         | _ -> failwith $"Unrecognized operator: {s}"
+
+type ExtraForm =
+    { Attr: string
+      Operator: AttrOperator
+      Values: Set<string> }
 
 type Subcategory =
     { Attr: string
@@ -28,12 +39,6 @@ type Subcategory =
             |> String.concat "|"
 
         $"{this.Attr}=\"{valueStr}\""
-
-type MinMax =
-    | Min
-    | Max
-
-type Interval = { Min: int option; Max: int option }
 
 /// Used to represent CWB attribute selections in a query such as parts of speech
 /// with their morphosyntactic categories as subcategories
@@ -70,7 +75,7 @@ type QueryProperty =
 
 type QueryTerm =
     { MainStringValue: string option
-      ExtraForms: Map<string, Set<string>>
+      ExtraForms: ExtraForm list
       IsLemma: bool
       IsPhonetic: bool
       IsOriginal: bool
@@ -83,7 +88,7 @@ type QueryTerm =
       PrecedingInterval: Interval option }
     static member Default =
         { MainStringValue = None
-          ExtraForms = Map.empty
+          ExtraForms = []
           IsLemma = false
           IsPhonetic = false
           IsOriginal = false
@@ -139,15 +144,15 @@ type QueryTerm =
             | None -> None
 
         let maybeExtraForms =
-            if this.ExtraForms.Count > 0 then
-                [ for pair in this.ExtraForms ->
+            if this.ExtraForms.Length > 0 then
+                [ for forms in this.ExtraForms ->
                       let values =
-                          pair.Value
+                          forms.Values
                           |> Set.toArray
                           |> Array.sort
                           |> String.concat "|"
 
-                      $"{pair.Key}=\"{values}\"" ]
+                      $"{forms.Attr}=\"{values}\"" ]
                 |> String.concat " & "
                 |> Some
             else
@@ -184,6 +189,37 @@ type QueryTerm =
                 else $"[{s}]"
 
         $"{intervalString}{forms}"
+
+let addOrRemoveExtraForms term attrName operator attrValue shouldAdd =
+    let mutable foundForms = false
+
+    term.ExtraForms
+    |> List.map
+        (fun forms ->
+            if forms.Attr = attrName then
+                // A set of values already exists for this attribute name
+                foundForms <- true
+
+                let newValues =
+                    if shouldAdd then
+                        forms.Values.Add(attrValue)
+                    else
+                        forms.Values.Remove(attrValue)
+
+                { forms with Values = newValues }
+            else
+                forms)
+    |> fun extraFormsList ->
+        if foundForms then
+            extraFormsList
+        else
+            List.append
+                extraFormsList
+                [ { Attr = attrName
+                    Operator = operator
+                    Values = Set.singleton attrValue } ]
+
+
 
 let handleInterval intervalStr =
     let min =
@@ -270,13 +306,10 @@ let handleAttributeValue
               IsMiddle = isMiddle }
 
     let processOtherForms (term: QueryTerm) (name, operator, value) =
-        let newValues =
-            match term.ExtraForms |> Map.tryFind name with
-            | Some values -> values.Add(value)
-            | None -> Set.singleton value
+        let newExtraForms =
+            addOrRemoveExtraForms term name operator value true
 
-        { term with
-              ExtraForms = term.ExtraForms.Add(name, newValues) }
+        { term with ExtraForms = newExtraForms }
 
     let processForms =
         // In order to distinguish between, on the one hand, standard attributes such as word form, lemma,
@@ -310,7 +343,7 @@ let handleAttributeValue
                         replace "%c" ""
                         >> fun s ->
                             let m = Regex.Match(s, "(.+)(!?=)\"(.+)\"")
-                            (m.Groups.[1].Value, m.Groups.[2].Value, m.Groups.[3].Value)
+                            (m.Groups.[1].Value, AttrOperator.OfString(m.Groups.[2].Value), m.Groups.[3].Value)
                     )
 
                 let h = Array.head attrValuePairs
@@ -318,7 +351,7 @@ let handleAttributeValue
 
                 let term =
                     match firstOperator with
-                    | "=" ->
+                    | Equals ->
                         // Only set the value of the text box and checkboxes if the operator is = and not !=.
                         let t = processFirstForm h
                         Array.fold processOtherForms t (Array.tail attrValuePairs)

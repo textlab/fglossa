@@ -115,6 +115,37 @@ let AttributeModal
                                                                Bulma.levelItem (Bulma.buttons (buttonList subcatValues)) ] ] ]
         )
 
+    let includeExcludeOptions =
+        let hasLemma = corpus.Config.HasAttribute("lemma")
+        let hasPhon = corpus.Config.HasAttribute("phon")
+        let hasOrig = corpus.Config.HasAttribute("orig")
+
+        let wordName = if hasOrig then "corrected" else "word"
+
+        [ Html.option [ prop.text "Select specify/exclude" ]
+          Html.option [ prop.text $"Specify {wordName} form"
+                        prop.onClick (fun _ -> printfn "velger") ]
+          if hasLemma then
+              Html.option [ prop.text $"Specify lemma"
+                            prop.onClick (fun _ -> printfn "velger") ]
+          if hasPhon then
+              Html.option [ prop.text $"Specify phonetic form"
+                            prop.onClick (fun _ -> printfn "velger") ]
+          if hasOrig then
+              Html.option [ prop.text $"Specify original form"
+                            prop.onClick (fun _ -> printfn "velger") ]
+          Html.option [ prop.text $"Exclude {wordName} form"
+                        prop.onClick (fun _ -> printfn "velger") ]
+          if hasLemma then
+              Html.option [ prop.text $"Exclude lemma"
+                            prop.onClick (fun _ -> printfn "velger") ]
+          if hasPhon then
+              Html.option [ prop.text $"Exclude phonetic form"
+                            prop.onClick (fun _ -> printfn "velger") ]
+          if hasOrig then
+              Html.option [ prop.text $"Exclude original form"
+                            prop.onClick (fun _ -> printfn "velger") ] ]
+
     let attrMenu =
         match corpus.CwbAttributeMenu with
         | Some menuSections ->
@@ -154,10 +185,7 @@ let AttributeModal
                                 yield! subcategoryPanels
                                 Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.input.text [ prop.style [ style.width
                                                                                                                       200 ] ] ]
-                                                                Bulma.levelItem [ Bulma.select [ Html.option [ prop.value
-                                                                                                                   "hei"
-                                                                                                               prop.text
-                                                                                                                   "hallo" ] ] ] ] ]
+                                                                Bulma.levelItem [ Bulma.select includeExcludeOptions ] ] ]
                                 Bulma.level [ Bulma.levelLeft (
                                                   Bulma.levelItem [ prop.text "Click to select; shift-click to exclude" ]
                                               )

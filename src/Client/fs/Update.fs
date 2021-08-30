@@ -298,7 +298,7 @@ module LoadedCorpus =
             queryIndex: int *
             term: QueryTerm *
             termIndex: int *
-            value: string option
+            maybeValue: string option
         | CwbExtendedSetQueryProperty of
             query: Query *
             queryIndex: int *
@@ -306,6 +306,15 @@ module LoadedCorpus =
             termIndex: int *
             property: QueryProperty *
             value: bool
+        | CwbExtendedSetExtraForm of
+            query: Query *
+            queryIndex: int *
+            term: QueryTerm *
+            termIndex: int *
+            attrName: string *
+            operator: AttrOperator *
+            attrValue: string *
+            shouldAdd: bool
         | CwbExtendedToggleAttributeCategory of
             query: Query *
             queryIndex: int *
@@ -328,7 +337,7 @@ module LoadedCorpus =
             term: QueryTerm *
             termIndex: int *
             minMax: MinMax *
-            value: int option
+            maybeValue: int option
         | CwbExtendedAddTerm of query: Query * queryIndex: int
         | CwbExtendedRemoveTerm of query: Query * queryIndex: int * termIndex: int
         | CwbExtendedToggleAttrModal of maybeTermIndex: int option
@@ -453,6 +462,17 @@ module LoadedCorpus =
                           IsMiddle = isChecked }
                 | IsInitial -> { term with IsInitial = isChecked }
                 | IsFinal -> { term with IsFinal = isChecked }
+
+            let newModel =
+                updateQueryTerm model query queryIndex newTerm termIndex
+
+            newModel, Cmd.none
+
+        | CwbExtendedSetExtraForm (query, queryIndex, term, termIndex, attrName, operator, attrValue, shouldAdd) ->
+            let newExtraForms =
+                addOrRemoveExtraForms term attrName operator attrValue shouldAdd
+
+            let newTerm = { term with ExtraForms = newExtraForms }
 
             let newModel =
                 updateQueryTerm model query queryIndex newTerm termIndex
