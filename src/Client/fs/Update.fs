@@ -306,15 +306,13 @@ module LoadedCorpus =
             termIndex: int *
             property: QueryProperty *
             value: bool
-        | CwbExtendedSetExtraForm of
+        | CwbExtendedSetExtraForm of value: string
+        | CwbExtendedIncludeOrExcludeExtraForm of
             query: Query *
             queryIndex: int *
             term: QueryTerm *
             termIndex: int *
-            attrName: string *
-            operator: AttrOperator *
-            attrValue: string *
-            shouldAdd: bool
+            command: string
         | CwbExtendedToggleAttributeCategory of
             query: Query *
             queryIndex: int *
@@ -468,16 +466,48 @@ module LoadedCorpus =
 
             newModel, Cmd.none
 
-        | CwbExtendedSetExtraForm (query, queryIndex, term, termIndex, attrName, operator, attrValue, shouldAdd) ->
-            let newExtraForms =
-                addOrRemoveExtraForms term attrName operator attrValue shouldAdd
-
-            let newTerm = { term with ExtraForms = newExtraForms }
-
+        | CwbExtendedSetExtraForm value ->
             let newModel =
-                updateQueryTerm model query queryIndex newTerm termIndex
+                match model.Search.Interface with
+                | Extended (Some attrModalModel) ->
+                    { model with
+                          Search =
+                              { model.Search with
+                                    Interface =
+                                        Extended(
+                                            Some
+                                                { attrModalModel with
+                                                      IncludeExcludeInput = value }
+                                        ) } }
+                | _ -> model
 
             newModel, Cmd.none
+
+        | CwbExtendedIncludeOrExcludeExtraForm (query, queryIndex, term, termIndex, command) ->
+            match model.Search.Interface with
+            | Extended (Some attrModalModel) ->
+                let attrName, operator =
+                    match command with
+                    | "specify_word" -> "word", Equals
+                    | "specify_lemma" -> "lemma", Equals
+                    | "specify_phon" -> "phon", Equals
+                    | "specify_orig" -> "phon", Equals
+                    | "exclude_word" -> "word", NotEquals
+                    | "exclude_lemma" -> "lemma", NotEquals
+                    | "exclude_phon" -> "phon", NotEquals
+                    | "exclude_orig" -> "phon", NotEquals
+                    | _ -> failwith $"Unknown command: {command}"
+
+                let newExtraForms =
+                    addOrRemoveExtraForms term attrName operator attrModalModel.IncludeExcludeInput true
+
+                let newTerm = { term with ExtraForms = newExtraForms }
+
+                let newModel =
+                    updateQueryTerm model query queryIndex newTerm termIndex
+
+                newModel, Cmd.none
+            | _ -> model, Cmd.none
 
         | CwbExtendedToggleAttributeCategory (query, queryIndex, term, termIndex, categorySectionIndex, category) ->
             let newCategorySections =

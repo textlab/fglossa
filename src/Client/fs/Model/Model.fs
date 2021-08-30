@@ -40,12 +40,10 @@ module CwbAttributeMenu =
 
 type AttributeModalModel =
     { TermIndex: int
-      IncludeExcludeInput: string
-      IncludeExcludeSelectDisabled: bool }
+      IncludeExcludeInput: string }
     static member Init(termIndex: int) =
         { TermIndex = termIndex
-          IncludeExcludeInput = ""
-          IncludeExcludeSelectDisabled = true }
+          IncludeExcludeInput = "" }
 
 type SearchInterface =
     | Simple

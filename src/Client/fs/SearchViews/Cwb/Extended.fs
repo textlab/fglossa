@@ -13,6 +13,7 @@ open Update.LoadedCorpus
 let AttributeModal
     (
         corpus: Corpus,
+        modalModel: AttributeModalModel,
         query: Query,
         term: QueryTerm,
         termIndex: int,
@@ -122,29 +123,29 @@ let AttributeModal
 
         let wordName = if hasOrig then "corrected" else "word"
 
-        [ Html.option [ prop.text "Select specify/exclude" ]
-          Html.option [ prop.text $"Specify {wordName} form"
-                        prop.onClick (fun _ -> printfn "velger") ]
+        [ Html.option [ prop.text "Specify/exclude" ]
+          Html.option [ prop.value "specify_word"
+                        prop.text $"Specify {wordName} form" ]
           if hasLemma then
-              Html.option [ prop.text $"Specify lemma"
-                            prop.onClick (fun _ -> printfn "velger") ]
+              Html.option [ prop.value "specify_lemma"
+                            prop.text $"Specify lemma" ]
           if hasPhon then
-              Html.option [ prop.text $"Specify phonetic form"
-                            prop.onClick (fun _ -> printfn "velger") ]
+              Html.option [ prop.value "specify_phon"
+                            prop.text $"Specify phonetic form" ]
           if hasOrig then
-              Html.option [ prop.text $"Specify original form"
-                            prop.onClick (fun _ -> printfn "velger") ]
-          Html.option [ prop.text $"Exclude {wordName} form"
-                        prop.onClick (fun _ -> printfn "velger") ]
+              Html.option [ prop.value "specify_orig"
+                            prop.text $"Specify original form" ]
+          Html.option [ prop.value "exclude_word"
+                        prop.text $"Exclude {wordName} form" ]
           if hasLemma then
-              Html.option [ prop.text $"Exclude lemma"
-                            prop.onClick (fun _ -> printfn "velger") ]
+              Html.option [ prop.value "exclude_lemma"
+                            prop.text $"Exclude lemma" ]
           if hasPhon then
-              Html.option [ prop.text $"Exclude phonetic form"
-                            prop.onClick (fun _ -> printfn "velger") ]
+              Html.option [ prop.value "exclude_phon"
+                            prop.text $"Exclude phonetic form" ]
           if hasOrig then
-              Html.option [ prop.text $"Exclude original form"
-                            prop.onClick (fun _ -> printfn "velger") ] ]
+              Html.option [ prop.value "exclude_orig"
+                            prop.text $"Exclude original form" ] ]
 
     let attrMenu =
         match corpus.CwbAttributeMenu with
@@ -184,8 +185,30 @@ let AttributeModal
                                                                                         termSectionSelection ] ] ]
                                 yield! subcategoryPanels
                                 Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.input.text [ prop.style [ style.width
-                                                                                                                      200 ] ] ]
-                                                                Bulma.levelItem [ Bulma.select includeExcludeOptions ] ] ]
+                                                                                                                      200 ]
+                                                                                                     prop.value
+                                                                                                         modalModel.IncludeExcludeInput
+                                                                                                     prop.onChange (
+                                                                                                         CwbExtendedSetExtraForm
+                                                                                                         >> dispatch
+                                                                                                     ) ] ]
+                                                                Bulma.levelItem [ Bulma.select [ prop.disabled (
+                                                                                                     modalModel.IncludeExcludeInput =
+                                                                                                         ""
+                                                                                                 )
+                                                                                                 prop.onChange
+                                                                                                     (fun (command: string) ->
+                                                                                                         dispatch (
+                                                                                                             CwbExtendedIncludeOrExcludeExtraForm(
+                                                                                                                 query,
+                                                                                                                 0,
+                                                                                                                 term,
+                                                                                                                 termIndex,
+                                                                                                                 command
+                                                                                                             )
+                                                                                                         ))
+                                                                                                 prop.children
+                                                                                                     includeExcludeOptions ] ] ] ]
                                 Bulma.level [ Bulma.levelLeft (
                                                   Bulma.levelItem [ prop.text "Click to select; shift-click to exclude" ]
                                               )
@@ -395,7 +418,7 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
             | None -> []
 
         [ match maybeAttrModalModel with
-          | Some am when am.TermIndex = termIndex -> AttributeModal(corpus, query, term, termIndex, dispatch)
+          | Some am when am.TermIndex = termIndex -> AttributeModal(corpus, am, query, term, termIndex, dispatch)
           | _ -> ignore None
 
           if termIndex > 0 then
