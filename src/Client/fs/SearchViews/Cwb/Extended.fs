@@ -307,6 +307,9 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
                                         Html.button [ prop.className "delete is-small" ] ] ]
 
         let attributeTags =
+            // For each element in a list of subcategories given in the attribute menu in the corpus configuration,
+            // check whether it is included in the set of selected subcategories for the given selected main category,
+            // and if so, get its human-readable title to be shown in the tag.
             let checkForSubcatValues selectedMainCat (subcategories: Cwb.Subcategory list) =
                 [ for (_, subcatValues) in subcategories ->
                       [ for (menuSubcatAttr, menuSubcatAttrValue, subcatHumanReadable) in subcatValues do
@@ -325,30 +328,40 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
 
             match corpus.CwbAttributeMenu with
             | Some attributeMenu ->
-                [ for (menuSection, selectionSection) in List.zip attributeMenu term.CategorySections do
-                      yield!
-                          [ for (mainAttr, mainAttrValue, mainHumanReadable, subcategories) in menuSection.Values do
-                                let maybeCatStr =
-                                    selectionSection
-                                    |> Set.toList
-                                    |> List.tryFind
-                                        (fun selectedCat ->
-                                            selectedCat.Attr = mainAttr.Code
-                                            && selectedCat.Value = mainAttrValue)
-                                    |> function
-                                        | Some selectedMainCat ->
-                                            let subcatStr =
-                                                checkForSubcatValues selectedMainCat subcategories
+                // Go through the attribute menu specified in the corpus configuration and construct a tag element for
+                // each main category that has been selected for this query term along with its selected subcategories
+                List.zip attributeMenu term.CategorySections
+                |> List.indexed
+                |> List.collect
+                    (fun (sectionIndex, (menuSection, termSectionSelection)) ->
+                        [ for (mainAttr, mainAttrValue, mainHumanReadable, subcategories) in menuSection.Values do
+                              termSectionSelection
+                              |> Set.toList
+                              |> List.tryFind
+                                  (fun selectedCat ->
+                                      selectedCat.Attr = mainAttr.Code
+                                      && selectedCat.Value = mainAttrValue)
+                              |> function
+                                  | Some selectedMainCat ->
+                                      let subcatStr =
+                                          checkForSubcatValues selectedMainCat subcategories
 
-                                            Some $"{mainHumanReadable} {subcatStr}"
-                                        | None -> None
-
-                                match maybeCatStr with
-                                | Some catStr ->
-                                    Bulma.tag [ color.isInfo
-                                                prop.children [ Html.span catStr
-                                                                Html.button [ prop.className "delete is-small" ] ] ]
-                                | None -> Html.none ] ]
+                                      Bulma.tag [ color.isInfo
+                                                  prop.children [ Html.span $"{mainHumanReadable} {subcatStr}"
+                                                                  Html.button [ prop.className "delete is-small"
+                                                                                prop.onClick
+                                                                                    (fun _ ->
+                                                                                        dispatch (
+                                                                                            CwbExtendedToggleAttributeCategory(
+                                                                                                query,
+                                                                                                0,
+                                                                                                term,
+                                                                                                termIndex,
+                                                                                                sectionIndex,
+                                                                                                selectedMainCat
+                                                                                            )
+                                                                                        )) ] ] ]
+                                  | None -> Html.none ])
             | None -> []
 
         [ match maybeTermIndexWithAttrModal with
