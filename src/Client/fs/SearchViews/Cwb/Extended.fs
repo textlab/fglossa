@@ -9,13 +9,6 @@ open Model
 open CwbExtended
 open Update.LoadedCorpus
 
-let selectionContainsCategory (attr: Cwb.PositionalAttribute) attrValue selection =
-    selection
-    |> Set.exists
-        (fun selectedCat ->
-            selectedCat.Attr = attr.Code
-            && selectedCat.Value = attrValue)
-
 [<ReactComponent>]
 let AttributeModal
     (
@@ -25,6 +18,13 @@ let AttributeModal
         termIndex: int,
         dispatch: Msg -> unit
     ) : ReactElement =
+
+    let selectionContainsCategory (attr: Cwb.PositionalAttribute) attrValue selection =
+        selection
+        |> Set.exists
+            (fun selectedCat ->
+                selectedCat.Attr = attr.Code
+                && selectedCat.Value = attrValue)
 
     let mainCategoryButtons
         sectionIndex
