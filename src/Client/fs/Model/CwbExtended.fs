@@ -379,7 +379,7 @@ let handleAttributeValue
                                       (fun menuSection ->
                                           menuSection.Values
                                           |> List.exists
-                                              (fun ((attr, attrValue, _, _): Cwb.MainCategoryValue) ->
+                                              (fun ((attr, attrValue, _, _): CwbAttributeMenu.MainCategoryValue) ->
                                                   attr.Code = firstCategory.Attr
                                                   && attrValue = firstCategory.Value))
 

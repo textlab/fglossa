@@ -9,7 +9,7 @@ let serverApi =
     |> Remoting.withRouteBuilder Route.builder
     |> Remoting.buildProxy<IServerApi>
 
-module Cwb =
+module CwbAttributeMenu =
     open Shared.Cwb
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +52,7 @@ type Search =
           MetadataSelection = Map.empty
           Params = SearchParams.Init(corpusConfig) }
 
-type CwbAttributeMenu = Cwb.AttributeSection list
+type CwbAttributeMenu = CwbAttributeMenu.AttributeSection list
 
 type Corpus =
     { Config: CorpusConfig

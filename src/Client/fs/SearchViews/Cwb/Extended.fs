@@ -28,7 +28,7 @@ let AttributeModal
 
     let mainCategoryButtons
         sectionIndex
-        (menuSectionCategories: Cwb.MainCategoryValue list)
+        (menuSectionCategories: CwbAttributeMenu.MainCategoryValue list)
         (termSectionSelection: Set<MainCategory>)
         =
         Bulma.buttons [ for (attr, attrValue, humanReadableName, _) in menuSectionCategories ->
@@ -57,8 +57,12 @@ let AttributeModal
                                                           ))
                                                   prop.text humanReadableName ] ]
 
-    let subcategoryButtons sectionIndex (selectedMainCategory: MainCategory) (subcategories: Cwb.Subcategory list) =
-        let buttonList (subcatValues: Cwb.SubcategoryValue list) =
+    let subcategoryButtons
+        sectionIndex
+        (selectedMainCategory: MainCategory)
+        (subcategories: CwbAttributeMenu.Subcategory list)
+        =
+        let buttonList (subcatValues: CwbAttributeMenu.SubcategoryValue list) =
             [ for ((attr: Cwb.PositionalAttribute), attrValue, humanReadableName) in subcatValues ->
                   let subCategory =
                       let attrWithoutValues =
@@ -310,7 +314,7 @@ let view (corpus: Corpus) (search: Search) (maybeTermIndexWithAttrModal: int opt
             // For each element in a list of subcategories given in the attribute menu in the corpus configuration,
             // check whether it is included in the set of selected subcategories for the given selected main category,
             // and if so, get its human-readable title to be shown in the tag.
-            let checkForSubcatValues selectedMainCat (subcategories: Cwb.Subcategory list) =
+            let checkForSubcatValues selectedMainCat (subcategories: CwbAttributeMenu.Subcategory list) =
                 [ for (_, subcatValues) in subcategories ->
                       [ for (menuSubcatAttr, menuSubcatAttrValue, subcatHumanReadable) in subcatValues do
                             match selectedMainCat.Subcategories with
