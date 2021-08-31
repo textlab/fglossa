@@ -348,7 +348,7 @@ let handleAttributeValue
                     |> Array.map (
                         replace "%c" ""
                         >> fun s ->
-                            let m = Regex.Match(s, "(.+)(!?=)\"(.+)\"")
+                            let m = Regex.Match(s, "(.+?)(!?=)\"(.+)\"")
                             (m.Groups.[1].Value, AttrOperator.OfString(m.Groups.[2].Value), m.Groups.[3].Value)
                     )
 
