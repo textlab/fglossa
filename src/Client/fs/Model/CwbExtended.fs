@@ -22,6 +22,12 @@ type AttrOperator =
         | "contains" -> Contains
         | _ -> failwith $"Unrecognized operator: {s}"
 
+    member this.ToOperatorString() =
+        match this with
+        | Equals -> "="
+        | NotEquals -> "!="
+        | Contains -> "contains"
+
 type ExtraForm =
     { Attr: string
       Operator: AttrOperator
@@ -152,7 +158,7 @@ type QueryTerm =
                           |> Array.sort
                           |> String.concat "|"
 
-                      $"{forms.Attr}=\"{values}\"" ]
+                      $"{forms.Attr}{forms.Operator.ToOperatorString()}\"{values}\"" ]
                 |> String.concat " & "
                 |> Some
             else
