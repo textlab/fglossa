@@ -54,7 +54,8 @@ type MainCategory =
       Value: string
       Subcategories: Set<Subcategory> option }
     member this.ToCqp() =
-        let mainExpr = $"{this.Attr}=\"{this.Value}\""
+        let mainExpr =
+            $"{this.Attr}{this.Operator.ToOperatorString()}\"{this.Value}\""
 
         let expressions =
             match this.Subcategories with
@@ -168,11 +169,18 @@ type QueryTerm =
             if this.CategorySections
                |> List.exists (fun sectionCategories -> not sectionCategories.IsEmpty) then
                 [ for categorySection in this.CategorySections ->
+                      // If we want to exclude these category values rather than include them,
+                      // the output expressions should be combined with '&' instead of '|'
+                      // (e.g. [pos!="noun" & pos!="adj"])
+                      let isExcluded =
+                          categorySection.Count > 0
+                          && categorySection.MinimumElement.Operator = NotEquals
+
                       [ for category in categorySection ->
                             // yields e.g. (pos="noun" & num="sg")
                             category.ToCqp() ]
                       // yields e.g. (pos="noun" & num="sg") | (pos="pron" & num="sg")
-                      |> String.concat " | "
+                      |> String.concat (if isExcluded then " & " else " | ")
                       // yields e.g. ((pos="noun" & num="sg") | (pos="pron" & num="sg"))
                       |> fun s -> $"({s})" ]
                 // yields e.g. ((pos="noun" & num="sg") | (pos="pron" & num="sg")) & ((desc="laughing"))
@@ -378,7 +386,7 @@ let handleAttributeValue
                     let sectionsByAttributeMenuIndex =
                         [ for categorySection in categorySections ->
                               let categoryStrings =
-                                  Regex.Split(categorySection.Groups.[0].Value, "\)\|\(")
+                                  Regex.Split(categorySection.Groups.[0].Value, "\)[\|\&]\(")
 
                               let categories =
                                   [ for category in categoryStrings ->

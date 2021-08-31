@@ -49,29 +49,36 @@ let AttributeModal
         dispatch: Msg -> unit
     ) : ReactElement =
 
-    let selectionContainsCategory (attr: Cwb.PositionalAttribute) attrValue selection =
-        selection
-        |> Set.exists
-            (fun selectedCat ->
-                selectedCat.Attr = attr.Code
-                && selectedCat.Value = attrValue)
-
     let mainCategoryButtons
         sectionIndex
         (menuSectionCategories: CwbAttributeMenu.MainCategoryValue list)
         (termSectionSelection: Set<MainCategory>)
         =
         Bulma.buttons [ for (attr, attrValue, humanReadableName, _) in menuSectionCategories ->
-                            let isSelected =
+                            let isSelected, isExcluded =
                                 termSectionSelection
-                                |> selectionContainsCategory attr attrValue
+                                |> Set.toList
+                                |> List.tryPick
+                                    (fun selectedMainCat ->
+                                        let isSel =
+                                            selectedMainCat.Attr = attr.Code
+                                            && selectedMainCat.Value = attrValue
 
-                            Bulma.button.button [ if isSelected then color.isSuccess
+                                        if isSel then
+                                            Some(selectedMainCat.Operator = NotEquals)
+                                        else
+                                            None)
+                                |> function
+                                    | Some isExcl -> (true, isExcl)
+                                    | None -> (false, false)
+
+                            Bulma.button.button [ if isExcluded then color.isDanger
+                                                  elif isSelected then color.isSuccess
                                                   prop.onClick
-                                                      (fun _ ->
+                                                      (fun e ->
                                                           let category =
                                                               { Attr = attr.Code
-                                                                Operator = Equals
+                                                                Operator = if e.shiftKey then NotEquals else Equals
                                                                 Value = attrValue
                                                                 Subcategories = None }
 
@@ -190,7 +197,11 @@ let AttributeModal
                               else
                                   termSectionSelection
                                   |> Set.toArray
-                                  |> Array.tryFind (fun cat -> cat.Attr = attr.Code && cat.Value = attrValue)
+                                  |> Array.tryFind
+                                      (fun cat ->
+                                          cat.Attr = attr.Code
+                                          && cat.Value = attrValue
+                                          && cat.Operator <> NotEquals)
                                   |> function
                                       // If the main category has been selected, we show all its subcategories
                                       | Some cat ->
@@ -431,7 +442,10 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
                                       let subcatStr =
                                           checkForSubcatValues selectedMainCat subcategories
 
-                                      Bulma.tag [ color.isInfo
+                                      Bulma.tag [ if selectedMainCat.Operator = NotEquals then
+                                                      color.isDanger
+                                                  else
+                                                      color.isInfo
                                                   prop.children [ Html.span $"{mainHumanReadable} {subcatStr}"
                                                                   Html.button [ prop.className "delete is-small"
                                                                                 prop.onClick
