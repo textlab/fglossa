@@ -549,7 +549,18 @@ module LoadedCorpus =
                             |> Array.tryFind (fun s -> s.Attr = category.Attr && s.Value = category.Value)
                             |> function
                                 | Some existingCat -> section.Remove(existingCat)
-                                | None -> section.Add(category)
+                                | None ->
+                                    // If the operator of the category we are currently selecting or excluding is different
+                                    // from the existing ones, remove the existing ones, since it does not make any sense to
+                                    // specify categories to include and to exclude at the same time (i.e., if you include specific
+                                    // categories the rest are automatically excluded, and if you exclude specific categories
+                                    // the rest are automatically included.)
+                                    if section.Count > 0
+                                       && section.MinimumElement.Operator
+                                          <> category.Operator then
+                                        Set.singleton category
+                                    else
+                                        section.Add(category)
                         else
                             section)
 
