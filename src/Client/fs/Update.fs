@@ -505,7 +505,7 @@ module LoadedCorpus =
                     | _ -> failwith $"Unknown command: {command}"
 
                 let newExtraForms =
-                    addOrRemoveExtraForms term attrName operator attrModalModel.IncludeExcludeInput true
+                    addOrRemoveExtraForms term attrName operator attrModalModel.IncludeExcludeInput
 
                 let newTerm = { term with ExtraForms = newExtraForms }
 

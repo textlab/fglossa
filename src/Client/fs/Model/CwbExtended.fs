@@ -196,7 +196,7 @@ type QueryTerm =
 
         $"{intervalString}{forms}"
 
-let addOrRemoveExtraForms term attrName operator attrValue shouldAdd =
+let addOrRemoveExtraForms term attrName operator attrValue =
     let mutable foundForms = false
 
     term.ExtraForms
@@ -206,11 +206,7 @@ let addOrRemoveExtraForms term attrName operator attrValue shouldAdd =
                 // A set of values already exists for this attribute name
                 foundForms <- true
 
-                let newValues =
-                    if shouldAdd then
-                        forms.Values.Add(attrValue)
-                    else
-                        forms.Values.Remove(attrValue)
+                let newValues = forms.Values.Add(attrValue)
 
                 { forms with Values = newValues }
             else
@@ -313,7 +309,7 @@ let handleAttributeValue
 
     let processOtherForms (term: QueryTerm) (name, operator, value) =
         let newExtraForms =
-            addOrRemoveExtraForms term name operator value true
+            addOrRemoveExtraForms term name operator value
 
         { term with ExtraForms = newExtraForms }
 
