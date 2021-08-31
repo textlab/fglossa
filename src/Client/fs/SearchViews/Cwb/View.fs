@@ -131,10 +131,12 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
 
     let simpleView =
         Bulma.input.search [ prop.value queryText
+                             prop.onKeyUp (key.enter, (fun _ -> dispatch Search))
                              prop.onChange (textInputToQuery >> SetQueryText >> dispatch) ]
 
     let cqpView =
         Bulma.input.search [ prop.value queryText
+                             prop.onKeyUp (key.enter, (fun _ -> dispatch Search))
                              prop.onChange (textInputToQuery >> SetQueryText >> dispatch) ]
 
     let searchInterface =

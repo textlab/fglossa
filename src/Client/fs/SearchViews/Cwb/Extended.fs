@@ -373,6 +373,7 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
 
         let mainStringInput =
             Bulma.input.text [ prop.value (term.MainStringValue |> Option.defaultValue "")
+                               prop.onKeyUp (key.enter, (fun _ -> dispatch Search))
                                prop.onChange
                                    (fun (s: string) ->
                                        let v = if s = "" then None else Some s
