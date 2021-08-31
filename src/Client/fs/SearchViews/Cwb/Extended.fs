@@ -496,10 +496,13 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
                                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className
                                                                                                                                "fas fa-list" ] ] ] ]
                                                            )
-                                                           Bulma.control.div (
-                                                               Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
-                                                                                                               "fas fa-chevron-down" ] ] ]
-                                                           )
+                                                           // TODO: Check if people actually want this button. Since the trigger should be only
+                                                           // a small button, not the full width of the list of categories, it probably needs to
+                                                           // be implemented as a popup panel or something.
+                                                           //    Bulma.control.div (
+                                                           //        Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
+                                                           //                                                        "fas fa-chevron-down" ] ] ]
+                                                           //    )
                                                            Bulma.control.div (mainStringInput)
                                                            if query.Terms.Length > 1 then
                                                                Bulma.control.div (removeTermButton) ] ]
