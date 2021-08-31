@@ -261,9 +261,7 @@ let AttributeModal
                   prop.children [ Bulma.modalBackground [ prop.onClick
                                                               (fun _ -> dispatch (CwbExtendedToggleAttrModal None)) ]
                                   Bulma.modalContent [ prop.style [ style.width 900 ]
-                                                       prop.children [ Bulma.box attrMenu
-                                                                       Bulma.level [ Bulma.levelLeft [ Bulma.levelItem
-                                                                                                           "hei" ] ] ] ]
+                                                       prop.children [ Bulma.box attrMenu ] ]
 
                                   Bulma.modalClose [ button.isLarge
                                                      prop.onClick (fun _ -> dispatch (CwbExtendedToggleAttrModal None)) ] ] ]
