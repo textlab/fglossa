@@ -597,7 +597,10 @@ module LoadedCorpus =
             newModel, Cmd.none
 
         | CwbExtendedClearAttributeCategories (query, queryIndex, term, termIndex) ->
-            let newTerm = { term with CategorySections = [] }
+            let newTerm =
+                { term with
+                      CategorySections = []
+                      ExtraForms = [] }
 
             let newModel =
                 updateQueryTerm model query queryIndex newTerm termIndex
