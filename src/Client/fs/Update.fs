@@ -313,6 +313,12 @@ module LoadedCorpus =
             term: QueryTerm *
             termIndex: int *
             command: string
+        | CwbExtendedRemoveExtraForms of
+            query: Query *
+            queryIndex: int *
+            term: QueryTerm *
+            termIndex: int *
+            attrName: string
         | CwbExtendedToggleAttributeCategory of
             query: Query *
             queryIndex: int *
@@ -518,6 +524,19 @@ module LoadedCorpus =
 
                 newModel, Cmd.none
             | _ -> model, Cmd.none
+
+        | CwbExtendedRemoveExtraForms (query, queryIndex, term, termIndex, attrName) ->
+            // Remove all extra forms for a given attribute name
+            let newExtraForms =
+                term.ExtraForms
+                |> List.filter (fun forms -> forms.Attr <> attrName)
+
+            let newTerm = { term with ExtraForms = newExtraForms }
+
+            let newModel =
+                updateQueryTerm model query queryIndex newTerm termIndex
+
+            newModel, Cmd.none
 
         | CwbExtendedToggleAttributeCategory (query, queryIndex, term, termIndex, categorySectionIndex, category) ->
             let newCategorySections =

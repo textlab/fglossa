@@ -9,7 +9,7 @@ open Model
 open CwbExtended
 open Update.LoadedCorpus
 
-let includeExcludeTags (term: QueryTerm) =
+let includeExcludeTags (query: Query) queryIndex (term: QueryTerm) termIndex dispatch =
     [ for forms in term.ExtraForms do
           let attrStr =
               if [| "lemma"; "phon"; "orig" |]
@@ -25,7 +25,18 @@ let includeExcludeTags (term: QueryTerm) =
                                 else
                                     color.isInfo
                                 prop.children [ Html.span $"{attrStr}{value}"
-                                                Html.button [ prop.className "delete is-small" ] ] ] ] ]
+                                                Html.button [ prop.onClick
+                                                                  (fun _ ->
+                                                                      dispatch (
+                                                                          CwbExtendedRemoveExtraForms(
+                                                                              query,
+                                                                              0,
+                                                                              term,
+                                                                              termIndex,
+                                                                              forms.Attr
+                                                                          )
+                                                                      ))
+                                                              prop.className "delete is-small" ] ] ] ] ]
 
 [<ReactComponent>]
 let AttributeModal
@@ -229,7 +240,14 @@ let AttributeModal
                                                                                                          ))
                                                                                                  prop.children
                                                                                                      includeExcludeOptions ] ]
-                                                                Bulma.levelItem [ Bulma.tags (includeExcludeTags term) ] ] ]
+                                                                Bulma.levelItem [ Bulma.tags (
+                                                                                      includeExcludeTags
+                                                                                          query
+                                                                                          0
+                                                                                          term
+                                                                                          termIndex
+                                                                                          dispatch
+                                                                                  ) ] ] ]
                                 Bulma.level [ Bulma.levelLeft (
                                                   Bulma.levelItem [ prop.text "Click to select; shift-click to exclude" ]
                                               )
@@ -503,7 +521,9 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
                                                                | Written -> Html.none ] ]
                          Bulma.field.div [ prop.style [ style.marginTop 10 ]
                                            prop.children [ Bulma.tags (
-                                                               List.append attributeTags (includeExcludeTags term)
+                                                               List.append
+                                                                   attributeTags
+                                                                   (includeExcludeTags query 0 term termIndex dispatch)
                                                            ) ] ] ]
 
 
