@@ -9,6 +9,24 @@ open Model
 open CwbExtended
 open Update.LoadedCorpus
 
+let includeExcludeTags (term: QueryTerm) =
+    [ for forms in term.ExtraForms do
+          let attrStr =
+              if [| "lemma"; "phon"; "orig" |]
+                 |> Array.contains forms.Attr then
+                  $"{forms.Attr}:"
+              else
+                  ""
+
+          yield!
+              [ for value in forms.Values ->
+                    Bulma.tag [ if forms.Operator = NotEquals then
+                                    color.isDanger
+                                else
+                                    color.isInfo
+                                prop.children [ Html.span $"{attrStr}{value}"
+                                                Html.button [ prop.className "delete is-small" ] ] ] ] ]
+
 [<ReactComponent>]
 let AttributeModal
     (
@@ -210,7 +228,8 @@ let AttributeModal
                                                                                                              )
                                                                                                          ))
                                                                                                  prop.children
-                                                                                                     includeExcludeOptions ] ] ] ]
+                                                                                                     includeExcludeOptions ] ]
+                                                                Bulma.levelItem [ Bulma.tags (includeExcludeTags term) ] ] ]
                                 Bulma.level [ Bulma.levelLeft (
                                                   Bulma.levelItem [ prop.text "Click to select; shift-click to exclude" ]
                                               )
@@ -488,7 +507,9 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
                                                                        IsFinal
                                                                | Written -> Html.none ] ]
                          Bulma.field.div [ prop.style [ style.marginTop 10 ]
-                                           prop.children [ Bulma.tags attributeTags ] ] ]
+                                           prop.children [ Bulma.tags (
+                                                               List.append attributeTags (includeExcludeTags term)
+                                                           ) ] ] ]
 
 
           ]
