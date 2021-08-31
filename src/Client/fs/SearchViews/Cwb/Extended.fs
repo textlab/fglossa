@@ -373,11 +373,6 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
             Bulma.button.button [ prop.onClick (fun _ -> dispatch (CwbExtendedRemoveTerm(query, 0, termIndex)))
                                   prop.children [ Bulma.icon [ Html.i [ prop.className "fas fa-minus" ] ] ] ]
 
-        let attributeTag (mainCategory: MainCategory) =
-            Bulma.tag [ color.isInfo
-                        prop.children [ Html.span mainCategory.Value
-                                        Html.button [ prop.className "delete is-small" ] ] ]
-
         let attributeTags =
             // For each element in a list of subcategories given in the attribute menu in the corpus configuration,
             // check whether it is included in the set of selected subcategories for the given selected main category,
