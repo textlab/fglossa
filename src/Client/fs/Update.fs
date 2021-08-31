@@ -505,6 +505,16 @@ module LoadedCorpus =
 
                 let newModel =
                     updateQueryTerm model query queryIndex newTerm termIndex
+                    |> fun m ->
+                        { m with
+                              Search =
+                                  { m.Search with
+                                        Interface =
+                                            Extended(
+                                                Some
+                                                    { attrModalModel with
+                                                          IncludeExcludeInput = "" }
+                                            ) } }
 
                 newModel, Cmd.none
             | _ -> model, Cmd.none

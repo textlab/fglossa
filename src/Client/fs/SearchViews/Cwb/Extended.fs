@@ -123,7 +123,8 @@ let AttributeModal
 
         let wordName = if hasOrig then "corrected" else "word"
 
-        [ Html.option [ prop.text "Specify/exclude" ]
+        [ Html.option [ prop.value "default"
+                        prop.text "Specify/exclude" ]
           Html.option [ prop.value "specify_word"
                         prop.text $"Specify {wordName} form" ]
           if hasLemma then
@@ -196,6 +197,7 @@ let AttributeModal
                                                                                                      modalModel.IncludeExcludeInput =
                                                                                                          ""
                                                                                                  )
+                                                                                                 prop.value "default"
                                                                                                  prop.onChange
                                                                                                      (fun (command: string) ->
                                                                                                          dispatch (
