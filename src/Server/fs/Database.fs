@@ -8,8 +8,6 @@ open System.Text.RegularExpressions
 open FSharp.Control.Tasks
 open Serilog
 
-let inline (=>) k v = k, box v
-
 // https://stackoverflow.com/questions/42797288/dapper-column-to-f-option-property
 type OptionHandler<'T>() =
     inherit SqlMapper.TypeHandler<option<'T>>()
@@ -30,6 +28,23 @@ type OptionHandler<'T>() =
 
 SqlMapper.AddTypeHandler(OptionHandler<string>())
 SqlMapper.AddTypeHandler(OptionHandler<int>())
+
+let inline (=>) k v = k, box v
+
+let sanitizeString s =
+    if
+        String.IsNullOrWhiteSpace(s)
+        || Regex.IsMatch(s, "\W")
+    then
+        failwith $"Invalid string in SQL: {s}"
+    else
+        s
+
+let mapToParamDict map =
+    map
+    |> Map.toArray
+    |> Array.map (fun (name, values) -> (string name, box values))
+    |> dict
 
 let toDisplayedSql (sql: string) (maybeParams: IDictionary<string, obj> option) =
     match maybeParams with

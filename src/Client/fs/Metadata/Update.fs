@@ -6,6 +6,8 @@ open Model
 
 type Msg =
     | ToggleMetadataMenuOpen of category: Metadata.Category
+    | FetchMetadataValues of category: Metadata.Category
+    | FetchedMetadataValues of results: string seq
     | ToggleExclude of category: Metadata.Category
     | SelectItem of Metadata.Category * Metadata.StringSelectOption
     | DeselectItem of Metadata.Category * Metadata.StringSelectOption
@@ -14,15 +16,26 @@ type Msg =
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
     match msg with
     | ToggleMetadataMenuOpen category ->
-        let newCode =
+        let newCode, cmd =
             if model.OpenMetadataCategoryCode = Some category.Code then
-                None
+                None, Cmd.none
             else
-                Some category.Code
+                Some category.Code, Cmd.ofMsg (FetchMetadataValues category)
 
         { model with
               OpenMetadataCategoryCode = newCode },
-        Cmd.none
+        cmd
+    | FetchMetadataValues category ->
+        let cmd =
+            Cmd.OfAsync.perform
+                serverApi.GetMetadataForCategory
+                (model.Corpus.Config.Code, category.Code, model.Search.MetadataSelection)
+                FetchedMetadataValues
+
+        model, cmd
+    | FetchedMetadataValues results ->
+        printfn "Fetched results"
+        model, Cmd.none
     | ToggleExclude category ->
         let newMetadataSelection =
             model.Search.MetadataSelection

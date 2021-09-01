@@ -18,7 +18,10 @@ let createServerApi ctx =
 
     { GetCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
       GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
-      GetMetadataForCategory = fun (code, selection) -> async { return "", [||] }
+      GetMetadataForCategory =
+          fun (corpusCode, categoryCode, selection) ->
+              Remoting.Corpus.getMetadataForCategory logger corpusCode categoryCode selection
+              |> Async.AwaitTask
       GetSearchResults =
           fun (searchParams, pageNumbers) ->
               Remoting.Search.Core.getSearchResults connStr logger searchParams pageNumbers
@@ -83,7 +86,7 @@ let webApp =
 //     forward "" browserRouter
 // }
 
-let webAppWithLogging : HttpHandler = SerilogAdapter.Enable(webApp)
+let webAppWithLogging: HttpHandler = SerilogAdapter.Enable(webApp)
 
 // The default template does not include date, but we want that
 let outputTemplate =
