@@ -163,8 +163,7 @@ let insert (logger: ILogger) (connection: #DbConnection) (table: string) (data: 
 
         let placeholders =
             data
-            |> Seq.map fst
-            |> Seq.map (fun s -> $"@{s}")
+            |> Seq.map (fst >> (fun s -> $"@{s}"))
             |> String.concat ", "
 
         let parameters = dict data
