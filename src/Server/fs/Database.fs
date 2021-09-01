@@ -70,7 +70,8 @@ let execute (logger: ILogger) (connection: #DbConnection) (sql: string) (paramet
                 | None -> connection.ExecuteAsync(sql)
 
             return Ok res
-        with ex -> return Error ex
+        with
+        | ex -> return Error ex
     }
 
 let executeScalar
@@ -90,7 +91,8 @@ let executeScalar
                 | None -> connection.ExecuteScalarAsync<'T>(sql)
 
             return Ok res
-        with ex -> return Error ex
+        with
+        | ex -> return Error ex
     }
 
 let query (logger: ILogger) (connection: #DbConnection) (sql: string) (parameters: IDictionary<string, obj> option) =
@@ -105,7 +107,8 @@ let query (logger: ILogger) (connection: #DbConnection) (sql: string) (parameter
                 | None -> connection.QueryAsync<'T>(sql)
 
             return Ok res
-        with ex -> return Error ex
+        with
+        | ex -> return Error ex
     }
 
 let querySingle
@@ -129,7 +132,8 @@ let querySingle
                     Ok None
                 else
                     Ok(Some res)
-        with ex -> return Error ex
+        with
+        | ex -> return Error ex
     }
 
 let queryDynamic
@@ -153,7 +157,8 @@ let queryDynamic
                     Ok None
                 else
                     Ok(Some res)
-        with ex -> return Error ex
+        with
+        | ex -> return Error ex
     }
 
 let insert (logger: ILogger) (connection: #DbConnection) (table: string) (data: (string * obj) seq) =
@@ -194,5 +199,6 @@ let insert (logger: ILogger) (connection: #DbConnection) (table: string) (data: 
             connection.Close()
 
             return Ok lastInsertId
-        with ex -> return Error ex
+        with
+        | ex -> return Error ex
     }
