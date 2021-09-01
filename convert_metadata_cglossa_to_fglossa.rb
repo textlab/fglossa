@@ -10,6 +10,13 @@
 # $ sort -u /tmp/tmp.txt  > /tmp/values_texts.txt
 #
 # Get num_categories by running "select count(*) from metadata_category"
+#
+# Use csvkit to create the database (with the correct data types based of analysis of the
+# data file) and import the data:
+# csvsql -t --tables texts --db sqlite:///mycorpus.sqlite --insert mycorpus_texts.tsv
+#
+# To determine the column types:
+# csvstat -t --type mycorpus_texts.tsv
 
 def cleanup_column(column)
     if column.nil?
@@ -45,10 +52,10 @@ values_texts_lines.each do |line|
     metadata_value_id, text_id = line.split("\t").map { |column| cleanup_column column }
 
     column_index = metadata_values[metadata_value_id][:column_index]
-    if !texts[text_id][column_index].nil?
-        puts "Metadata already exists in column, when processing line: #{line}"
-        exit
-    end
+    # if !texts[text_id][column_index].nil?
+    #     puts "Metadata already exists in column, when processing line: #{line}"
+    #     exit
+    # end
     texts[text_id][column_index] = metadata_values[metadata_value_id][:text_value]
 end
 
