@@ -216,33 +216,34 @@ module MetadataMenu =
                                                                      prop.title "Remove selection"
                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className
                                                                                                                "fa fa-times" ] ] ] ] ] ]
-                  if isOpen then
-                      // List of already selected values
-                      let choices =
-                          [ for choice in categorySelection.Choices do
-                                Html.div [ prop.className "metadata-choice"
-                                           if categorySelection.ShouldExclude then
-                                               prop.style [ style.color "white"
-                                                            style.backgroundColor "#f14668" ]
-                                           prop.children [ Html.span [ prop.className "metadata-choice-cross"
-                                                                       if categorySelection.ShouldExclude then
-                                                                           prop.style [ style.color "white" ]
-                                                                       prop.children [ Html.span [ prop.onClick
-                                                                                                       (fun _ ->
-                                                                                                           dispatch (
-                                                                                                               DeselectItem(
-                                                                                                                   category,
-                                                                                                                   choice
-                                                                                                               )
-                                                                                                           ))
-                                                                                                   prop.text "x" ] ] ]
-                                                           Html.span [ prop.text choice.Name
-                                                                       prop.title choice.Name ] ] ] ]
+                  // List of already selected values
+                  let choices =
+                      [ for choice in categorySelection.Choices do
+                            Html.div [ prop.className "metadata-choice"
+                                       if categorySelection.ShouldExclude then
+                                           prop.style [ style.color "white"
+                                                        style.backgroundColor "#f14668" ]
+                                       prop.children [ Html.span [ prop.className "metadata-choice-cross"
+                                                                   if categorySelection.ShouldExclude then
+                                                                       prop.style [ style.color "white" ]
+                                                                   prop.children [ Html.span [ prop.onClick
+                                                                                                   (fun _ ->
+                                                                                                       dispatch (
+                                                                                                           DeselectItem(
+                                                                                                               category,
+                                                                                                               choice
+                                                                                                           )
+                                                                                                       ))
+                                                                                               prop.text "x" ] ] ]
+                                                       Html.span [ prop.text choice.Name
+                                                                   prop.title choice.Name ] ] ] ]
 
+                  if isOpen || categorySelection.Choices.Length > 0 then
                       // The box containing already selected values
                       Html.div [ prop.className "metadata-menu-selection"
                                  prop.children choices ]
 
+                  if isOpen then
                       // The menu dropdown
                       Html.div [ prop.className "metadata-menu-list-container"
                                  prop.children [ selectDropdown
