@@ -106,25 +106,6 @@ module SelectionTable =
         ReactDOM.createPortal (popup, root)
 
 module MetadataMenu =
-    let shouldShowMetadataMenu (model: LoadedCorpusModel) =
-        if model.Corpus.MetadataMenu.IsEmpty then
-            // Don't show metadata if the corpus doesn't have any (duh!)
-            false
-        else
-            match model.ShouldShowMetadataMenu with
-            | Some shouldShow ->
-                // If ShouldShowMetadata is a Some, the user has explicitly chosen whether to see metadata,
-                // so we respect that unconditionally
-                shouldShow
-            | None ->
-                // Now we know that we have metadata, and that the user has not explicitly chosen
-                // whether to see them. If we are showing search results, we hide the metadata if the
-                // window is narrow; if instead we are showing the start page, we show the metadata
-                // regardless of window size.
-                match model.Substate with
-                | CorpusStart -> true
-                | ShowingResults _ -> not model.IsNarrowWindow
-
     let FixedSizeList: obj = importMember "react-window"
 
     // The components in react-window expect a `children` prop, which should be a
@@ -181,7 +162,8 @@ module MetadataMenu =
                                              "width" ==> 170 ],
                                  ListItem)
 
-    let metadataSelect
+    [<ReactComponent>]
+    let MetadataSelect
         (category: Category)
         isOpen
         (metadataSelection: Shared.Metadata.Selection)
@@ -238,10 +220,13 @@ module MetadataMenu =
                                                        Html.span [ prop.text choice.Name
                                                                    prop.title choice.Name ] ] ] ]
 
+                  let filterInput = Bulma.input.search []
+
                   if isOpen || categorySelection.Choices.Length > 0 then
                       // The box containing already selected values
                       Html.div [ prop.className "metadata-menu-selection"
-                                 prop.children choices ]
+                                 prop.children [ yield! choices
+                                                 filterInput ] ]
 
                   if isOpen then
                       // The menu dropdown
@@ -252,11 +237,31 @@ module MetadataMenu =
                                                      fetchedMetadataValues
                                                      dispatch ] ] ]
 
+    let shouldShowMetadataMenu (model: LoadedCorpusModel) =
+        if model.Corpus.MetadataMenu.IsEmpty then
+            // Don't show metadata if the corpus doesn't have any (duh!)
+            false
+        else
+            match model.ShouldShowMetadataMenu with
+            | Some shouldShow ->
+                // If ShouldShowMetadata is a Some, the user has explicitly chosen whether to see metadata,
+                // so we respect that unconditionally
+                shouldShow
+            | None ->
+                // Now we know that we have metadata, and that the user has not explicitly chosen
+                // whether to see them. If we are showing search results, we hide the metadata if the
+                // window is narrow; if instead we are showing the start page, we show the metadata
+                // regardless of window size.
+                match model.Substate with
+                | CorpusStart -> true
+                | ShowingResults _ -> not model.IsNarrowWindow
+
+
     let stringSelect (category: StringCategory) isOpen metadataSelection fetchedMetadataValues dispatch =
-        metadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
+        MetadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
 
     let numberSelect (category: NumberCategory) isOpen metadataSelection fetchedMetadataValues dispatch =
-        metadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
+        MetadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
 
     let interval (category: NumberCategory) dispatch =
         Html.li (
