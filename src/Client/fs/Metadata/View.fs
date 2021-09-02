@@ -219,6 +219,8 @@ module MetadataMenu =
                                                                      color.isDanger
                                                                      prop.style [ style.marginLeft 5 ]
                                                                      prop.title "Remove selection"
+                                                                     prop.onClick
+                                                                         (fun _ -> dispatch (DeselectAllItems category))
                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className
                                                                                                                "fa fa-times" ] ] ] ] ] ]
                   // List of already selected values

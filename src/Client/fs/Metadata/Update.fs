@@ -11,6 +11,7 @@ type Msg =
     | ToggleExclude of category: Metadata.Category
     | SelectItem of Metadata.Category * Metadata.StringSelectOption
     | DeselectItem of Metadata.Category * Metadata.StringSelectOption
+    | DeselectAllItems of Metadata.Category
     | ToggleShowSelectionOpen
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
@@ -105,6 +106,20 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                             MetadataSelection = newSelection } }
 
         newModel, Cmd.none
+    | DeselectAllItems category ->
+        let newSelection =
+            // Find the selected values for this category and remove all of them
+            model.Search.MetadataSelection
+            |> Map.add category.Code Metadata.CategorySelection.Default
+
+        let newModel =
+            { model with
+                  Search =
+                      { model.Search with
+                            MetadataSelection = newSelection } }
+
+        newModel, Cmd.none
+
     | ToggleShowSelectionOpen ->
         { model with
               IsShowSelectionOpen = not model.IsShowSelectionOpen },
