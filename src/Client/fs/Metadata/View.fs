@@ -202,7 +202,7 @@ module MetadataMenu =
                                prop.style [ style.lineHeight (length.em 1.7) ]
                            prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category))
                            prop.children [ Html.text category.Name
-                                           if isOpen then
+                                           if isOpen || categorySelection.Choices.Length > 0 then
                                                Bulma.button.button [ button.isSmall
                                                                      if categorySelection.ShouldExclude then
                                                                          color.isDanger
