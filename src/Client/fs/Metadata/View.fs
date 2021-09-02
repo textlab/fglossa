@@ -106,61 +106,6 @@ module SelectionTable =
         ReactDOM.createPortal (popup, root)
 
 module MetadataMenu =
-    let FixedSizeList: obj = importMember "react-window"
-
-    // The components in react-window expect a `children` prop, which should be a
-    // component function or class. However, all React functions in Fable.React and
-    // Feliz (such as `ofImport`, `ofType`, and even `Fable.React.ReactBindings.React.createElement`)
-    // seem to automatically call createElement on (i.e. instantiate) whatever components we pass
-    // as their `children` arguments.
-    // Hence, the only solution I have found is to import React ourselves and and call
-    // React.createElement directly, since it allows us to provide function components as
-    // the `children` argument and leaves them uninstantiated.
-
-    let ReactBare: obj = importAll "react"
-
-    let selectDropdown
-        category
-        categorySelection
-        (fetchedMetadataValues: string [])
-        (dispatch: Msg -> unit)
-        : ReactElement =
-        /// A single item in a metadata category dropdown list
-        let ListItem (props: {| index: int; style: obj |}) =
-            // let selectOption = fetchedMetadataValues.[props.index]
-            let metadataValue = fetchedMetadataValues.[props.index]
-
-            let selectOption =
-                { Name = metadataValue
-                  Value = metadataValue }
-
-            let isAlreadySelected =
-                categorySelection.Choices
-                |> Array.contains selectOption
-
-            Html.div [ prop.className "metadata-menu-list-item"
-                       prop.style [ style.height (int props.style?height)
-                                    style.left (int props.style?left)
-                                    style.position.absolute
-                                    style.top (int props.style?top)
-                                    style.width (length.percent 100)
-                                    style.padding 6
-                                    if isAlreadySelected then
-                                        if categorySelection.ShouldExclude then
-                                            style.color "white"
-                                            style.backgroundColor "#f14668"
-                                        else
-                                            style.backgroundColor "#ddd" ]
-                       prop.onClick (fun _ -> dispatch (SelectItem(category, selectOption)))
-                       prop.text (selectOption.Name |> truncate 21)
-                       prop.title selectOption.Name ]
-
-        ReactBare?createElement (FixedSizeList,
-                                 createObj [ "height" ==> 200
-                                             "itemCount" ==> fetchedMetadataValues.Length
-                                             "itemSize" ==> 32
-                                             "width" ==> 170 ],
-                                 ListItem)
 
     [<ReactComponent>]
     let MetadataSelect
@@ -179,6 +124,74 @@ module MetadataMenu =
         let focusFilterInput () =
             filterInputRef.current
             |> Option.iter (fun inputFilterElement -> inputFilterElement.focus ())
+
+
+        let filterSelectOptions (selectOptions: string []) =
+            if System.String.IsNullOrWhiteSpace(filterInputText) then
+                selectOptions
+            else
+                selectOptions
+                |> Array.filter (fun option -> option.Contains(filterInputText))
+
+        let FixedSizeList: obj = importMember "react-window"
+
+        // The components in react-window expect a `children` prop, which should be a
+        // component function or class. However, all React functions in Fable.React and
+        // Feliz (such as `ofImport`, `ofType`, and even `Fable.React.ReactBindings.React.createElement`)
+        // seem to automatically call createElement on (i.e. instantiate) whatever components we pass
+        // as their `children` arguments.
+        // Hence, the only solution I have found is to import React ourselves and and call
+        // React.createElement directly, since it allows us to provide function components as
+        // the `children` argument and leaves them uninstantiated.
+
+        let ReactBare: obj = importAll "react"
+
+        let selectDropdown
+            category
+            categorySelection
+            (fetchedMetadataValues: string [])
+            (dispatch: Msg -> unit)
+            : ReactElement =
+
+            /// A single item in a metadata category dropdown list
+            let ListItem (props: {| index: int; style: obj |}) =
+                // let selectOption = fetchedMetadataValues.[props.index]
+                let metadataValue = fetchedMetadataValues.[props.index]
+
+                let selectOption =
+                    { Name = metadataValue
+                      Value = metadataValue }
+
+                let isAlreadySelected =
+                    categorySelection.Choices
+                    |> Array.contains selectOption
+
+                Html.div [ prop.className "metadata-menu-list-item"
+                           prop.style [ style.height (int props.style?height)
+                                        style.left (int props.style?left)
+                                        style.position.absolute
+                                        style.top (int props.style?top)
+                                        style.width (length.percent 100)
+                                        style.padding 6
+                                        if isAlreadySelected then
+                                            if categorySelection.ShouldExclude then
+                                                style.color "white"
+                                                style.backgroundColor "#f14668"
+                                            else
+                                                style.backgroundColor "#ddd" ]
+                           prop.onClick
+                               (fun _ ->
+                                   setFilterInputText ""
+                                   dispatch (SelectItem(category, selectOption)))
+                           prop.text (selectOption.Name |> truncate 21)
+                           prop.title selectOption.Name ]
+
+            ReactBare?createElement (FixedSizeList,
+                                     createObj [ "height" ==> 200
+                                                 "itemCount" ==> fetchedMetadataValues.Length
+                                                 "itemSize" ==> 32
+                                                 "width" ==> 170 ],
+                                     ListItem)
 
         let categorySelection =
             metadataSelection.TryFind(category.Code)
@@ -263,7 +276,7 @@ module MetadataMenu =
                                  prop.children [ selectDropdown
                                                      category
                                                      categorySelection
-                                                     fetchedMetadataValues
+                                                     (filterSelectOptions fetchedMetadataValues)
                                                      dispatch ] ] ]
 
     let shouldShowMetadataMenu (model: LoadedCorpusModel) =
