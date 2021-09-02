@@ -170,6 +170,16 @@ module MetadataMenu =
         fetchedMetadataValues
         dispatch
         =
+
+        let (filterInputText, setFilterInputText) = React.useState ("")
+        let (filterInputNumChars, setFilterInputNumChars) = React.useState (1.0)
+
+        let filterInputRef = React.useInputRef ()
+
+        let focusFilterInput () =
+            filterInputRef.current
+            |> Option.iter (fun inputFilterElement -> inputFilterElement.focus ())
+
         let categorySelection =
             metadataSelection.TryFind(category.Code)
             |> Option.defaultValue CategorySelection.Default
@@ -220,11 +230,30 @@ module MetadataMenu =
                                                        Html.span [ prop.text choice.Name
                                                                    prop.title choice.Name ] ] ] ]
 
-                  let filterInput = Bulma.input.search []
+                  let filterInput =
+                      Bulma.input.search [ prop.ref filterInputRef
+                                           prop.autoCapitalize.off
+                                           prop.autoComplete "off"
+                                           prop.spellcheck false
+                                           prop.style [ style.width (length.em ((filterInputNumChars + 3.0) * 0.55))
+                                                        style.backgroundColor color.transparent
+                                                        style.borderWidth 0
+                                                        style.boxShadow (0, 0, color.transparent)
+                                                        style.outlineWidth 0
+                                                        style.padding 0 ]
+                                           prop.value filterInputText
+                                           prop.onChange
+                                               (fun (s: string) ->
+                                                   setFilterInputText s
+                                                   setFilterInputNumChars (float s.Length)) ]
 
                   if isOpen || categorySelection.Choices.Length > 0 then
                       // The box containing already selected values
                       Html.div [ prop.className "metadata-menu-selection"
+                                 prop.onClick
+                                     (fun _ ->
+                                         setFilterInputText ""
+                                         focusFilterInput ())
                                  prop.children [ yield! choices
                                                  filterInput ] ]
 
