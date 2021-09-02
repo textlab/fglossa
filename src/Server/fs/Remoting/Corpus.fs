@@ -46,13 +46,14 @@ let getMetadataForCategory
 
         let catCode = sanitizeString categoryCode
 
-        let sql = $"SELECT distinct({catCode}) FROM texts"
+        let sql =
+            $"SELECT distinct({catCode}) FROM texts WHERE {catCode} <> '' AND {catCode} IS NOT NULL ORDER BY {catCode}"
 
         let parameters = metadataSelectionToParamDict selection
 
         let! res = query logger conn sql (Some parameters)
 
         match res with
-        | Ok values -> return values
+        | Ok values -> return values |> Seq.toArray
         | Error ex -> return raise ex
     }

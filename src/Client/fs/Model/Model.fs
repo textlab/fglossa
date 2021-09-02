@@ -131,6 +131,7 @@ type LoadedCorpusSubstate =
 
 type LoadedCorpusModel =
     { Corpus: Corpus
+      FetchedMetadataValues: string []
       IsNarrowWindow: bool
       IsShowSelectionOpen: bool
       OpenMetadataCategoryCode: string option

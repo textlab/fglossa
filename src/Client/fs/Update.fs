@@ -42,6 +42,7 @@ module LoadingCorpus =
 
             let m =
                 { Corpus = corpus
+                  FetchedMetadataValues = [||]
                   IsNarrowWindow = false
                   IsShowSelectionOpen = false
                   OpenMetadataCategoryCode = None

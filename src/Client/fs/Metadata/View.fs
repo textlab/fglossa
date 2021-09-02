@@ -4,6 +4,7 @@ open Fable.Core.JsInterop
 open Feliz
 open Feliz.Bulma
 open Shared.Metadata
+open Shared.StringUtils
 open Model
 open Update.Metadata
 open Common
@@ -137,10 +138,20 @@ module MetadataMenu =
 
     let ReactBare: obj = importAll "react"
 
-    let selectDropdown category categorySelection (dispatch: Msg -> unit) : ReactElement =
+    let selectDropdown
+        category
+        categorySelection
+        (fetchedMetadataValues: string [])
+        (dispatch: Msg -> unit)
+        : ReactElement =
         /// A single item in a metadata category dropdown list
         let ListItem (props: {| index: int; style: obj |}) =
-            let selectOption = fetchedMetadataValues.[props.index]
+            // let selectOption = fetchedMetadataValues.[props.index]
+            let metadataValue = fetchedMetadataValues.[props.index]
+
+            let selectOption =
+                { Name = metadataValue
+                  Value = metadataValue }
 
             let isAlreadySelected =
                 categorySelection.Choices
@@ -160,16 +171,23 @@ module MetadataMenu =
                                         else
                                             style.backgroundColor "#ddd" ]
                        prop.onClick (fun _ -> dispatch (SelectItem(category, selectOption)))
-                       prop.text selectOption.Name ]
+                       prop.text (selectOption.Name |> truncate 21)
+                       prop.title selectOption.Name ]
 
         ReactBare?createElement (FixedSizeList,
                                  createObj [ "height" ==> 200
-                                             "itemCount" ==> 10
+                                             "itemCount" ==> fetchedMetadataValues.Length
                                              "itemSize" ==> 32
                                              "width" ==> 170 ],
                                  ListItem)
 
-    let metadataSelect (category: Category) isOpen (metadataSelection: Shared.Metadata.Selection) dispatch =
+    let metadataSelect
+        (category: Category)
+        isOpen
+        (metadataSelection: Shared.Metadata.Selection)
+        fetchedMetadataValues
+        dispatch
+        =
         let categorySelection =
             metadataSelection.TryFind(category.Code)
             |> Option.defaultValue CategorySelection.Default
@@ -218,7 +236,8 @@ module MetadataMenu =
                                                                                                                )
                                                                                                            ))
                                                                                                    prop.text "x" ] ] ]
-                                                           Html.span choice.Name ] ] ]
+                                                           Html.span [ prop.text choice.Name
+                                                                       prop.title choice.Name ] ] ] ]
 
                       // The box containing already selected values
                       Html.div [ prop.className "metadata-menu-selection"
@@ -226,13 +245,17 @@ module MetadataMenu =
 
                       // The menu dropdown
                       Html.div [ prop.className "metadata-menu-list-container"
-                                 prop.children [ selectDropdown category categorySelection dispatch ] ] ]
+                                 prop.children [ selectDropdown
+                                                     category
+                                                     categorySelection
+                                                     fetchedMetadataValues
+                                                     dispatch ] ] ]
 
-    let stringSelect (category: StringCategory) isOpen metadataSelection dispatch =
-        metadataSelect category isOpen metadataSelection dispatch
+    let stringSelect (category: StringCategory) isOpen metadataSelection fetchedMetadataValues dispatch =
+        metadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
 
-    let numberSelect (category: NumberCategory) isOpen metadataSelection dispatch =
-        metadataSelect category isOpen metadataSelection dispatch
+    let numberSelect (category: NumberCategory) isOpen metadataSelection fetchedMetadataValues dispatch =
+        metadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
 
     let interval (category: NumberCategory) dispatch =
         Html.li (
@@ -256,6 +279,7 @@ module MetadataMenu =
                    Items: MenuItem list
                    OpenCategoryCode: string option
                    MetadataSelection: Shared.Metadata.Selection
+                   FetchedMetadataValues: string []
                    Dispatch: (Msg -> unit) |})
         =
         let (isExpanded, setIsExpanded) = React.useState (props.StartExpanded)
@@ -269,12 +293,12 @@ module MetadataMenu =
                         let isOpen =
                             (Some category.Code = props.OpenCategoryCode)
 
-                        stringSelect category isOpen props.MetadataSelection props.Dispatch
+                        stringSelect category isOpen props.MetadataSelection props.FetchedMetadataValues props.Dispatch
                     | NumberSelect category ->
                         let isOpen =
                             (Some category.Code = props.OpenCategoryCode)
 
-                        numberSelect category isOpen props.MetadataSelection props.Dispatch
+                        numberSelect category isOpen props.MetadataSelection props.FetchedMetadataValues props.Dispatch
                     | Interval category -> interval category props.Dispatch
                     | FreeTextSearch category -> freeTextSearch category props.Dispatch
                     | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}")
@@ -318,17 +342,18 @@ module MetadataMenu =
                              Items = items
                              OpenCategoryCode = model.OpenMetadataCategoryCode
                              MetadataSelection = model.Search.MetadataSelection
+                             FetchedMetadataValues = model.FetchedMetadataValues
                              Dispatch = dispatch |}
                   | StringSelect category ->
                       let isOpen =
                           (Some category.Code = model.OpenMetadataCategoryCode)
 
-                      stringSelect category isOpen model.Search.MetadataSelection dispatch
+                      stringSelect category isOpen model.Search.MetadataSelection model.FetchedMetadataValues dispatch
                   | NumberSelect category ->
                       let isOpen =
                           (Some category.Code = model.OpenMetadataCategoryCode)
 
-                      numberSelect category isOpen model.Search.MetadataSelection dispatch
+                      numberSelect category isOpen model.Search.MetadataSelection model.FetchedMetadataValues dispatch
                   | Interval category -> (interval category dispatch)
                   | FreeTextSearch category -> (freeTextSearch category dispatch) ]
 

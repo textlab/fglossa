@@ -7,6 +7,12 @@ module StringUtils =
     let replace (pattern: string) (replacement: string) input =
         Regex.Replace(input, pattern, replacement)
 
+    let truncate (maxLength: int) (s: string) =
+        if s.Length > maxLength - 3 then
+            s.[0..maxLength - 3] + "..."
+        else
+            s
+
 module Cwb =
     /// Positional CWB attribute
     type PositionalAttribute =
@@ -214,6 +220,6 @@ module Route =
 type IServerApi =
     { GetCorpusConfig: CorpusCode -> Async<CorpusConfig>
       GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
-      GetMetadataForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<string seq>
+      GetMetadataForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<string []>
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       SearchCorpus: SearchParams -> Async<SearchResultInfo> }

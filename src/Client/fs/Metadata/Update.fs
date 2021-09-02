@@ -7,7 +7,7 @@ open Model
 type Msg =
     | ToggleMetadataMenuOpen of category: Metadata.Category
     | FetchMetadataValues of category: Metadata.Category
-    | FetchedMetadataValues of results: string seq
+    | FetchedMetadataValues of results: string []
     | ToggleExclude of category: Metadata.Category
     | SelectItem of Metadata.Category * Metadata.StringSelectOption
     | DeselectItem of Metadata.Category * Metadata.StringSelectOption
@@ -23,7 +23,8 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                 Some category.Code, Cmd.ofMsg (FetchMetadataValues category)
 
         { model with
-              OpenMetadataCategoryCode = newCode },
+              OpenMetadataCategoryCode = newCode
+              FetchedMetadataValues = [||] },
         cmd
     | FetchMetadataValues category ->
         let cmd =
@@ -34,8 +35,9 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         model, cmd
     | FetchedMetadataValues results ->
-        printfn "Fetched results"
-        model, Cmd.none
+        { model with
+              FetchedMetadataValues = results },
+        Cmd.none
     | ToggleExclude category ->
         let newMetadataSelection =
             model.Search.MetadataSelection
