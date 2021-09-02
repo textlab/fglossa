@@ -249,7 +249,6 @@ module MetadataMenu =
                       Bulma.input.search [ prop.ref filterInputRef
                                            prop.autoCapitalize.off
                                            prop.autoComplete "off"
-                                           prop.spellcheck false
                                            prop.style [ style.width (length.em ((filterInputNumChars + 3.0) * 0.55))
                                                         style.backgroundColor color.transparent
                                                         style.borderWidth 0
@@ -268,7 +267,8 @@ module MetadataMenu =
                                  prop.onClick
                                      (fun _ ->
                                          setFilterInputText ""
-                                         focusFilterInput ())
+                                         focusFilterInput ()
+                                         dispatch (OpenMetadataMenu category))
                                  prop.children [ yield! choices
                                                  filterInput ] ]
 

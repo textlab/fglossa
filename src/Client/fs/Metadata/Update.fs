@@ -5,6 +5,7 @@ open Shared
 open Model
 
 type Msg =
+    | OpenMetadataMenu of category: Metadata.Category
     | ToggleMetadataMenuOpen of category: Metadata.Category
     | FetchMetadataValues of category: Metadata.Category
     | FetchedMetadataValues of results: string []
@@ -16,6 +17,18 @@ type Msg =
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
     match msg with
+    | OpenMetadataMenu category ->
+        if model.OpenMetadataCategoryCode
+           <> Some category.Code then
+            let newModel =
+                { model with
+                      OpenMetadataCategoryCode = Some category.Code
+                      FetchedMetadataValues = [||] }
+
+            let cmd = Cmd.ofMsg (FetchMetadataValues category)
+            newModel, cmd
+        else
+            model, Cmd.none
     | ToggleMetadataMenuOpen category ->
         let newCode, cmd =
             if model.OpenMetadataCategoryCode = Some category.Code then
