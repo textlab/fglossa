@@ -96,21 +96,27 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         newModel, Cmd.none
     | DeselectItem (category, optionToRemove) ->
-        let newSelection =
-            // Find the selected values for this category and remove the given one
-            model.Search.MetadataSelection
-            |> Map.change
-                category.Code
-                (fun maybeCategorySelection ->
-                    maybeCategorySelection
-                    |> Option.map
-                        (fun categorySelection ->
-                            let newCategoryChoices =
-                                categorySelection.Choices
-                                |> Array.except [ optionToRemove ]
+        let maybeNewCategorySelection =
+            model.Search.MetadataSelection.TryFind(category.Code)
+            |> Option.map
+                (fun categorySelection ->
+                    let newCategoryChoices =
+                        categorySelection.Choices
+                        |> Array.except [ optionToRemove ]
 
-                            { categorySelection with
-                                  Choices = newCategoryChoices }))
+                    { categorySelection with
+                          Choices = newCategoryChoices })
+
+        let newSelection =
+            match maybeNewCategorySelection with
+            | Some categorySelection ->
+                // If removing the option left the selection for this category empty, remove the whole
+                // category; otherwise set the new category selection
+                if categorySelection.Choices.Length > 0 then
+                    model.Search.MetadataSelection.Add(category.Code, categorySelection)
+                else
+                    model.Search.MetadataSelection.Remove(category.Code)
+            | None -> model.Search.MetadataSelection
 
         let newModel =
             { model with
@@ -121,9 +127,9 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         newModel, Cmd.none
     | DeselectAllItems category ->
         let newSelection =
-            // Find the selected values for this category and remove all of them
+            // Remove the given category from the metadata selection
             model.Search.MetadataSelection
-            |> Map.add category.Code Metadata.CategorySelection.Default
+            |> Map.remove category.Code
 
         let newModel =
             { model with
