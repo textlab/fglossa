@@ -130,8 +130,10 @@ module MetadataMenu =
             if System.String.IsNullOrWhiteSpace(filterInputText) then
                 selectOptions
             else
+                let downCasedFilterText = filterInputText.ToLower()
+
                 selectOptions
-                |> Array.filter (fun option -> option.Contains(filterInputText))
+                |> Array.filter (fun option -> option.ToLower().Contains(downCasedFilterText))
 
         let FixedSizeList: obj = importMember "react-window"
 
