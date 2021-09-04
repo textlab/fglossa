@@ -7,13 +7,15 @@ open Model
 type Msg =
     | OpenMetadataMenu of category: Metadata.Category
     | ToggleMetadataMenuOpen of category: Metadata.Category
-    | FetchMetadataValues of category: Metadata.Category
-    | FetchedMetadataValues of results: string []
+    | FetchMetadataValuesForCategory of category: Metadata.Category
+    | FetchedMetadataValuesForCategory of results: string []
     | ToggleExclude of category: Metadata.Category
     | SelectItem of Metadata.Category * Metadata.StringSelectOption
     | DeselectItem of Metadata.Category * Metadata.StringSelectOption
     | DeselectAllItems of Metadata.Category
-    | ToggleShowSelectionOpen
+    | FetchMetadataForTexts
+    | FetchedMetadataForTexts of results: string [] []
+    | CloseShowSelection
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
     match msg with
@@ -25,7 +27,9 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                       OpenMetadataCategoryCode = Some category.Code
                       FetchedMetadataValues = [||] }
 
-            let cmd = Cmd.ofMsg (FetchMetadataValues category)
+            let cmd =
+                Cmd.ofMsg (FetchMetadataValuesForCategory category)
+
             newModel, cmd
         else
             model, Cmd.none
@@ -34,21 +38,21 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             if model.OpenMetadataCategoryCode = Some category.Code then
                 None, Cmd.none
             else
-                Some category.Code, Cmd.ofMsg (FetchMetadataValues category)
+                Some category.Code, Cmd.ofMsg (FetchMetadataValuesForCategory category)
 
         { model with
               OpenMetadataCategoryCode = newCode
               FetchedMetadataValues = [||] },
         cmd
-    | FetchMetadataValues category ->
+    | FetchMetadataValuesForCategory category ->
         let cmd =
             Cmd.OfAsync.perform
                 serverApi.GetMetadataForCategory
                 (model.Corpus.Config.Code, category.Code, model.Search.MetadataSelection)
-                FetchedMetadataValues
+                FetchedMetadataValuesForCategory
 
         model, cmd
-    | FetchedMetadataValues results ->
+    | FetchedMetadataValuesForCategory results ->
         { model with
               FetchedMetadataValues = results },
         Cmd.none
@@ -139,7 +143,25 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         newModel, Cmd.none
 
-    | ToggleShowSelectionOpen ->
+    | FetchMetadataForTexts ->
+        let columns =
+            [ for category in model.Corpus.MetadataTable -> category.Code ]
+
+        let cmd =
+            Cmd.OfAsync.perform
+                serverApi.GetMetadataForTexts
+                (model.Corpus.Config.Code, model.Search.MetadataSelection, columns)
+                FetchedMetadataForTexts
+
+        model, cmd
+
+    | FetchedMetadataForTexts results ->
         { model with
-              IsShowSelectionOpen = not model.IsShowSelectionOpen },
+              FetchedTextMetadata = results
+              IsShowSelectionOpen = true },
+        Cmd.none
+
+    | CloseShowSelection ->
+        { model with
+              IsShowSelectionOpen = false },
         Cmd.none
