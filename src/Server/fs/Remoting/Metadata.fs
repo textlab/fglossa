@@ -24,10 +24,26 @@ let private metadataSelectionToParamDict (selection: Metadata.Selection) =
             |> Array.map (fun choice -> choice.Value))
     |> mapToParamDict
 
+let generateMetadataSelectionSql (categoryCode: string) (selection: Metadata.Selection) =
+    [ for category in selection do
+          // Don't include the category we are fetching values for, since that would only
+          // return the same values...
+          if category.Key <> categoryCode then
+              let column = sanitizeString category.Key
+
+              let operator =
+                  if category.Value.ShouldExclude then
+                      "NOT IN"
+                  else
+                      "IN"
+
+              $" AND {column} {operator} @{column}" ]
+    |> String.concat ""
+
 let getMetadataForCategory
     (logger: ILogger)
     (corpusCode: string)
-    (categoryCode: Metadata.CategoryCode)
+    (categoryCode: string)
     (selection: Metadata.Selection)
     =
     task {
@@ -37,8 +53,11 @@ let getMetadataForCategory
 
         let catCode = sanitizeString categoryCode
 
+        let metadataSelectionSql =
+            generateMetadataSelectionSql catCode selection
+
         let sql =
-            $"SELECT distinct({catCode}) FROM texts WHERE {catCode} <> '' AND {catCode} IS NOT NULL ORDER BY {catCode}"
+            $"SELECT distinct({catCode}) FROM texts WHERE {catCode} <> '' AND {catCode} IS NOT NULL{metadataSelectionSql} ORDER BY {catCode}"
 
         let parameters = metadataSelectionToParamDict selection
 
