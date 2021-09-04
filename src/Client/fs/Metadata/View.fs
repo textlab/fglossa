@@ -9,25 +9,6 @@ open Model
 open Update.Metadata
 open Common
 
-let fetchedMetadataValues =
-    [| { Name = "Adresseavisen"
-         Value = "Adresseavisen" }
-       { Name = "Aftenposten"
-         Value = "Aftenposten" }
-       { Name = "Bellona"; Value = "Bellona" }
-       { Name = "Bergens Tidende"
-         Value = "Bergens Tidende" }
-       { Name = "Dagbladet"
-         Value = "Dagbladet" }
-       { Name = "Det Nye"; Value = "Det Nye" }
-       { Name = "Familien"
-         Value = "Familien" }
-       { Name = "Filmmagasinet"
-         Value = "Filmmagasinet" }
-       { Name = "Gateavisa"
-         Value = "Gateavisa" }
-       { Name = "KK"; Value = "KK" } |]
-
 let dummyMetadataTableData =
     [| "SA00BaJo04"
        "Årboka Litteratur for barn og unge 2004: Nyskapende faglitteratur - to fulltreffere og ett godt forsøk"
