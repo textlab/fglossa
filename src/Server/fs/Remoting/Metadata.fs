@@ -111,7 +111,9 @@ let getMetadataForTexts
                     // Since the results of queryDynamic are DapperRow objects, which implement
                     // IDictionary<string, obj>, we cast to that in order to access the data dynamically
                     [| for (row: IDictionary<string, obj>) in rows |> Seq.cast ->
-                           [| for column in columns -> row.[column] |> string |] |]
+                           [| for column in columns ->
+                                  let text = row.[column] |> string
+                                  if text <> "\N" then text else "" |] |]
                 | None -> [||]
         | Error ex -> return raise ex
     }
