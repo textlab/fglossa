@@ -135,6 +135,8 @@ type LoadedCorpusModel =
       FetchedTextMetadata: string [] []
       IsNarrowWindow: bool
       IsShowSelectionOpen: bool
+      NumSelectedTexts: int64 option
+      NumSelectedTokens: int64 option
       OpenMetadataCategoryCode: string option
       Search: Search
       ShouldShowMetadataMenu: bool option

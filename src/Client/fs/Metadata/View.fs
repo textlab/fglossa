@@ -9,6 +9,12 @@ open Model
 open Update.Metadata
 open Common
 
+let textAndTokenCountText (model: LoadedCorpusModel) =
+    match (model.NumSelectedTexts, model.NumSelectedTokens) with
+    | Some selectedTexts, selectedTokens when selectedTexts <> model.Corpus.Config.TotalTexts ->
+        $"{selectedTexts} of {model.Corpus.Config.TotalTexts} texts ({selectedTokens} of {model.Corpus.Config.TotalTokens} tokens) selected"
+    | _ -> $"All {model.Corpus.Config.TotalTexts} texts ({model.Corpus.Config.TotalTokens} tokens) selected"
+
 module SelectionTable =
     [<ReactComponent>]
     let SelectionTablePopup model dispatch =
@@ -30,8 +36,9 @@ module SelectionTable =
         let header =
             Bulma.level [ prop.style [ style.padding 20
                                        style.marginBottom 0 ]
-                          prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle
-                                                                                  $"All {model.Corpus.Config.NumTexts} texts ({model.Corpus.Config.NumTokens} tokens) selected" ] ]
+                          prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle (
+                                                                                  textAndTokenCountText model
+                                                                              ) ] ]
                                           Bulma.levelRight pagination ] ]
 
         let table =
@@ -386,8 +393,7 @@ module MetadataMenu =
         Html.span [ Html.div [ prop.style [ style.width sidebarWidth
                                             style.paddingLeft (length.em 0.75)
                                             style.marginBottom (length.rem 0.75) ]
-                               prop.children [ Html.text
-                                                   $"All {model.Corpus.Config.NumTexts} texts ({model.Corpus.Config.NumTokens} tokens) selected"
+                               prop.children [ Html.text (textAndTokenCountText model)
                                                showSelectionButton ] ]
                     SelectionTable.SelectionTablePopup model dispatch
                     Bulma.menu [ prop.style [ style.width sidebarWidth

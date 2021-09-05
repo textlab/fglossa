@@ -64,12 +64,8 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         model, cmd
     | FetchedTextAndTokenCounts counts ->
         { model with
-              Corpus =
-                  { model.Corpus with
-                        Config =
-                            { model.Corpus.Config with
-                                  NumTexts = counts.NumTexts
-                                  NumTokens = counts.NumTokens } } },
+              NumSelectedTexts = Some counts.NumTexts
+              NumSelectedTokens = Some counts.NumTokens },
         Cmd.none
     | FetchedMetadataValuesForCategory results ->
         { model with
@@ -117,7 +113,9 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                       { model.Search with
                             MetadataSelection = newSelection } }
 
-        newModel, Cmd.none
+        let cmd = Cmd.ofMsg FetchTextAndTokenCounts
+
+        newModel, cmd
     | DeselectItem (category, optionToRemove) ->
         let maybeNewCategorySelection =
             model.Search.MetadataSelection.TryFind(category.Code)
@@ -147,7 +145,9 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                       { model.Search with
                             MetadataSelection = newSelection } }
 
-        newModel, Cmd.none
+        let cmd = Cmd.ofMsg FetchTextAndTokenCounts
+
+        newModel, cmd
     | DeselectAllItems category ->
         let newSelection =
             // Remove the given category from the metadata selection
@@ -160,7 +160,9 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                       { model.Search with
                             MetadataSelection = newSelection } }
 
-        newModel, Cmd.none
+        let cmd = Cmd.ofMsg FetchTextAndTokenCounts
+
+        newModel, cmd
 
     | FetchMetadataForTexts ->
         let columns =

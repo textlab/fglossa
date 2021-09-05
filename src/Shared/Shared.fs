@@ -110,8 +110,8 @@ type CorpusConfig =
       Logo: string option
       MultiCpuBounds: uint64 [] [] option
       Name: string
-      NumTexts: int64
-      NumTokens: int64
+      TotalTexts: int64
+      TotalTokens: int64
       SearchEngine: SearchEngine
       Sizes: Map<string, uint64> }
     static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
@@ -122,8 +122,8 @@ type CorpusConfig =
           Logo = logo
           MultiCpuBounds = defaultArg multiCpuBounds None
           Name = name
-          NumTexts = 0L
-          NumTokens = 0L
+          TotalTexts = 0L
+          TotalTokens = 0L
           SearchEngine = defaultArg searchEngine Cwb
           Sizes = Map.empty }
 

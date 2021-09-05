@@ -49,6 +49,6 @@ let getCorpusConfig (logger: ILogger) (corpusCode: string) =
 
         return
             { corpus.Config with
-                  NumTexts = numTextsAndTokens.NumTexts
-                  NumTokens = numTextsAndTokens.NumTokens }
+                  TotalTexts = numTextsAndTokens.NumTexts
+                  TotalTokens = numTextsAndTokens.NumTokens }
     }
