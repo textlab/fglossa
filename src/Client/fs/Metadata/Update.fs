@@ -66,7 +66,8 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
     | FetchedTextAndTokenCounts counts ->
         { model with
               NumSelectedTexts = Some counts.NumTexts
-              NumSelectedTokens = Some counts.NumTokens },
+              NumSelectedTokens = Some counts.NumTokens
+              SelectionTablePageNumber = 1 },
         Cmd.none
     | FetchedMetadataValuesForCategory results ->
         { model with
