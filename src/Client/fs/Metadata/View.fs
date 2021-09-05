@@ -34,26 +34,38 @@ module SelectionTable =
                 if pageNo >= 1 && pageNo <= numPages then
                     dispatch (SetSelectionTablePage pageNo)
 
-            [ Bulma.levelItem [ Bulma.buttons [ iconButton
-                                                    "fa-angle-double-left"
-                                                    (model.SelectionTablePageNumber = 1)
-                                                    (fun e -> setPage e 1)
-                                                iconButton
-                                                    "fa-angle-left"
-                                                    (model.SelectionTablePageNumber = 1)
-                                                    (fun e -> setPage e (model.SelectionTablePageNumber - 1)) ] ]
-              Bulma.levelItem [ Bulma.buttons [ iconButton
-                                                    "fa-angle-right"
-                                                    (model.SelectionTablePageNumber = numPages)
-                                                    (fun e -> setPage e (model.SelectionTablePageNumber + 1))
-                                                iconButton
-                                                    "fa-angle-double-right"
-                                                    (model.SelectionTablePageNumber = numPages)
-                                                    (fun e -> setPage e (numPages - 1)) ] ]
-              Bulma.levelItem [ Bulma.delete [ delete.isMedium
-                                               prop.title "Close"
-                                               prop.style [ style.marginLeft 40 ]
-                                               prop.onClick (fun _ -> dispatch CloseSelectionTable) ] ] ]
+            Bulma.pagination (
+                Bulma.paginationList [ if model.SelectionTablePageNumber > 1 then
+                                           Bulma.paginationLink.a [ prop.onClick (fun e -> setPage e 1)
+                                                                    prop.text "1" ]
+                                       if model.SelectionTablePageNumber >= 4 then
+                                           Html.li [ prop.key "ellipse-left"
+                                                     prop.children [ Html.span [ prop.className "pagination-ellipsis"
+                                                                                 prop.text "…" ] ] ]
+                                       if model.SelectionTablePageNumber >= 3 then
+                                           Bulma.paginationLink.a [ prop.onClick
+                                                                        (fun e ->
+                                                                            setPage
+                                                                                e
+                                                                                (model.SelectionTablePageNumber - 1))
+                                                                    prop.text (model.SelectionTablePageNumber - 1) ]
+                                       Bulma.paginationLink.a [ paginationLink.isCurrent
+                                                                prop.text model.SelectionTablePageNumber ]
+                                       if model.SelectionTablePageNumber <= numPages - 2 then
+                                           Bulma.paginationLink.a [ prop.onClick
+                                                                        (fun e ->
+                                                                            setPage
+                                                                                e
+                                                                                (model.SelectionTablePageNumber + 1))
+                                                                    prop.text (model.SelectionTablePageNumber + 1) ]
+                                       if model.SelectionTablePageNumber <= numPages - 3 then
+                                           Html.li [ prop.key "ellipse-right"
+                                                     prop.children [ Html.span [ prop.className "pagination-ellipsis"
+                                                                                 prop.text "…" ] ] ]
+                                       if model.SelectionTablePageNumber < numPages then
+                                           Bulma.paginationLink.a [ prop.onClick (fun e -> setPage e numPages)
+                                                                    prop.text numPages ] ]
+            )
 
         let header =
             Bulma.level [ prop.style [ style.padding 20
@@ -61,7 +73,15 @@ module SelectionTable =
                           prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle (
                                                                                   textAndTokenCountText model
                                                                               ) ] ]
-                                          Bulma.levelRight pagination ] ]
+                                          Bulma.levelRight [ Bulma.levelItem [ pagination ]
+                                                             Bulma.levelItem [ Bulma.delete [ delete.isMedium
+                                                                                              prop.title "Close"
+                                                                                              prop.style [ style.marginLeft
+                                                                                                               40 ]
+                                                                                              prop.onClick
+                                                                                                  (fun _ ->
+                                                                                                      dispatch
+                                                                                                          CloseSelectionTable) ] ] ] ] ]
 
         let table =
             Bulma.tableContainer [ Bulma.table [ table.isStriped

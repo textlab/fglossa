@@ -82,7 +82,7 @@ let getMetadataForTexts
         use conn = new SQLiteConnection(connStr)
 
         let limit = 50
-        let offset = pageNumber * limit
+        let offset = (pageNumber - 1) * limit
 
         let columnSql =
             columns
