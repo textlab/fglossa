@@ -281,16 +281,18 @@ let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) 
                                                                                                    model
                                                                                                    (MetadataMsg
                                                                                                     >> dispatch) ] ]
-                                                                Bulma.column [ match model.Substate with
-                                                                               | CorpusStart ->
-                                                                                   CorpusStartView.view
-                                                                                       model.Corpus
-                                                                                       model.Search
-                                                                                       dispatch
-                                                                               | ShowingResults showingResultsModel ->
-                                                                                   ResultsView.view
-                                                                                       showingResultsModel
-                                                                                       model.Corpus
-                                                                                       model.Search
-                                                                                       dispatch
-                                                                                       (ShowingResultsMsg >> dispatch) ] ] ] ] ]
+                                                                Bulma.column [ prop.style [ style.marginLeft 20 ]
+                                                                               prop.children [ match model.Substate with
+                                                                                               | CorpusStart ->
+                                                                                                   CorpusStartView.view
+                                                                                                       model.Corpus
+                                                                                                       model.Search
+                                                                                                       dispatch
+                                                                                               | ShowingResults showingResultsModel ->
+                                                                                                   ResultsView.view
+                                                                                                       showingResultsModel
+                                                                                                       model.Corpus
+                                                                                                       model.Search
+                                                                                                       dispatch
+                                                                                                       (ShowingResultsMsg
+                                                                                                        >> dispatch) ] ] ] ] ] ]
