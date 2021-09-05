@@ -107,13 +107,17 @@ module SelectionTable =
                                                                                                       dispatch
                                                                                                           CloseSelectionTable) ] ] ] ] ]
 
+        let elementRef = React.useElementRef ()
+
+        let focusPopup () =
+            elementRef.current
+            |> Option.iter (fun popupElement -> popupElement.focus ())
+
+        // Focus the popup when mounted to enable it to receive keyboard events
+        React.useEffectOnce focusPopup
+
         let popup =
-            Html.div [ prop.style [ style.height (
-                                        if model.IsSelectionTableOpen then
-                                            length.percent 100
-                                        else
-                                            (length.percent 0)
-                                    )
+            Html.div [ prop.style [ style.height (length.percent 100)
                                     style.top 0
                                     style.left 0
                                     style.width (length.percent 100)
@@ -125,6 +129,14 @@ module SelectionTable =
                                     style.transitionProperty transitionProperty.height
                                     style.transitionDuration (System.TimeSpan(3500000L))
                                     style.transitionTimingFunction.easeOut ]
+                       // Set elementRef in order to apply the focusPopup() function to this element
+                       prop.ref elementRef
+                       // Set tabIndex so that the lement receives keyboard events
+                       prop.tabIndex 0
+                       prop.onKeyUp
+                           (fun e ->
+                               if e.key = "Escape" then
+                                   dispatch CloseSelectionTable)
                        prop.children [ header; table; footer ] ]
 
         let root =
@@ -451,7 +463,8 @@ module MetadataMenu =
                                             style.marginBottom (length.rem 0.75) ]
                                prop.children [ Html.text (textAndTokenCountText model)
                                                showSelectionButton ] ]
-                    SelectionTable.SelectionTablePopup model dispatch
+                    if model.IsSelectionTableOpen then
+                        SelectionTable.SelectionTablePopup model dispatch
                     Bulma.menu [ prop.style [ style.width sidebarWidth
                                               style.overflowX.hidden ]
                                  prop.children [ Bulma.menuList menuItems ] ]
