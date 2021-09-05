@@ -156,14 +156,14 @@ module MetadataMenu =
                                (fun _ ->
                                    setFilterInputText ""
                                    dispatch (SelectItem(category, selectOption)))
-                           prop.text (selectOption.Name |> truncate 21)
+                           prop.text (selectOption.Name |> truncate 25)
                            prop.title selectOption.Name ]
 
             ReactBare?createElement (FixedSizeList,
                                      createObj [ "height" ==> 200
                                                  "itemCount" ==> fetchedMetadataValues.Length
                                                  "itemSize" ==> 32
-                                                 "width" ==> 170 ],
+                                                 "width" ==> 200 ],
                                      ListItem)
 
         let categorySelection =
@@ -348,7 +348,7 @@ module MetadataMenu =
     let view (model: LoadedCorpusModel) (dispatch: Update.Metadata.Msg -> unit) =
         let sidebarWidth =
             if shouldShowMetadataMenu model then
-                170
+                200
             else
                 0
 
