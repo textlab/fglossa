@@ -93,6 +93,20 @@ module SelectionTable =
                                                                                   Html.tr [ for column in row ->
                                                                                                 Html.td column ] ] ] ] ]
 
+        let footer =
+            Bulma.level [ prop.style [ style.padding 20
+                                       style.marginBottom 0 ]
+                          prop.children [ Bulma.levelLeft []
+                                          Bulma.levelRight [ Bulma.levelItem [ pagination ]
+                                                             Bulma.levelItem [ Bulma.delete [ delete.isMedium
+                                                                                              prop.title "Close"
+                                                                                              prop.style [ style.marginLeft
+                                                                                                               40 ]
+                                                                                              prop.onClick
+                                                                                                  (fun _ ->
+                                                                                                      dispatch
+                                                                                                          CloseSelectionTable) ] ] ] ] ]
+
         let popup =
             Html.div [ prop.style [ style.height (
                                         if model.IsSelectionTableOpen then
@@ -111,7 +125,7 @@ module SelectionTable =
                                     style.transitionProperty transitionProperty.height
                                     style.transitionDuration (System.TimeSpan(3500000L))
                                     style.transitionTimingFunction.easeOut ]
-                       prop.children [ header; table ] ]
+                       prop.children [ header; table; footer ] ]
 
         let root =
             Browser.Dom.document.getElementById ("metadata-selection-popup-root")
