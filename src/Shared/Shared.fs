@@ -221,6 +221,8 @@ type ResultPageNumbers = int []
 
 type DatabaseColumn = string
 
+type PageNumber = int
+
 module Route =
     let builder typeName methodName =
         sprintf "/glossa3/api/%s/%s" typeName methodName
@@ -229,7 +231,7 @@ type IServerApi =
     { GetCorpusConfig: CorpusCode -> Async<CorpusConfig>
       GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
       GetMetadataForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<string []>
-      GetMetadataForTexts: CorpusCode * Metadata.Selection * DatabaseColumn list -> Async<string [] []>
+      GetMetadataForTexts: CorpusCode * Metadata.Selection * DatabaseColumn list * PageNumber -> Async<string [] []>
       GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts>
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       SearchCorpus: SearchParams -> Async<SearchResultInfo> }

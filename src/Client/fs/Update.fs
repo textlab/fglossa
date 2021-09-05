@@ -45,12 +45,13 @@ module LoadingCorpus =
                   FetchedMetadataValues = [||]
                   FetchedTextMetadata = [| [||] |]
                   IsNarrowWindow = false
-                  IsShowSelectionOpen = false
+                  IsSelectionTableOpen = false
                   NumSelectedTexts = None
                   NumSelectedTokens = None
                   OpenMetadataCategoryCode = None
                   Search = Search.Init(corpus.Config)
                   ShouldShowMetadataMenu = None
+                  SelectionTablePageNumber = 1
                   Substate = CorpusStart }
 
             LoadedCorpus m, Cmd.none

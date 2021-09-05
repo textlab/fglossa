@@ -17,7 +17,8 @@ type Msg =
     | DeselectAllItems of Metadata.Category
     | FetchMetadataForTexts
     | FetchedMetadataForTexts of results: string [] []
-    | CloseShowSelection
+    | SetSelectionTablePage of pageNumber: int
+    | CloseSelectionTable
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
     match msg with
@@ -171,7 +172,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         let cmd =
             Cmd.OfAsync.perform
                 serverApi.GetMetadataForTexts
-                (model.Corpus.Config.Code, model.Search.MetadataSelection, columns)
+                (model.Corpus.Config.Code, model.Search.MetadataSelection, columns, model.SelectionTablePageNumber)
                 FetchedMetadataForTexts
 
         model, cmd
@@ -179,10 +180,14 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
     | FetchedMetadataForTexts results ->
         { model with
               FetchedTextMetadata = results
-              IsShowSelectionOpen = true },
+              IsSelectionTableOpen = true },
         Cmd.none
 
-    | CloseShowSelection ->
+    | SetSelectionTablePage pageNumber ->
         { model with
-              IsShowSelectionOpen = false },
+              SelectionTablePageNumber = pageNumber },
+        Cmd.ofMsg FetchMetadataForTexts
+    | CloseSelectionTable ->
+        { model with
+              IsSelectionTableOpen = false },
         Cmd.none

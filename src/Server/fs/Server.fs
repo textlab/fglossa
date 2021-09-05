@@ -23,8 +23,8 @@ let createServerApi ctx =
               Remoting.Metadata.getMetadataForCategory logger corpusCode categoryCode selection
               |> Async.AwaitTask
       GetMetadataForTexts =
-          fun (corpusCode, selection, columns) ->
-              Remoting.Metadata.getMetadataForTexts logger corpusCode selection columns
+          fun (corpusCode, selection, columns, pageNumber) ->
+              Remoting.Metadata.getMetadataForTexts logger corpusCode selection columns pageNumber
               |> Async.AwaitTask
       GetTextAndTokenCount =
           fun (corpusCode, selection) ->

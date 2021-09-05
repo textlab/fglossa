@@ -17,21 +17,43 @@ let textAndTokenCountText (model: LoadedCorpusModel) =
 
 module SelectionTable =
     [<ReactComponent>]
-    let SelectionTablePopup model dispatch =
+    let SelectionTablePopup (model: LoadedCorpusModel) dispatch =
         let pagination =
-            [ Bulma.levelItem [ Bulma.buttons [ iconButton "fa-angle-double-left" false (fun e -> ())
-                                                iconButton "fa-angle-left" false (fun e -> ()) ] ]
-              Bulma.levelItem [ Bulma.input.number [ input.isSmall
-                                                     prop.style [ style.width 60
-                                                                  style.textAlign.right ]
-                                                     prop.value 1
-                                                     prop.onChange (fun (s: string) -> printfn $"New value: {s}") ] ]
-              Bulma.levelItem [ Bulma.buttons [ iconButton "fa-angle-right" false (fun e -> ())
-                                                iconButton "fa-angle-double-right" false (fun e -> ()) ] ]
+            let pageSize = 50.0
+
+            let numPages =
+                match model.NumSelectedTexts with
+                | Some selectedTexts -> float selectedTexts / pageSize
+                | None -> float model.Corpus.Config.TotalTexts / pageSize
+                |> ceil
+                |> int
+
+            let setPage (e: Browser.Types.MouseEvent) (pageNo: int) =
+                e.preventDefault ()
+
+                if pageNo >= 1 && pageNo <= numPages then
+                    dispatch (SetSelectionTablePage pageNo)
+
+            [ Bulma.levelItem [ Bulma.buttons [ iconButton
+                                                    "fa-angle-double-left"
+                                                    (model.SelectionTablePageNumber = 1)
+                                                    (fun e -> setPage e 1)
+                                                iconButton
+                                                    "fa-angle-left"
+                                                    (model.SelectionTablePageNumber = 1)
+                                                    (fun e -> setPage e (model.SelectionTablePageNumber - 1)) ] ]
+              Bulma.levelItem [ Bulma.buttons [ iconButton
+                                                    "fa-angle-right"
+                                                    (model.SelectionTablePageNumber = numPages)
+                                                    (fun e -> setPage e (model.SelectionTablePageNumber + 1))
+                                                iconButton
+                                                    "fa-angle-double-right"
+                                                    (model.SelectionTablePageNumber = numPages)
+                                                    (fun e -> setPage e (numPages - 1)) ] ]
               Bulma.levelItem [ Bulma.delete [ delete.isMedium
                                                prop.title "Close"
                                                prop.style [ style.marginLeft 40 ]
-                                               prop.onClick (fun _ -> dispatch CloseShowSelection) ] ] ]
+                                               prop.onClick (fun _ -> dispatch CloseSelectionTable) ] ] ]
 
         let header =
             Bulma.level [ prop.style [ style.padding 20
@@ -53,7 +75,7 @@ module SelectionTable =
 
         let popup =
             Html.div [ prop.style [ style.height (
-                                        if model.IsShowSelectionOpen then
+                                        if model.IsSelectionTableOpen then
                                             length.percent 100
                                         else
                                             (length.percent 0)

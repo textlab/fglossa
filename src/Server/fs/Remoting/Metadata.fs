@@ -68,12 +68,21 @@ let getMetadataForCategory
         | Error ex -> return raise ex
     }
 
-let getMetadataForTexts (logger: ILogger) (corpusCode: string) (selection: Metadata.Selection) (columns: string list) =
+let getMetadataForTexts
+    (logger: ILogger)
+    (corpusCode: string)
+    (selection: Metadata.Selection)
+    (columns: string list)
+    (pageNumber: int)
+    =
 
     task {
         let! connStr = getConnectionString corpusCode
 
         use conn = new SQLiteConnection(connStr)
+
+        let limit = 50
+        let offset = pageNumber * limit
 
         let columnSql =
             columns
@@ -84,7 +93,7 @@ let getMetadataForTexts (logger: ILogger) (corpusCode: string) (selection: Metad
             generateMetadataSelectionSql None selection
 
         let sql =
-            $"SELECT {columnSql} FROM texts WHERE 1 = 1{metadataSelectionSql} ORDER BY tid limit 10"
+            $"SELECT {columnSql} FROM texts WHERE 1 = 1{metadataSelectionSql} ORDER BY tid limit {limit} OFFSET {offset}"
 
         let parameters = metadataSelectionToParamDict selection
 

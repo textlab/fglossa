@@ -134,12 +134,13 @@ type LoadedCorpusModel =
       FetchedMetadataValues: string []
       FetchedTextMetadata: string [] []
       IsNarrowWindow: bool
-      IsShowSelectionOpen: bool
+      IsSelectionTableOpen: bool
       NumSelectedTexts: int64 option
       NumSelectedTokens: int64 option
       OpenMetadataCategoryCode: string option
       Search: Search
       ShouldShowMetadataMenu: bool option
+      SelectionTablePageNumber: int
       Substate: LoadedCorpusSubstate }
 
 type Model =
