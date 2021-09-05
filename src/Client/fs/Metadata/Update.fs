@@ -88,7 +88,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
               Search =
                   { model.Search with
                         MetadataSelection = newMetadataSelection } },
-        Cmd.none
+        Cmd.ofMsg FetchTextAndTokenCounts
     | SelectItem (category, selectedOption) ->
         let newCategorySelection =
             // Find the already selected values for this category, if any, and append the new one
