@@ -296,6 +296,7 @@ module LoadedCorpus =
         | MetadataMsg of Update.Metadata.Msg
         | ShowingResultsMsg of ShowingResults.Msg
 
+        | SetShouldShowMetadataMenu of bool
         | SetSearchInterface of SearchInterface
         | SetQueryText of query: string * hasFinalSpace: bool
         | CwbExtendedSetMainString of
@@ -385,6 +386,10 @@ module LoadedCorpus =
                 Cmd.map ShowingResultsMsg cmd
             | otherSubstate -> failwith $"Invalid substate for ShowingResultsMsg: {otherSubstate}"
 
+        | SetShouldShowMetadataMenu shouldShow ->
+            { model with
+                  ShouldShowMetadataMenu = Some shouldShow },
+            Cmd.none
         | SetSearchInterface ``interface`` ->
             { model with
                   Search =

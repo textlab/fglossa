@@ -9,8 +9,38 @@ open Model
 open Update.LoadedCorpus
 open Common
 
-let topRowButtons dispatch =
-    Bulma.buttons [ Bulma.button.button [ prop.text "Hide filters" ]
+let shouldShowMetadataMenu model =
+    if model.Corpus.MetadataMenu.IsEmpty then
+        // Don't show metadata if the corpus doesn't have any (duh!)
+        false
+    else
+        match model.ShouldShowMetadataMenu with
+        | Some shouldShow ->
+            // If ShouldShowMetadata is a Some, the user has explicitly chosen whether to see metadata,
+            // so we respect that unconditionally
+            shouldShow
+        | None ->
+            // Now we know that we have metadata, and that the user has not explicitly chosen
+            // whether to see them. If we are showing search results, we hide the metadata if the
+            // window is narrow; if instead we are showing the start page, we show the metadata
+            // regardless of window size.
+            match model.Substate with
+            | CorpusStart -> true
+            | ShowingResults _ -> not model.IsNarrowWindow
+
+let topRowButtons (model: LoadedCorpusModel) dispatch =
+    let filterButton =
+        if shouldShowMetadataMenu model then
+            Bulma.button.button [ prop.onClick (fun _ -> dispatch (SetShouldShowMetadataMenu false))
+                                  prop.text "Hide filters" ]
+        elif not model.Corpus.MetadataMenu.IsEmpty then
+            Bulma.button.button [ prop.onClick (fun _ -> dispatch (SetShouldShowMetadataMenu true))
+                                  prop.text "Filters" ]
+        // Don't show the filter button if the corpus doesn't have any metadata
+        else
+            Html.none
+
+    Bulma.buttons [ filterButton
                     Bulma.button.button [ color.isInfo
                                           prop.onClick (fun _ -> dispatch ResetForm)
                                           prop.text "Reset form" ] ]
@@ -33,8 +63,8 @@ module CorpusStartView =
                     prop.children [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.title config.Name ]
                                                                     Bulma.levelItem logo ] ] ] ]
 
-    let view (corpus: Corpus) (search: Search) (dispatch: Update.LoadedCorpus.Msg -> unit) =
-        Html.span [ topRowButtons dispatch
+    let view (corpus: Corpus) (search: Search) topRowButtonsElement (dispatch: Update.LoadedCorpus.Msg -> unit) =
+        Html.span [ topRowButtonsElement
                     corpusNameBox corpus.Config
                     selectSearchView corpus search dispatch ]
 
@@ -249,7 +279,14 @@ module ResultsView =
     ///////////////////////////////////////
     /// View.LoadedCorpus.ResultsView.view
     ///////////////////////////////////////
-    let view (model: ShowingResultsModel) (corpus: Corpus) (search: Search) parentDispatch dispatch =
+    let view
+        (model: ShowingResultsModel)
+        (corpus: Corpus)
+        (search: Search)
+        topRowButtonsElement
+        parentDispatch
+        dispatch
+        =
         let resultsView =
             [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ tabs model dispatch ] ] ]
               match model.ActiveTab with
@@ -266,7 +303,7 @@ module ResultsView =
                 true
             | _ -> false
 
-        Html.span [ topRowButtons parentDispatch
+        Html.span [ topRowButtonsElement
                     selectSearchView corpus search parentDispatch
                     spinnerOverlay shouldShowResultsTableSpinner (Some [ style.top 75 ]) resultsView ]
 
@@ -275,24 +312,28 @@ module ResultsView =
 /// View.LoadedCorpus.view
 //////////////////////////////
 let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) =
+    let topRowButtonsElement = topRowButtons model dispatch
+
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
-                                prop.children [ Bulma.columns [ Bulma.column [ column.isNarrow
-                                                                               prop.children [ Metadata.MetadataMenu.view
-                                                                                                   model
-                                                                                                   (MetadataMsg
-                                                                                                    >> dispatch) ] ]
-                                                                Bulma.column [ prop.style [ style.marginLeft 20 ]
-                                                                               prop.children [ match model.Substate with
-                                                                                               | CorpusStart ->
-                                                                                                   CorpusStartView.view
-                                                                                                       model.Corpus
-                                                                                                       model.Search
-                                                                                                       dispatch
-                                                                                               | ShowingResults showingResultsModel ->
-                                                                                                   ResultsView.view
-                                                                                                       showingResultsModel
-                                                                                                       model.Corpus
-                                                                                                       model.Search
-                                                                                                       dispatch
-                                                                                                       (ShowingResultsMsg
-                                                                                                        >> dispatch) ] ] ] ] ] ]
+                                prop.children [ Bulma.columns [ if shouldShowMetadataMenu model then
+                                                                    Bulma.column [ column.isNarrow
+                                                                                   prop.style [ style.marginRight 20 ]
+                                                                                   prop.children [ Metadata.MetadataMenu.view
+                                                                                                       model
+                                                                                                       (MetadataMsg
+                                                                                                        >> dispatch) ] ]
+                                                                Bulma.column [ match model.Substate with
+                                                                               | CorpusStart ->
+                                                                                   CorpusStartView.view
+                                                                                       model.Corpus
+                                                                                       model.Search
+                                                                                       topRowButtonsElement
+                                                                                       dispatch
+                                                                               | ShowingResults showingResultsModel ->
+                                                                                   ResultsView.view
+                                                                                       showingResultsModel
+                                                                                       model.Corpus
+                                                                                       model.Search
+                                                                                       topRowButtonsElement
+                                                                                       dispatch
+                                                                                       (ShowingResultsMsg >> dispatch) ] ] ] ] ]

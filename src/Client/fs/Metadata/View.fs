@@ -322,26 +322,6 @@ module MetadataMenu =
                                                      (filterSelectOptions fetchedMetadataValues)
                                                      dispatch ] ] ]
 
-    let shouldShowMetadataMenu (model: LoadedCorpusModel) =
-        if model.Corpus.MetadataMenu.IsEmpty then
-            // Don't show metadata if the corpus doesn't have any (duh!)
-            false
-        else
-            match model.ShouldShowMetadataMenu with
-            | Some shouldShow ->
-                // If ShouldShowMetadata is a Some, the user has explicitly chosen whether to see metadata,
-                // so we respect that unconditionally
-                shouldShow
-            | None ->
-                // Now we know that we have metadata, and that the user has not explicitly chosen
-                // whether to see them. If we are showing search results, we hide the metadata if the
-                // window is narrow; if instead we are showing the start page, we show the metadata
-                // regardless of window size.
-                match model.Substate with
-                | CorpusStart -> true
-                | ShowingResults _ -> not model.IsNarrowWindow
-
-
     let stringSelect (category: StringCategory) isOpen metadataSelection fetchedMetadataValues dispatch =
         MetadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
 
@@ -414,12 +394,6 @@ module MetadataMenu =
 
     /// The main view of the metadata menu on the left hand side of the interface
     let view (model: LoadedCorpusModel) (dispatch: Update.Metadata.Msg -> unit) =
-        let sidebarWidth =
-            if shouldShowMetadataMenu model then
-                200
-            else
-                0
-
         let menuItems =
             [ for item in model.Corpus.MetadataMenu do
                   match item with
@@ -458,14 +432,14 @@ module MetadataMenu =
                                   prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-binoculars" ] ] ]
                                                   Html.span "Show" ] ]
 
-        Html.span [ Html.div [ prop.style [ style.width sidebarWidth
+        Html.span [ Html.div [ prop.style [ style.width 200
                                             style.paddingLeft (length.em 0.75)
                                             style.marginBottom (length.rem 0.75) ]
                                prop.children [ Html.text (textAndTokenCountText model)
                                                showSelectionButton ] ]
                     if model.IsSelectionTableOpen then
                         SelectionTable.SelectionTablePopup model dispatch
-                    Bulma.menu [ prop.style [ style.width sidebarWidth
+                    Bulma.menu [ prop.style [ style.width 200
                                               style.overflowX.hidden ]
                                  prop.children [ Bulma.menuList menuItems ] ]
 
