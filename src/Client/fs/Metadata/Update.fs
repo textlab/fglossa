@@ -9,6 +9,8 @@ type Msg =
     | ToggleMetadataMenuOpen of category: Metadata.Category
     | FetchMetadataValuesForCategory of category: Metadata.Category
     | FetchedMetadataValuesForCategory of results: string []
+    | FetchTextAndTokenCounts
+    | FetchedTextAndTokenCounts of TextAndTokenCounts
     | ToggleExclude of category: Metadata.Category
     | SelectItem of Metadata.Category * Metadata.StringSelectOption
     | DeselectItem of Metadata.Category * Metadata.StringSelectOption
@@ -52,6 +54,23 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                 FetchedMetadataValuesForCategory
 
         model, cmd
+    | FetchTextAndTokenCounts ->
+        let cmd =
+            Cmd.OfAsync.perform
+                serverApi.GetTextAndTokenCount
+                (model.Corpus.Config.Code, model.Search.MetadataSelection)
+                FetchedTextAndTokenCounts
+
+        model, cmd
+    | FetchedTextAndTokenCounts counts ->
+        { model with
+              Corpus =
+                  { model.Corpus with
+                        Config =
+                            { model.Corpus.Config with
+                                  NumTexts = counts.NumTexts
+                                  NumTokens = counts.NumTokens } } },
+        Cmd.none
     | FetchedMetadataValuesForCategory results ->
         { model with
               FetchedMetadataValues = results },

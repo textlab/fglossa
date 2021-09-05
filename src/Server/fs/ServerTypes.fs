@@ -2,6 +2,14 @@ module ServerTypes
 
 open System.Text.RegularExpressions
 open Shared
+open Database
+
+let getConnectionString corpusCode =
+    async {
+        let code = sanitizeString corpusCode
+
+        return $"DataSource=../Corpora/corpora/{code}/{code}.sqlite"
+    }
 
 type Corpus(config: CorpusConfig) =
     // Determine the size of the corpus (or the corpora, in the case of parallel corpora)

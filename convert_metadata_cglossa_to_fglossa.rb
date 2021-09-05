@@ -13,7 +13,10 @@
 #
 # Use csvkit to create the database (with the correct data types based of analysis of the
 # data file) and import the data:
-# csvsql -t --tables texts --db sqlite:///mycorpus.sqlite --insert mycorpus_texts.tsv
+# csvsql -t -i sqlite mycorpus.tsv
+# (Change FLOAT to INT)
+# sqlite3 -init ./create_db.sql mycorpus.sqlite
+# csvsql --no-create -t --tables texts --db sqlite:///mycorpus.sqlite --insert mycorpus_texts.tsv
 #
 # To determine the column types:
 # csvstat -t --type mycorpus_texts.tsv

@@ -31,7 +31,7 @@ module SelectionTable =
             Bulma.level [ prop.style [ style.padding 20
                                        style.marginBottom 0 ]
                           prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle
-                                                                                  "All 123 texts (123,456,789 tokens) selected" ] ]
+                                                                                  $"All {model.Corpus.Config.NumTexts} texts ({model.Corpus.Config.NumTokens} tokens) selected" ] ]
                                           Bulma.levelRight pagination ] ]
 
         let table =
@@ -386,7 +386,8 @@ module MetadataMenu =
         Html.span [ Html.div [ prop.style [ style.width sidebarWidth
                                             style.paddingLeft (length.em 0.75)
                                             style.marginBottom (length.rem 0.75) ]
-                               prop.children [ Html.text "All 123 texts (123,456,789 tokens) selected"
+                               prop.children [ Html.text
+                                                   $"All {model.Corpus.Config.NumTexts} texts ({model.Corpus.Config.NumTokens} tokens) selected"
                                                showSelectionButton ] ]
                     SelectionTable.SelectionTablePopup model dispatch
                     Bulma.menu [ prop.style [ style.width sidebarWidth

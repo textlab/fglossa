@@ -10,14 +10,7 @@ open ServerTypes
 open Database
 open Shared
 
-let private getConnectionString corpusCode =
-    async {
-        let code = sanitizeString corpusCode
-
-        return $"DataSource=../Corpora/corpora/{code}/{code}.sqlite"
-    }
-
-let private metadataSelectionToParamDict (selection: Metadata.Selection) =
+let metadataSelectionToParamDict (selection: Metadata.Selection) =
     selection
     |> Map.map
         (fun key sel ->

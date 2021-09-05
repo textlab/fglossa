@@ -16,8 +16,8 @@ let createServerApi ctx =
     let logger = ctx.Logger()
     let connStr = cnf.connectionString
 
-    { GetCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig code
-      GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
+    { GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
+      GetCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig logger code
       GetMetadataForCategory =
           fun (corpusCode, categoryCode, selection) ->
               Remoting.Metadata.getMetadataForCategory logger corpusCode categoryCode selection
@@ -25,6 +25,10 @@ let createServerApi ctx =
       GetMetadataForTexts =
           fun (corpusCode, selection, columns) ->
               Remoting.Metadata.getMetadataForTexts logger corpusCode selection columns
+              |> Async.AwaitTask
+      GetTextAndTokenCount =
+          fun (corpusCode, selection) ->
+              Remoting.Corpus.getTextAndTokenCount logger corpusCode selection
               |> Async.AwaitTask
       GetSearchResults =
           fun (searchParams, pageNumbers) ->

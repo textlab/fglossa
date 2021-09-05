@@ -110,6 +110,8 @@ type CorpusConfig =
       Logo: string option
       MultiCpuBounds: uint64 [] [] option
       Name: string
+      NumTexts: int64
+      NumTokens: int64
       SearchEngine: SearchEngine
       Sizes: Map<string, uint64> }
     static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
@@ -120,6 +122,8 @@ type CorpusConfig =
           Logo = logo
           MultiCpuBounds = defaultArg multiCpuBounds None
           Name = name
+          NumTexts = 0L
+          NumTokens = 0L
           SearchEngine = defaultArg searchEngine Cwb
           Sizes = Map.empty }
 
@@ -211,6 +215,8 @@ type SearchResultInfo =
       SearchStep: int
       ResultPages: SearchResultPage [] }
 
+type TextAndTokenCounts = { NumTexts: int64; NumTokens: int64 }
+
 type ResultPageNumbers = int []
 
 type DatabaseColumn = string
@@ -224,5 +230,6 @@ type IServerApi =
       GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
       GetMetadataForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<string []>
       GetMetadataForTexts: CorpusCode * Metadata.Selection * DatabaseColumn list -> Async<string [] []>
+      GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts>
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       SearchCorpus: SearchParams -> Async<SearchResultInfo> }
