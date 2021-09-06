@@ -406,19 +406,29 @@ module MetadataMenu =
                              Title = title
                              Items = items
                              OpenCategoryCode = model.OpenMetadataCategoryCode
-                             MetadataSelection = model.Search.MetadataSelection
+                             MetadataSelection = model.Search.Params.MetadataSelection
                              FetchedMetadataValues = model.FetchedMetadataValues
                              Dispatch = dispatch |}
                   | StringSelect category ->
                       let isOpen =
                           (Some category.Code = model.OpenMetadataCategoryCode)
 
-                      stringSelect category isOpen model.Search.MetadataSelection model.FetchedMetadataValues dispatch
+                      stringSelect
+                          category
+                          isOpen
+                          model.Search.Params.MetadataSelection
+                          model.FetchedMetadataValues
+                          dispatch
                   | NumberSelect category ->
                       let isOpen =
                           (Some category.Code = model.OpenMetadataCategoryCode)
 
-                      numberSelect category isOpen model.Search.MetadataSelection model.FetchedMetadataValues dispatch
+                      numberSelect
+                          category
+                          isOpen
+                          model.Search.Params.MetadataSelection
+                          model.FetchedMetadataValues
+                          dispatch
                   | Interval category -> (interval category dispatch)
                   | FreeTextSearch category -> (freeTextSearch category dispatch) ]
 

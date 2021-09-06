@@ -44,7 +44,8 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                   "Queries"
                   => (searchParams.Queries
                       |> Array.map (fun q -> q.QueryString))
-                  "Metadata" => searchParams.Metadata ]
+                  "Metadata"
+                  => searchParams.MetadataSelection.ToString() ]
 
             let searchId =
                 if searchParams.SearchId = 0 then

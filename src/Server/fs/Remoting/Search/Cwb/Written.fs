@@ -131,7 +131,15 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
 
                         let cqpInitCommands =
                             [ yield!
-                                constructQueryCommands corpus searchParams namedQuery startpos endpos None (Some cpu)
+                                constructQueryCommands
+                                    logger
+                                    corpus
+                                    searchParams
+                                    namedQuery
+                                    startpos
+                                    endpos
+                                    None
+                                    (Some cpu)
                               match searchParams.NumRandomHits with
                               | Some numRandomHits ->
                                   yield!

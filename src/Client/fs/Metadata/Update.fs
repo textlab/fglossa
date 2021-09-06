@@ -51,7 +51,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         let cmd =
             Cmd.OfAsync.perform
                 serverApi.GetMetadataForCategory
-                (model.Corpus.Config.Code, category.Code, model.Search.MetadataSelection)
+                (model.Corpus.Config.Code, category.Code, model.Search.Params.MetadataSelection)
                 FetchedMetadataValuesForCategory
 
         model, cmd
@@ -59,7 +59,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         let cmd =
             Cmd.OfAsync.perform
                 serverApi.GetTextAndTokenCount
-                (model.Corpus.Config.Code, model.Search.MetadataSelection)
+                (model.Corpus.Config.Code, model.Search.Params.MetadataSelection)
                 FetchedTextAndTokenCounts
 
         model, cmd
@@ -75,7 +75,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         Cmd.none
     | ToggleExclude category ->
         let newMetadataSelection =
-            model.Search.MetadataSelection
+            model.Search.Params.MetadataSelection
             |> Map.change
                 category.Code
                 (fun maybeCategorySelection ->
@@ -88,12 +88,14 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         { model with
               Search =
                   { model.Search with
-                        MetadataSelection = newMetadataSelection } },
+                        Params =
+                            { model.Search.Params with
+                                  MetadataSelection = newMetadataSelection } } },
         Cmd.ofMsg FetchTextAndTokenCounts
     | SelectItem (category, selectedOption) ->
         let newCategorySelection =
             // Find the already selected values for this category, if any, and append the new one
-            match model.Search.MetadataSelection.TryFind category.Code with
+            match model.Search.Params.MetadataSelection.TryFind category.Code with
             | Some categorySelection ->
                 let newChoices =
                     Array.append categorySelection.Choices [| selectedOption |]
@@ -106,21 +108,23 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                   ShouldExclude = false }
 
         let newSelection =
-            model.Search.MetadataSelection
+            model.Search.Params.MetadataSelection
             |> Map.add category.Code newCategorySelection
 
         let newModel =
             { model with
                   Search =
                       { model.Search with
-                            MetadataSelection = newSelection } }
+                            Params =
+                                { model.Search.Params with
+                                      MetadataSelection = newSelection } } }
 
         let cmd = Cmd.ofMsg FetchTextAndTokenCounts
 
         newModel, cmd
     | DeselectItem (category, optionToRemove) ->
         let maybeNewCategorySelection =
-            model.Search.MetadataSelection.TryFind(category.Code)
+            model.Search.Params.MetadataSelection.TryFind(category.Code)
             |> Option.map
                 (fun categorySelection ->
                     let newCategoryChoices =
@@ -136,16 +140,18 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                 // If removing the option left the selection for this category empty, remove the whole
                 // category; otherwise set the new category selection
                 if categorySelection.Choices.Length > 0 then
-                    model.Search.MetadataSelection.Add(category.Code, categorySelection)
+                    model.Search.Params.MetadataSelection.Add(category.Code, categorySelection)
                 else
-                    model.Search.MetadataSelection.Remove(category.Code)
-            | None -> model.Search.MetadataSelection
+                    model.Search.Params.MetadataSelection.Remove(category.Code)
+            | None -> model.Search.Params.MetadataSelection
 
         let newModel =
             { model with
                   Search =
                       { model.Search with
-                            MetadataSelection = newSelection } }
+                            Params =
+                                { model.Search.Params with
+                                      MetadataSelection = newSelection } } }
 
         let cmd = Cmd.ofMsg FetchTextAndTokenCounts
 
@@ -153,14 +159,16 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
     | DeselectAllItems category ->
         let newSelection =
             // Remove the given category from the metadata selection
-            model.Search.MetadataSelection
+            model.Search.Params.MetadataSelection
             |> Map.remove category.Code
 
         let newModel =
             { model with
                   Search =
                       { model.Search with
-                            MetadataSelection = newSelection } }
+                            Params =
+                                { model.Search.Params with
+                                      MetadataSelection = newSelection } } }
 
         let cmd = Cmd.ofMsg FetchTextAndTokenCounts
 
@@ -173,7 +181,10 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         let cmd =
             Cmd.OfAsync.perform
                 serverApi.GetMetadataForTexts
-                (model.Corpus.Config.Code, model.Search.MetadataSelection, columns, model.SelectionTablePageNumber)
+                (model.Corpus.Config.Code,
+                 model.Search.Params.MetadataSelection,
+                 columns,
+                 model.SelectionTablePageNumber)
                 FetchedMetadataForTexts
 
         model, cmd

@@ -166,7 +166,7 @@ type SearchParams =
       CpuCounts: uint64 [] option
       End: uint64
       LastCount: uint64 option
-      Metadata: string option
+      MetadataSelection: Metadata.Selection
       NumRandomHits: uint64 option
       PageSize: int
       Queries: Query []
@@ -189,7 +189,7 @@ type SearchParams =
           CpuCounts = None
           End = 99UL
           LastCount = None
-          Metadata = None
+          MetadataSelection = Map.empty
           NumRandomHits = None
           PageSize = 50
           Queries = [| Query.Init(languageCode) |]

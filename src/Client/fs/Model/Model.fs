@@ -52,11 +52,9 @@ type SearchInterface =
 
 type Search =
     { Interface: SearchInterface
-      MetadataSelection: Metadata.Selection
       Params: SearchParams }
     static member Init(corpusConfig: CorpusConfig) =
         { Interface = Simple
-          MetadataSelection = Map.empty
           Params = SearchParams.Init(corpusConfig) }
 
 type CwbAttributeMenu = CwbAttributeMenu.AttributeSection list

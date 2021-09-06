@@ -12,6 +12,9 @@ open Database
 open Shared
 open ServerTypes
 open Remoting.Search.Common
+open Remoting.Metadata
+
+type TextBounds = { Startpos: int64; Endpos: int64 }
 
 let cwbCorpusName (corpus: Corpus) (queries: Query seq) =
     let uppercaseCode = corpus.Config.Code.ToUpper()
@@ -81,40 +84,61 @@ let buildMultilingualQuery (corpus: Corpus) (queries: Query []) (sTag: string) =
 // the same category and an AND relationship between categories. Also restricts the positions to the start
 // and end positions provided in the request.
 let printPositionsMatchingMetadata
+    (logger: ILogger)
     (corpus: Corpus)
     (searchParams: SearchParams)
     (startpos: uint64)
     (endpos: uint64)
     (positionsFilename: string)
     =
-    File.Delete(positionsFilename)
+    task {
+        File.Delete(positionsFilename)
 
-    match searchParams.Metadata with
-    | Some metadata ->
-        let positionFields =
+        if searchParams.MetadataSelection.Count > 0 then
+            let! connStr = getConnectionString corpus.Config.Code
+
+            use conn = new SQLiteConnection(connStr)
+
+            let positionFields =
+                match corpus.Config.Modality with
+                | Spoken -> $"replace(replace(`bounds`, '-', '\t'), ':', '\n')"
+                | Written -> $"startpos as Startpos, endpos as Endpos"
+
+            let metadataSelectionSql =
+                generateMetadataSelectionSql None searchParams.MetadataSelection
+
+            let sql =
+                $"SELECT {positionFields} FROM texts WHERE 1 = 1{metadataSelectionSql}"
+
+            let parameters =
+                metadataSelectionToParamDict searchParams.MetadataSelection
+
+            let! res = query logger conn sql (Some parameters)
+
+            match res with
+            | Ok (values: TextBounds seq) ->
+                values
+                |> Seq.map (fun (bounds: TextBounds) -> $"{bounds.Startpos}\t{bounds.Endpos}")
+                |> fun lines -> File.WriteAllLines(positionsFilename, lines)
+            | Error ex -> return raise ex
+        else
+            // No metadata selected
             match corpus.Config.Modality with
-            | Spoken -> $"replace(replace(`bounds`, '-', '\t'), ':', '\n')"
-            | Written -> $"startpos, endpos"
+            | Spoken -> failwith "NOT IMPLEMENTED"
+            | Written ->
+                // For written corpora, simply search the entire corpus by just printing the start and end
+                // positions specified in the request, making sure that the end position does not exceed the size
+                // of the corpus
+                let cwbCorpus =
+                    (cwbCorpusName corpus searchParams.Queries)
+                        .ToLower()
 
-        let sql = $"SELECT DISTINCT({positionFields})"
-        failwith "NOT IMPLEMENTED"
-    | None ->
-        // No metadata selected
-        match corpus.Config.Modality with
-        | Spoken -> failwith "NOT IMPLEMENTED"
-        | Written ->
-            // For written corpora, simply search the entire corpus by just printing the start and end
-            // positions specified in the request, making sure that the end position does not exceed the size
-            // of the corpus
-            let cwbCorpus =
-                (cwbCorpusName corpus searchParams.Queries)
-                    .ToLower()
-
-            match corpus.Config.Sizes.TryFind(cwbCorpus) with
-            | Some corpusSize ->
-                let endpos' = Math.Min(endpos, corpusSize - 1UL)
-                File.WriteAllText(positionsFilename, $"{startpos}\t{endpos'}\n")
-            | None -> failwith $"No corpus size found for {cwbCorpus} in {corpus.Config.Sizes}!"
+                match corpus.Config.Sizes.TryFind(cwbCorpus) with
+                | Some corpusSize ->
+                    let endpos' = Math.Min(endpos, corpusSize - 1UL)
+                    File.WriteAllText(positionsFilename, $"{startpos}\t{endpos'}\n")
+                | None -> failwith $"No corpus size found for {cwbCorpus} in {corpus.Config.Sizes}!"
+    }
 
 let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes: Cwb.PositionalAttribute list option) =
     let createAttrString (attributes: Cwb.PositionalAttribute list) =
@@ -207,6 +231,7 @@ let sortCommand (namedQuery: string) (sortKey: SortKey) =
               $"sort {namedQuery} by word %%c{c}" ])
 
 let constructQueryCommands
+    (logger: ILogger)
     (corpus: Corpus)
     (searchParams: SearchParams)
     (namedQuery: string)
@@ -234,7 +259,11 @@ let constructQueryCommands
         [ $"undump {namedQuery} < '{positionsFilename}'"
           namedQuery ]
 
-    printPositionsMatchingMetadata corpus searchParams startpos endpos positionsFilename
+    let res =
+        printPositionsMatchingMetadata logger corpus searchParams startpos endpos positionsFilename
+
+    res.Wait()
+
     initCommands @ [ $"{namedQuery} = {queryStr}" ]
 
 
