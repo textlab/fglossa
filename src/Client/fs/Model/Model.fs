@@ -151,7 +151,8 @@ type LoadedCorpusModel =
       Search: Search
       ShouldShowMetadataMenu: bool option
       SelectionTablePageNumber: int
-      Substate: LoadedCorpusSubstate }
+      Substate: LoadedCorpusSubstate
+      TextIdInQuickView: string option }
 
 type Model =
     | LoadingCorpus

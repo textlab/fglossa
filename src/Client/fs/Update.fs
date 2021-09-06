@@ -52,7 +52,8 @@ module LoadingCorpus =
                   Search = Search.Init(corpus.Config)
                   ShouldShowMetadataMenu = None
                   SelectionTablePageNumber = 1
-                  Substate = CorpusStart }
+                  Substate = CorpusStart
+                  TextIdInQuickView = None }
 
             LoadedCorpus m, Cmd.none
 
@@ -393,13 +394,24 @@ module LoadedCorpus =
                       { Name = category.Name
                         Code = category.Code } ]
 
-            let cmd =
-                Cmd.OfAsync.perform
-                    serverApi.GetMetadataForSingleText
-                    (model.Corpus.Config.Code, categories, textId)
-                    FetchedMetadataForText
+            let newModel, cmd =
+                match model.TextIdInQuickView with
+                | Some textIdInQuickView when textIdInQuickView = textId ->
+                    // We were already showing metadata for this text, so close the quickview instead
+                    { model with TextIdInQuickView = None },
+                    Cmd.ofMsg (
+                        ShowingResultsMsg(ShowingResults.ConcordanceMsg(ShowingResults.Concordance.CloseQuickView))
+                    )
+                | _ ->
+                    // We were NOT already showing metadata for this text, so mark it as being shown and fetch its metadata
+                    { model with
+                          TextIdInQuickView = Some textId },
+                    Cmd.OfAsync.perform
+                        serverApi.GetMetadataForSingleText
+                        (model.Corpus.Config.Code, categories, textId)
+                        FetchedMetadataForText
 
-            model, cmd
+            newModel, cmd
 
         | ShowingResultsMsg msg' ->
             match model.Substate with
