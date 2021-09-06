@@ -85,7 +85,17 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                             { categorySelection with
                                   ShouldExclude = not categorySelection.ShouldExclude }))
 
+        let openMetadataCategoryCode, fetchedMetadataValues =
+            match model.OpenMetadataCategoryCode with
+            | Some openCategoryCode when openCategoryCode <> category.Code ->
+                // Some other category was open when we toggled exclude for this one, so close
+                // the other category and empty the array of fetched metadata values
+                None, [||]
+            | _ -> model.OpenMetadataCategoryCode, model.FetchedMetadataValues
+
         { model with
+              FetchedMetadataValues = fetchedMetadataValues
+              OpenMetadataCategoryCode = openMetadataCategoryCode
               Search =
                   { model.Search with
                         Params =
