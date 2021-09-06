@@ -792,8 +792,7 @@ module LoadedCorpus =
             { model with
                   Search = Search.Init(model.Corpus.Config)
                   Substate = CorpusStart },
-            Cmd.none
-
+            Cmd.ofMsg (MetadataMsg Update.Metadata.FetchTextAndTokenCounts)
 
         | FetchedhMetadataForText metadata ->
             // TODO: Find a better way to handle this!
