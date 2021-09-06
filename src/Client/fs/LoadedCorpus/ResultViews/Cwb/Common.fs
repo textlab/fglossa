@@ -2,6 +2,7 @@ module View.LoadedCorpus.ResultViews.Cwb.Common
 
 open System.Text.RegularExpressions
 open Feliz
+open Update.LoadedCorpus.ShowingResults.Concordance
 
 type ResultLineFields =
     { SId: string
@@ -13,7 +14,7 @@ type ResultInfo =
     { Word: ResultLineFields
       MaybeOrig: ResultLineFields option }
 
-let idColumn sId rowIndex =
+let idColumn sId rowIndex (dispatch: Msg -> unit) =
     // If the 'match' property is defined, we know that we have a result from a monolingual
     // search or the first language of a multilingual one. If that is the case, and s-id is
     // defined, we print it in the first column (if we have a non-first language result, we
@@ -24,7 +25,10 @@ let idColumn sId rowIndex =
     let textId = Regex.Replace(sId, "\..+", "")
 
     Html.div [ Html.a [ prop.href ""
-                        prop.onClick (fun _ -> ())
+                        prop.onClick
+                            (fun e ->
+                                e.preventDefault ()
+                                dispatch (FetchMetadataForText textId))
                         prop.children [ Html.span textId ] ] ]
 // TODO: Show corpus-specific result links
 

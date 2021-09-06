@@ -74,6 +74,8 @@ module LoadedCorpus =
                 | SetPaginatorPage of int option
                 | SetContextSizeTextValue of string
                 | SetContextSize of int
+                | FetchMetadataForText of textId: string
+                | CloseQuickView
 
             let update (msg: Msg) (model: ConcordanceModel) : ConcordanceModel * Cmd<Msg> =
                 let registerResultPages results =
@@ -144,10 +146,6 @@ module LoadedCorpus =
                               SearchParams = newSearchParams }
 
                     newModel, cmd
-
-                | SetContextSizeTextValue v -> { model with ContextSizeTextValue = v }, Cmd.none
-
-                | SetContextSize _ -> failwith "The SetContextSize message should be handled by a parent!"
 
                 // Fetch a window of search result pages centred on centrePageNo. Ignores pages that have
                 // already been fetched or that are currently being fetched in another request (note that such
@@ -266,6 +264,17 @@ module LoadedCorpus =
 
                     newModel, cmd
 
+                | SetContextSizeTextValue v -> { model with ContextSizeTextValue = v }, Cmd.none
+
+                | SetContextSize _ -> failwith "The SetContextSize message should be handled by a parent!"
+
+                | FetchMetadataForText _ -> failwith "The FetchMetadataForText message should be handled by a parent!"
+
+                | CloseQuickView ->
+                    { model with
+                          ShouldShowQuickView = false },
+                    Cmd.none
+
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults
         ///////////////////////////////////////////
@@ -353,7 +362,7 @@ module LoadedCorpus =
         | CwbExtendedToggleAttrModal of maybeTermIndex: int option
         | Search
         | ResetForm
-
+        | FetchedhMetadataForText of Metadata.CategoryNameAndValue list
 
     let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
         match msg with
@@ -375,6 +384,22 @@ module LoadedCorpus =
                                 Params = newSearchParams } }
 
             newModel, Cmd.ofMsg Search
+
+        // The FetchMetadataForText message is dispatched from the concordance view, but needs to be handled here
+        // where the corpus info is available
+        | ShowingResultsMsg (ShowingResults.ConcordanceMsg (ShowingResults.Concordance.FetchMetadataForText textId)) ->
+            let (categories: Metadata.CategoryNameAndCode list) =
+                [ for category in model.Corpus.MetadataQuickView ->
+                      { Name = category.Name
+                        Code = category.Code } ]
+
+            let cmd =
+                Cmd.OfAsync.perform
+                    serverApi.GetMetadataForSingleText
+                    (model.Corpus.Config.Code, categories, textId)
+                    FetchedhMetadataForText
+
+            model, cmd
 
         | ShowingResultsMsg msg' ->
             match model.Substate with
@@ -745,7 +770,8 @@ module LoadedCorpus =
                                   ShowingResultsModel.Init(
                                       searchParams,
                                       numSteps,
-                                      string model.Search.Params.ContextSize
+                                      string model.Search.Params.ContextSize,
+                                      []
                                   )
                               ) }
 
@@ -769,7 +795,30 @@ module LoadedCorpus =
             Cmd.none
 
 
+        | FetchedhMetadataForText metadata ->
+            // TODO: Find a better way to handle this!
+            let newModel =
+                { model with
+                      Substate =
+                          match model.Substate with
+                          | ShowingResults showingResultsModel ->
+                              let newShowingResultsModel =
+                                  let resultTab =
+                                      match showingResultsModel.ActiveTab with
+                                      | Concordance concordanceModel ->
+                                          Concordance
+                                              { concordanceModel with
+                                                    QuickViewMetadata = metadata
+                                                    ShouldShowQuickView = true }
+                                      | _ -> failwith "Wrong model"
 
+                                  { showingResultsModel with
+                                        ActiveTab = resultTab }
+
+                              ShowingResults newShowingResultsModel
+                          | _ -> failwith "Wrong model" }
+
+            newModel, Cmd.none
 
 ////////////////////////////////
 // Update

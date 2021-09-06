@@ -74,6 +74,9 @@ module Metadata =
     type CategoryCode = string
     type StringSelectOption = { Name: string; Value: string }
 
+    type CategoryNameAndCode = { Name: string; Code: string }
+    type CategoryNameAndValue = StringSelectOption
+
     type CategorySelection =
         { Choices: StringSelectOption []
           ShouldExclude: bool }
@@ -223,6 +226,8 @@ type DatabaseColumn = string
 
 type PageNumber = int
 
+type TextId = string
+
 module Route =
     let builder typeName methodName =
         sprintf "/glossa3/api/%s/%s" typeName methodName
@@ -232,6 +237,7 @@ type IServerApi =
       GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
       GetMetadataForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<string []>
       GetMetadataForTexts: CorpusCode * Metadata.Selection * DatabaseColumn list * PageNumber -> Async<string [] []>
+      GetMetadataForSingleText: CorpusCode * Metadata.CategoryNameAndCode list * TextId -> Async<Metadata.CategoryNameAndValue list>
       GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts>
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       SearchCorpus: SearchParams -> Async<SearchResultInfo> }

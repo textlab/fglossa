@@ -179,6 +179,26 @@ module ResultsView =
         /// View.LoadedCorpus.ResultsView.Concordance.view
         ////////////////////////////////////////////////////
         let view (model: ConcordanceModel) (corpus: Corpus) (dispatch: ShowingResults.Concordance.Msg -> unit) =
+            let quickView =
+                QuickView.quickview [ if model.ShouldShowQuickView then
+                                          yield quickview.isActive
+                                      yield
+                                          prop.children [ QuickView.header [ Html.div [ prop.style [ style.fontSize 16
+                                                                                                     style.fontWeight.bold ]
+                                                                                        prop.text "Metadata" ]
+                                                                             Bulma.delete [ prop.onClick
+                                                                                                (fun _ ->
+                                                                                                    dispatch
+                                                                                                        ShowingResults.Concordance.CloseQuickView) ] ]
+                                                          QuickView.body [ QuickView.block [ Bulma.table [ prop.style [ style.margin
+                                                                                                                            5 ]
+                                                                                                           prop.children [ for category in
+                                                                                                                               model.QuickViewMetadata ->
+                                                                                                                               Html.tr [ Html.td
+                                                                                                                                             category.Name
+                                                                                                                                         Html.td
+                                                                                                                                             category.Value ] ] ] ] ] ] ]
+
             let numPages = model.NumResultPages()
 
             let resultsInfo =
@@ -233,7 +253,8 @@ module ResultsView =
             let resultPage =
                 model.ResultPages.TryFind(model.ResultPageNo)
 
-            [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.buttons [ Bulma.button.button [ prop.text
+            [ quickView
+              Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.buttons [ Bulma.button.button [ prop.text
                                                                                                           "Sort by position" ]
                                                                                 Bulma.button.button [ prop.text
                                                                                                           "Download" ] ] ]
@@ -241,7 +262,7 @@ module ResultsView =
                             Bulma.levelRight [ if corpus.Config.Modality <> Spoken then
                                                    yield! contextSelector
                                                yield! pagination model isSearchingOrFetching numPages dispatch ] ]
-              LoadedCorpus.ResultViews.Cwb.Written.concordanceTable corpus resultPage ]
+              LoadedCorpus.ResultViews.Cwb.Written.concordanceTable corpus resultPage dispatch ]
 
 
     let tabs (model: ShowingResultsModel) (dispatch: ShowingResults.Msg -> unit) =
@@ -263,7 +284,8 @@ module ResultsView =
                                                                              ConcordanceModel.Init(
                                                                                  model.SearchParams,
                                                                                  model.NumSteps,
-                                                                                 string model.SearchParams.ContextSize
+                                                                                 string model.SearchParams.ContextSize,
+                                                                                 []
                                                                              )
                                                                          )
                                                                      )

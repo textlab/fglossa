@@ -63,16 +63,20 @@ type Corpus =
     { Config: CorpusConfig
       CwbAttributeMenu: CwbAttributeMenu option
       MetadataMenu: Metadata.MenuItem list
-      MetadataTable: Metadata.Category list }
+      MetadataTable: Metadata.Category list
+      MetadataQuickView: Metadata.Category list }
     static member Init(config) =
         { Config = config
           CwbAttributeMenu = None
           MetadataMenu = []
-          MetadataTable = [] }
+          MetadataTable = []
+          MetadataQuickView = [] }
 
 type ConcordanceModel =
     { ContextSizeTextValue: string
       IsSearching: bool
+      QuickViewMetadata: Metadata.CategoryNameAndValue list
+      ShouldShowQuickView: bool
       // The page numbers of the result pages currently being fetched from the server
       NumResults: uint64 option
       NumSteps: int
@@ -87,9 +91,11 @@ type ConcordanceModel =
       ResultPageNo: int
       ResultPages: Map<int, SearchResult []>
       SearchParams: SearchParams }
-    static member Init(searchParams, numSteps, contextSizeTextValue) =
+    static member Init(searchParams, numSteps, contextSizeTextValue, quickViewMetadata) =
         { ContextSizeTextValue = contextSizeTextValue
           IsSearching = true
+          QuickViewMetadata = quickViewMetadata
+          ShouldShowQuickView = false
           NumResults = None
           NumSteps = numSteps
           PagesBeingFetched = [||]
@@ -117,8 +123,14 @@ type ShowingResultsModel =
       SearchParams: SearchParams
       SearchResults: SearchResultInfo option
       NumSteps: int }
-    static member Init((searchParams: SearchParams, numSteps: int, contextSizeTextValue: string)) =
-        { ActiveTab = Concordance(ConcordanceModel.Init(searchParams, numSteps, contextSizeTextValue))
+    static member Init
+        ((searchParams: SearchParams,
+          numSteps: int,
+          contextSizeTextValue: string,
+          quickViewMetadata: Metadata.CategoryNameAndValue list))
+        =
+        { ActiveTab =
+              Concordance(ConcordanceModel.Init(searchParams, numSteps, contextSizeTextValue, quickViewMetadata))
           SearchParams = searchParams
           SearchResults = None
           NumSteps = numSteps }

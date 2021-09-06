@@ -5,6 +5,7 @@ open Feliz
 open Feliz.Bulma
 open Shared
 open Model
+open Update.LoadedCorpus.ShowingResults.Concordance
 open View.LoadedCorpus.ResultViews.Cwb.Common
 
 /// Processes a pre-match, match, or post-match field.
@@ -109,10 +110,10 @@ let private extractFields resultText =
     (sId, pre, searchWord, post)
 
 
-let private mainRow (resultLineFields: ResultLineFields) index =
+let private mainRow (resultLineFields: ResultLineFields) index dispatch =
     Html.tr [ Html.td [ prop.style [ style.textAlign.center
                                      style.verticalAlign.middle ]
-                        prop.children [ idColumn resultLineFields.SId index ] ]
+                        prop.children [ idColumn resultLineFields.SId index dispatch ] ]
               yield! textColumns resultLineFields ]
 
 
@@ -130,6 +131,7 @@ let private singleResultRows
     maybeFontFamily
     (searchResult: SearchResult)
     index
+    dispatch
     =
     match searchResult.Text with
     // Only one line per search result
@@ -142,7 +144,8 @@ let private singleResultRows
               SearchWord = processField wordIndex maybeOrigCorrIndex maybeLemmaIndex maybeFontFamily searchWord
               PostMatch = processField wordIndex maybeOrigCorrIndex maybeLemmaIndex maybeFontFamily post }
 
-        let wordRow = mainRow processedWordFields index
+        let wordRow =
+            mainRow processedWordFields index dispatch
 
         match maybeOrigCorrIndex with
         | Some origCorrIndex ->
@@ -167,7 +170,8 @@ let private singleResultRows
               SearchWord = processField wordIndex maybeOrigCorrIndex maybeLemmaIndex maybeFontFamily searchWord
               PostMatch = processField wordIndex maybeOrigCorrIndex maybeLemmaIndex maybeFontFamily post }
 
-        let mainTableRow = mainRow processedWordFields index
+        let mainTableRow =
+            mainRow processedWordFields index dispatch
 
         let otherTableRows =
             otherLines
@@ -178,7 +182,7 @@ let private singleResultRows
     | [] -> []
 
 
-let concordanceTable (corpus: Corpus) (pageResults: SearchResult [] option) =
+let concordanceTable (corpus: Corpus) (pageResults: SearchResult [] option) (dispatch: Msg -> unit) =
     let wordIndex = 0 // word form is always the first attribute
 
     // We need to increment lemmaIndex and origIndex since the first attribute ('word') is
@@ -210,7 +214,14 @@ let concordanceTable (corpus: Corpus) (pageResults: SearchResult [] option) =
             |> List.indexed
             |> List.collect
                 (fun (index, result) ->
-                    singleResultRows wordIndex maybeOrigIndex maybeLemmaIndex corpus.Config.FontFamily result index)
+                    singleResultRows
+                        wordIndex
+                        maybeOrigIndex
+                        maybeLemmaIndex
+                        corpus.Config.FontFamily
+                        result
+                        index
+                        dispatch)
         | None -> []
 
     Bulma.table [ table.isStriped

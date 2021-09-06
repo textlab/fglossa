@@ -93,7 +93,7 @@ let getMetadataForTexts
             generateMetadataSelectionSql None selection
 
         let sql =
-            $"SELECT {columnSql} FROM texts WHERE 1 = 1{metadataSelectionSql} ORDER BY tid limit {limit} OFFSET {offset}"
+            $"SELECT {columnSql} FROM texts WHERE 1 = 1{metadataSelectionSql} ORDER BY tid LIMIT {limit} OFFSET {offset}"
 
         let parameters = metadataSelectionToParamDict selection
 
@@ -115,5 +115,46 @@ let getMetadataForTexts
                                   let text = row.[column] |> string
                                   if text <> "\N" then text else "" |] |]
                 | None -> [||]
+        | Error ex -> return raise ex
+    }
+
+let getMetadataForSingleText
+    (logger: ILogger)
+    (corpusCode: string)
+    (categories: Metadata.CategoryNameAndCode list)
+    (textId: string)
+    : Task<Metadata.CategoryNameAndValue list> =
+
+    task {
+        let! connStr = getConnectionString corpusCode
+
+        use conn = new SQLiteConnection(connStr)
+
+        let sql =
+            $"SELECT * FROM texts WHERE tid = @tid LIMIT 1"
+
+        let parameters = [ "tid" => textId ] |> dict
+
+        // Since each corpus has a different set of metadata categories, we cannot use the 'query'
+        // function, which requires the result rows to conform to a specific type. Instead, we use
+        // 'queryDynamic' and cast the resulting DapperRow objects to a dictionary in order to
+        // access the results (see below).
+        let! res = queryDynamic logger conn sql (Some parameters)
+
+        match res with
+        | Ok maybeRows ->
+            return
+                match maybeRows with
+                | Some rows ->
+                    // Since the results of queryDynamic are DapperRow objects, which implement
+                    // IDictionary<string, obj>, we cast to that in order to access the data dynamically
+                    let row: IDictionary<string, obj> = rows |> Seq.cast |> Seq.head
+
+                    [ for category in categories ->
+                          let text = row.[category.Code] |> string
+                          let value = if text <> "\N" then text else ""
+
+                          { Name = category.Name; Value = value } ]
+                | None -> []
         | Error ex -> return raise ex
     }
