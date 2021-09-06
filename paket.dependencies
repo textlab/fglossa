@@ -3,6 +3,7 @@ framework: net5.0
 storage: none
 
 nuget Fable.Remoting.Giraffe prerelease
+nuget Feliz.Bulma.QuickView
 nuget Feliz.Bulma.Tooltip
 nuget Saturn prerelease
 nuget Expecto
