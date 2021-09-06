@@ -362,7 +362,7 @@ module LoadedCorpus =
         | CwbExtendedToggleAttrModal of maybeTermIndex: int option
         | Search
         | ResetForm
-        | FetchedhMetadataForText of Metadata.CategoryNameAndValue list
+        | FetchedMetadataForText of Metadata.CategoryNameAndValue list
 
     let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
         match msg with
@@ -397,7 +397,7 @@ module LoadedCorpus =
                 Cmd.OfAsync.perform
                     serverApi.GetMetadataForSingleText
                     (model.Corpus.Config.Code, categories, textId)
-                    FetchedhMetadataForText
+                    FetchedMetadataForText
 
             model, cmd
 
@@ -795,7 +795,7 @@ module LoadedCorpus =
                   OpenMetadataCategoryCode = None },
             Cmd.ofMsg (MetadataMsg Update.Metadata.FetchTextAndTokenCounts)
 
-        | FetchedhMetadataForText metadata ->
+        | FetchedMetadataForText metadata ->
             // TODO: Find a better way to handle this!
             let newModel =
                 { model with
