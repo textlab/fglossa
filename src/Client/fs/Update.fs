@@ -791,7 +791,8 @@ module LoadedCorpus =
         | ResetForm ->
             { model with
                   Search = Search.Init(model.Corpus.Config)
-                  Substate = CorpusStart },
+                  Substate = CorpusStart
+                  OpenMetadataCategoryCode = None },
             Cmd.ofMsg (MetadataMsg Update.Metadata.FetchTextAndTokenCounts)
 
         | FetchedhMetadataForText metadata ->
