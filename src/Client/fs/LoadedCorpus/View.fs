@@ -173,32 +173,52 @@ module ResultsView =
                                        | (false, _) -> ignore None)
                                ) ]
 
+        [<ReactComponent>]
+        let MetadataQuickView (model: ConcordanceModel) dispatch =
+            let elementRef = React.useElementRef ()
+
+            let focusQuickView () =
+                elementRef.current
+                |> Option.iter
+                    (fun quickViewElement ->
+                        if model.ShouldShowQuickView then
+                            quickViewElement.focus ())
+
+            // Focus the QuickView when mounted to enable it to receive keyboard events
+            React.useEffect (focusQuickView, [| box model |])
+
+            QuickView.quickview [ if model.ShouldShowQuickView then
+                                      quickview.isActive
+                                  // Set elementRef in order to apply the focusQuickView() function to this element
+                                  prop.ref elementRef
+                                  // Set tabIndex so that the lement receives keyboard events
+                                  prop.tabIndex 0
+                                  prop.onKeyUp
+                                      (fun e ->
+                                          if e.key = "Escape" then
+                                              dispatch ShowingResults.Concordance.CloseQuickView)
+                                  prop.children [ QuickView.header [ Html.div [ prop.style [ style.fontSize 16
+                                                                                             style.fontWeight.bold ]
+                                                                                prop.text "Metadata" ]
+                                                                     Bulma.delete [ prop.onClick
+                                                                                        (fun _ ->
+                                                                                            dispatch
+                                                                                                ShowingResults.Concordance.CloseQuickView) ] ]
+                                                  QuickView.body [ QuickView.block [ Bulma.table [ prop.style [ style.margin
+                                                                                                                    5 ]
+                                                                                                   prop.children [ Html.tbody [ for category in
+                                                                                                                                    model.QuickViewMetadata ->
+                                                                                                                                    Html.tr [ Html.td
+                                                                                                                                                  category.Name
+                                                                                                                                              Html.td
+                                                                                                                                                  category.Value ] ] ] ] ] ] ] ]
+
 
 
         ////////////////////////////////////////////////////
         /// View.LoadedCorpus.ResultsView.Concordance.view
         ////////////////////////////////////////////////////
         let view (model: ConcordanceModel) (corpus: Corpus) (dispatch: ShowingResults.Concordance.Msg -> unit) =
-            let quickView =
-                QuickView.quickview [ if model.ShouldShowQuickView then
-                                          yield quickview.isActive
-                                      yield
-                                          prop.children [ QuickView.header [ Html.div [ prop.style [ style.fontSize 16
-                                                                                                     style.fontWeight.bold ]
-                                                                                        prop.text "Metadata" ]
-                                                                             Bulma.delete [ prop.onClick
-                                                                                                (fun _ ->
-                                                                                                    dispatch
-                                                                                                        ShowingResults.Concordance.CloseQuickView) ] ]
-                                                          QuickView.body [ QuickView.block [ Bulma.table [ prop.style [ style.margin
-                                                                                                                            5 ]
-                                                                                                           prop.children [ for category in
-                                                                                                                               model.QuickViewMetadata ->
-                                                                                                                               Html.tr [ Html.td
-                                                                                                                                             category.Name
-                                                                                                                                         Html.td
-                                                                                                                                             category.Value ] ] ] ] ] ] ]
-
             let numPages = model.NumResultPages()
 
             let resultsInfo =
@@ -253,7 +273,7 @@ module ResultsView =
             let resultPage =
                 model.ResultPages.TryFind(model.ResultPageNo)
 
-            [ quickView
+            [ MetadataQuickView model dispatch
               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.buttons [ Bulma.button.button [ prop.text
                                                                                                           "Sort by position" ]
                                                                                 Bulma.button.button [ prop.text
