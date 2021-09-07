@@ -208,8 +208,10 @@ module ResultsView =
                                                                                                                     5 ]
                                                                                                    prop.children [ Html.tbody [ for category in
                                                                                                                                     model.QuickViewMetadata ->
-                                                                                                                                    Html.tr [ Html.td
+                                                                                                                                    Html.tr [ Html.td (
                                                                                                                                                   category.Name
+                                                                                                                                                  + ":"
+                                                                                                                                              )
                                                                                                                                               Html.td
                                                                                                                                                   category.Value ] ] ] ] ] ] ] ]
 
