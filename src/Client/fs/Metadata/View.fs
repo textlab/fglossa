@@ -328,12 +328,63 @@ module MetadataMenu =
     let numberSelect (category: NumberCategory) isOpen metadataSelection fetchedMetadataValues dispatch =
         MetadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
 
-    let interval (category: NumberCategory) dispatch =
-        Html.li (
-            Html.a [ prop.key category.Code
-                     prop.text category.Name
-                     prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
-        )
+    let interval (category: NumberCategory) isOpen dispatch =
+        Html.li [ Html.a [ prop.key category.Code
+                           if isOpen then
+                               prop.style [ style.lineHeight (length.em 1.7) ]
+                           prop.onClick (fun _ -> dispatch (OpenMetadataMenu category))
+                           prop.children [ Html.text category.Name
+                                           if isOpen then
+                                               Bulma.button.button [ button.isSmall
+                                                                     color.isDanger
+                                                                     prop.style [ style.marginLeft 15 ]
+                                                                     prop.title "Remove selection"
+                                                                     prop.onClick
+                                                                         (fun _ ->
+                                                                             dispatch (ToggleMetadataMenuOpen category))
+                                                                     prop.children [ Bulma.icon [ Html.i [ prop.className
+                                                                                                               "fa fa-times" ] ] ] ]
+                                           if isOpen then
+                                               Bulma.table [ table.isNarrow
+                                                             prop.style [ style.marginTop 5 ]
+                                                             prop.children (
+                                                                 Html.tbody [ Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
+                                                                                                  prop.text "From:" ]
+                                                                                        Html.td (
+                                                                                            Bulma.field.div (
+                                                                                                Bulma.control.div (
+                                                                                                    Bulma.input.number [ prop.onChange
+                                                                                                                             (fun (v: int) ->
+                                                                                                                                 dispatch (
+                                                                                                                                     SetIntervalFrom(
+                                                                                                                                         category,
+                                                                                                                                         v
+                                                                                                                                     )
+                                                                                                                                 ))
+                                                                                                                         prop.placeholder
+                                                                                                                             "1234" ]
+                                                                                                )
+                                                                                            )
+                                                                                        ) ]
+                                                                              Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
+                                                                                                  prop.text "To:" ]
+                                                                                        Html.td (
+                                                                                            Bulma.field.div (
+                                                                                                Bulma.control.div (
+                                                                                                    Bulma.input.number [ prop.onChange
+                                                                                                                             (fun (v: int) ->
+                                                                                                                                 dispatch (
+                                                                                                                                     SetIntervalTo(
+                                                                                                                                         category,
+                                                                                                                                         v
+                                                                                                                                     )
+                                                                                                                                 ))
+                                                                                                                         prop.placeholder
+                                                                                                                             "1234" ]
+                                                                                                )
+                                                                                            )
+                                                                                        ) ] ]
+                                                             ) ] ] ] ]
 
     let freeTextSearch (category: LongTextCategory) dispatch =
         Html.li (
@@ -370,7 +421,11 @@ module MetadataMenu =
                             (Some category.Code = props.OpenCategoryCode)
 
                         numberSelect category isOpen props.MetadataSelection props.FetchedMetadataValues props.Dispatch
-                    | Interval category -> interval category props.Dispatch
+                    | Interval category ->
+                        let isOpen =
+                            (Some category.Code = props.OpenCategoryCode)
+
+                        interval category isOpen props.Dispatch
                     | FreeTextSearch category -> freeTextSearch category props.Dispatch
                     | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}")
 
@@ -429,7 +484,11 @@ module MetadataMenu =
                           model.Search.Params.MetadataSelection
                           model.FetchedMetadataValues
                           dispatch
-                  | Interval category -> (interval category dispatch)
+                  | Interval category ->
+                      let isOpen =
+                          (Some category.Code = model.OpenMetadataCategoryCode)
+
+                      interval category isOpen dispatch
                   | FreeTextSearch category -> (freeTextSearch category dispatch) ]
 
         let showSelectionButton =

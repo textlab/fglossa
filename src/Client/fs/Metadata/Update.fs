@@ -15,6 +15,8 @@ type Msg =
     | SelectItem of Metadata.Category * Metadata.StringSelectOption
     | DeselectItem of Metadata.Category * Metadata.StringSelectOption
     | DeselectAllItems of Metadata.Category
+    | SetIntervalFrom of Metadata.NumberCategory * int
+    | SetIntervalTo of Metadata.NumberCategory * int
     | FetchMetadataForTexts
     | FetchedMetadataForTexts of results: string [] []
     | SetSelectionTablePage of pageNumber: int
@@ -183,6 +185,85 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         let cmd = Cmd.ofMsg FetchTextAndTokenCounts
 
         newModel, cmd
+
+    | SetIntervalFrom (category, number) ->
+        let newCategoryValues =
+            let fromValue: Metadata.StringSelectOption =
+                { Name = "glossa_interval_from"
+                  Value = string number }
+
+            // Find the already selected values for this category, if any, and append the new one
+            match model.Search.Params.MetadataSelection.TryFind category.Code with
+            | Some categoryValues ->
+                let maybeToValue =
+                    categoryValues.Choices
+                    |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_to")
+
+                let newChoices =
+                    [| fromValue
+                       match maybeToValue with
+                       | Some toValue -> toValue
+                       | None -> ignore None |]
+
+                { categoryValues with
+                      Choices = newChoices }
+            | None ->
+                { Choices = [| fromValue |]
+                  ShouldExclude = false }
+
+        let newSelection =
+            model.Search.Params.MetadataSelection
+            |> Map.add category.Code newCategoryValues
+
+        let newModel =
+            { model with
+                  Search =
+                      { model.Search with
+                            Params =
+                                { model.Search.Params with
+                                      MetadataSelection = newSelection } } }
+
+        newModel, Cmd.none
+
+    | SetIntervalTo (category, number) ->
+        let newCategoryValues =
+            let toValue: Metadata.StringSelectOption =
+                { Name = "glossa_interval_to"
+                  Value = string number }
+
+            // Find the already selected values for this category, if any, and append the new one
+            match model.Search.Params.MetadataSelection.TryFind category.Code with
+            | Some categoryValues ->
+                let maybeFromValue =
+                    categoryValues.Choices
+                    |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_from")
+
+                let newChoices =
+                    [| match maybeFromValue with
+                       | Some fromValue -> fromValue
+                       | None -> ignore None
+                       toValue |]
+
+                { categoryValues with
+                      Choices = newChoices }
+            | None ->
+                { Choices = [| toValue |]
+                  ShouldExclude = false }
+
+        let newSelection =
+            model.Search.Params.MetadataSelection
+            |> Map.add category.Code newCategoryValues
+
+        let newModel =
+            { model with
+                  Search =
+                      { model.Search with
+                            Params =
+                                { model.Search.Params with
+                                      MetadataSelection = newSelection } } }
+
+        newModel, Cmd.none
+
 
     | FetchMetadataForTexts ->
         let columns =

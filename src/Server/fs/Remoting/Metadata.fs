@@ -31,13 +31,14 @@ let generateMetadataSelectionSql (maybeRequestedCategoryCode: string option) (se
           if shouldInclude then
               let column = sanitizeString category.Key
 
-              let operator =
-                  if category.Value.ShouldExclude then
-                      "NOT IN"
-                  else
-                      "IN"
-
-              $" AND {column} {operator} @{column}" ]
+              // TODO: Test on subclasses of Category and make this more robust
+              if category.Value.Choices
+                 |> Array.exists (fun choice -> choice.Name = "glossa_interval_from") then
+                  $" AND {column} BETWEEN {int category.Value.Choices.[0].Value} AND {int category.Value.Choices.[1].Value}"
+              elif category.Value.ShouldExclude then
+                  $" AND {column} NOT IN @{column}"
+              else
+                  $" AND {column} IN @{column}" ]
     |> String.concat ""
 
 let getMetadataForCategory
