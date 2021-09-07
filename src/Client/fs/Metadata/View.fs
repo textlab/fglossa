@@ -332,7 +332,7 @@ module MetadataMenu =
         Html.li [ Html.a [ prop.key category.Code
                            if isOpen then
                                prop.style [ style.lineHeight (length.em 1.7) ]
-                           prop.onClick (fun _ -> dispatch (OpenMetadataMenu category))
+                           prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category))
                            prop.children [ Html.text category.Name
                                            if isOpen then
                                                Bulma.button.button [ button.isSmall
@@ -340,51 +340,50 @@ module MetadataMenu =
                                                                      prop.style [ style.marginLeft 15 ]
                                                                      prop.title "Remove selection"
                                                                      prop.onClick
-                                                                         (fun _ ->
-                                                                             dispatch (ToggleMetadataMenuOpen category))
+                                                                         (fun e -> dispatch (DeselectAllItems category))
                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className
-                                                                                                               "fa fa-times" ] ] ] ]
-                                           if isOpen then
-                                               Html.table [ prop.className "interval-category-table"
-                                                            prop.style [ style.marginTop 5 ]
-                                                            prop.children (
-                                                                Html.tbody [ Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
-                                                                                                 prop.text "From:" ]
-                                                                                       Html.td (
-                                                                                           Bulma.field.div (
-                                                                                               Bulma.control.div (
-                                                                                                   Bulma.input.number [ prop.onChange
-                                                                                                                            (fun (v: int) ->
-                                                                                                                                dispatch (
-                                                                                                                                    SetIntervalFrom(
-                                                                                                                                        category,
-                                                                                                                                        v
-                                                                                                                                    )
-                                                                                                                                ))
-                                                                                                                        prop.placeholder
-                                                                                                                            "1234" ]
-                                                                                               )
-                                                                                           )
-                                                                                       ) ]
-                                                                             Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
-                                                                                                 prop.text "To:" ]
-                                                                                       Html.td (
-                                                                                           Bulma.field.div (
-                                                                                               Bulma.control.div (
-                                                                                                   Bulma.input.number [ prop.onChange
-                                                                                                                            (fun (v: int) ->
-                                                                                                                                dispatch (
-                                                                                                                                    SetIntervalTo(
-                                                                                                                                        category,
-                                                                                                                                        v
-                                                                                                                                    )
-                                                                                                                                ))
-                                                                                                                        prop.placeholder
-                                                                                                                            "1234" ]
-                                                                                               )
-                                                                                           )
-                                                                                       ) ] ]
-                                                            ) ] ] ] ]
+                                                                                                               "fa fa-times" ] ] ] ] ] ]
+                  if isOpen then
+                      Html.table [ prop.className "interval-category-table"
+                                   prop.style [ style.marginTop 5
+                                                style.marginBottom 5
+                                                style.marginLeft 10 ]
+                                   prop.children (
+                                       Html.tbody [ Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
+                                                                        prop.text "From:" ]
+                                                              Html.td (
+                                                                  Bulma.field.div (
+                                                                      Bulma.control.div (
+                                                                          Bulma.input.number [ prop.onChange
+                                                                                                   (fun (v: int) ->
+                                                                                                       dispatch (
+                                                                                                           SetIntervalFrom(
+                                                                                                               category,
+                                                                                                               v
+                                                                                                           )
+                                                                                                       ))
+                                                                                               prop.placeholder "1234" ]
+                                                                      )
+                                                                  )
+                                                              ) ]
+                                                    Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
+                                                                        prop.text "To:" ]
+                                                              Html.td (
+                                                                  Bulma.field.div (
+                                                                      Bulma.control.div (
+                                                                          Bulma.input.number [ prop.onChange
+                                                                                                   (fun (v: int) ->
+                                                                                                       dispatch (
+                                                                                                           SetIntervalTo(
+                                                                                                               category,
+                                                                                                               v
+                                                                                                           )
+                                                                                                       ))
+                                                                                               prop.placeholder "1234" ]
+                                                                      )
+                                                                  )
+                                                              ) ] ]
+                                   ) ] ]
 
     let freeTextSearch (category: LongTextCategory) dispatch =
         Html.li (
