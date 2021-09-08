@@ -142,6 +142,7 @@ type LoadedCorpusSubstate =
 type LoadedCorpusModel =
     { Corpus: Corpus
       FetchedMetadataValues: string []
+      FetchedMinAndMax: (int64 * int64) option
       FetchedTextMetadata: string [] []
       IsNarrowWindow: bool
       IsSelectionTableOpen: bool

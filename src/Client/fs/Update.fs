@@ -43,6 +43,7 @@ module LoadingCorpus =
             let m =
                 { Corpus = corpus
                   FetchedMetadataValues = [||]
+                  FetchedMinAndMax = None
                   FetchedTextMetadata = [| [||] |]
                   IsNarrowWindow = false
                   IsSelectionTableOpen = false

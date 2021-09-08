@@ -9,6 +9,9 @@ type Msg =
     | ToggleMetadataMenuOpen of category: Metadata.Category
     | FetchMetadataValuesForCategory of category: Metadata.Category
     | FetchedMetadataValuesForCategory of results: string []
+    | ToggleIntervalOpen of category: Metadata.NumberCategory
+    | FetchMinAndMaxForCategory of category: Metadata.NumberCategory
+    | FetchedMinAndMaxForCategory of (int64 * int64)
     | FetchTextAndTokenCounts
     | FetchedTextAndTokenCounts of TextAndTokenCounts
     | ToggleExclude of category: Metadata.Category
@@ -57,6 +60,32 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                 FetchedMetadataValuesForCategory
 
         model, cmd
+    | FetchedMetadataValuesForCategory results ->
+        { model with
+              FetchedMetadataValues = results },
+        Cmd.none
+    | ToggleIntervalOpen category ->
+        let newCode, cmd =
+            if model.OpenMetadataCategoryCode = Some category.Code then
+                None, Cmd.none
+            else
+                Some category.Code, Cmd.ofMsg (FetchMinAndMaxForCategory category)
+
+        { model with
+              OpenMetadataCategoryCode = newCode
+              FetchedMetadataValues = [||]
+              FetchedMinAndMax = None },
+        cmd
+    | FetchMinAndMaxForCategory category ->
+        model,
+        Cmd.OfAsync.perform
+            serverApi.GetMinAndMaxForCategory
+            (model.Corpus.Config.Code, category.Code, model.Search.Params.MetadataSelection)
+            FetchedMinAndMaxForCategory
+    | FetchedMinAndMaxForCategory (min, max) ->
+        { model with
+              FetchedMinAndMax = Some(min, max) },
+        Cmd.none
     | FetchTextAndTokenCounts ->
         let cmd =
             Cmd.OfAsync.perform
@@ -70,10 +99,6 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
               NumSelectedTexts = Some counts.NumTexts
               NumSelectedTokens = Some counts.NumTokens
               SelectionTablePageNumber = 1 },
-        Cmd.none
-    | FetchedMetadataValuesForCategory results ->
-        { model with
-              FetchedMetadataValues = results },
         Cmd.none
     | ToggleExclude category ->
         let newMetadataSelection =

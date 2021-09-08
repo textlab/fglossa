@@ -236,6 +236,7 @@ type IServerApi =
     { GetCorpusConfig: CorpusCode -> Async<CorpusConfig>
       GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
       GetMetadataForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<string []>
+      GetMinAndMaxForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<int64 * int64>
       GetMetadataForTexts: CorpusCode * Metadata.Selection * DatabaseColumn list * PageNumber -> Async<string [] []>
       GetMetadataForSingleText: CorpusCode * Metadata.CategoryNameAndCode list * TextId -> Async<Metadata.CategoryNameAndValue list>
       GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts>

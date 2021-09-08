@@ -10,6 +10,8 @@ open ServerTypes
 open Database
 open Shared
 
+type MinAndMax = { Min: int64; Max: int64 }
+
 let metadataSelectionToParamDict (selection: Metadata.Selection) =
     selection
     |> Map.map
@@ -64,9 +66,42 @@ let getMetadataForCategory
 
         let! res = query logger conn sql (Some parameters)
 
-        match res with
-        | Ok values -> return values |> Seq.toArray
-        | Error ex -> return raise ex
+        return
+            match res with
+            | Ok values -> values |> Seq.toArray
+            | Error ex -> raise ex
+    }
+
+let getMinAndMaxForCategory
+    (logger: ILogger)
+    (corpusCode: string)
+    (categoryCode: string)
+    (selection: Metadata.Selection)
+    =
+    task {
+        let! connStr = getConnectionString corpusCode
+
+        use conn = new SQLiteConnection(connStr)
+
+        let catCode = sanitizeString categoryCode
+
+        let metadataSelectionSql =
+            generateMetadataSelectionSql (Some catCode) selection
+
+        let sql =
+            $"SELECT min({catCode}) as Min, max({catCode}) as Max FROM texts WHERE 1 = 1{metadataSelectionSql}"
+
+        let parameters = metadataSelectionToParamDict selection
+
+        let! res = querySingle logger conn sql (Some parameters)
+
+        return
+            match res with
+            | Ok (maybeValues: MinAndMax option) ->
+                match maybeValues with
+                | Some values -> (values.Min, values.Max)
+                | None -> failwith $"No min and max values found for category {catCode}"
+            | Error ex -> raise ex
     }
 
 let getMetadataForTexts
@@ -104,9 +139,9 @@ let getMetadataForTexts
         // access the results (see below).
         let! res = queryDynamic logger conn sql (Some parameters)
 
-        match res with
-        | Ok maybeRows ->
-            return
+        return
+            match res with
+            | Ok maybeRows ->
                 match maybeRows with
                 | Some rows ->
                     // Since the results of queryDynamic are DapperRow objects, which implement
@@ -116,7 +151,7 @@ let getMetadataForTexts
                                   let text = row.[column] |> string
                                   if text <> "\N" then text else "" |] |]
                 | None -> [||]
-        | Error ex -> return raise ex
+            | Error ex -> raise ex
     }
 
 let getMetadataForSingleText
@@ -142,9 +177,9 @@ let getMetadataForSingleText
         // access the results (see below).
         let! res = queryDynamic logger conn sql (Some parameters)
 
-        match res with
-        | Ok maybeRows ->
-            return
+        return
+            match res with
+            | Ok maybeRows ->
                 match maybeRows with
                 | Some rows ->
                     // Since the results of queryDynamic are DapperRow objects, which implement
@@ -157,5 +192,5 @@ let getMetadataForSingleText
 
                           { Name = category.Name; Value = value } ]
                 | None -> []
-        | Error ex -> return raise ex
+            | Error ex -> raise ex
     }
