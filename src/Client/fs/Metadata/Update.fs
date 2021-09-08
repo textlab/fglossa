@@ -18,8 +18,8 @@ type Msg =
     | SelectItem of Metadata.Category * Metadata.StringSelectOption
     | DeselectItem of Metadata.Category * Metadata.StringSelectOption
     | DeselectAllItems of Metadata.Category
-    | SetIntervalFrom of Metadata.NumberCategory * int
-    | SetIntervalTo of Metadata.NumberCategory * int
+    | SetIntervalFrom of Metadata.NumberCategory * string
+    | SetIntervalTo of Metadata.NumberCategory * string
     | FetchMetadataForTexts
     | FetchedMetadataForTexts of results: string [] []
     | SetSelectionTablePage of pageNumber: int
@@ -212,10 +212,10 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         newModel, cmd
 
     | SetIntervalFrom (category, number) ->
-        let newCategoryValues =
+        let (newCategoryValues: Metadata.CategorySelection) =
             let fromValue: Metadata.StringSelectOption =
                 { Name = "glossa_interval_from"
-                  Value = string number }
+                  Value = number }
 
             // Find the already selected values for this category, if any, and append the new one
             match model.Search.Params.MetadataSelection.TryFind category.Code with
@@ -224,14 +224,12 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                     categoryValues.Choices
                     |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_to")
 
-                let newChoices =
-                    [| fromValue
-                       match maybeToValue with
-                       | Some toValue -> toValue
-                       | None -> ignore None |]
-
-                { categoryValues with
-                      Choices = newChoices }
+                { Choices =
+                      [| fromValue
+                         match maybeToValue with
+                         | Some toValue -> toValue
+                         | None -> ignore None |]
+                  ShouldExclude = false }
             | None ->
                 { Choices = [| fromValue |]
                   ShouldExclude = false }
@@ -251,10 +249,10 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         newModel, Cmd.none
 
     | SetIntervalTo (category, number) ->
-        let newCategoryValues =
+        let (newCategoryValues: Metadata.CategorySelection) =
             let toValue: Metadata.StringSelectOption =
                 { Name = "glossa_interval_to"
-                  Value = string number }
+                  Value = number }
 
             // Find the already selected values for this category, if any, and append the new one
             match model.Search.Params.MetadataSelection.TryFind category.Code with
@@ -263,14 +261,12 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                     categoryValues.Choices
                     |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_from")
 
-                let newChoices =
-                    [| match maybeFromValue with
-                       | Some fromValue -> fromValue
-                       | None -> ignore None
-                       toValue |]
-
-                { categoryValues with
-                      Choices = newChoices }
+                { Choices =
+                      [| match maybeFromValue with
+                         | Some fromValue -> fromValue
+                         | None -> ignore None
+                         toValue |]
+                  ShouldExclude = false }
             | None ->
                 { Choices = [| toValue |]
                   ShouldExclude = false }

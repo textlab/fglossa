@@ -328,7 +328,58 @@ module MetadataMenu =
     let numberSelect (category: NumberCategory) isOpen metadataSelection fetchedMetadataValues dispatch =
         MetadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
 
-    let interval (category: NumberCategory) isOpen (fetchedMinAndMax: (int64 * int64) option) dispatch =
+    let interval
+        (category: NumberCategory)
+        isOpen
+        (metadataSelection: Selection)
+        (fetchedMinAndMax: (int64 * int64) option)
+        dispatch
+        =
+
+        let maybeCategorySelection = metadataSelection.TryFind(category.Code)
+
+        let pickValue choiceName =
+            // If a from or to value already exists, find it
+            maybeCategorySelection
+            |> Option.bind
+                (fun categorySelection ->
+                    categorySelection.Choices
+                    |> Array.tryPick
+                        (fun choice ->
+                            if choice.Name = choiceName then
+                                Some choice.Value
+                            else
+                                None))
+
+        let maybeFrom = pickValue "glossa_interval_from"
+        let maybeTo = pickValue "glossa_interval_to"
+
+
+        let boundaryInput
+            (label: string)
+            (maybeValue: string option)
+            (mixOrMaxSelectionFunction: (int64 * int64) -> int64)
+            onChangeMsg
+            =
+            Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
+                                prop.text label ]
+                      Html.td [ Bulma.field.div (
+                                    Bulma.control.div (
+                                        Bulma.input.text [ prop.placeholder (
+                                                               fetchedMinAndMax
+                                                               |> Option.map (mixOrMaxSelectionFunction >> string)
+                                                               |> Option.defaultValue ""
+                                                           )
+                                                           prop.value (maybeValue |> Option.defaultValue "")
+                                                           prop.onChange
+                                                               (fun (v: string) -> dispatch (onChangeMsg (category, v)))
+                                                           prop.onKeyUp (
+                                                               key.enter,
+                                                               fun _ -> dispatch FetchTextAndTokenCounts
+                                                           ) ]
+                                    )
+                                ) ] ]
+
         Html.li [ Html.a [ prop.key category.Code
                            if isOpen then
                                prop.style [ style.lineHeight (length.em 1.7) ]
@@ -349,52 +400,8 @@ module MetadataMenu =
                                                 style.marginBottom 5
                                                 style.marginLeft 10 ]
                                    prop.children (
-                                       Html.tbody [ Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
-                                                                        prop.text "From:" ]
-                                                              Html.td [ Bulma.field.div (
-                                                                            Bulma.control.div (
-                                                                                Bulma.input.number [ prop.placeholder (
-                                                                                                         fetchedMinAndMax
-                                                                                                         |> Option.map (
-                                                                                                             fst
-                                                                                                             >> string
-                                                                                                         )
-                                                                                                         |> Option.defaultValue
-                                                                                                             ""
-                                                                                                     )
-                                                                                                     prop.onChange
-                                                                                                         (fun (v: int) ->
-                                                                                                             dispatch (
-                                                                                                                 SetIntervalFrom(
-                                                                                                                     category,
-                                                                                                                     v
-                                                                                                                 )
-                                                                                                             )) ]
-                                                                            )
-                                                                        ) ] ]
-                                                    Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
-                                                                        prop.text "To:" ]
-                                                              Html.td [ Bulma.field.div (
-                                                                            Bulma.control.div (
-                                                                                Bulma.input.number [ prop.placeholder (
-                                                                                                         fetchedMinAndMax
-                                                                                                         |> Option.map (
-                                                                                                             snd
-                                                                                                             >> string
-                                                                                                         )
-                                                                                                         |> Option.defaultValue
-                                                                                                             ""
-                                                                                                     )
-                                                                                                     prop.onChange
-                                                                                                         (fun (v: int) ->
-                                                                                                             dispatch (
-                                                                                                                 SetIntervalTo(
-                                                                                                                     category,
-                                                                                                                     v
-                                                                                                                 )
-                                                                                                             )) ]
-                                                                            )
-                                                                        ) ] ] ]
+                                       Html.tbody [ boundaryInput "From:" maybeFrom fst SetIntervalFrom
+                                                    boundaryInput "To:" maybeTo snd SetIntervalTo ]
                                    ) ] ]
 
     let freeTextSearch (category: LongTextCategory) dispatch =
@@ -437,7 +444,7 @@ module MetadataMenu =
                         let isOpen =
                             (Some category.Code = props.OpenCategoryCode)
 
-                        interval category isOpen props.FetchedMinAndMax props.Dispatch
+                        interval category isOpen props.MetadataSelection props.FetchedMinAndMax props.Dispatch
                     | FreeTextSearch category -> freeTextSearch category props.Dispatch
                     | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}")
 
@@ -501,7 +508,7 @@ module MetadataMenu =
                       let isOpen =
                           (Some category.Code = model.OpenMetadataCategoryCode)
 
-                      interval category isOpen model.FetchedMinAndMax dispatch
+                      interval category isOpen model.Search.Params.MetadataSelection model.FetchedMinAndMax dispatch
                   | FreeTextSearch category -> (freeTextSearch category dispatch) ]
 
         let showSelectionButton =

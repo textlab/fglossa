@@ -33,14 +33,32 @@ let generateMetadataSelectionSql (maybeRequestedCategoryCode: string option) (se
           if shouldInclude then
               let column = sanitizeString category.Key
 
-              // TODO: Test on subclasses of Category and make this more robust
-              if category.Value.Choices
-                 |> Array.exists (fun choice -> choice.Name = "glossa_interval_from") then
-                  $" AND {column} BETWEEN {int category.Value.Choices.[0].Value} AND {int category.Value.Choices.[1].Value}"
-              elif category.Value.ShouldExclude then
-                  $" AND {column} NOT IN @{column}"
-              else
-                  $" AND {column} IN @{column}" ]
+              let choices =
+                  // Remove empty values
+                  category.Value.Choices
+                  |> Array.filter (fun choice -> not (System.String.IsNullOrWhiteSpace(choice.Value)))
+
+              if choices.Length > 0 then
+                  // If we find 'glossa_interval_from' and/or 'glossa_interval_to' we have an interval; otherwise
+                  // we options from a select list
+                  let maybeFrom =
+                      choices
+                      |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_from")
+
+                  let maybeTo =
+                      choices
+                      |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_to")
+
+                  match (maybeFrom, maybeTo) with
+                  | Some fromValue, Some toValue ->
+                      $" AND {column} BETWEEN {int fromValue.Value} AND {int toValue.Value}"
+                  | Some fromValue, None -> $" AND {column} >= {int fromValue.Value}"
+                  | None, Some toValue -> $" AND {column} <= {int toValue.Value}"
+                  | None, None ->
+                      if category.Value.ShouldExclude then
+                          $" AND {column} NOT IN @{column}"
+                      else
+                          $" AND {column} IN @{column}" ]
     |> String.concat ""
 
 let getMetadataForCategory
