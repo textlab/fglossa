@@ -434,8 +434,10 @@ module MetadataMenu =
                                                                                      )
 
                                                                                      dispatch (
-                                                                                         SetIntervalCategoryMode
+                                                                                         SetIntervalCategoryMode(
+                                                                                             category,
                                                                                              ListMode
+                                                                                         )
                                                                                      ))
                                                                          prop.children [ Html.a [ Html.span "List" ] ] ]
                                                                Html.li [ if mode = IntervalMode then tab.isActive
@@ -452,8 +454,10 @@ module MetadataMenu =
                                                                                      )
 
                                                                                      dispatch (
-                                                                                         SetIntervalCategoryMode
+                                                                                         SetIntervalCategoryMode(
+                                                                                             category,
                                                                                              IntervalMode
+                                                                                         )
                                                                                      ))
                                                                          prop.children [ Html.a [ Html.span "Interval" ] ] ] ] ] ]
 
@@ -474,7 +478,7 @@ module MetadataMenu =
                    Title: string
                    Items: MenuItem list
                    OpenCategoryCode: string option
-                   IntervalCategoryMode: ListOrIntervalMode
+                   IntervalCategoryModes: Map<CategoryCode, ListOrIntervalMode>
                    MetadataSelection: Shared.Metadata.Selection
                    FetchedMetadataValues: string []
                    FetchedMinAndMax: (int64 * int64) option
@@ -504,7 +508,8 @@ module MetadataMenu =
                         SelectOrInterval
                             category
                             isOpen
-                            props.IntervalCategoryMode
+                            (props.IntervalCategoryModes.TryFind(category.Code)
+                             |> Option.defaultValue ListMode)
                             props.MetadataSelection
                             props.FetchedMetadataValues
                             props.FetchedMinAndMax
@@ -544,7 +549,7 @@ module MetadataMenu =
                              Title = title
                              Items = items
                              OpenCategoryCode = model.OpenMetadataCategoryCode
-                             IntervalCategoryMode = model.IntervalCategoryMode
+                             IntervalCategoryModes = model.IntervalCategoryModes
                              MetadataSelection = model.Search.Params.MetadataSelection
                              FetchedMetadataValues = model.FetchedMetadataValues
                              FetchedMinAndMax = model.FetchedMinAndMax
@@ -576,7 +581,8 @@ module MetadataMenu =
                       SelectOrInterval
                           category
                           isOpen
-                          model.IntervalCategoryMode
+                          (model.IntervalCategoryModes.TryFind(category.Code)
+                           |> Option.defaultValue ListMode)
                           model.Search.Params.MetadataSelection
                           model.FetchedMetadataValues
                           model.FetchedMinAndMax
