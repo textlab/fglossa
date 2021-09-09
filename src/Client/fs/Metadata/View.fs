@@ -328,81 +328,136 @@ module MetadataMenu =
     let numberSelect (category: NumberCategory) isOpen metadataSelection fetchedMetadataValues dispatch =
         MetadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
 
-    let interval
+    type ListOrIntervalMode =
+        | ListMode
+        | IntervalMode
+
+    [<ReactComponent>]
+    let SelectOrInterval
         (category: NumberCategory)
         isOpen
         (metadataSelection: Selection)
+        (fetchedMetadataValues: string [])
         (fetchedMinAndMax: (int64 * int64) option)
         dispatch
         =
 
-        let maybeCategorySelection = metadataSelection.TryFind(category.Code)
+        let mode, setMode = React.useState (ListMode)
 
-        let pickValue choiceName =
-            // If a from or to value already exists, find it
-            maybeCategorySelection
-            |> Option.bind
-                (fun categorySelection ->
-                    categorySelection.Choices
-                    |> Array.tryPick
-                        (fun choice ->
-                            if choice.Name = choiceName then
-                                Some choice.Value
-                            else
-                                None))
+        let interval =
+            let maybeCategorySelection = metadataSelection.TryFind(category.Code)
 
-        let maybeFrom = pickValue "glossa_interval_from"
-        let maybeTo = pickValue "glossa_interval_to"
+            let pickValue choiceName =
+                // If a from or to value already exists, find it
+                maybeCategorySelection
+                |> Option.bind
+                    (fun categorySelection ->
+                        categorySelection.Choices
+                        |> Array.tryPick
+                            (fun choice ->
+                                if choice.Name = choiceName then
+                                    Some choice.Value
+                                else
+                                    None))
+
+            let maybeFrom = pickValue "glossa_interval_from"
+            let maybeTo = pickValue "glossa_interval_to"
+
+            let boundaryInput
+                (label: string)
+                (maybeValue: string option)
+                (mixOrMaxSelectionFunction: (int64 * int64) -> int64)
+                onChangeMsg
+                =
+                Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
+                                    prop.text label ]
+                          Html.td [ Bulma.field.div (
+                                        Bulma.control.div (
+                                            Bulma.input.text [ prop.placeholder (
+                                                                   fetchedMinAndMax
+                                                                   |> Option.map (mixOrMaxSelectionFunction >> string)
+                                                                   |> Option.defaultValue ""
+                                                               )
+                                                               prop.value (maybeValue |> Option.defaultValue "")
+                                                               prop.onChange
+                                                                   (fun (v: string) ->
+                                                                       dispatch (onChangeMsg (category, v)))
+                                                               prop.onKeyUp (
+                                                                   key.enter,
+                                                                   fun _ -> dispatch FetchTextAndTokenCounts
+                                                               ) ]
+                                        )
+                                    ) ] ]
+
+            Html.li [ Html.a [ prop.key category.Code
+                               if isOpen then
+                                   prop.style [ style.lineHeight (length.em 1.7) ]
+                               prop.onClick (fun _ -> dispatch (ToggleIntervalOpen category))
+                               prop.children [ Html.text category.Name
+                                               if isOpen then
+                                                   Bulma.button.button [ button.isSmall
+                                                                         color.isDanger
+                                                                         prop.style [ style.marginLeft 15 ]
+                                                                         prop.title "Remove selection"
+                                                                         prop.onClick
+                                                                             (fun e ->
+                                                                                 dispatch (DeselectAllItems category))
+                                                                         prop.children [ Bulma.icon [ Html.i [ prop.className
+                                                                                                                   "fa fa-times" ] ] ] ] ] ]
+
+                      if isOpen then
+                          Html.table [ prop.className "interval-category-table"
+                                       prop.style [ style.marginTop 5
+                                                    style.marginBottom 5
+                                                    style.marginLeft 10 ]
+                                       prop.children (
+                                           Html.tbody [ boundaryInput "From:" maybeFrom fst SetIntervalFrom
+                                                        boundaryInput "To:" maybeTo snd SetIntervalTo ]
+                                       ) ] ]
+
+        Html.span [ if mode = ListMode then
+                        numberSelect category isOpen metadataSelection fetchedMetadataValues dispatch
+                    else
+                        interval
+
+                    if isOpen then
+                        Bulma.tabs [ tabs.isToggle
+                                     tabs.isSmall
+                                     tabs.isCentered
+                                     prop.style [ style.marginTop 5 ]
+                                     prop.children [ Html.ul [ Html.li [ if mode = ListMode then tab.isActive
+                                                                         prop.onClick
+                                                                             (fun _ ->
+                                                                                 if mode <> ListMode then
+                                                                                     dispatch (
+                                                                                         DeselectAllItems category
+                                                                                     )
+
+                                                                                     dispatch (
+                                                                                         FetchMetadataValuesForCategory
+                                                                                             category
+                                                                                     )
+
+                                                                                     setMode ListMode)
+                                                                         prop.children [ Html.a [ Html.span "List" ] ] ]
+                                                               Html.li [ if mode = IntervalMode then tab.isActive
+                                                                         prop.onClick
+                                                                             (fun _ ->
+                                                                                 if mode <> IntervalMode then
+                                                                                     dispatch (
+                                                                                         DeselectAllItems category
+                                                                                     )
+
+                                                                                     dispatch (
+                                                                                         FetchMinAndMaxForCategory
+                                                                                             category
+                                                                                     )
+
+                                                                                     setMode IntervalMode)
+                                                                         prop.children [ Html.a [ Html.span "Interval" ] ] ] ] ] ]
 
 
-        let boundaryInput
-            (label: string)
-            (maybeValue: string option)
-            (mixOrMaxSelectionFunction: (int64 * int64) -> int64)
-            onChangeMsg
-            =
-            Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
-                                prop.text label ]
-                      Html.td [ Bulma.field.div (
-                                    Bulma.control.div (
-                                        Bulma.input.text [ prop.placeholder (
-                                                               fetchedMinAndMax
-                                                               |> Option.map (mixOrMaxSelectionFunction >> string)
-                                                               |> Option.defaultValue ""
-                                                           )
-                                                           prop.value (maybeValue |> Option.defaultValue "")
-                                                           prop.onChange
-                                                               (fun (v: string) -> dispatch (onChangeMsg (category, v)))
-                                                           prop.onKeyUp (
-                                                               key.enter,
-                                                               fun _ -> dispatch FetchTextAndTokenCounts
-                                                           ) ]
-                                    )
-                                ) ] ]
-
-        Html.li [ Html.a [ prop.key category.Code
-                           if isOpen then
-                               prop.style [ style.lineHeight (length.em 1.7) ]
-                           prop.onClick (fun _ -> dispatch (ToggleIntervalOpen category))
-                           prop.children [ Html.text category.Name
-                                           if isOpen then
-                                               Bulma.button.button [ button.isSmall
-                                                                     color.isDanger
-                                                                     prop.style [ style.marginLeft 15 ]
-                                                                     prop.title "Remove selection"
-                                                                     prop.onClick
-                                                                         (fun e -> dispatch (DeselectAllItems category))
-                                                                     prop.children [ Bulma.icon [ Html.i [ prop.className
-                                                                                                               "fa fa-times" ] ] ] ] ] ]
-                  if isOpen then
-                      Html.table [ prop.className "interval-category-table"
-                                   prop.style [ style.marginTop 5
-                                                style.marginBottom 5
-                                                style.marginLeft 10 ]
-                                   prop.children (
-                                       Html.tbody [ boundaryInput "From:" maybeFrom fst SetIntervalFrom
-                                                    boundaryInput "To:" maybeTo snd SetIntervalTo ]
-                                   ) ] ]
+                     ]
 
     let freeTextSearch (category: LongTextCategory) dispatch =
         Html.li (
@@ -444,7 +499,13 @@ module MetadataMenu =
                         let isOpen =
                             (Some category.Code = props.OpenCategoryCode)
 
-                        interval category isOpen props.MetadataSelection props.FetchedMinAndMax props.Dispatch
+                        SelectOrInterval
+                            category
+                            isOpen
+                            props.MetadataSelection
+                            props.FetchedMetadataValues
+                            props.FetchedMinAndMax
+                            props.Dispatch
                     | FreeTextSearch category -> freeTextSearch category props.Dispatch
                     | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}")
 
@@ -508,7 +569,13 @@ module MetadataMenu =
                       let isOpen =
                           (Some category.Code = model.OpenMetadataCategoryCode)
 
-                      interval category isOpen model.Search.Params.MetadataSelection model.FetchedMinAndMax dispatch
+                      SelectOrInterval
+                          category
+                          isOpen
+                          model.Search.Params.MetadataSelection
+                          model.FetchedMetadataValues
+                          model.FetchedMinAndMax
+                          dispatch
                   | FreeTextSearch category -> (freeTextSearch category dispatch) ]
 
         let showSelectionButton =
