@@ -328,21 +328,16 @@ module MetadataMenu =
     let numberSelect (category: NumberCategory) isOpen metadataSelection fetchedMetadataValues dispatch =
         MetadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
 
-    type ListOrIntervalMode =
-        | ListMode
-        | IntervalMode
-
     [<ReactComponent>]
     let SelectOrInterval
         (category: NumberCategory)
         isOpen
+        (mode: ListOrIntervalMode)
         (metadataSelection: Selection)
         (fetchedMetadataValues: string [])
         (fetchedMinAndMax: (int64 * int64) option)
         dispatch
         =
-
-        let mode, setMode = React.useState (ListMode)
 
         let interval =
             let maybeCategorySelection = metadataSelection.TryFind(category.Code)
@@ -438,7 +433,10 @@ module MetadataMenu =
                                                                                              category
                                                                                      )
 
-                                                                                     setMode ListMode)
+                                                                                     dispatch (
+                                                                                         SetIntervalCategoryMode
+                                                                                             ListMode
+                                                                                     ))
                                                                          prop.children [ Html.a [ Html.span "List" ] ] ]
                                                                Html.li [ if mode = IntervalMode then tab.isActive
                                                                          prop.onClick
@@ -453,7 +451,10 @@ module MetadataMenu =
                                                                                              category
                                                                                      )
 
-                                                                                     setMode IntervalMode)
+                                                                                     dispatch (
+                                                                                         SetIntervalCategoryMode
+                                                                                             IntervalMode
+                                                                                     ))
                                                                          prop.children [ Html.a [ Html.span "Interval" ] ] ] ] ] ]
 
 
@@ -473,6 +474,7 @@ module MetadataMenu =
                    Title: string
                    Items: MenuItem list
                    OpenCategoryCode: string option
+                   IntervalCategoryMode: ListOrIntervalMode
                    MetadataSelection: Shared.Metadata.Selection
                    FetchedMetadataValues: string []
                    FetchedMinAndMax: (int64 * int64) option
@@ -502,6 +504,7 @@ module MetadataMenu =
                         SelectOrInterval
                             category
                             isOpen
+                            props.IntervalCategoryMode
                             props.MetadataSelection
                             props.FetchedMetadataValues
                             props.FetchedMinAndMax
@@ -541,6 +544,7 @@ module MetadataMenu =
                              Title = title
                              Items = items
                              OpenCategoryCode = model.OpenMetadataCategoryCode
+                             IntervalCategoryMode = model.IntervalCategoryMode
                              MetadataSelection = model.Search.Params.MetadataSelection
                              FetchedMetadataValues = model.FetchedMetadataValues
                              FetchedMinAndMax = model.FetchedMinAndMax
@@ -572,6 +576,7 @@ module MetadataMenu =
                       SelectOrInterval
                           category
                           isOpen
+                          model.IntervalCategoryMode
                           model.Search.Params.MetadataSelection
                           model.FetchedMetadataValues
                           model.FetchedMinAndMax

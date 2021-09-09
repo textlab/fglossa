@@ -47,6 +47,7 @@ module LoadingCorpus =
                   FetchedTextMetadata = [| [||] |]
                   IsNarrowWindow = false
                   IsSelectionTableOpen = false
+                  IntervalCategoryMode = ListMode
                   NumSelectedTexts = None
                   NumSelectedTokens = None
                   OpenMetadataCategoryCode = None

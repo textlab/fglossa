@@ -45,6 +45,10 @@ type AttributeModalModel =
         { TermIndex = termIndex
           IncludeExcludeInput = "" }
 
+type ListOrIntervalMode =
+    | ListMode
+    | IntervalMode
+
 type SearchInterface =
     | Simple
     | Extended of AttributeModalModel option
@@ -146,6 +150,7 @@ type LoadedCorpusModel =
       FetchedTextMetadata: string [] []
       IsNarrowWindow: bool
       IsSelectionTableOpen: bool
+      IntervalCategoryMode: ListOrIntervalMode
       NumSelectedTexts: int64 option
       NumSelectedTokens: int64 option
       OpenMetadataCategoryCode: string option
