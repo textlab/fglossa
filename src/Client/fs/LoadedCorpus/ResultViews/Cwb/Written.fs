@@ -115,7 +115,7 @@ let concordanceTable (corpus: Corpus) (pageResults: SearchResult [] option) (dis
     let mainRow (resultLineFields: ResultLineFields) index =
         Html.tr [ Html.td [ prop.style [ style.textAlign.center
                                          style.verticalAlign.middle ]
-                            prop.children [ idColumn resultLineFields.SId index dispatch ] ]
+                            prop.children [ idColumn corpus resultLineFields.SId index dispatch ] ]
                   yield! textColumns resultLineFields ]
 
 

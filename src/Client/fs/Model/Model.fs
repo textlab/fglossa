@@ -94,7 +94,8 @@ type ConcordanceModel =
       // The nmber of the result page actually being shown at the moment
       ResultPageNo: int
       ResultPages: Map<int, SearchResult []>
-      SearchParams: SearchParams }
+      SearchParams: SearchParams
+      TextIdInQuickView: string option }
     static member Init(searchParams, numSteps, contextSizeTextValue, quickViewMetadata) =
         { ContextSizeTextValue = contextSizeTextValue
           IsSearching = true
@@ -107,7 +108,8 @@ type ConcordanceModel =
           PaginatorTextValue = "1"
           ResultPageNo = 1
           ResultPages = Map.empty
-          SearchParams = searchParams }
+          SearchParams = searchParams
+          TextIdInQuickView = None }
 
     member this.NumResultPages() =
         match this.NumResults with
@@ -160,8 +162,7 @@ type LoadedCorpusModel =
       Search: Search
       ShouldShowMetadataMenu: bool option
       SelectionTablePageNumber: int
-      Substate: LoadedCorpusSubstate
-      TextIdInQuickView: string option }
+      Substate: LoadedCorpusSubstate }
 
 type Model =
     | LoadingCorpus

@@ -54,8 +54,7 @@ module LoadingCorpus =
                   Search = Search.Init(corpus.Config)
                   ShouldShowMetadataMenu = None
                   SelectionTablePageNumber = 1
-                  Substate = CorpusStart
-                  TextIdInQuickView = None }
+                  Substate = CorpusStart }
 
             LoadedCorpus m, Cmd.none
 
@@ -77,7 +76,8 @@ module LoadedCorpus =
                 | SetPaginatorPage of int option
                 | SetContextSizeTextValue of string
                 | SetContextSize of int
-                | FetchMetadataForText of textId: string
+                | FetchMetadataForText of corpus: Corpus * textId: string
+                | FetchedMetadataForText of Metadata.CategoryNameAndValue list
                 | CloseQuickView
 
             let update (msg: Msg) (model: ConcordanceModel) : ConcordanceModel * Cmd<Msg> =
@@ -271,7 +271,35 @@ module LoadedCorpus =
 
                 | SetContextSize _ -> failwith "The SetContextSize message should be handled by a parent!"
 
-                | FetchMetadataForText _ -> failwith "The FetchMetadataForText message should be handled by a parent!"
+                | FetchMetadataForText (corpus, textId) ->
+                    let (categories: Metadata.CategoryNameAndCode list) =
+                        [ for category in corpus.MetadataQuickView ->
+                              { Name = category.Name
+                                Code = category.Code } ]
+
+                    let newModel, cmd =
+                        match model.TextIdInQuickView with
+                        | Some textIdInQuickView when textIdInQuickView = textId ->
+                            // We were already showing metadata for this text, so close the quickview instead
+                            { model with TextIdInQuickView = None }, Cmd.ofMsg CloseQuickView
+                        | _ ->
+                            // We were NOT already showing metadata for this text, so mark it as being shown and fetch its metadata
+                            { model with
+                                  TextIdInQuickView = Some textId },
+                            Cmd.OfAsync.perform
+                                serverApi.GetMetadataForSingleText
+                                (corpus.Config.Code, categories, textId)
+                                FetchedMetadataForText
+
+                    newModel, cmd
+
+                | FetchedMetadataForText metadata ->
+                    let newModel =
+                        { model with
+                              QuickViewMetadata = metadata
+                              ShouldShowQuickView = true }
+
+                    newModel, Cmd.none
 
                 | CloseQuickView ->
                     { model with
@@ -365,7 +393,6 @@ module LoadedCorpus =
         | CwbExtendedToggleAttrModal of maybeTermIndex: int option
         | Search
         | ResetForm
-        | FetchedMetadataForText of Metadata.CategoryNameAndValue list
 
     let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
         match msg with
@@ -387,33 +414,6 @@ module LoadedCorpus =
                                 Params = newSearchParams } }
 
             newModel, Cmd.ofMsg Search
-
-        // The FetchMetadataForText message is dispatched from the concordance view, but needs to be handled here
-        // where the corpus info is available
-        | ShowingResultsMsg (ShowingResults.ConcordanceMsg (ShowingResults.Concordance.FetchMetadataForText textId)) ->
-            let (categories: Metadata.CategoryNameAndCode list) =
-                [ for category in model.Corpus.MetadataQuickView ->
-                      { Name = category.Name
-                        Code = category.Code } ]
-
-            let newModel, cmd =
-                match model.TextIdInQuickView with
-                | Some textIdInQuickView when textIdInQuickView = textId ->
-                    // We were already showing metadata for this text, so close the quickview instead
-                    { model with TextIdInQuickView = None },
-                    Cmd.ofMsg (
-                        ShowingResultsMsg(ShowingResults.ConcordanceMsg(ShowingResults.Concordance.CloseQuickView))
-                    )
-                | _ ->
-                    // We were NOT already showing metadata for this text, so mark it as being shown and fetch its metadata
-                    { model with
-                          TextIdInQuickView = Some textId },
-                    Cmd.OfAsync.perform
-                        serverApi.GetMetadataForSingleText
-                        (model.Corpus.Config.Code, categories, textId)
-                        FetchedMetadataForText
-
-            newModel, cmd
 
         | ShowingResultsMsg msg' ->
             match model.Substate with
@@ -808,31 +808,6 @@ module LoadedCorpus =
                   Substate = CorpusStart
                   OpenMetadataCategoryCode = None },
             Cmd.ofMsg (MetadataMsg Update.Metadata.FetchTextAndTokenCounts)
-
-        | FetchedMetadataForText metadata ->
-            // TODO: Find a better way to handle this!
-            let newModel =
-                { model with
-                      Substate =
-                          match model.Substate with
-                          | ShowingResults showingResultsModel ->
-                              let newShowingResultsModel =
-                                  let resultTab =
-                                      match showingResultsModel.ActiveTab with
-                                      | Concordance concordanceModel ->
-                                          Concordance
-                                              { concordanceModel with
-                                                    QuickViewMetadata = metadata
-                                                    ShouldShowQuickView = true }
-                                      | _ -> failwith "Wrong model"
-
-                                  { showingResultsModel with
-                                        ActiveTab = resultTab }
-
-                              ShowingResults newShowingResultsModel
-                          | _ -> failwith "Wrong model" }
-
-            newModel, Cmd.none
 
 ////////////////////////////////
 // Update
