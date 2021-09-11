@@ -140,10 +140,39 @@ module LoadedCorpus =
                         else
                             Cmd.none
 
-                    let modelWithResultPages = registerResultPages results.ResultPages
+                    let fetchedPages =
+                        results.ResultPages
+                        |> Array.map (fun page -> page.PageNumber)
+
+                    // Remove the fetched pages from the set of pages currently being fetched...
+                    let pagesBeingFetched =
+                        model.PagesBeingFetched
+                        |> Array.except fetchedPages
+
+                    // ...and put them into the map of fetched pages. Since we may already have
+                    // recived a half-filled page from a previous search step, we need to gather
+                    // all previsous and current results together and chunk them into page-sized
+                    // chunks to make sure we get the correct page sizes.
+                    let existingResults =
+                        model.ResultPages
+                        |> Map.toArray
+                        |> Array.collect snd
+
+                    let newResults =
+                        results.ResultPages
+                        |> Array.collect (fun page -> page.Results)
+
+                    let resultPages =
+                        Array.append existingResults newResults
+                        |> Array.map cleanupResult
+                        |> Array.chunkBySize model.SearchParams.PageSize
+                        |> Array.mapi (fun index page -> (index + 1, page))
+                        |> Map.ofArray
 
                     let newModel =
-                        { modelWithResultPages with
+                        { model with
+                              PagesBeingFetched = pagesBeingFetched
+                              ResultPages = resultPages
                               IsSearching = shouldRunMoreSteps
                               NumResults = Some results.Count
                               SearchParams = newSearchParams }
