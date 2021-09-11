@@ -238,6 +238,8 @@ module MetadataMenu =
             metadataSelection.TryFind(category.Code)
             |> Option.defaultValue CategorySelection.Default
 
+        React.useEffect ((fun () -> if isOpen then focusFilterInput ()), [| box isOpen |])
+
         Html.li [ Html.a [ prop.key category.Code
                            if isOpen then
                                prop.style [ style.lineHeight (length.em 1.7) ]
