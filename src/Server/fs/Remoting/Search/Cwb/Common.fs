@@ -79,6 +79,25 @@ let buildMultilingualQuery (corpus: Corpus) (queries: Query []) (sTag: string) =
     (Array.append [| mainQuery |] alignedQueries)
     |> String.concat " :"
 
+let generateLanguageSql (corpus: Corpus) (queries: Query []) =
+    match corpus.Config.LanguageConfig with
+    | Monolingual _ -> ""
+    | Multilingual _ ->
+        try
+            let languageCode =
+                queries
+                |> Array.head
+                |> fun query -> query.LanguageCode
+
+            $" AND language = '{languageCode}'"
+        with
+        | :? ArgumentException as ex -> failwith $"Empty array of languages! {ex}"
+
+let generateLimitsSql (corpus: Corpus) startpos endpos =
+    match corpus.Config.Modality with
+    | Spoken -> failwith "NOT IMPLEMENTED!"
+    | Written -> $" AND startpos >= {startpos} AND endpos <= {endpos}"
+
 // Prints to file the start and stop positions of all corpus texts that are associated with the
 // metadata values that have the given database ids, with an OR relationship between values within
 // the same category and an AND relationship between categories. Also restricts the positions to the start
@@ -107,8 +126,13 @@ let printPositionsMatchingMetadata
             let metadataSelectionSql =
                 generateMetadataSelectionSql None searchParams.MetadataSelection
 
+            let langSql =
+                generateLanguageSql corpus searchParams.Queries
+
+            let limitsSql = generateLimitsSql corpus startpos endpos
+
             let sql =
-                $"SELECT {positionFields} FROM texts WHERE 1 = 1{metadataSelectionSql}"
+                $"SELECT {positionFields} FROM texts WHERE 1 = 1{metadataSelectionSql}{langSql}{limitsSql}"
 
             let parameters =
                 metadataSelectionToParamDict searchParams.MetadataSelection
@@ -120,7 +144,13 @@ let printPositionsMatchingMetadata
                 values
                 |> Seq.map (fun (bounds: TextBounds) -> $"{bounds.Startpos}\t{bounds.Endpos}")
                 |> fun lines -> File.WriteAllLines(positionsFilename, lines)
-            | Error ex -> return raise ex
+            | Error ex ->
+                if ex.Message.Contains("one matching signature (System.Object Startpos, System.Object Endpos") then
+                    // This simply means that the metadata selection is not contained within the bounds
+                    // we are searching with the current CPU in the current search step, so just create an empty file
+                    File.Create(positionsFilename) |> ignore
+                else
+                    return raise ex
         else
             // No metadata selected
             match corpus.Config.Modality with
@@ -247,13 +277,13 @@ let constructQueryCommands
         | Monolingual _ -> buildMonolingualQuery searchParams.Queries sTag
         | Multilingual _ -> buildMultilingualQuery corpus searchParams.Queries sTag
 
-    let cqpIndexStr =
+    let cpuIndexStr =
         maybeCpuIndex
         |> Option.map string
         |> Option.defaultValue ""
 
     let positionsFilename =
-        $"/tmp/glossa/positions_{searchParams.SearchId}{cqpIndexStr}"
+        $"/tmp/glossa/positions_{searchParams.SearchId}_{cpuIndexStr}"
 
     let initCommands =
         [ $"undump {namedQuery} < '{positionsFilename}'"
