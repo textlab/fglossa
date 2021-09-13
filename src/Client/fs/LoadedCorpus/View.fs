@@ -98,7 +98,7 @@ module ResultsView =
                                )
                                prop.onKeyUp (
                                    key.enter,
-                                   (fun _ -> dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage None))
+                                   (fun _ -> dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage(None, None)))
                                ) ]
 
         let pagination
@@ -116,7 +116,7 @@ module ResultsView =
                 if not isSearchingOrFetching
                    && pageNo >= 1
                    && pageNo <= numPages then
-                    dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage(Some pageNo))
+                    dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage(Some pageNo, None))
 
             match model.NumResults with
             | Some results when results > uint64 model.SearchParams.PageSize ->
@@ -223,6 +223,31 @@ module ResultsView =
         let view (model: ConcordanceModel) (corpus: Corpus) (dispatch: ShowingResults.Concordance.Msg -> unit) =
             let numPages = model.NumResultPages()
 
+            let isSearchingOrFetching =
+                model.PagesBeingFetched.Length > 0
+                || model.IsSearching
+
+            let sortMenu =
+                Bulma.select [ prop.disabled isSearchingOrFetching
+                               prop.onChange
+                                   (fun (s: string) ->
+                                       let sortKey = SortKey.OfString(s)
+
+                                       dispatch (ShowingResults.Concordance.SetPaginatorPage(Some 1, Some sortKey)))
+                               prop.children [ Html.option [ prop.value "Position"
+                                                             prop.text "Sort by position" ]
+                                               Html.option [ prop.value "Match"
+                                                             prop.text "Sort by match" ]
+                                               Html.option [ prop.value "Left"
+                                                             prop.text "Sort by left context" ]
+                                               Html.option [ prop.value "Right"
+                                                             prop.text "Sort by right context" ] ] ]
+
+            let downloadButton =
+                Bulma.button.button [ prop.disabled isSearchingOrFetching
+                                      prop.style [ style.marginLeft 5 ]
+                                      prop.text "Download" ]
+
             let resultsInfo =
                 let text =
                     match model.NumResults with
@@ -262,10 +287,6 @@ module ResultsView =
                                            spinnerOverlay shouldShowSpnner (Some [ style.width 40; style.height 40 ]) []
                                        ) ] ]
 
-            let isSearchingOrFetching =
-                model.PagesBeingFetched.Length > 0
-                || model.IsSearching
-
             let contextSelector =
                 [ Bulma.levelItem [ prop.text "Context:" ]
                   Bulma.levelItem [ ContextSizeTextInput(model.ContextSizeTextValue, isSearchingOrFetching, dispatch) ]
@@ -276,10 +297,8 @@ module ResultsView =
                 model.ResultPages.TryFind(model.ResultPageNo)
 
             [ MetadataQuickView model dispatch
-              Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.buttons [ Bulma.button.button [ prop.text
-                                                                                                          "Sort by position" ]
-                                                                                Bulma.button.button [ prop.text
-                                                                                                          "Download" ] ] ]
+              Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ sortMenu
+                                                                downloadButton ]
                                               Bulma.levelItem resultsInfo ]
                             Bulma.levelRight [ if corpus.Config.Modality <> Spoken then
                                                    yield! contextSelector
@@ -328,7 +347,7 @@ module ResultsView =
         (corpus: Corpus)
         (search: Search)
         topRowButtonsElement
-        parentDispatch
+        loadedCorpusDispatch
         dispatch
         =
         let resultsView =
@@ -348,7 +367,7 @@ module ResultsView =
             | _ -> false
 
         Html.span [ topRowButtonsElement
-                    selectSearchView corpus search parentDispatch
+                    selectSearchView corpus search loadedCorpusDispatch
                     spinnerOverlay shouldShowResultsTableSpinner (Some [ style.top 75 ]) resultsView ]
 
 

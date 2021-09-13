@@ -1,5 +1,6 @@
 module Remoting.Search.Cwb.Written
 
+open System
 open System.IO
 open System.Threading.Tasks
 open FSharp.Control.Tasks
@@ -80,6 +81,7 @@ let randomReduceCommand
 let cqpInit
     (corpus: Corpus)
     (searchParams: SearchParams)
+    (maybeSortKey: SortKey option)
     (maybeAttributes: Cwb.PositionalAttribute list option)
     (namedQuery: string)
     (constructSaveCommands: string list)
@@ -94,7 +96,9 @@ let cqpInit
         else defaultSize
 
     let sortCmd =
-        sortCommand namedQuery searchParams.SortKey
+        match maybeSortKey with
+        | Some sortKey -> sortCommand namedQuery sortKey
+        | None -> None
 
     [ "set DataDirectory \"/tmp/glossa\""
       cwbCorpusName corpus searchParams.Queries
@@ -169,7 +173,7 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
                                     $"cat {namedQuery} {searchParams.Start} {searchParams.End}"
                                 | _ -> ""
 
-                        [ yield! cqpInit corpus searchParams None namedQuery cqpInitCommands
+                        [ yield! cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery cqpInitCommands
                           // Always return the number of results, which may be
                           // either total or cut size depending on whether we
                           // restricted the corpus positions
@@ -314,7 +318,8 @@ let getNonzeroFiles
                     [| for cpuIndex in 0 .. cpuBounds.Length - 1 -> $"{namedQuery}_{index + 1}_{cpuIndex}" |])
 
         let lastFile =
-            maybeLastFile |> Option.defaultValue firstFile
+            maybeLastFile
+            |> Option.defaultValue (files.Length - 1)
 
         let filesAndCounts = Array.zip files cpuCounts
 
@@ -364,14 +369,15 @@ let getSortedPositions (logger: ILogger) (corpus: Corpus) (searchParams: SearchP
     let namedQuery =
         cwbQueryName corpus searchParams.SearchId
 
-    let resultPositionsFilename = $"tmp/result_positions_{namedQuery}"
+    let resultPositionsFilename =
+        $"/tmp/glossa/result_positions_{namedQuery}"
 
     if not (File.Exists(resultPositionsFilename)) then
         let nonzeroFiles =
             getNonzeroFiles corpus searchParams namedQuery 0 None
 
         let firstCommands =
-            cqpInit corpus searchParams None namedQuery []
+            cqpInit corpus searchParams None None namedQuery []
 
         let moreCommands =
             nonzeroFiles
@@ -379,12 +385,17 @@ let getSortedPositions (logger: ILogger) (corpus: Corpus) (searchParams: SearchP
                 (fun index resultFile ->
                     let redirectOperator = if index = 0 then " >" else " >>"
 
-                    $"tabulate {resultFile} match[-1] word, match word, match[1] word, match, matchend
-                                 {redirectOperator} {resultPositionsFilename}")
+                    $"tabulate {resultFile} match[-1] word, match word, match[1] word, match, matchend {redirectOperator} '{resultPositionsFilename}'")
 
         let commands = firstCommands @ moreCommands
 
-        runCqpCommands logger corpus false commands
+        let commandStr =
+            commands
+            |> Seq.filter (String.IsNullOrWhiteSpace >> not)
+            |> Seq.map (fun s -> s + ";")
+            |> String.concat "\n"
+
+        Process.runCmdWithInputAndOutput "docker" "exec -i cwb cqp -c" commandStr
         |> ignore
 
     let sortOpt =
@@ -398,9 +409,12 @@ let getSortedPositions (logger: ILogger) (corpus: Corpus) (searchParams: SearchP
         $"{resultPositionsFilename}_sort_by_{searchParams.SortKey}"
 
     if not (File.Exists(sortedResultPositions)) then
-        Process.runCmd
-            "sh"
-            $"-c util/multisort.sh {resultPositionsFilename} -t '\t' {sortOpt} |LC_ALL=C cut -f 4,5 > {sortedResultPositions}"
+        Process.runCmdWithOutput "util/multisort.sh" $"{resultPositionsFilename} {sortOpt}"
+        |> fun output ->
+            let sortedWithAllFields = $"{sortedResultPositions}_all_fields"
+            File.WriteAllText(sortedWithAllFields, output)
+            Process.runCmdWithOutput "cut" $"-f 4,5 {sortedWithAllFields}"
+        |> fun output -> File.WriteAllText(sortedResultPositions, output)
 
     sortedResultPositions
 
@@ -430,7 +444,7 @@ let getSearchResults (onnStr: string) (logger: ILogger) (corpus: Corpus) (search
                         (nonzeroFiles, indexes)
                         ||> Seq.map2
                                 (fun resultFile (start, ``end``) ->
-                                    [ yield! cqpInit corpus searchParams None namedQuery []
+                                    [ yield! cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery []
                                       $"cat {resultFile} {start} {``end``}" ])
 
                     async {
@@ -465,7 +479,8 @@ let getSearchResults (onnStr: string) (logger: ILogger) (corpus: Corpus) (search
                               $"save {namedQuery}" ]
 
                     let commands =
-                        [ yield! cqpInit corpus searchParams None namedQuery undumpSaveCommands
+                        [ yield!
+                            cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery undumpSaveCommands
                           $"cat {namedQuery} {searchParams.Start} {searchParams.End}" ]
 
                     async {
@@ -476,7 +491,7 @@ let getSearchResults (onnStr: string) (logger: ILogger) (corpus: Corpus) (search
                 let namedQuery = $"{queryName}_1_o"
 
                 let commands =
-                    [ yield! cqpInit corpus searchParams None namedQuery []
+                    [ yield! cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery []
                       $"cat {namedQuery} {searchParams.Start} {searchParams.End}" ]
 
                 async {

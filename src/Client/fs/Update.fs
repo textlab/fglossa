@@ -70,10 +70,10 @@ module LoadedCorpus =
             type Msg =
                 | PerformSearchStep
                 | SearchResultsReceived of SearchResultInfo
-                | FetchResultWindow of int
+                | FetchResultWindow of centrePageNo: int * maybeSortKey: SortKey option
                 | FetchedResultWindow of SearchResultPage []
                 | SetPaginatorTextValue of string
-                | SetPaginatorPage of int option
+                | SetPaginatorPage of pageNumber: int option * maybeSortKey: SortKey option
                 | SetContextSizeTextValue of string
                 | SetContextSize of int
                 | FetchMetadataForText of corpus: Corpus * textId: string
@@ -183,7 +183,11 @@ module LoadedCorpus =
                 // already been fetched or that are currently being fetched in another request (note that such
                 // pages can only be located at the edges of the window, and not as 'holes' within the window,
                 // since they must have been fetched as part of an earlier window).
-                | FetchResultWindow centrePageNo ->
+                | FetchResultWindow (centrePageNo, maybeSortKey) ->
+                    let sortKey =
+                        maybeSortKey
+                        |> Option.defaultValue model.SearchParams.SortKey
+
                     // Make sure the edges of the window are between 1 and the last page number
                     let startPage = max (centrePageNo - 1) 1
 
@@ -191,23 +195,28 @@ module LoadedCorpus =
                         min (centrePageNo + 1) (model.NumResultPages())
 
                     let pageNumbers =
-                        [| startPage .. endPage |]
-                        // Ignore pages currently being fetched by another request
-                        |> Array.filter
-                            (fun page ->
-                                model.PagesBeingFetched
-                                |> Array.contains page
-                                |> not)
-                        // Ignore pages that have already been fetched
-                        |> Array.filter (fun page -> model.ResultPages |> Map.containsKey page |> not)
-                        // Create a new sequence to make sure we didn't create any "holes" in
-                        // it (although that should not really happen in practice since we
-                        // always fetch whole windows of pages)
-                        |> fun pageNos ->
-                            if Array.isEmpty pageNos then
-                                pageNos
-                            else
-                                [| (Array.head pageNos) .. (Array.last pageNos) |]
+                        if sortKey <> model.SearchParams.SortKey then
+                            // If we are changing the sort order, we need to fetch all specified pages
+                            // regardless of whether those page numbers have already been fetched
+                            [| startPage .. endPage |]
+                        else
+                            [| startPage .. endPage |]
+                            // Ignore pages currently being fetched by another request
+                            |> Array.filter
+                                (fun page ->
+                                    model.PagesBeingFetched
+                                    |> Array.contains page
+                                    |> not)
+                            // Ignore pages that have already been fetched
+                            |> Array.filter (fun page -> model.ResultPages |> Map.containsKey page |> not)
+                            // Create a new sequence to make sure we didn't create any "holes" in
+                            // it (although that should not really happen in practice since we
+                            // always fetch whole windows of pages)
+                            |> fun pageNos ->
+                                if Array.isEmpty pageNos then
+                                    pageNos
+                                else
+                                    [| (Array.head pageNos) .. (Array.last pageNos) |]
 
                     if Array.isEmpty pageNumbers then
                         // All pages are either being fetched or already fetched, so there is nothing to do
@@ -228,10 +237,12 @@ module LoadedCorpus =
                         let searchParams =
                             { model.SearchParams with
                                   Start = firstResult
-                                  End = lastResult }
+                                  End = lastResult
+                                  SortKey = sortKey }
 
                         let newModel =
                             { model with
+                                  SearchParams = searchParams
                                   // Register the pages as being fetched
                                   PagesBeingFetched = Array.append model.PagesBeingFetched pageNumbers }
 
@@ -258,7 +269,7 @@ module LoadedCorpus =
 
                 | SetPaginatorTextValue s -> { model with PaginatorTextValue = s }, Cmd.none
 
-                | SetPaginatorPage maybePageNo ->
+                | SetPaginatorPage (maybePageNo, maybeSortKey) ->
                     let pageNo =
                         match maybePageNo with
                         // If we got an explicit page number, use that
@@ -286,13 +297,21 @@ module LoadedCorpus =
                                       // Otherwise, we need to wait until the results from the server
                                       // arrive before changing the page to be shown in the result
                                       // table
-                                      model.PaginatorPageNo }
+                                      model.PaginatorPageNo
+                              ResultPages =
+                                  match maybeSortKey with
+                                  | Some sortKey when sortKey <> model.SearchParams.SortKey ->
+                                      // If we have received a sort key that is different from the one currently
+                                      // set in the model, invalidate all previously fetched search result pages
+                                      Map.empty
+                                  | _ -> model.ResultPages }
+
 
                     let cmd =
                         // If necessary, fetch any result pages in a window centred
                         // around the selected page in order to speed up pagination
                         // to nearby pages. No need to wait for it to finish though.
-                        Cmd.ofMsg (FetchResultWindow pageNo)
+                        Cmd.ofMsg (FetchResultWindow(pageNo, maybeSortKey))
 
                     newModel, cmd
 

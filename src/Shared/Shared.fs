@@ -162,6 +162,13 @@ type SortKey =
     | Match
     | Left
     | Right
+    static member OfString(s) =
+        match s with
+        | "Position" -> Position
+        | "Match" -> Match
+        | "Left" -> Left
+        | "Right" -> Right
+        | _ -> failwith $"Unrecognized sort key: {s}"
 
 type SearchParams =
     { ContextSize: int
