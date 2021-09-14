@@ -565,7 +565,7 @@ let view
 
           ]
 
-    Bulma.columns [ prop.style [ style.marginBottom 30 ]
+    Bulma.columns [ prop.style [ style.marginBottom 15 ]
                     prop.children [ yield!
                                         [ for (index, term) in query.Terms |> Array.indexed do
                                               yield! termView index term ]
