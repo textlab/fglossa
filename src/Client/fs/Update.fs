@@ -858,12 +858,8 @@ module LoadedCorpus =
 
             // If we have an empty query, don't do the search
             let shouldSearch =
-                let firstQuery =
-                    model.Search.Params.Queries |> Array.tryHead
-
-                match firstQuery with
-                | None -> false
-                | Some query -> not query.IsEmpty
+                model.Search.Params.Queries
+                |> Array.forall (fun query -> not query.IsEmpty)
 
             // TODO: Implement cancellation of searches. In the Clojure version, we simply cancel
             // any HTTP request which is already running when we start a new search, but what we
