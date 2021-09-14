@@ -417,7 +417,8 @@ let view
                                          Bulma.text.span $" {label}" ] ]
 
         let removeTermButton =
-            Bulma.button.button [ prop.onClick (fun _ -> dispatch (CwbExtendedRemoveTerm(query, queryIndex, termIndex)))
+            Bulma.button.button [ prop.title "Remove search word"
+                                  prop.onClick (fun _ -> dispatch (CwbExtendedRemoveTerm(query, queryIndex, termIndex)))
                                   prop.children [ Bulma.icon [ Html.i [ prop.className "fas fa-minus" ] ] ] ]
 
         let attributeTags =
@@ -572,6 +573,7 @@ let view
                                     Bulma.column [ Bulma.field.div (
                                                        Bulma.control.div (
                                                            Bulma.button.button [ color.isInfo
+                                                                                 prop.title "Add search word"
                                                                                  prop.onClick
                                                                                      (fun _ ->
                                                                                          dispatch (
