@@ -483,6 +483,7 @@ module LoadedCorpus =
             { model with
                   ShouldShowMetadataMenu = Some shouldShow },
             Cmd.none
+
         | SetSearchInterface ``interface`` ->
             { model with
                   Search =
@@ -527,6 +528,7 @@ module LoadedCorpus =
                                           Queries = newQueries } } }
 
             newModel, Cmd.none
+
         | RemoveQueryRow queryIndex ->
             let newQueries =
                 model.Search.Params.Queries
@@ -547,6 +549,7 @@ module LoadedCorpus =
                                           Queries = newQueries } } }
 
             newModel, Cmd.none
+
         | CwbExtendedSetMainString (query, queryIndex, term, termIndex, maybeValue) ->
             let newTerm =
                 { term with
