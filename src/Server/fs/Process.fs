@@ -53,6 +53,7 @@ let runCmdWithInputOutputErrorAndEncoding
     startInfo.RedirectStandardOutput <- true
     startInfo.RedirectStandardError <- true
     startInfo.StandardOutputEncoding <- encoding
+    startInfo.StandardInputEncoding <- encoding
 
     use proc =
         System.Diagnostics.Process.Start(startInfo)
