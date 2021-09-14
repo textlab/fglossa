@@ -388,6 +388,7 @@ module LoadedCorpus =
         | SetSearchInterface of SearchInterface
         | SetQueryText of query: string * queryIndex: int * hasFinalSpace: bool
         | AddQueryRow
+        | RemoveQueryRow of queryIndex: int
         | CwbExtendedSetMainString of
             query: CwbExtended.Query *
             queryIndex: int *
@@ -516,6 +517,26 @@ module LoadedCorpus =
         | AddQueryRow ->
             let newQueries =
                 Array.append model.Search.Params.Queries [| Query.Init(None) |]
+
+            let newModel =
+                { model with
+                      Search =
+                          { model.Search with
+                                Params =
+                                    { model.Search.Params with
+                                          Queries = newQueries } } }
+
+            newModel, Cmd.none
+        | RemoveQueryRow queryIndex ->
+            let newQueries =
+                model.Search.Params.Queries
+                |> Array.indexed
+                |> Array.choose
+                    (fun (index, query) ->
+                        if index <> queryIndex then
+                            Some query
+                        else
+                            None)
 
             let newModel =
                 { model with

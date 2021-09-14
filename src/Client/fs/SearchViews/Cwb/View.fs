@@ -142,9 +142,30 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
         | Cqp -> cqpView query queryIndex
 
     let queryRows =
+        let shouldShowDeleteRowButton =
+            match search.Interface with
+            | Simple
+            | Cqp -> search.Params.Queries.Length > 1
+            | Extended _ -> false
+
         search.Params.Queries
         |> Array.mapi
-            (fun queryIndex query -> Bulma.field.div [ Bulma.control.div [ searchInterface query queryIndex ] ])
+            (fun queryIndex query ->
+                Bulma.field.div [ if shouldShowDeleteRowButton then
+                                      field.hasAddons
+                                      field.hasAddonsRight
+                                  prop.children [ Bulma.control.div [ control.isExpanded
+                                                                      prop.children [ searchInterface query queryIndex ] ]
+                                                  if shouldShowDeleteRowButton then
+                                                      Bulma.control.div (
+                                                          Bulma.button.button [ color.isDanger
+                                                                                prop.onClick
+                                                                                    (fun _ ->
+                                                                                        dispatch (
+                                                                                            RemoveQueryRow queryIndex
+                                                                                        ))
+                                                                                prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-times" ] ] ] ] ]
+                                                      ) ] ])
 
     Html.div [ prop.style [ style.width 500 ]
                prop.children [ Bulma.level [ prop.style [ style.paddingTop 20 ]
