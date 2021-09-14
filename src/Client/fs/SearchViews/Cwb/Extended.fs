@@ -570,19 +570,28 @@ let view
                     prop.children [ yield!
                                         [ for (index, term) in query.Terms |> Array.indexed do
                                               yield! termView index term ]
-                                    Bulma.column [ Bulma.field.div (
-                                                       Bulma.control.div (
-                                                           Bulma.button.button [ color.isInfo
-                                                                                 prop.title "Add search word"
-                                                                                 prop.onClick
-                                                                                     (fun _ ->
-                                                                                         dispatch (
-                                                                                             CwbExtendedAddTerm(
-                                                                                                 query,
-                                                                                                 queryIndex
-                                                                                             )
-                                                                                         ))
-                                                                                 prop.children [ Bulma.icon [ Html.i [ prop.className
-                                                                                                                           "fas fa-plus" ] ] ] ]
-                                                       )
-                                                   ) ] ] ]
+                                    Bulma.column (
+                                        Bulma.buttons [ Bulma.button.button [ color.isInfo
+                                                                              prop.title "Add search word"
+                                                                              prop.onClick
+                                                                                  (fun _ ->
+                                                                                      dispatch (
+                                                                                          CwbExtendedAddTerm(
+                                                                                              query,
+                                                                                              queryIndex
+                                                                                          )
+                                                                                      ))
+                                                                              prop.children [ Bulma.icon [ Html.i [ prop.className
+                                                                                                                        "fas fa-plus" ] ] ] ]
+                                                        if search.Params.Queries.Length > 1 then
+                                                            Bulma.button.button [ color.isDanger
+                                                                                  prop.title "Delete row"
+                                                                                  prop.onClick
+                                                                                      (fun _ ->
+                                                                                          dispatch (
+                                                                                              RemoveQueryRow queryIndex
+                                                                                          ))
+                                                                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-times" ] ] ] ] ]
+
+                                                         ]
+                                    ) ] ]

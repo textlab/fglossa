@@ -159,6 +159,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                   if shouldShowDeleteRowButton then
                                                       Bulma.control.div (
                                                           Bulma.button.button [ color.isDanger
+                                                                                prop.title "Delete row"
                                                                                 prop.onClick
                                                                                     (fun _ ->
                                                                                         dispatch (
