@@ -386,15 +386,16 @@ module LoadedCorpus =
 
         | SetShouldShowMetadataMenu of bool
         | SetSearchInterface of SearchInterface
-        | SetQueryText of query: string * hasFinalSpace: bool
+        | SetQueryText of query: string * queryIndex: int * hasFinalSpace: bool
+        | AddQueryRow
         | CwbExtendedSetMainString of
-            query: Query *
+            query: CwbExtended.Query *
             queryIndex: int *
             term: QueryTerm *
             termIndex: int *
             maybeValue: string option
         | CwbExtendedSetQueryProperty of
-            query: Query *
+            query: CwbExtended.Query *
             queryIndex: int *
             term: QueryTerm *
             termIndex: int *
@@ -402,42 +403,46 @@ module LoadedCorpus =
             value: bool
         | CwbExtendedSetExtraForm of value: string
         | CwbExtendedIncludeOrExcludeExtraForm of
-            query: Query *
+            query: CwbExtended.Query *
             queryIndex: int *
             term: QueryTerm *
             termIndex: int *
             command: string
         | CwbExtendedRemoveExtraForms of
-            query: Query *
+            query: CwbExtended.Query *
             queryIndex: int *
             term: QueryTerm *
             termIndex: int *
             attrName: string
         | CwbExtendedToggleAttributeCategory of
-            query: Query *
+            query: CwbExtended.Query *
             queryIndex: int *
             term: QueryTerm *
             termIndex: int *
             categorySectionIndex: int *
             category: MainCategory
         | CwbExtendedToggleAttributeSubcategory of
-            query: Query *
+            query: CwbExtended.Query *
             queryIndex: int *
             term: QueryTerm *
             termIndex: int *
             categorySectionIndex: int *
             mainCategory: MainCategory *
             subcategory: Subcategory
-        | CwbExtendedClearAttributeCategories of query: Query * queryIndex: int * term: QueryTerm * termIndex: int
+        | CwbExtendedClearAttributeCategories of
+            query: CwbExtended.Query *
+            queryIndex: int *
+            term: QueryTerm *
+            termIndex: int
         | CwbExtendedSetIntervalValue of
-            query: Query *
+            query: CwbExtended.Query *
             queryIndex: int *
             term: QueryTerm *
             termIndex: int *
             minMax: MinMax *
             maybeValue: int option
-        | CwbExtendedAddTerm of query: Query * queryIndex: int
-        | CwbExtendedRemoveTerm of query: Query * queryIndex: int * termIndex: int
+        | CwbExtendedAddTerm of query: CwbExtended.Query * queryIndex: int
+        | CwbExtendedRemoveTerm of query: CwbExtended.Query * queryIndex: int * termIndex: int
         | CwbExtendedToggleAttrModal of maybeTermIndex: int option
         | Search
         | ResetForm
@@ -484,15 +489,21 @@ module LoadedCorpus =
                             Interface = ``interface`` } },
             Cmd.none
 
-        | SetQueryText (text, hasFinalSpace) ->
-            printfn $"query: {text}"
+        | SetQueryText (text, queryIndex, hasFinalSpace) ->
+            let newQueries =
+                model.Search.Params.Queries
+                |> Array.mapi
+                    (fun index query ->
+                        if index = queryIndex then
+                            { query with
+                                  HasFinalSpace = hasFinalSpace
+                                  QueryString = text }
+                        else
+                            query)
 
             let newSearchParams =
                 { model.Search.Params with
-                      Queries =
-                          [| { HasFinalSpace = hasFinalSpace
-                               LanguageCode = model.Search.Params.Queries.[0].LanguageCode
-                               QueryString = text } |] }
+                      Queries = newQueries }
 
             let newModel =
                 { model with
@@ -502,6 +513,19 @@ module LoadedCorpus =
 
             newModel, Cmd.none
 
+        | AddQueryRow ->
+            let newQueries =
+                Array.append model.Search.Params.Queries [| Query.Init(None) |]
+
+            let newModel =
+                { model with
+                      Search =
+                          { model.Search with
+                                Params =
+                                    { model.Search.Params with
+                                          Queries = newQueries } } }
+
+            newModel, Cmd.none
         | CwbExtendedSetMainString (query, queryIndex, term, termIndex, maybeValue) ->
             let newTerm =
                 { term with

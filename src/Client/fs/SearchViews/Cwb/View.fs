@@ -51,44 +51,34 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
               separator
               Html.b cqpHeading ]
 
-    let queryText =
+    let queryText (query: Query) =
         match search.Interface with
         | Simple ->
-            search.Params.Queries
-            |> Array.tryHead
-            |> Option.map
-                (fun query ->
-                    query.QueryString
-                    |> replace "</?(?:s|who)?>" ""
-                    // Unescape any escaped chars, since we don't want the backslashes
-                    // to show in the text input
-                    |> replace "\\\(.)" "$1"
-                    |> replace "\[\(?\w+=\"(.*?)\"(?:\s+%c)?\)?\]" "$1"
-                    |> replace "\"([^\s=]+)\"" "$1"
-                    |> replace "\s*\[\]\s*" " .* "
-                    |> replace "^!" ""
-                    |> replace "__QUOTE__" "\""
-                    // Replace .* or .+ by a single asterisk, used for truncation in the simple view
-                    |> replace "\.[\*\+]" "*"
-                    |> fun text ->
-                        if text = " * " then ""
-                        elif query.HasFinalSpace then text + " "
-                        else text)
-            |> Option.defaultValue ""
+            query.QueryString
+            |> replace "</?(?:s|who)?>" ""
+            // Unescape any escaped chars, since we don't want the backslashes
+            // to show in the text input
+            |> replace "\\\(.)" "$1"
+            |> replace "\[\(?\w+=\"(.*?)\"(?:\s+%c)?\)?\]" "$1"
+            |> replace "\"([^\s=]+)\"" "$1"
+            |> replace "\s*\[\]\s*" " .* "
+            |> replace "^!" ""
+            |> replace "__QUOTE__" "\""
+            // Replace .* or .+ by a single asterisk, used for truncation in the simple view
+            |> replace "\.[\*\+]" "*"
+            |> fun text ->
+                if text = " * " then ""
+                elif query.HasFinalSpace then text + " "
+                else text
         | Extended _ -> ""
         | Cqp ->
-            search.Params.Queries
-            |> Array.tryHead
-            |> Option.map
-                (fun query ->
-                    query.QueryString
-                    |> replace "__QUOTE__" "\""
-                    |> fun text ->
-                        if query.HasFinalSpace then
-                            text + " "
-                        else
-                            text)
-            |> Option.defaultValue ""
+            query.QueryString
+            |> replace "__QUOTE__" "\""
+            |> fun text ->
+                if query.HasFinalSpace then
+                    text + " "
+                else
+                    text
 
     let textInputToQuery (inputValue: string) : (string * bool) =
         match search.Interface with
@@ -129,21 +119,32 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
             let hasFinalSpace = Regex.IsMatch(inputValue, "\s+$")
             (query, hasFinalSpace)
 
-    let simpleView =
-        Bulma.input.search [ prop.value queryText
+    let simpleView (query: Query) queryIndex =
+        Bulma.input.search [ prop.value (queryText query)
                              prop.onKeyUp (key.enter, (fun _ -> dispatch Search))
-                             prop.onChange (textInputToQuery >> SetQueryText >> dispatch) ]
+                             prop.onChange
+                                 (fun (s: string) ->
+                                     let query, hasFinalSpace = textInputToQuery s
+                                     dispatch (SetQueryText(query, queryIndex, hasFinalSpace))) ]
 
-    let cqpView =
-        Bulma.input.search [ prop.value queryText
+    let cqpView (query: Query) queryIndex =
+        Bulma.input.search [ prop.value (queryText query)
                              prop.onKeyUp (key.enter, (fun _ -> dispatch Search))
-                             prop.onChange (textInputToQuery >> SetQueryText >> dispatch) ]
+                             prop.onChange
+                                 (fun (s: string) ->
+                                     let query, hasFinalSpace = textInputToQuery s
+                                     dispatch (SetQueryText(query, queryIndex, hasFinalSpace))) ]
 
-    let searchInterface =
+    let searchInterface (query: Query) queryIndex =
         match search.Interface with
-        | Simple -> simpleView
-        | Extended maybeAttrModalModel -> Cwb.Extended.view corpus search maybeAttrModalModel dispatch
-        | Cqp -> cqpView
+        | Simple -> simpleView query queryIndex
+        | Extended maybeAttrModalModel -> Cwb.Extended.view corpus search query queryIndex maybeAttrModalModel dispatch
+        | Cqp -> cqpView query queryIndex
+
+    let queryRows =
+        search.Params.Queries
+        |> Array.mapi
+            (fun queryIndex query -> Bulma.field.div [ Bulma.control.div [ searchInterface query queryIndex ] ])
 
     Html.div [ prop.style [ style.width 500 ]
                prop.children [ Bulma.level [ prop.style [ style.paddingTop 20 ]
@@ -154,5 +155,8 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                                                           (fun _ ->
                                                                                                               dispatch
                                                                                                                   Search) ] ] ] ]
-                               Bulma.field.div [ Bulma.control.div [ searchInterface ] ]
-                               Bulma.field.div [ Bulma.control.div [ Bulma.button.button "Or..." ] ] ] ]
+                               yield! queryRows
+                               Bulma.field.div [ Bulma.control.div [ Bulma.button.button [ prop.onClick
+                                                                                               (fun _ ->
+                                                                                                   dispatch AddQueryRow)
+                                                                                           prop.text "Or..." ] ] ] ] ]

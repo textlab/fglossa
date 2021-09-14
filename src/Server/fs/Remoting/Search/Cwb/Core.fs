@@ -43,7 +43,8 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                 [ "CorpusCode" => searchParams.CorpusCode
                   "Queries"
                   => (searchParams.Queries
-                      |> Array.map (fun q -> q.QueryString))
+                      |> Array.map (fun q -> q.QueryString)
+                      |> String.concat " | ")
                   "Metadata"
                   => searchParams.MetadataSelection.ToString() ]
 

@@ -30,7 +30,7 @@ let includeExcludeTags (query: Query) queryIndex (term: QueryTerm) termIndex dis
                                                                       dispatch (
                                                                           CwbExtendedRemoveExtraForms(
                                                                               query,
-                                                                              0,
+                                                                              queryIndex,
                                                                               term,
                                                                               termIndex,
                                                                               forms.Attr
@@ -44,12 +44,14 @@ let AttributeModal
         corpus: Corpus,
         modalModel: AttributeModalModel,
         query: Query,
+        queryIndex: int,
         term: QueryTerm,
         termIndex: int,
         dispatch: Msg -> unit
     ) : ReactElement =
 
     let mainCategoryButtons
+        queryIndex
         sectionIndex
         (menuSectionCategories: CwbAttributeMenu.MainCategoryValue list)
         (termSectionSelection: Set<MainCategory>)
@@ -85,7 +87,7 @@ let AttributeModal
                                                           dispatch (
                                                               CwbExtendedToggleAttributeCategory(
                                                                   query,
-                                                                  0,
+                                                                  queryIndex,
                                                                   term,
                                                                   termIndex,
                                                                   sectionIndex,
@@ -133,7 +135,7 @@ let AttributeModal
                                                 dispatch (
                                                     CwbExtendedToggleAttributeSubcategory(
                                                         query,
-                                                        0,
+                                                        queryIndex,
                                                         term,
                                                         termIndex,
                                                         sectionIndex,
@@ -221,6 +223,7 @@ let AttributeModal
                     Html.span [ Bulma.message [ color.isInfo
                                                 prop.children [ Bulma.messageHeader [ Html.p menuSection.Heading ]
                                                                 Bulma.messageBody [ mainCategoryButtons
+                                                                                        queryIndex
                                                                                         sectionIndex
                                                                                         menuSection.Values
                                                                                         termSectionSelection ] ] ]
@@ -243,7 +246,7 @@ let AttributeModal
                                                                                                          dispatch (
                                                                                                              CwbExtendedIncludeOrExcludeExtraForm(
                                                                                                                  query,
-                                                                                                                 0,
+                                                                                                                 queryIndex,
                                                                                                                  term,
                                                                                                                  termIndex,
                                                                                                                  command
@@ -269,7 +272,7 @@ let AttributeModal
                                                                                                 dispatch (
                                                                                                     CwbExtendedClearAttributeCategories(
                                                                                                         query,
-                                                                                                        0,
+                                                                                                        queryIndex,
                                                                                                         term,
                                                                                                         termIndex
                                                                                                     )
@@ -317,12 +320,19 @@ let AttributeModal
                                                      prop.onClick (fun _ -> dispatch (CwbExtendedToggleAttrModal None)) ] ] ]
 
 
-let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalModel option) (dispatch: Msg -> unit) =
+let view
+    (corpus: Corpus)
+    (search: Search)
+    (underlyingQuery: Shared.Query)
+    (queryIndex: int)
+    (maybeAttrModalModel: AttributeModalModel option)
+    (dispatch: Msg -> unit)
+    =
     let query =
         if search.Params.Queries.Length > 0 then
-            Query.OfCqp(corpus, search.Params.Queries.[0].QueryString)
+            CwbExtended.Query.OfCqp(corpus, underlyingQuery.QueryString)
         else
-            Query.Default
+            CwbExtended.Query.Default
 
     let segmentType =
         match corpus.Config.Modality with
@@ -353,7 +363,14 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
                                        (fun (s: string) ->
                                            if s = "" then
                                                dispatch (
-                                                   CwbExtendedSetIntervalValue(query, 0, term, termIndex, minMax, None)
+                                                   CwbExtendedSetIntervalValue(
+                                                       query,
+                                                       queryIndex,
+                                                       term,
+                                                       termIndex,
+                                                       minMax,
+                                                       None
+                                                   )
                                                )
 
                                            match Int32.TryParse(s) with
@@ -361,7 +378,7 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
                                                dispatch (
                                                    CwbExtendedSetIntervalValue(
                                                        query,
-                                                       0,
+                                                       queryIndex,
                                                        term,
                                                        termIndex,
                                                        minMax,
@@ -378,7 +395,7 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
                                    (fun (s: string) ->
                                        let v = if s = "" then None else Some s
 
-                                       dispatch (CwbExtendedSetMainString(query, 0, term, termIndex, v)))
+                                       dispatch (CwbExtendedSetMainString(query, queryIndex, term, termIndex, v)))
                                prop.style [ style.width 108 ] ]
 
         let checkbox label title isChecked (property: QueryProperty) =
@@ -390,7 +407,7 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
                                                                         dispatch (
                                                                             CwbExtendedSetQueryProperty(
                                                                                 query,
-                                                                                0,
+                                                                                queryIndex,
                                                                                 term,
                                                                                 termIndex,
                                                                                 property,
@@ -400,7 +417,7 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
                                          Bulma.text.span $" {label}" ] ]
 
         let removeTermButton =
-            Bulma.button.button [ prop.onClick (fun _ -> dispatch (CwbExtendedRemoveTerm(query, 0, termIndex)))
+            Bulma.button.button [ prop.onClick (fun _ -> dispatch (CwbExtendedRemoveTerm(query, queryIndex, termIndex)))
                                   prop.children [ Bulma.icon [ Html.i [ prop.className "fas fa-minus" ] ] ] ]
 
         let attributeTags =
@@ -454,7 +471,7 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
                                                                                         dispatch (
                                                                                             CwbExtendedToggleAttributeCategory(
                                                                                                 query,
-                                                                                                0,
+                                                                                                queryIndex,
                                                                                                 term,
                                                                                                 termIndex,
                                                                                                 sectionIndex,
@@ -465,7 +482,8 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
             | None -> []
 
         [ match maybeAttrModalModel with
-          | Some am when am.TermIndex = termIndex -> AttributeModal(corpus, am, query, term, termIndex, dispatch)
+          | Some am when am.TermIndex = termIndex ->
+              AttributeModal(corpus, am, query, queryIndex, term, termIndex, dispatch)
           | _ -> ignore None
 
           if termIndex > 0 then
@@ -559,7 +577,7 @@ let view (corpus: Corpus) (search: Search) (maybeAttrModalModel: AttributeModalM
                                                                                          dispatch (
                                                                                              CwbExtendedAddTerm(
                                                                                                  query,
-                                                                                                 0
+                                                                                                 queryIndex
                                                                                              )
                                                                                          ))
                                                                                  prop.children [ Bulma.icon [ Html.i [ prop.className
