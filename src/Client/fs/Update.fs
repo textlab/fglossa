@@ -794,7 +794,17 @@ module LoadedCorpus =
             let newQueryTerms =
                 query.Terms
                 |> Array.indexed
-                |> Array.choose (fun (i, t) -> if i <> termIndex then Some t else None)
+                |> Array.choose
+                    (fun (i, t) ->
+                        if i = termIndex + 1 then
+                            // When we remove a term, we also have to remove any interval that may have
+                            // specified between it and the next term, if any. The interval is specified
+                            // on the next term.
+                            Some { t with PrecedingInterval = None }
+                        elif i <> termIndex then
+                            Some t
+                        else
+                            None)
 
             let newModel =
                 updateQuery model query queryIndex newQueryTerms
