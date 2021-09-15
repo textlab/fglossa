@@ -351,7 +351,8 @@ module LoadedCorpus =
 
                 | CloseQuickView ->
                     { model with
-                          ShouldShowQuickView = false },
+                          ShouldShowQuickView = false
+                          TextIdInQuickView = None },
                     Cmd.none
 
         ///////////////////////////////////////////
