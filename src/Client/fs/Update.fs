@@ -446,6 +446,8 @@ module LoadedCorpus =
         | CwbExtendedAddTerm of query: CwbExtended.Query * queryIndex: int
         | CwbExtendedRemoveTerm of query: CwbExtended.Query * queryIndex: int * termIndex: int
         | CwbExtendedToggleAttrModal of maybeTermIndex: int option
+        | SetNumRandomHits of uint64 option
+        | SetRandomHitsSeed of int option
         | Search
         | ResetForm
 
@@ -849,6 +851,22 @@ module LoadedCorpus =
                                     | someInterface -> someInterface } },
             Cmd.none
 
+        | SetNumRandomHits maybeNumHits ->
+            { model with
+                  Search =
+                      { model.Search with
+                            Params =
+                                { model.Search.Params with
+                                      NumRandomHits = maybeNumHits } } },
+            Cmd.none
+        | SetRandomHitsSeed maybeSeed ->
+            { model with
+                  Search =
+                      { model.Search with
+                            Params =
+                                { model.Search.Params with
+                                      RandomHitsSeed = maybeSeed } } },
+            Cmd.none
         | Search ->
             // Do three search steps only if multicpu_bounds is defined for this corpus
             let numSteps =

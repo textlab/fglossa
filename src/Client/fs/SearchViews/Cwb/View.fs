@@ -168,6 +168,52 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                                 prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-times" ] ] ] ] ]
                                                       ) ] ])
 
+    let randomResultsControls =
+        [ Bulma.levelItem [ prop.style [ style.marginRight (length.rem 0.5) ]
+                            prop.children [ Bulma.field.div (
+                                                Bulma.control.div (
+                                                    Bulma.input.text [ prop.style [ style.width 70 ]
+                                                                       prop.value (
+                                                                           search.Params.NumRandomHits
+                                                                           |> Option.map string
+                                                                           |> Option.defaultValue ""
+                                                                       )
+                                                                       prop.onChange
+                                                                           (fun (s: string) ->
+                                                                               let value =
+                                                                                   match System.UInt64.TryParse(s) with
+                                                                                   | (true, v) -> Some v
+                                                                                   | (false, _) -> None
+
+                                                                               dispatch (SetNumRandomHits value))
+                                                                       prop.onKeyUp (
+                                                                           key.enter,
+                                                                           (fun _ -> dispatch Search)
+                                                                       ) ]
+                                                )
+                                            ) ] ]
+          Bulma.levelItem [ prop.style [ style.marginRight (length.rem 0.35) ]
+                            prop.children [ Bulma.text.span "random results (with seed:" ] ]
+          Bulma.levelItem [ prop.style [ style.marginRight (length.rem 0.5) ]
+                            prop.children [ Bulma.input.text [ prop.style [ style.width 50 ]
+                                                               prop.value (
+                                                                   search.Params.RandomHitsSeed
+                                                                   |> Option.map string
+                                                                   |> Option.defaultValue ""
+                                                               )
+                                                               prop.onChange
+                                                                   (fun (s: string) ->
+                                                                       let value =
+                                                                           match System.Int32.TryParse(s) with
+                                                                           | (true, v) -> Some v
+                                                                           | (false, _) -> None
+
+                                                                       dispatch (SetRandomHitsSeed value))
+                                                               prop.onKeyUp (key.enter, (fun _ -> dispatch Search)) ]
+
+                                             ] ]
+          Bulma.levelItem (Bulma.text.span ")") ]
+
     Html.div [ prop.style [ style.width 500 ]
                prop.children [ Bulma.level [ prop.style [ style.paddingTop 20 ]
                                              prop.children [ Bulma.levelLeft [ Bulma.levelItem links ]
@@ -178,7 +224,18 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                                                               dispatch
                                                                                                                   Search) ] ] ] ]
                                yield! queryRows
-                               Bulma.field.div [ Bulma.control.div [ Bulma.button.button [ prop.onClick
-                                                                                               (fun _ ->
-                                                                                                   dispatch AddQueryRow)
-                                                                                           prop.text "Or..." ] ] ] ] ]
+                               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ prop.style [ style.marginRight (
+                                                                                                  length.rem 3.5
+                                                                                              ) ]
+                                                                                 prop.children [ Bulma.field.div (
+                                                                                                     Bulma.control.div (
+                                                                                                         Bulma.button.button [ prop.onClick
+                                                                                                                                   (fun _ ->
+                                                                                                                                       dispatch
+                                                                                                                                           AddQueryRow)
+                                                                                                                               prop.text
+                                                                                                                                   "Or..." ]
+                                                                                                     )
+                                                                                                 ) ] ]
+                                                               if search.Interface <> Simple then
+                                                                   yield! randomResultsControls ] ] ] ]
