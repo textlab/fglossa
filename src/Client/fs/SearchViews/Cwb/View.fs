@@ -172,7 +172,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
         [ Bulma.levelItem [ prop.style [ style.marginRight (length.rem 0.5) ]
                             prop.children [ Bulma.field.div (
                                                 Bulma.control.div (
-                                                    Bulma.input.text [ prop.style [ style.width 70 ]
+                                                    Bulma.input.text [ prop.style [ style.width 55 ]
                                                                        prop.value (
                                                                            search.Params.NumRandomHits
                                                                            |> Option.map string
@@ -225,7 +225,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                                                                   Search) ] ] ] ]
                                yield! queryRows
                                Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ prop.style [ style.marginRight (
-                                                                                                  length.rem 3.5
+                                                                                                  length.rem 4.5
                                                                                               ) ]
                                                                                  prop.children [ Bulma.field.div (
                                                                                                      Bulma.control.div (
