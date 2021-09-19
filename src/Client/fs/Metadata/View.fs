@@ -15,134 +15,128 @@ let textAndTokenCountText (model: LoadedCorpusModel) =
         $"{selectedTexts} of {model.Corpus.Config.TotalTexts} texts ({selectedTokens} of {model.Corpus.Config.TotalTokens} tokens) selected"
     | _ -> $"All {model.Corpus.Config.TotalTexts} texts ({model.Corpus.Config.TotalTokens} tokens) selected"
 
-module SelectionTable =
-    [<ReactComponent>]
-    let SelectionTablePopup (model: LoadedCorpusModel) dispatch =
-        let pagination =
-            let pageSize = 50.0
+[<ReactComponent>]
+let SelectionTablePopup (model: LoadedCorpusModel) dispatch =
+    let pagination =
+        let pageSize = 50.0
 
-            let numPages =
-                match model.NumSelectedTexts with
-                | Some selectedTexts -> float selectedTexts / pageSize
-                | None -> float model.Corpus.Config.TotalTexts / pageSize
-                |> ceil
-                |> int
+        let numPages =
+            match model.NumSelectedTexts with
+            | Some selectedTexts -> float selectedTexts / pageSize
+            | None -> float model.Corpus.Config.TotalTexts / pageSize
+            |> ceil
+            |> int
 
-            let setPage (e: Browser.Types.MouseEvent) (pageNo: int) =
-                e.preventDefault ()
+        let setPage (e: Browser.Types.MouseEvent) (pageNo: int) =
+            e.preventDefault ()
 
-                if pageNo >= 1 && pageNo <= numPages then
-                    dispatch (SetSelectionTablePage pageNo)
+            if pageNo >= 1 && pageNo <= numPages then
+                dispatch (SetSelectionTablePage pageNo)
 
-            Bulma.pagination (
-                Bulma.paginationList [ if model.SelectionTablePageNumber > 1 then
-                                           Bulma.paginationLink.a [ prop.onClick (fun e -> setPage e 1)
-                                                                    prop.text "1" ]
-                                       if model.SelectionTablePageNumber >= 4 then
-                                           Html.li [ prop.key "ellipse-left"
-                                                     prop.children [ Html.span [ prop.className "pagination-ellipsis"
-                                                                                 prop.text "…" ] ] ]
-                                       if model.SelectionTablePageNumber >= 3 then
-                                           Bulma.paginationLink.a [ prop.onClick
-                                                                        (fun e ->
-                                                                            setPage
-                                                                                e
-                                                                                (model.SelectionTablePageNumber - 1))
-                                                                    prop.text (model.SelectionTablePageNumber - 1) ]
-                                       Bulma.paginationLink.a [ paginationLink.isCurrent
-                                                                prop.text model.SelectionTablePageNumber ]
-                                       if model.SelectionTablePageNumber <= numPages - 2 then
-                                           Bulma.paginationLink.a [ prop.onClick
-                                                                        (fun e ->
-                                                                            setPage
-                                                                                e
-                                                                                (model.SelectionTablePageNumber + 1))
-                                                                    prop.text (model.SelectionTablePageNumber + 1) ]
-                                       if model.SelectionTablePageNumber <= numPages - 3 then
-                                           Html.li [ prop.key "ellipse-right"
-                                                     prop.children [ Html.span [ prop.className "pagination-ellipsis"
-                                                                                 prop.text "…" ] ] ]
-                                       if model.SelectionTablePageNumber < numPages then
-                                           Bulma.paginationLink.a [ prop.onClick (fun e -> setPage e numPages)
-                                                                    prop.text numPages ] ]
-            )
+        Bulma.pagination (
+            Bulma.paginationList [ if model.SelectionTablePageNumber > 1 then
+                                       Bulma.paginationLink.a [ prop.onClick (fun e -> setPage e 1)
+                                                                prop.text "1" ]
+                                   if model.SelectionTablePageNumber >= 4 then
+                                       Html.li [ prop.key "ellipse-left"
+                                                 prop.children [ Html.span [ prop.className "pagination-ellipsis"
+                                                                             prop.text "…" ] ] ]
+                                   if model.SelectionTablePageNumber >= 3 then
+                                       Bulma.paginationLink.a [ prop.onClick
+                                                                    (fun e ->
+                                                                        setPage e (model.SelectionTablePageNumber - 1))
+                                                                prop.text (model.SelectionTablePageNumber - 1) ]
+                                   Bulma.paginationLink.a [ paginationLink.isCurrent
+                                                            prop.text model.SelectionTablePageNumber ]
+                                   if model.SelectionTablePageNumber <= numPages - 2 then
+                                       Bulma.paginationLink.a [ prop.onClick
+                                                                    (fun e ->
+                                                                        setPage e (model.SelectionTablePageNumber + 1))
+                                                                prop.text (model.SelectionTablePageNumber + 1) ]
+                                   if model.SelectionTablePageNumber <= numPages - 3 then
+                                       Html.li [ prop.key "ellipse-right"
+                                                 prop.children [ Html.span [ prop.className "pagination-ellipsis"
+                                                                             prop.text "…" ] ] ]
+                                   if model.SelectionTablePageNumber < numPages then
+                                       Bulma.paginationLink.a [ prop.onClick (fun e -> setPage e numPages)
+                                                                prop.text numPages ] ]
+        )
 
-        let header =
-            Bulma.level [ prop.style [ style.padding 20
-                                       style.marginBottom 0 ]
-                          prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle (
-                                                                                  textAndTokenCountText model
-                                                                              ) ] ]
-                                          Bulma.levelRight [ Bulma.levelItem [ pagination ]
-                                                             Bulma.levelItem [ Bulma.delete [ delete.isMedium
-                                                                                              prop.title "Close"
-                                                                                              prop.style [ style.marginLeft
-                                                                                                               40 ]
-                                                                                              prop.onClick
-                                                                                                  (fun _ ->
-                                                                                                      dispatch
-                                                                                                          CloseSelectionTable) ] ] ] ] ]
+    let header =
+        Bulma.level [ prop.style [ style.padding 20
+                                   style.marginBottom 0 ]
+                      prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle (textAndTokenCountText model) ] ]
+                                      Bulma.levelRight [ Bulma.levelItem [ pagination ]
+                                                         Bulma.levelItem [ Bulma.delete [ delete.isMedium
+                                                                                          prop.title "Close"
+                                                                                          prop.style [ style.marginLeft
+                                                                                                           40 ]
+                                                                                          prop.onClick
+                                                                                              (fun _ ->
+                                                                                                  dispatch
+                                                                                                      CloseSelectionTable) ] ] ] ] ]
 
-        let table =
-            Bulma.tableContainer [ Bulma.table [ table.isStriped
-                                                 table.isFullWidth
-                                                 prop.children [ Html.thead [ Html.tr [ for category in
-                                                                                            model.Corpus.MetadataTable ->
-                                                                                            Html.th category.Name ] ]
-                                                                 Html.tbody [ for row in model.FetchedTextMetadata ->
-                                                                                  Html.tr [ for column in row ->
-                                                                                                Html.td column ] ] ] ] ]
+    let table =
+        Bulma.tableContainer [ Bulma.table [ table.isStriped
+                                             table.isFullWidth
+                                             prop.children [ Html.thead [ Html.tr [ for category in
+                                                                                        model.Corpus.MetadataTable ->
+                                                                                        Html.th category.Name ] ]
+                                                             Html.tbody [ for row in model.FetchedTextMetadata ->
+                                                                              Html.tr [ for column in row ->
+                                                                                            Html.td column ] ] ] ] ]
 
-        let footer =
-            Bulma.level [ prop.style [ style.padding 20
-                                       style.marginBottom 0 ]
-                          prop.children [ Bulma.levelLeft []
-                                          Bulma.levelRight [ Bulma.levelItem [ pagination ]
-                                                             Bulma.levelItem [ Bulma.delete [ delete.isMedium
-                                                                                              prop.title "Close"
-                                                                                              prop.style [ style.marginLeft
-                                                                                                               40 ]
-                                                                                              prop.onClick
-                                                                                                  (fun _ ->
-                                                                                                      dispatch
-                                                                                                          CloseSelectionTable) ] ] ] ] ]
+    let footer =
+        Bulma.level [ prop.style [ style.padding 20
+                                   style.marginBottom 0 ]
+                      prop.children [ Bulma.levelLeft []
+                                      Bulma.levelRight [ Bulma.levelItem [ pagination ]
+                                                         Bulma.levelItem [ Bulma.delete [ delete.isMedium
+                                                                                          prop.title "Close"
+                                                                                          prop.style [ style.marginLeft
+                                                                                                           40 ]
+                                                                                          prop.onClick
+                                                                                              (fun _ ->
+                                                                                                  dispatch
+                                                                                                      CloseSelectionTable) ] ] ] ] ]
 
-        let elementRef = React.useElementRef ()
+    let elementRef = React.useElementRef ()
 
-        let focusPopup () =
-            elementRef.current
-            |> Option.iter (fun popupElement -> popupElement.focus ())
+    let focusPopup () =
+        elementRef.current
+        |> Option.iter (fun popupElement -> popupElement.focus ())
 
-        // Focus the popup when mounted to enable it to receive keyboard events
-        React.useEffectOnce focusPopup
+    // Focus the popup when mounted to enable it to receive keyboard events
+    React.useEffectOnce focusPopup
 
-        let popup =
-            Html.div [ prop.style [ style.height (length.percent 100)
-                                    style.top 0
-                                    style.left 0
-                                    style.width (length.percent 100)
-                                    style.position.absolute
-                                    style.zIndex 40
-                                    style.backgroundColor "white"
-                                    style.overflowX.hidden
-                                    style.border (1, borderStyle.solid, "black")
-                                    style.transitionProperty transitionProperty.height
-                                    style.transitionDuration (System.TimeSpan(3500000L))
-                                    style.transitionTimingFunction.easeOut ]
-                       // Set elementRef in order to apply the focusPopup() function to this element
-                       prop.ref elementRef
-                       // Set tabIndex so that the lement receives keyboard events
-                       prop.tabIndex 0
-                       prop.onKeyUp
-                           (fun e ->
-                               if e.key = "Escape" then
-                                   dispatch CloseSelectionTable)
-                       prop.children [ header; table; footer ] ]
+    let popup =
+        Html.div [ prop.style [ style.height (length.percent 100)
+                                style.top 0
+                                style.left 0
+                                style.width (length.percent 100)
+                                style.position.absolute
+                                style.zIndex 40
+                                style.backgroundColor "white"
+                                style.overflowX.hidden
+                                style.border (1, borderStyle.solid, "black")
+                                style.transitionProperty transitionProperty.height
+                                style.transitionDuration (System.TimeSpan(3500000L))
+                                style.transitionTimingFunction.easeOut ]
+                   // Set elementRef in order to apply the focusPopup() function to this element
+                   prop.ref elementRef
+                   // Set tabIndex so that the lement receives keyboard events
+                   prop.tabIndex 0
+                   prop.onKeyUp
+                       (fun e ->
+                           if e.key = "Escape" then
+                               dispatch CloseSelectionTable)
+                   prop.children [ header; table; footer ] ]
 
-        let root =
-            Browser.Dom.document.getElementById ("metadata-selection-popup-root")
+    let root =
+        Browser.Dom.document.getElementById ("metadata-selection-popup-root")
 
-        ReactDOM.createPortal (popup, root)
+    ReactDOM.createPortal (popup, root)
+
 
 module MetadataMenu =
 
@@ -607,7 +601,7 @@ module MetadataMenu =
                                prop.children [ Html.text (textAndTokenCountText model)
                                                showSelectionButton ] ]
                     if model.IsSelectionTableOpen then
-                        SelectionTable.SelectionTablePopup model dispatch
+                        SelectionTablePopup model dispatch
                     Bulma.menu [ prop.style [ style.width 200
                                               style.overflowX.hidden ]
                                  prop.children [ Bulma.menuList menuItems ] ]
