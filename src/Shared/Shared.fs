@@ -118,7 +118,7 @@ type CorpusConfig =
       TotalTokens: int64
       SearchEngine: SearchEngine
       Sizes: Map<string, uint64> }
-    static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
+    static member Init(code, name, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
         { Code = code
           FontFamily = None
           Info = None
