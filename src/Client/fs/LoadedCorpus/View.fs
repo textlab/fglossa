@@ -63,10 +63,19 @@ module CorpusStartView =
                     prop.children [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.title config.Name ]
                                                                     Bulma.levelItem logo ] ] ] ]
 
+    let corpusInfo (config: CorpusConfig) =
+        match config.Info with
+        | Some info ->
+            Html.div [ prop.style [ style.marginTop 30
+                                    style.marginBottom 10 ]
+                       prop.dangerouslySetInnerHTML info ]
+        | None -> Html.none
+
     let view (corpus: Corpus) (search: Search) topRowButtonsElement (dispatch: Update.LoadedCorpus.Msg -> unit) =
         Html.span [ topRowButtonsElement
                     corpusNameBox corpus.Config
-                    selectSearchView corpus search dispatch ]
+                    selectSearchView corpus search dispatch
+                    corpusInfo corpus.Config ]
 
 
 module ResultsView =

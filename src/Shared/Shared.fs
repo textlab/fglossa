@@ -108,6 +108,7 @@ type LanguageConfig =
 type CorpusConfig =
     { Code: string
       FontFamily: string option
+      Info: string option
       LanguageConfig: LanguageConfig
       Modality: CorpusModality
       Logo: string option
@@ -120,6 +121,7 @@ type CorpusConfig =
     static member Init(code, name, ?encoding, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
         { Code = code
           FontFamily = None
+          Info = None
           LanguageConfig = defaultArg languageConfig (Monolingual None)
           Modality = defaultArg modality Written
           Logo = logo

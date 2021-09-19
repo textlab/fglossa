@@ -1,5 +1,6 @@
 module ServerTypes
 
+open System.IO
 open System.Text.RegularExpressions
 open Shared
 open Database
@@ -52,5 +53,15 @@ type Corpus(config: CorpusConfig) =
                 Map.empty
         | Fcs -> failwith "Not implemented"
 
-    member _.Config = { config with Sizes = corpusSizes }
+    let corpusInfo =
+        try
+            Some(File.ReadAllText($"../Corpora/corpora/{config.Code}/{config.Code}.html"))
+        with
+        | :? FileNotFoundException -> None
+
+    member _.Config =
+        { config with
+              Sizes = corpusSizes
+              Info = corpusInfo }
+
     member val Encoding = System.Text.Encoding.UTF8 with get, set
