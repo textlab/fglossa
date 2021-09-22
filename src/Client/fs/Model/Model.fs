@@ -95,7 +95,8 @@ type ConcordanceModel =
       ResultPageNo: int
       ResultPages: Map<int, SearchResult []>
       SearchParams: SearchParams
-      TextIdInQuickView: string option }
+      TextIdInQuickView: string option
+      ResultRowInMediaPlayer: int option }
     static member Init(searchParams, numSteps, contextSizeTextValue, quickViewMetadata) =
         { ContextSizeTextValue = contextSizeTextValue
           IsSearching = true
@@ -109,7 +110,8 @@ type ConcordanceModel =
           ResultPageNo = 1
           ResultPages = Map.empty
           SearchParams = searchParams
-          TextIdInQuickView = None }
+          TextIdInQuickView = None
+          ResultRowInMediaPlayer = None }
 
     member this.NumResultPages() =
         match this.NumResults with

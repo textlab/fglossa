@@ -79,6 +79,7 @@ module LoadedCorpus =
                 | FetchMetadataForText of corpus: Corpus * textId: string
                 | FetchedMetadataForText of Metadata.CategoryNameAndValue list
                 | CloseQuickView
+                | SetMediaPlayerRowIndex of resultRowIndex: int option
 
             let update (msg: Msg) (model: ConcordanceModel) : ConcordanceModel * Cmd<Msg> =
                 let registerResultPages results =
@@ -353,6 +354,11 @@ module LoadedCorpus =
                     { model with
                           ShouldShowQuickView = false
                           TextIdInQuickView = None },
+                    Cmd.none
+
+                | SetMediaPlayerRowIndex maybeResultRowIndex ->
+                    { model with
+                          ResultRowInMediaPlayer = maybeResultRowIndex },
                     Cmd.none
 
         ///////////////////////////////////////////
