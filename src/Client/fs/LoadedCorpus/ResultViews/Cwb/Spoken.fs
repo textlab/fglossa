@@ -1,8 +1,11 @@
 module View.LoadedCorpus.ResultViews.Cwb.Spoken
 
+open System
+open System.Text.RegularExpressions
 open Feliz
 open Feliz.Bulma
 open Shared
+open Shared.StringUtils
 open Model
 open Update.LoadedCorpus.ShowingResults.Concordance
 open View.LoadedCorpus.ResultViews.Cwb.Common
@@ -85,24 +88,103 @@ let MediaPlayerPopup (model: ConcordanceModel) resultRowIndex (dispatch: Msg -> 
 
     ReactDOM.createPortal (popup, root)
 
-let concordanceTable (model: ConcordanceModel) (pageResults: SearchResult [] option) (dispatch: Msg -> unit) =
+let concordanceTable
+    (model: ConcordanceModel)
+    (corpus: Corpus)
+    (pageResults: SearchResult [] option)
+    (dispatch: Msg -> unit)
+    =
     let mediaPlayer =
         match model.ResultRowInMediaPlayer with
         | Some rowIndex -> MediaPlayerPopup model rowIndex dispatch
         | None -> Html.none
 
-    let singleResultRows wordIndex maybeOrigCorrIndex maybeLemmaIndex (searchResult: SearchResult) index = []
+    let extractFields result =
+        let m =
+            Regex.Match(result, "^<who_name\s+(\S*?)>:\s+(.*)\{\{(.+?)\}\}(.*?)$")
 
-    // let rows =
-    //     match pageResults with
-    //     | Some results ->
-    //         results
-    //         |> Array.toList
-    //         |> List.indexed
-    //         |> List.collect
-    //             (fun (index, result) -> singleResultRows wordIndex maybeOrigIndex maybeLemmaIndex result index)
-    //     | None -> []
-    let rows = []
+        let groupValues =
+            m.Groups
+            |> Seq.map (fun group -> group.Value)
+            |> Seq.toList
+
+        let sId = groupValues.[1]
+
+        let pre =
+            groupValues.[2]
+            // If the result begins with a who_name tag with the same ID as the one for the
+            // actual match, it feels redundant (since that speaker ID is listed just
+            // to the left of it), so just remove it.
+            |> replace $"^<who_name\s+{sId}>" ""
+
+        let searchWord =
+            groupValues.[3]
+            |> fun m ->
+                // Do the same with the match if there is no left context
+                if String.IsNullOrWhiteSpace(pre) then
+                    Regex.Replace(m, $"^<who_name\s+{sId}>", "")
+                else
+                    m
+
+        let post = groupValues.[4]
+
+        (sId, pre, searchWord, post)
+
+
+    // Returns one or more rows representing a single search result
+    let singleResultRows
+        ortIndex
+        maybePhhonIndex
+        maybeLemmaIndex
+        ortTipIndexes
+        phonTipIndexes
+        (searchResult: SearchResult)
+        index
+        =
+        []
+
+    let attributes =
+        match corpus.Config.LanguageConfig with
+        | Monolingual (Some attrs) -> attrs
+        | Monolingual None -> []
+        | Multilingual languages -> failwith "NOT IMPLEMENTED!"
+
+    let ortIndex = 0
+
+    // We need to increment phonIndex and lemmaIndex, as well as the ranges of indexes below,
+    // since the first attribute ('word') is not in the list because it is shown by
+    // default by CQP
+    let maybePhonIndex =
+        attributes
+        |> List.tryFindIndex (fun attr -> attr.Code = "phon")
+        |> Option.map (fun i -> i + 1)
+
+    let maybeLemmaIndex =
+        attributes
+        |> List.tryFindIndex (fun attr -> attr.Code = "lemma")
+        |> Option.map (fun i -> i + 1)
+
+    let ortTipIndexes =
+        [ 0 .. attributes.Length ]
+        |> List.except [ ortIndex ]
+
+    let phonTipIndexes =
+        match maybePhonIndex with
+        | Some phonIndex ->
+            [ 0 .. attributes.Length ]
+            |> List.except [ phonIndex ]
+        | None -> [ 0 .. attributes.Length ]
+
+    let rows =
+        match pageResults with
+        | Some results ->
+            results
+            |> Array.toList
+            |> List.indexed
+            |> List.collect
+                (fun (index, result) ->
+                    singleResultRows ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes phonTipIndexes result index)
+        | None -> []
 
 
     Html.span [ mediaPlayer
