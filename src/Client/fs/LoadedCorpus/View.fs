@@ -312,7 +312,9 @@ module ResultsView =
                             Bulma.levelRight [ if corpus.Config.Modality <> Spoken then
                                                    yield! contextSelector
                                                yield! pagination model isSearchingOrFetching numPages dispatch ] ]
-              LoadedCorpus.ResultViews.Cwb.Written.concordanceTable corpus resultPage dispatch ]
+              match corpus.Config.Modality with
+              | Spoken -> LoadedCorpus.ResultViews.Cwb.Spoken.concordanceTable model corpus resultPage dispatch
+              | Written -> LoadedCorpus.ResultViews.Cwb.Written.concordanceTable corpus resultPage dispatch ]
 
 
     let tabs (model: ShowingResultsModel) (dispatch: ShowingResults.Msg -> unit) =

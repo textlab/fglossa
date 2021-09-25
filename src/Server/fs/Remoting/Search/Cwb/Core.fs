@@ -92,7 +92,7 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                                         results
                                         |> Array.map
                                             (fun resultLines ->
-                                                { HasAudio = false
+                                                { AudioType = None
                                                   HasVideo = false
                                                   Text = resultLines }) }) }
         else

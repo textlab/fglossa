@@ -24,7 +24,7 @@ let getSearchResults (connStr: string) (logger: ILogger) (searchParams: SearchPa
                         { PageNumber = pageNumber
                           Results =
                               [| for hitLines in pageHits ->
-                                     { HasAudio = false
+                                     { AudioType = None
                                        HasVideo = false
                                        Text = hitLines } |] })
     }

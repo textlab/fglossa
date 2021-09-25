@@ -211,8 +211,12 @@ type SearchParams =
           Start = 0UL
           Step = 1 }
 
+type AudioType =
+    | Sound
+    | Nosound
+
 type SearchResult =
-    { HasAudio: bool
+    { AudioType: AudioType option
       HasVideo: bool
       Text: string list }
 

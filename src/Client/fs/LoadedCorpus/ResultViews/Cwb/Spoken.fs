@@ -10,6 +10,15 @@ open Model
 open Update.LoadedCorpus.ShowingResults.Concordance
 open View.LoadedCorpus.ResultViews.Cwb.Common
 
+type SearchResultInfo =
+    { AudioType: AudioType option
+      HasVideo: bool
+      SId: string
+      PreMatch: ReactElement []
+      Match: ReactElement []
+      PostMatch: ReactElement []
+      FullText: string option }
+
 [<ReactComponent>]
 let MediaPlayerPopup (model: ConcordanceModel) resultRowIndex (dispatch: Msg -> unit) =
     let navigation =
@@ -130,6 +139,180 @@ let concordanceTable
 
         (sId, pre, searchWord, post)
 
+    let audioVideoLinks (resultInfo: SearchResultInfo) : ReactElement =
+        let audioButton title icon =
+            Bulma.button.button [ button.isSmall
+                                  prop.title title
+                                  prop.style [ style.marginLeft 2
+                                               style.marginTop 2
+                                               style.marginBottom 2 ]
+                                  prop.onClick (fun _ -> printfn "viser lyd")
+                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"; icon ] ] ] ] ]
+
+        Html.span [ prop.style [ style.whitespace.nowrap ]
+                    prop.children [ if resultInfo.HasVideo then
+                                        Bulma.button.button [ button.isSmall
+                                                              prop.title "Show video"
+                                                              prop.style [ style.marginTop 2
+                                                                           style.marginBottom 2 ]
+                                                              prop.onClick (fun _ -> printfn "viser video")
+                                                              prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-film" ] ] ] ] ]
+                                    match resultInfo.AudioType with
+                                    | Some Sound -> audioButton "Play audio" "fa-volume-up"
+                                    | Some Nosound -> audioButton "Show more context" "fa-search"
+                                    | None -> Html.none
+                                    if resultInfo.AudioType = Some Sound then
+                                        Bulma.button.button [ button.isSmall
+                                                              prop.title "Show waveform"
+                                                              prop.style [ style.marginLeft 2
+                                                                           style.marginTop 2
+                                                                           style.marginBottom 2 ]
+                                                              prop.onClick (fun _ -> printfn "viser spektrogram")
+                                                              prop.children [ Html.img [ prop.src
+                                                                                             "img/speech/waveform.png"
+                                                                                         prop.style [ style.width 12 ] ] ] ] ] ]
+
+    let orthographicRow corpus (resultInfo: SearchResultInfo) rowIndex =
+        let hasPhon = corpus.Config.HasAttribute("phon")
+
+        Html.tr [ prop.key $"ort{rowIndex}"
+                  prop.children [ Html.td [ prop.style [ style.textAlign.center
+                                                         style.verticalAlign.middle ]
+                                            prop.children [ idColumn corpus resultInfo.SId rowIndex dispatch
+                                                            if not hasPhon then
+                                                                // If we don't have a phonetic transcription, we need to show the audio and video
+                                                                // links in the orthographic row instead
+                                                                Html.div [ prop.style [ style.marginTop 5 ]
+                                                                           prop.children (audioVideoLinks resultInfo) ] ] ] ] ]
+
+    let processToken token index displayedFieldIndex maybeOrtPhonIndex maybeLemmaIndex tipFieldIndexes =
+        if String.IsNullOrWhiteSpace(token) then
+            (Html.none, "")
+
+        else
+            let attrs =
+                token.Split("/")
+                |> Array.mapi
+                    (fun index attr ->
+                        attr
+                        |> fun a ->
+                            // Show the orthographic or phonetic form in italics
+                            // if present
+                            match maybeOrtPhonIndex with
+                            | Some ortPhonIndex when ortPhonIndex = index -> $"<i>{a}</i>"
+                            | _ -> a
+                        |> fun a ->
+                            // Show the lemma in quotes, if present
+                            match maybeLemmaIndex with
+                            | Some lemmaIndex when lemmaIndex = index -> $"\"{a}\""
+                            | _ -> a)
+
+            let maybeUrlsIndex =
+                attrs
+                |> Array.tryFindIndex (fun attr -> attr.Contains("\$https?:"))
+
+            let tipAttrs =
+                attrs
+                |> Array.indexed
+                |> Array.filter (fun (index, _) -> tipFieldIndexes |> List.contains index)
+                // Remove attributes that contain URLs for linking to dictionaries etc.
+                |> Array.filter
+                    (fun (index, _) ->
+                        match maybeUrlsIndex with
+                        | Some urlsIndex -> index <> urlsIndex
+                        | None -> true)
+                |> Array.filter
+                    (fun (_, attr) ->
+                        [ "__UNDEF__"
+                          "\"__UNDEF__\""
+                          "<i>__UNDEF__</i>"
+                          "-"
+                          "_"
+                          "\"_\""
+                          "<i>_</i>" ]
+                        |> List.contains attr
+                        |> not)
+                |> Array.map snd
+
+            let tipText = tipAttrs |> String.concat " "
+
+            let maybeUrls =
+                match maybeUrlsIndex with
+                | Some urlsIndex ->
+                    attrs.[urlsIndex]
+                    |> replace "!!" "/"
+                    |> fun s -> s.Split('$')
+                    |> Array.filter (not << String.IsNullOrWhiteSpace)
+                    |> Some
+                | None -> None
+
+            let dt =
+                attrs.[displayedFieldIndex]
+                |> replace "__UNDEF__" ""
+
+            let displayedText =
+                match maybeUrls with
+                | Some urls ->
+                    let links =
+                        (urls, [| "[1]"; "[2]" |])
+                        ||> Array.map2
+                                (fun url symbol ->
+                                    Html.a [ prop.key url
+                                             prop.href url
+                                             prop.target "_blank"
+                                             prop.dangerouslySetInnerHTML symbol ])
+
+                    Html.span [ prop.style [ style.whitespace.nowrap ]
+                                prop.children [ Html.span dt
+                                                Html.sup links ] ]
+                | None -> Html.text dt
+
+            (Html.span [ prop.key $"{index}{tipText}"
+                         tooltip.text tipText
+                         prop.className "has-tooltip-arrow"
+                         match corpus.Config.FontFamily with
+                         | Some fontFamily -> prop.style [ style.fontFamily fontFamily ]
+                         | None -> ignore None
+                         prop.children [ displayedText
+                                         Html.text " " ] ],
+             dt)
+
+    // Processes a pre-match, match, or post-match field
+    let processField
+        displayedFieldIndex
+        maybeOrtPhonIndex
+        maybeLemmaIndex
+        tipFieldIndexes
+        field
+        : (ReactElement * string) [] =
+        let tokens =
+            field
+            |> replace "<who_name\s+(.+?)>\s*" "<who_name_$1> "
+            |> replace "\s*</who_name>" " $&"
+            |> fun s -> s.Split()
+
+        tokens
+        |> Array.indexed
+        |> Array.choose
+            (fun (index, token) ->
+                let m = Regex.Match(token, "<who_name_(.+?)>")
+
+                if m.Success then
+                    // Extract the speaker ID and put it in front of its segment
+                    let speakerId = m.Groups.[1].Value
+
+                    Some(
+                        (Html.span [ prop.key index
+                                     prop.className "speaker-id"
+                                     prop.text $"<{speakerId}> " ],
+                         "")
+                    )
+                // Ignore end-of-segment tags; process all other tokens
+                elif not (token.Contains("</who_name>")) then
+                    processToken token index displayedFieldIndex maybeOrtPhonIndex maybeLemmaIndex tipFieldIndexes
+                    |> Some
+                else
+                    None)
 
     // Returns one or more rows representing a single search result
     let singleResultRows
@@ -141,6 +324,44 @@ let concordanceTable
         (searchResult: SearchResult)
         index
         =
+
+        let line = searchResult.Text.Head
+
+        let sId, pre, searchWord, post = extractFields line
+
+        let ortPre =
+            processField ortIndex maybePhhonIndex maybeLemmaIndex ortTipIndexes pre
+
+        let ortMatch =
+            processField ortIndex maybePhhonIndex maybeLemmaIndex ortTipIndexes searchWord
+
+        let ortPost =
+            processField ortIndex maybePhhonIndex maybeLemmaIndex ortTipIndexes post
+
+        let ortText =
+            [| ortPre |> Array.map snd
+               ortMatch |> Array.map snd
+               ortPost |> Array.map snd |]
+            |> Array.concat
+            |> String.concat ""
+
+        let ortResInfo =
+            { AudioType = searchResult.AudioType
+              HasVideo = searchResult.HasVideo
+              SId = sId
+              PreMatch = ortPre |> Array.map fst
+              Match = ortMatch |> Array.map fst
+              PostMatch = ortPost |> Array.map fst
+              FullText = Some ortText }
+
+        let orthographic = orthographicRow corpus ortResInfo
+
+        // let phonPre, phonMatch, phonPost =
+        //     match maybePhonIndex with
+        //     | Some phonIndex ->
+        //         processField phonIndex (Some ortIndex) maybeLemmaIndex ortTipIndexes [ pre; searchWord; post ]
+        //     | None -> None, None, None
+
         []
 
     let attributes =

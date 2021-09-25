@@ -946,8 +946,11 @@ type Msg =
 let init () : Model * Cmd<Msg> =
     let model = LoadingCorpus
 
+    let corpusCode =
+        Browser.Dom.window.location.hash.Split('/').[1]
+
     let cmd =
-        Cmd.OfAsync.perform serverApi.GetCorpusConfig "bokmal" LoadingCorpus.FetchedCorpusConfig
+        Cmd.OfAsync.perform serverApi.GetCorpusConfig corpusCode LoadingCorpus.FetchedCorpusConfig
 
     model, Cmd.map LoadingCorpusMsg cmd
 
