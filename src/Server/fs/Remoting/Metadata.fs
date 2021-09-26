@@ -68,7 +68,7 @@ let getMetadataForCategory
     (selection: Metadata.Selection)
     =
     task {
-        let! connStr = getConnectionString corpusCode
+        let connStr = getConnectionString corpusCode
 
         use conn = new SQLiteConnection(connStr)
 
@@ -97,7 +97,7 @@ let getMinAndMaxForCategory
     (selection: Metadata.Selection)
     =
     task {
-        let! connStr = getConnectionString corpusCode
+        let connStr = getConnectionString corpusCode
 
         use conn = new SQLiteConnection(connStr)
 
@@ -131,7 +131,7 @@ let getMetadataForTexts
     =
 
     task {
-        let! connStr = getConnectionString corpusCode
+        let connStr = getConnectionString corpusCode
 
         use conn = new SQLiteConnection(connStr)
 
@@ -180,7 +180,7 @@ let getMetadataForSingleText
     : Task<Metadata.CategoryNameAndValue list> =
 
     task {
-        let! connStr = getConnectionString corpusCode
+        let connStr = getConnectionString corpusCode
 
         use conn = new SQLiteConnection(connStr)
 

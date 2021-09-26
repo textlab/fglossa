@@ -14,7 +14,7 @@ open Metadata
 module Spoken =
     let getTextAndTokenCount (logger: ILogger) (corpus: Corpus) (selection: Metadata.Selection) =
         task {
-            let! connStr = getConnectionString corpus.Config.Code
+            let connStr = getConnectionString corpus.Config.Code
 
             use conn = new SQLiteConnection(connStr)
 
@@ -63,7 +63,7 @@ module Spoken =
 module Written =
     let getTextAndTokenCount (logger: ILogger) (corpus: Corpus) (selection: Metadata.Selection) =
         task {
-            let! connStr = getConnectionString corpus.Config.Code
+            let connStr = getConnectionString corpus.Config.Code
 
             use conn = new SQLiteConnection(connStr)
 

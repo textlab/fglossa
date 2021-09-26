@@ -114,7 +114,7 @@ let printPositionsMatchingMetadata
         File.Delete(positionsFilename)
 
         if searchParams.MetadataSelection.Count > 0 then
-            let! connStr = getConnectionString corpus.Config.Code
+            let connStr = getConnectionString corpus.Config.Code
 
             use conn = new SQLiteConnection(connStr)
 
