@@ -1,5 +1,6 @@
 module Remoting.Corpus
 
+open System
 open System.Data.SQLite
 open System.Threading.Tasks
 open FSharp.Control.Tasks
@@ -10,31 +11,80 @@ open Database
 open Shared
 open Metadata
 
-let getTextAndTokenCount (logger: ILogger) (corpusCode: string) (selection: Metadata.Selection) =
+module Spoken =
+    let getTextAndTokenCount (logger: ILogger) (corpus: Corpus) (selection: Metadata.Selection) =
+        task {
+            let! connStr = getConnectionString corpus.Config.Code
 
-    task {
-        let! connStr = getConnectionString corpusCode
+            use conn = new SQLiteConnection(connStr)
 
-        use conn = new SQLiteConnection(connStr)
+            let metadataSelectionSql =
+                generateMetadataSelectionSql None selection
 
-        let metadataSelectionSql =
-            generateMetadataSelectionSql None selection
+            let parameters = metadataSelectionToParamDict selection
 
-        let sql =
-            $"SELECT count(*) as NumTexts, sum(endpos - startpos + 1) as NumTokens FROM texts WHERE 1 = 1{metadataSelectionSql}"
+            let textSql =
+                $"SELECT COUNT(DISTINCT tid) as NumTexts FROM texts WHERE 1 = 1{metadataSelectionSql}"
 
-        let parameters = metadataSelectionToParamDict selection
+            let! textRes = querySingle logger conn textSql (Some parameters)
 
-        let! res = querySingle logger conn sql (Some parameters)
+            let numTexts =
+                match textRes with
+                | Ok maybeNumTexts ->
+                    match maybeNumTexts with
+                    | Some (num: int64) -> num
+                    | None -> 0L
+                | Error ex -> raise ex
 
-        match res with
-        | Ok maybeCounts ->
+            let tokenSql =
+                $"SELECT bounds FROM texts WHERE 1 = 1{metadataSelectionSql}"
+
+            let! tokenRes = query logger conn tokenSql (Some parameters)
+
+            let numTokens =
+                match tokenRes with
+                | Ok (bounds: string seq) ->
+                    bounds
+                    |> Seq.filter (not << String.IsNullOrWhiteSpace)
+                    |> Seq.collect (fun b -> b.Split(':'))
+                    |> Seq.sumBy
+                        (fun b ->
+                            let parts = b.Split('-')
+                            let startBound = Int64.Parse(parts.[0])
+                            let endBound = Int64.Parse(parts.[1])
+                            endBound - startBound + 1L)
+                | Error ex -> raise ex
+
             return
-                match maybeCounts with
-                | Some (counts: TextAndTokenCounts) -> counts
-                | None -> { NumTexts = 0L; NumTokens = 0L }
-        | Error ex -> return raise ex
-    }
+                { NumTexts = numTexts
+                  NumTokens = numTokens }
+        }
+
+module Written =
+    let getTextAndTokenCount (logger: ILogger) (corpus: Corpus) (selection: Metadata.Selection) =
+        task {
+            let! connStr = getConnectionString corpus.Config.Code
+
+            use conn = new SQLiteConnection(connStr)
+
+            let metadataSelectionSql =
+                generateMetadataSelectionSql None selection
+
+            let sql =
+                $"SELECT count(*) as NumTexts, sum(endpos - startpos + 1) as NumTokens FROM texts WHERE 1 = 1{metadataSelectionSql}"
+
+            let parameters = metadataSelectionToParamDict selection
+
+            let! res = querySingle logger conn sql (Some parameters)
+
+            match res with
+            | Ok maybeCounts ->
+                return
+                    match maybeCounts with
+                    | Some (counts: TextAndTokenCounts) -> counts
+                    | None -> { NumTexts = 0L; NumTokens = 0L }
+            | Error ex -> return raise ex
+        }
 
 let getCorpusList () =
     async { return Corpora.Server.getCorpusList () }
@@ -44,11 +94,23 @@ let getCorpusConfig (logger: ILogger) (corpusCode: string) =
         let corpus = Corpora.Server.getCorpus corpusCode
 
         let! numTextsAndTokens =
-            getTextAndTokenCount logger corpusCode Map.empty
+            match corpus.Config.Modality with
+            | Spoken -> Spoken.getTextAndTokenCount logger corpus Map.empty
+            | Written -> Written.getTextAndTokenCount logger corpus Map.empty
             |> Async.AwaitTask
 
         return
             { corpus.Config with
                   TotalTexts = numTextsAndTokens.NumTexts
                   TotalTokens = numTextsAndTokens.NumTokens }
+    }
+
+let getTextAndTokenCount (logger: ILogger) (corpusCode: string) (selection: Metadata.Selection) =
+    task {
+        let corpus = Corpora.Server.getCorpus corpusCode
+
+        return!
+            match corpus.Config.Modality with
+            | Spoken -> Spoken.getTextAndTokenCount logger corpus selection
+            | Written -> Written.getTextAndTokenCount logger corpus selection
     }
