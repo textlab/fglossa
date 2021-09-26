@@ -3,6 +3,7 @@ module ServerTypes
 open System.IO
 open System.Text.RegularExpressions
 open Shared
+open Shared.StringUtils
 open Database
 
 let getConnectionString corpusCode =
@@ -21,6 +22,7 @@ type Corpus(config: CorpusConfig) =
 
     member val Encoding = System.Text.Encoding.UTF8 with get, set
 
+    /// Only implemented for Corpus Workbench corpora. A map from CWB corpus name (lowercase) to number of tokens
     member _.CorpusSizes() =
         match config.SearchEngine with
         | Cwb ->
@@ -56,3 +58,25 @@ type Corpus(config: CorpusConfig) =
                     sizeMap.Add(cwbCorpus, size))
                 Map.empty
         | Fcs -> failwith "Not implemented"
+
+    /// A set containing the paths of audio files belonging to this corpus, with the
+    /// '.mp3' extension removed
+    member _.AudioFiles() =
+        try
+            Directory.GetFiles($"../Corpora/corpora/{config.Code}/audio")
+            |> Array.filter (fun filename -> filename.EndsWith(".mp3"))
+            |> Array.map (replace "\.mp3$" "")
+            |> Set.ofArray
+        with
+        | :? DirectoryNotFoundException -> Set.empty
+
+    /// A set containing the paths of video files belonging to this corpus, with the
+    /// '.mp4' extension removed
+    member _.VideoFiles() =
+        try
+            Directory.GetFiles($"../Corpora/corpora/{config.Code}/video")
+            |> Array.filter (fun filename -> filename.EndsWith(".mp4"))
+            |> Array.map (replace "\.mp4$" "")
+            |> Set.ofArray
+        with
+        | :? DirectoryNotFoundException -> Set.empty

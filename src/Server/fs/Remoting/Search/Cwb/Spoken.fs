@@ -1,5 +1,7 @@
 module Remoting.Search.Cwb.Spoken
 
+open System.IO
+open System.Text.RegularExpressions
 open Serilog
 open ServerTypes
 open Shared
@@ -73,3 +75,59 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
                    CpuCounts = [||]
                    Hits = [||] |}
     }
+
+let transformResults (corpus: Corpus) (queries: Query []) (hits: string []) =
+    let numLangs =
+        queries
+        |> Array.map (fun query -> query.LanguageCode)
+        |> Array.distinct
+        |> Array.length
+
+    let audioFiles = corpus.AudioFiles()
+    let videoFiles = corpus.VideoFiles()
+
+    [| for hitLines in (hits |> Array.chunkBySize numLangs) ->
+           let avFile =
+               hitLines
+               |> Array.head
+               |> fun line ->
+                   Regex.Match(line, "<who_avfile (.+?)>").Groups.[1]
+                       .Value
+
+           let maybeAudioType =
+               try
+                   if File.Exists($"../Corpora/corpora/{corpus.Config.Code}/audio/_.mp3") then
+                       // Indicates that it should be possible to open the audio player, but
+                       // with no sound
+                       Some Nosound
+                   elif audioFiles.Contains(avFile) then
+                       Some Sound
+                   else
+                       None
+               with
+               | :? DirectoryNotFoundException -> None
+
+           let ls =
+               [ for line in hitLines ->
+                     let l = line |> replace "<who_avfile .+?>" ""
+                     // Get rid of spaces in multiword expressions. Assuming that
+                     // attribute values never contain spaces, we can further
+                     // assume that if we find several spaces between slashes,
+                     // only the first one separates tokens and the remaining
+                     // ones are actually inside the token and should be
+                     // replaced by underscores.
+                     let mutable modifiedLine = ""
+                     let mutable modl = l
+
+                     while modl <> modifiedLine do
+                         modifiedLine <- modl
+
+                         modl <-
+                             modifiedLine
+                             |> replace " ([^/<>\s]+) ([^/<>\s]+)(/\S+/)" " $1_$2$3"
+
+                     modifiedLine ]
+
+           { AudioType = maybeAudioType
+             HasVideo = videoFiles.Contains(avFile)
+             Text = ls } |]

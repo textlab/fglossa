@@ -80,7 +80,14 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                   SearchStep = searchParams.Step
                   ResultPages =
                       match corpus.Config.Modality with
-                      | Spoken -> failwith "NOT IMPLEMENTED"
+                      | Spoken ->
+                          searchResults.Hits
+                          |> Spoken.transformResults corpus searchParams.Queries
+                          |> Array.chunkBySize searchParams.PageSize
+                          |> Array.mapi
+                              (fun index results ->
+                                  { PageNumber = index + 1
+                                    Results = results })
                       | Written ->
                           searchResults.Hits
                           |> Written.transformResults searchParams.Queries
