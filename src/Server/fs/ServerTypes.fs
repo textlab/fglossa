@@ -11,11 +11,17 @@ let getConnectionString corpusCode =
     $"DataSource=../Corpora/corpora/{code}/{code}.sqlite"
 
 type Corpus(config: CorpusConfig) =
-    // Determine the size of the corpus (or the corpora, in the case of parallel corpora)
-    // in the class constructor and store it in a private field, which can then be provided
-    // as part of the Config property (see below) without having to recompute it each time
-    // the proeperty is accessed.
-    let corpusSizes =
+    let corpusInfo =
+        try
+            Some(File.ReadAllText($"../Corpora/corpora/{config.Code}/{config.Code}.html"))
+        with
+        | :? FileNotFoundException -> None
+
+    member _.Config = { config with Info = corpusInfo }
+
+    member val Encoding = System.Text.Encoding.UTF8 with get, set
+
+    member _.CorpusSizes() =
         match config.SearchEngine with
         | Cwb ->
             // Run cwb-describe-corpus and extract the corpus size(s) from its output
@@ -50,16 +56,3 @@ type Corpus(config: CorpusConfig) =
                     sizeMap.Add(cwbCorpus, size))
                 Map.empty
         | Fcs -> failwith "Not implemented"
-
-    let corpusInfo =
-        try
-            Some(File.ReadAllText($"../Corpora/corpora/{config.Code}/{config.Code}.html"))
-        with
-        | :? FileNotFoundException -> None
-
-    member _.Config =
-        { config with
-              Sizes = corpusSizes
-              Info = corpusInfo }
-
-    member val Encoding = System.Text.Encoding.UTF8 with get, set

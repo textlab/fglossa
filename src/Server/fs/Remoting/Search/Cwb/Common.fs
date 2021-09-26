@@ -163,11 +163,13 @@ let printPositionsMatchingMetadata
                     (cwbCorpusName corpus searchParams.Queries)
                         .ToLower()
 
-                match corpus.Config.Sizes.TryFind(cwbCorpus) with
+                let corpusSizes = corpus.CorpusSizes()
+
+                match corpusSizes.TryFind(cwbCorpus) with
                 | Some corpusSize ->
                     let endpos' = Math.Min(endpos, corpusSize - 1UL)
                     File.WriteAllText(positionsFilename, $"{startpos}\t{endpos'}\n")
-                | None -> failwith $"No corpus size found for {cwbCorpus} in {corpus.Config.Sizes}!"
+                | None -> failwith $"No corpus size found for {cwbCorpus} in {corpusSizes}!"
     }
 
 let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes: Cwb.PositionalAttribute list option) =

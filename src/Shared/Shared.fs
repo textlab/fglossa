@@ -116,8 +116,7 @@ type CorpusConfig =
       Name: string
       TotalTexts: int64
       TotalTokens: int64
-      SearchEngine: SearchEngine
-      Sizes: Map<string, uint64> }
+      SearchEngine: SearchEngine }
     static member Init(code, name, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
         { Code = code
           FontFamily = None
@@ -129,8 +128,7 @@ type CorpusConfig =
           Name = name
           TotalTexts = 0L
           TotalTokens = 0L
-          SearchEngine = defaultArg searchEngine Cwb
-          Sizes = Map.empty }
+          SearchEngine = defaultArg searchEngine Cwb }
 
     member this.HasAttribute(attrCode: string) =
         match this.LanguageConfig with

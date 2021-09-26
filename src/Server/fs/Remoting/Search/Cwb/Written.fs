@@ -122,7 +122,9 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
             (cwbCorpusName corpus searchParams.Queries)
                 .ToLower()
 
-        match corpus.Config.Sizes.TryFind(cwbCorpus) with
+        let corpusSizes = corpus.CorpusSizes()
+
+        match corpusSizes.TryFind(cwbCorpus) with
         | Some corpusSize ->
             let! results =
                 getParts corpus searchParams.Step corpusSize maybeCommand
@@ -233,7 +235,7 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
                        CpuCounts = cpuCounts
                        Hits = hits |}
 
-        | None -> return failwith $"No corpus size found for {cwbCorpus} in {corpus.Config.Sizes}!"
+        | None -> return failwith $"No corpus size found for {cwbCorpus} in {corpusSizes}!"
     }
 
 
