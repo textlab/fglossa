@@ -17,7 +17,10 @@ let createServerApi ctx =
     let connStr = cnf.connectionString
 
     { GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
-      GetCorpusConfig = fun code -> Remoting.Corpus.getCorpusConfig logger code
+      GetCorpusConfig =
+          fun code ->
+              Remoting.Corpus.getCorpusConfig logger code
+              |> Async.AwaitTask
       GetMetadataForCategory =
           fun (corpusCode, categoryCode, selection) ->
               Remoting.Metadata.getMetadataForCategory logger corpusCode categoryCode selection

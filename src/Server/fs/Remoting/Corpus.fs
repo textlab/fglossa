@@ -90,14 +90,13 @@ let getCorpusList () =
     async { return Corpora.Server.getCorpusList () }
 
 let getCorpusConfig (logger: ILogger) (corpusCode: string) =
-    async {
+    task {
         let corpus = Corpora.Server.getCorpus corpusCode
 
         let! numTextsAndTokens =
             match corpus.Config.Modality with
             | Spoken -> Spoken.getTextAndTokenCount logger corpus Map.empty
             | Written -> Written.getTextAndTokenCount logger corpus Map.empty
-            |> Async.AwaitTask
 
         return
             { corpus.Config with
