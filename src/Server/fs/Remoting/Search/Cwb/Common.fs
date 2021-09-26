@@ -150,11 +150,25 @@ let printPositionsMatchingMetadata
                     // we are searching with the current CPU in the current search step, so just create an empty file
                     File.Create(positionsFilename) |> ignore
                 else
-                    return raise ex
+                    raise ex
         else
             // No metadata selected
             match corpus.Config.Modality with
-            | Spoken -> failwith "NOT IMPLEMENTED"
+            | Spoken ->
+                // Spoken corpora may include material (typically speech by interviewers) that should
+                // not be searchable, so when no metadata is selected, we search within the bounds for all
+                // speakers (which does not include the interviewers if they should be excluded from search).
+                let connStr = getConnectionString corpus.Config.Code
+                use conn = new SQLiteConnection(connStr)
+
+                let sql =
+                    "SELECT REPLACE(REPLACE(`bounds`, '-', '\t'), ':', '\n') FROM texts"
+
+                let! res = query logger conn sql None
+
+                match res with
+                | Ok bounds -> File.WriteAllLines(positionsFilename, bounds)
+                | Error ex -> raise ex
             | Written ->
                 // For written corpora, simply search the entire corpus by just printing the start and end
                 // positions specified in the request, making sure that the end position does not exceed the size
