@@ -56,12 +56,9 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
               $"size {namedQuery}"
 
               // ...as well as two pages of actual results
-              yield!
-                  match maybeCommand with
-                  | Some command ->
-                      [ command |> replace "QUERY" namedQuery
-                        $"cat {namedQuery} 0 {2 * searchParams.PageSize - 1}" ]
-                  | None -> [] ]
+              match maybeCommand with
+              | Some command -> command |> replace "QUERY" namedQuery
+              | None -> $"cat {namedQuery} 0 {2 * searchParams.PageSize - 1}" ]
 
         match! runCqpCommands logger corpus true commands with
         | Some hits, Some count ->
