@@ -175,6 +175,12 @@ let concordanceTable
     let orthographicRow corpus (resultInfo: SearchResultInfo) rowIndex =
         let hasPhon = corpus.Config.HasAttribute("phon")
 
+        let (resultLineFields: ResultLineFields) =
+            { SId = resultInfo.SId
+              PreMatch = resultInfo.PreMatch
+              SearchWord = resultInfo.Match
+              PostMatch = resultInfo.PostMatch }
+
         Html.tr [ prop.key $"ort{rowIndex}"
                   prop.children [ Html.td [ prop.style [ style.textAlign.center
                                                          style.verticalAlign.middle ]
@@ -183,7 +189,8 @@ let concordanceTable
                                                                 // If we don't have a phonetic transcription, we need to show the audio and video
                                                                 // links in the orthographic row instead
                                                                 Html.div [ prop.style [ style.marginTop 5 ]
-                                                                           prop.children (audioVideoLinks resultInfo) ] ] ] ] ]
+                                                                           prop.children (audioVideoLinks resultInfo) ] ] ]
+                                  yield! textColumns resultLineFields ] ]
 
     let processToken token index displayedFieldIndex maybeOrtPhonIndex maybeLemmaIndex tipFieldIndexes =
         if String.IsNullOrWhiteSpace(token) then
@@ -195,12 +202,13 @@ let concordanceTable
                 |> Array.mapi
                     (fun index attr ->
                         attr
-                        |> fun a ->
-                            // Show the orthographic or phonetic form in italics
-                            // if present
-                            match maybeOrtPhonIndex with
-                            | Some ortPhonIndex when ortPhonIndex = index -> $"<i>{a}</i>"
-                            | _ -> a
+                        // TODO: Fix the use of italics. Does not work with Feliz.Bulma.Tooltip
+                        // |> fun a ->
+                        //     // Show the orthographic or phonetic form in italics
+                        //     // if present
+                        //     match maybeOrtPhonIndex with
+                        //     | Some ortPhonIndex when ortPhonIndex = index -> $"<i>{a}</i>"
+                        //     | _ -> a
                         |> fun a ->
                             // Show the lemma in quotes, if present
                             match maybeLemmaIndex with
@@ -354,7 +362,8 @@ let concordanceTable
               PostMatch = ortPost |> Array.map fst
               FullText = Some ortText }
 
-        let orthographic = orthographicRow corpus ortResInfo
+        let orthographic = orthographicRow corpus ortResInfo index
+        let separator = separatorRow index
 
         // let phonPre, phonMatch, phonPost =
         //     match maybePhonIndex with
@@ -362,7 +371,7 @@ let concordanceTable
         //         processField phonIndex (Some ortIndex) maybeLemmaIndex ortTipIndexes [ pre; searchWord; post ]
         //     | None -> None, None, None
 
-        []
+        [ orthographic; separator ]
 
     let attributes =
         match corpus.Config.LanguageConfig with
