@@ -95,7 +95,7 @@ let generateLanguageSql (corpus: Corpus) (queries: Query []) =
 
 let generateLimitsSql (corpus: Corpus) startpos endpos =
     match corpus.Config.Modality with
-    | Spoken -> failwith "NOT IMPLEMENTED!"
+    | Spoken -> " AND bounds <> '' AND bounds IS NOT NULL"
     | Written -> $" AND startpos >= {startpos} AND endpos <= {endpos}"
 
 // Prints to file the start and stop positions of all corpus texts that are associated with the
@@ -120,7 +120,7 @@ let printPositionsMatchingMetadata
 
             let positionFields =
                 match corpus.Config.Modality with
-                | Spoken -> $"replace(replace(`bounds`, '-', '\t'), ':', '\n')"
+                | Spoken -> $"replace(replace(`bounds`, '-', '\t'), ':', '\n') as Bounds"
                 | Written -> $"startpos as Startpos, endpos as Endpos"
 
             let metadataSelectionSql =
@@ -137,20 +137,24 @@ let printPositionsMatchingMetadata
             let parameters =
                 metadataSelectionToParamDict searchParams.MetadataSelection
 
-            let! res = query logger conn sql (Some parameters)
-
-            match res with
-            | Ok (values: TextBounds seq) ->
-                values
-                |> Seq.map (fun (bounds: TextBounds) -> $"{bounds.Startpos}\t{bounds.Endpos}")
-                |> fun lines -> File.WriteAllLines(positionsFilename, lines)
-            | Error ex ->
-                if ex.Message.Contains("one matching signature (System.Object Startpos, System.Object Endpos") then
-                    // This simply means that the metadata selection is not contained within the bounds
-                    // we are searching with the current CPU in the current search step, so just create an empty file
-                    File.Create(positionsFilename) |> ignore
-                else
-                    raise ex
+            match corpus.Config.Modality with
+            | Spoken ->
+                match! query logger conn sql (Some parameters) with
+                | Ok (bounds: string seq) -> File.WriteAllLines(positionsFilename, bounds)
+                | Error ex -> raise ex
+            | Written ->
+                match! query logger conn sql (Some parameters) with
+                | Ok (values: TextBounds seq) ->
+                    values
+                    |> Seq.map (fun (bounds: TextBounds) -> $"{bounds.Startpos}\t{bounds.Endpos}")
+                    |> fun lines -> File.WriteAllLines(positionsFilename, lines)
+                | Error ex ->
+                    if ex.Message.Contains("one matching signature (System.Object Startpos, System.Object Endpos") then
+                        // This simply means that the metadata selection is not contained within the bounds
+                        // we are searching with the current CPU in the current search step, so just create an empty file
+                        File.Create(positionsFilename) |> ignore
+                    else
+                        raise ex
         else
             // No metadata selected
             match corpus.Config.Modality with
