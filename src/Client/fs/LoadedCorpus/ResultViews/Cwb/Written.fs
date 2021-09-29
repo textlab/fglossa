@@ -207,8 +207,7 @@ let concordanceTable (corpus: Corpus) (pageResults: SearchResult [] option) (dis
                 (fun (index, result) -> singleResultRows wordIndex maybeOrigIndex maybeLemmaIndex result index)
         | None -> []
 
-    Bulma.table [ table.isStriped
-                  table.isFullWidth
+    Bulma.table [ table.isFullWidth
                   table.isBordered
                   table.isNarrow
                   prop.className "concordance-table"

@@ -466,8 +466,7 @@ let concordanceTable
 
 
     Html.span [ mediaPlayer
-                Bulma.table [ table.isStriped
-                              table.isFullWidth
+                Bulma.table [ table.isFullWidth
                               table.isBordered
                               table.isNarrow
                               prop.className "concordance-table"

@@ -40,10 +40,13 @@ let textColumns (resultLineFields: ResultLineFields) =
         // search or the first language of a multilingual one, and then we want pre-match, match
         // and post-match in separate columns.
         [ Html.td [ prop.key 0
+                    prop.className "left-context"
                     prop.children resultLineFields.PreMatch ]
           Html.td [ prop.key 1
+                    prop.className "match"
                     prop.children resultLineFields.SearchWord ]
           Html.td [ prop.key 2
+                    prop.className "right-context"
                     prop.children resultLineFields.PostMatch ] ]
     else
         // Otherwise, we have a result from a non-first language of a multilingual search. In that

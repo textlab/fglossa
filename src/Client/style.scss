@@ -10,9 +10,35 @@ html {
 }
 
 // Override a few bulma-tooltip styles
-.concordance-table span[data-tooltip] {
-    border-bottom: none;
-    cursor: auto;
+.concordance-table {
+    span[data-tooltip] {
+        border-bottom: none;
+        cursor: auto;
+    }
+
+    td.left-context {
+        width: 50%;
+        text-align: right;
+        vertical-align: middle;
+      }
+
+      td.right-context {
+        width: 50%;
+        vertical-align: middle;
+      }
+
+      td.aligned-text {
+        font-style: italic;
+
+        span.aligned-id {
+          color: #999;
+        }
+      }
+
+      td.match {
+        font-weight: bold;
+        vertical-align: middle;
+      }
 }
 
 .interval-category-table td {
