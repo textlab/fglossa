@@ -367,7 +367,7 @@ let runCqpScripts logger corpus scripts =
     }
 
 
-let getSortedPositions (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) =
+let getSortedPositions (corpus: Corpus) (searchParams: SearchParams) =
     let namedQuery =
         cwbQueryName corpus searchParams.SearchId
 
@@ -421,7 +421,7 @@ let getSortedPositions (logger: ILogger) (corpus: Corpus) (searchParams: SearchP
     sortedResultPositions
 
 
-let getSearchResults (onnStr: string) (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) =
+let getSearchResults (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) =
     async {
         let queryName =
             cwbQueryName corpus searchParams.SearchId
@@ -473,8 +473,7 @@ let getSearchResults (onnStr: string) (logger: ILogger) (corpus: Corpus) (search
                         if File.Exists($"tmp/{cwbCorpusName corpus searchParams.Queries}:{namedQuery}") then
                             []
                         else
-                            let sortedPositions =
-                                getSortedPositions logger corpus searchParams
+                            let sortedPositions = getSortedPositions corpus searchParams
 
                             [ $"undump {namedQuery} < '{sortedPositions}'"
                               namedQuery

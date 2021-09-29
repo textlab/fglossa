@@ -8,14 +8,14 @@ open ServerTypes
 open Shared
 open Database
 
-let getSearchResults (connStr: string) (logger: ILogger) (searchParams: SearchParams) (corpus: Corpus) =
+let getSearchResults (logger: ILogger) (searchParams: SearchParams) (corpus: Corpus) =
     async {
         return!
             match corpus.Config.Modality with
             | Spoken -> failwith "NOT IMPLEMENTED"
             | Written ->
                 match corpus.Config.SearchEngine with
-                | Cwb -> Written.getSearchResults connStr logger corpus searchParams
+                | Cwb -> Written.getSearchResults logger corpus searchParams
                 | Fcs -> failwith "NOT IMPLMENTED"
     }
 

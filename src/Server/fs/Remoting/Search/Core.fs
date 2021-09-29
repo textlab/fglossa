@@ -11,7 +11,7 @@ let getSearchResults (connStr: string) (logger: ILogger) (searchParams: SearchPa
 
         let! hits =
             match corpus.Config.SearchEngine with
-            | Cwb -> Cwb.Core.getSearchResults connStr logger searchParams corpus
+            | Cwb -> Cwb.Core.getSearchResults logger searchParams corpus
             | Fcs -> failwith "Not implemented"
 
         let hitPages =
