@@ -4,29 +4,15 @@ open Serilog
 open Shared
 open ServerTypes
 
-let getSearchResults (connStr: string) (logger: ILogger) (searchParams: SearchParams) (pageNumbers: ResultPageNumbers) =
+let getSearchResults (logger: ILogger) (searchParams: SearchParams) maybeAttributes (pageNumbers: ResultPageNumbers) =
     async {
         let corpus =
             Corpora.Server.getCorpus searchParams.CorpusCode
 
-        let! hits =
+        return!
             match corpus.Config.SearchEngine with
-            | Cwb -> Cwb.Core.getSearchResults logger searchParams corpus
+            | Cwb -> Cwb.Core.getSearchResults logger searchParams corpus maybeAttributes pageNumbers
             | Fcs -> failwith "Not implemented"
-
-        let hitPages =
-            hits |> Array.chunkBySize searchParams.PageSize
-
-        return
-            (hitPages, pageNumbers)
-            ||> Array.map2
-                    (fun pageHits pageNumber ->
-                        { PageNumber = pageNumber
-                          Results =
-                              [| for hitLines in pageHits ->
-                                     { AudioType = None
-                                       HasVideo = false
-                                       Text = hitLines } |] })
     }
 
 

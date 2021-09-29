@@ -42,8 +42,7 @@ let createServerApi ctx =
               Remoting.Corpus.getTextAndTokenCount logger corpusCode selection
               |> Async.AwaitTask
       GetSearchResults =
-          fun (searchParams, pageNumbers) ->
-              Remoting.Search.Core.getSearchResults connStr logger searchParams pageNumbers
+          fun (searchParams, pageNumbers) -> Remoting.Search.Core.getSearchResults logger searchParams None pageNumbers
       SearchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =

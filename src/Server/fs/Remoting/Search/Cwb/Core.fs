@@ -8,14 +8,20 @@ open ServerTypes
 open Shared
 open Database
 
-let getSearchResults (logger: ILogger) (searchParams: SearchParams) (corpus: Corpus) =
+let getSearchResults
+    (logger: ILogger)
+    (searchParams: SearchParams)
+    (corpus: Corpus)
+    (maybeAttributes: Cwb.PositionalAttribute list option)
+    (pageNumbers: ResultPageNumbers)
+    =
     async {
         return!
             match corpus.Config.Modality with
-            | Spoken -> failwith "NOT IMPLEMENTED"
+            | Spoken -> Spoken.getSearchResults logger corpus searchParams maybeAttributes pageNumbers
             | Written ->
                 match corpus.Config.SearchEngine with
-                | Cwb -> Written.getSearchResults logger corpus searchParams
+                | Cwb -> Written.getSearchResults logger corpus searchParams maybeAttributes pageNumbers
                 | Fcs -> failwith "NOT IMPLMENTED"
     }
 

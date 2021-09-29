@@ -128,3 +128,75 @@ let transformResults (corpus: Corpus) (queries: Query []) (hits: string []) =
            { AudioType = maybeAudioType
              HasVideo = videoFiles.Contains(avFile)
              Text = ls } |]
+
+let sortContextWithinWho namedQuery sortKey =
+    let tmpfile =
+        $"\"tmp/{namedQuery}_sort_by_{sortKey}\""
+
+    let (bound, ``match``) =
+        match sortKey with
+        | Left -> "lbound", "on match[-1]"
+        | Right -> "rbound", "on matchend[1]"
+        | _ -> failwith "This function should only be called with Left or Right sort keys"
+
+    [ namedQuery
+      "set ExternalSort on"
+      $"{namedQuery}_{bound} = [{bound}(who)]"
+      $"{namedQuery}_n{bound} = [!{bound}(who)] sort by word %%c {``match``}"
+      $"tabulate {namedQuery}_n{bound} match, matchend > {tmpfile}"
+      $"tabulate {namedQuery}_{bound} match, matchend >> {tmpfile}"
+      $"undump {namedQuery} < {tmpfile}" ]
+
+let sortWithinWho namedQuery sortKey =
+    if sortKey = Match then
+        [ "set ExternalSort on"
+          $"sort {namedQuery} by word %%c" ]
+    elif sortKey = Left || sortKey = Right then
+        sortContextWithinWho namedQuery sortKey
+    else
+        []
+
+
+let getSearchResults
+    (logger: ILogger)
+    (corpus: Corpus)
+    (searchParams: SearchParams)
+    (maybeAttributes: Cwb.PositionalAttribute list option)
+    (pageNumbers: ResultPageNumbers)
+    =
+    async {
+        let namedQuery =
+            cwbQueryName corpus searchParams.SearchId
+
+        let sortCmds =
+            sortWithinWho namedQuery searchParams.SortKey
+
+        let commands =
+            [ "set DataDirectory \"tmp\""
+              cwbCorpusName corpus searchParams.Queries
+              "set Context 1 who_start"
+              "set PrintStructures \"who_name, who_avfile\""
+              "set LD \"{{\""
+              "set RD \"}}\""
+              displayedAttrsCommand corpus searchParams.Queries maybeAttributes
+              if sortCmds.Length > 0 then
+                  yield! sortCmds
+              $"cat {namedQuery} {searchParams.Start} {searchParams.End}" ]
+
+        let! output = runCqpCommands logger corpus false commands
+        let rawResults = fst output |> Option.defaultValue [||]
+
+        let hits =
+            rawResults
+            |> transformResults corpus searchParams.Queries
+
+        let hitPages =
+            hits |> Array.chunkBySize searchParams.PageSize
+
+        return
+            (hitPages, pageNumbers)
+            ||> Array.map2
+                    (fun pageHits pageNumber ->
+                        { PageNumber = pageNumber
+                          Results = pageHits })
+    }

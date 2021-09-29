@@ -421,13 +421,20 @@ let getSortedPositions (corpus: Corpus) (searchParams: SearchParams) =
     sortedResultPositions
 
 
-let getSearchResults (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) =
+let getSearchResults
+    (logger: ILogger)
+    (corpus: Corpus)
+    (searchParams: SearchParams)
+    (maybeAttributes: Cwb.PositionalAttribute list option)
+    (pageNumbers: ResultPageNumbers)
+    =
     async {
         let queryName =
             cwbQueryName corpus searchParams.SearchId
 
         let! rawResults =
             if corpus.Config.MultiCpuBounds.IsSome then
+                // The corpus uses multiple CPUs
                 match searchParams.SortKey with
                 | Position ->
                     let namedQuery =
@@ -446,7 +453,14 @@ let getSearchResults (logger: ILogger) (corpus: Corpus) (searchParams: SearchPar
                         (nonzeroFiles, indexes)
                         ||> Seq.map2
                                 (fun resultFile (start, ``end``) ->
-                                    [ yield! cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery []
+                                    [ yield!
+                                        cqpInit
+                                            corpus
+                                            searchParams
+                                            (Some searchParams.SortKey)
+                                            maybeAttributes
+                                            namedQuery
+                                            []
                                       $"cat {resultFile} {start} {``end``}" ])
 
                     async {
@@ -489,7 +503,8 @@ let getSearchResults (logger: ILogger) (corpus: Corpus) (searchParams: SearchPar
                         return fst output |> Option.defaultValue [||]
                     }
             else
-                let namedQuery = $"{queryName}_1_o"
+                // The corpus uses only a single CPU (e.g. small corpora, multilingual corpora)
+                let namedQuery = $"{queryName}_1_0"
 
                 let commands =
                     [ yield! cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery []
@@ -500,7 +515,21 @@ let getSearchResults (logger: ILogger) (corpus: Corpus) (searchParams: SearchPar
                     return fst output |> Option.defaultValue [||]
                 }
 
-        return
+        let hits =
             rawResults
             |> transformResults searchParams.Queries
+
+        let hitPages =
+            hits |> Array.chunkBySize searchParams.PageSize
+
+        return
+            (hitPages, pageNumbers)
+            ||> Array.map2
+                    (fun pageHits pageNumber ->
+                        { PageNumber = pageNumber
+                          Results =
+                              [| for hitLines in pageHits ->
+                                     { AudioType = None
+                                       HasVideo = false
+                                       Text = hitLines } |] })
     }
