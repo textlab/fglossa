@@ -192,7 +192,20 @@ let concordanceTable
                                                                            prop.children (audioVideoLinks resultInfo) ] ] ]
                                   yield! textColumns resultLineFields ] ]
 
-    let processToken token index displayedFieldIndex maybeOrtPhonIndex maybeLemmaIndex tipFieldIndexes =
+    let phoneticRow corpus (resultInfo: SearchResultInfo) rowIndex =
+        let (resultLineFields: ResultLineFields) =
+            { SId = resultInfo.SId
+              PreMatch = resultInfo.PreMatch
+              SearchWord = resultInfo.Match
+              PostMatch = resultInfo.PostMatch }
+
+        Html.tr [ prop.key $"phon{rowIndex}"
+                  prop.children [ Html.td [ prop.style [ style.textAlign.center
+                                                         style.verticalAlign.middle ]
+                                            prop.children [ audioVideoLinks resultInfo ] ]
+                                  yield! textColumns resultLineFields ] ]
+
+    let processToken token index displayedFieldIndex (maybeOrtPhonIndex: int option) maybeLemmaIndex tipFieldIndexes =
         if String.IsNullOrWhiteSpace(token) then
             (Html.none, "")
 
@@ -325,7 +338,7 @@ let concordanceTable
     // Returns one or more rows representing a single search result
     let singleResultRows
         ortIndex
-        maybePhhonIndex
+        maybePhonIndex
         maybeLemmaIndex
         ortTipIndexes
         phonTipIndexes
@@ -338,13 +351,13 @@ let concordanceTable
         let sId, pre, searchWord, post = extractFields line
 
         let ortPre =
-            processField ortIndex maybePhhonIndex maybeLemmaIndex ortTipIndexes pre
+            processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes pre
 
         let ortMatch =
-            processField ortIndex maybePhhonIndex maybeLemmaIndex ortTipIndexes searchWord
+            processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes searchWord
 
         let ortPost =
-            processField ortIndex maybePhhonIndex maybeLemmaIndex ortTipIndexes post
+            processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes post
 
         let ortText =
             [| ortPre |> Array.map snd
@@ -363,6 +376,39 @@ let concordanceTable
               FullText = Some ortText }
 
         let orthographic = orthographicRow corpus ortResInfo index
+
+        let phonetic =
+            match maybePhonIndex with
+            | Some phonIndex ->
+                let phonPre =
+                    processField phonIndex (Some ortIndex) maybeLemmaIndex phonTipIndexes pre
+
+                let phonMatch =
+                    processField phonIndex (Some ortIndex) maybeLemmaIndex phonTipIndexes searchWord
+
+                let phonPost =
+                    processField phonIndex (Some ortIndex) maybeLemmaIndex phonTipIndexes post
+
+                let phonText =
+                    [| phonPre |> Array.map snd
+                       phonMatch |> Array.map snd
+                       phonPost |> Array.map snd |]
+                    |> Array.concat
+                    |> String.concat ""
+
+                let phonResInfo =
+                    { AudioType = searchResult.AudioType
+                      HasVideo = searchResult.HasVideo
+                      SId = sId
+                      PreMatch = phonPre |> Array.map fst
+                      Match = phonMatch |> Array.map fst
+                      PostMatch = phonPost |> Array.map fst
+                      FullText = Some phonText }
+
+
+                Some(phoneticRow corpus phonResInfo index)
+            | None -> None
+
         let separator = separatorRow index
 
         // let phonPre, phonMatch, phonPost =
@@ -371,7 +417,9 @@ let concordanceTable
         //         processField phonIndex (Some ortIndex) maybeLemmaIndex ortTipIndexes [ pre; searchWord; post ]
         //     | None -> None, None, None
 
-        [ orthographic; separator ]
+        [ orthographic
+          if phonetic.IsSome then phonetic.Value
+          separator ]
 
     let attributes =
         match corpus.Config.LanguageConfig with
