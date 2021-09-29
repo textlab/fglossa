@@ -130,6 +130,13 @@ type CorpusConfig =
           TotalTokens = 0L
           SearchEngine = defaultArg searchEngine Cwb }
 
+    member this.TryGetAttribute(attrCode: string) =
+        match this.LanguageConfig with
+        | Monolingual (Some attributes) ->
+            attributes
+            |> List.tryFind (fun a -> a.Code = attrCode)
+        | _ -> failwith "NOT IMPLEMENTED!"
+
     member this.HasAttribute(attrCode: string) =
         match this.LanguageConfig with
         | Monolingual (Some attributes) ->

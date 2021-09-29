@@ -528,11 +528,16 @@ let view
                                                                Bulma.control.div (removeTermButton) ] ]
                          Bulma.field.div [ field.isGrouped
                                            field.isGroupedMultiline
+                                           // TODO: Use TryGetAttribute to get display names also for lemma, orig etc.?
                                            prop.children [ if corpus.Config.HasAttribute("lemma") then
                                                                checkbox "Lemma" "Lemma" term.IsLemma IsLemma
                                                            checkbox "Start" "Start of word" term.IsStart IsStart
                                                            checkbox "End" "End of word" term.IsEnd IsEnd
                                                            checkbox "Middle" "Middle of word" term.IsMiddle IsMiddle
+                                                           match corpus.Config.TryGetAttribute("phon") with
+                                                           | Some attr ->
+                                                               checkbox attr.Name attr.Name term.IsPhonetic IsPhonetic
+                                                           | None -> ignore None
                                                            if corpus.Config.HasAttribute("orig") then
                                                                checkbox
                                                                    "Original"
