@@ -1,6 +1,7 @@
 module Model
 
 open Fable.Remoting.Client
+open Feliz
 open Shared
 open Shared.StringUtils
 
@@ -63,18 +64,23 @@ type Search =
 
 type CwbAttributeMenu = CwbAttributeMenu.AttributeSection list
 
-type Corpus =
-    { Config: CorpusConfig
-      CwbAttributeMenu: CwbAttributeMenu option
-      MetadataMenu: Metadata.MenuItem list
-      MetadataTable: Metadata.Category list
-      MetadataQuickView: Metadata.Category list }
-    static member Init(config) =
-        { Config = config
-          CwbAttributeMenu = None
-          MetadataMenu = []
-          MetadataTable = []
-          MetadataQuickView = [] }
+// Implement the Corpus type as a class instead of a record so as to allow individual corpora to
+// override methods as they are instantiated using object expressions.
+type Corpus
+    (
+        config: CorpusConfig,
+        ?cwbAttributeMenu: CwbAttributeMenu,
+        ?metadataMenu: Metadata.MenuItem list,
+        ?metadataTable: Metadata.Category list,
+        ?metadataQuickView: Metadata.Category list
+    ) =
+    member val Config = config
+    member val CwbAttributeMenu = cwbAttributeMenu
+    member val MetadataMenu = defaultArg metadataMenu []
+    member val MetadataTable = defaultArg metadataTable []
+    member val MetadataQuickView = defaultArg metadataQuickView []
+    abstract member ResultLinks : unit -> ReactElement
+    default _.ResultLinks() = Html.none
 
 type ConcordanceModel =
     { ContextSizeTextValue: string

@@ -172,7 +172,7 @@ let concordanceTable
                                                                                              "img/speech/waveform.png"
                                                                                          prop.style [ style.width 12 ] ] ] ] ] ]
 
-    let orthographicRow corpus (resultInfo: SearchResultInfo) rowIndex =
+    let orthographicRow (corpus: Corpus) (resultInfo: SearchResultInfo) rowIndex =
         let hasPhon = corpus.Config.HasAttribute("phon")
 
         let (resultLineFields: ResultLineFields) =

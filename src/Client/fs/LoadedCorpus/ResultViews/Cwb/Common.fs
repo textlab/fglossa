@@ -30,7 +30,8 @@ let idColumn (corpus: Corpus) sId rowIndex (dispatch: Msg -> unit) =
                             (fun e ->
                                 e.preventDefault ()
                                 dispatch (FetchMetadataForText(corpus, textId)))
-                        prop.children [ Html.span textId ] ] ]
+                        prop.children [ Html.span textId ] ]
+               corpus.ResultLinks() ]
 // TODO: Show corpus-specific result links
 
 
