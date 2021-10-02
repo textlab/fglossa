@@ -65,7 +65,7 @@ type Corpus(config: CorpusConfig) =
         try
             Directory.GetFiles($"../Corpora/corpora/{config.Code}/audio")
             |> Array.filter (fun filename -> filename.EndsWith(".mp3"))
-            |> Array.map (replace "\.mp3$" "")
+            |> Array.map (replace ".+/" "" >> replace "\.mp3$" "")
             |> Set.ofArray
         with
         | :? DirectoryNotFoundException -> Set.empty
@@ -76,7 +76,7 @@ type Corpus(config: CorpusConfig) =
         try
             Directory.GetFiles($"../Corpora/corpora/{config.Code}/video")
             |> Array.filter (fun filename -> filename.EndsWith(".mp4"))
-            |> Array.map (replace "\.mp4$" "")
+            |> Array.map (replace ".+/" "" >> replace "\.mp4$" "")
             |> Set.ofArray
         with
         | :? DirectoryNotFoundException -> Set.empty

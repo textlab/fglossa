@@ -165,11 +165,13 @@ let concordanceTable
                                         Bulma.button.button [ button.isSmall
                                                               prop.title "Show waveform"
                                                               prop.style [ style.marginLeft 2
+                                                                           style.marginRight 12
                                                                            style.marginTop 2
-                                                                           style.marginBottom 2 ]
+                                                                           style.marginBottom 2
+                                                                           style.paddingLeft 6
+                                                                           style.paddingRight 6 ]
                                                               prop.onClick (fun _ -> printfn "viser spektrogram")
-                                                              prop.children [ Html.img [ prop.src
-                                                                                             "img/speech/waveform.png"
+                                                              prop.children [ Html.img [ prop.src "waveform.png"
                                                                                          prop.style [ style.width 12 ] ] ] ] ] ]
 
     let orthographicRow (corpus: Corpus) (resultInfo: SearchResultInfo) rowIndex =
