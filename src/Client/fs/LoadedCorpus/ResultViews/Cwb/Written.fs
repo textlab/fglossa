@@ -8,7 +8,12 @@ open Model
 open Update.LoadedCorpus.ShowingResults.Concordance
 open View.LoadedCorpus.ResultViews.Cwb.Common
 
-let concordanceTable (corpus: Corpus) (pageResults: SearchResult [] option) (dispatch: Msg -> unit) =
+let concordanceTable
+    (model: ConcordanceModel)
+    (corpus: Corpus)
+    (pageResults: SearchResult [] option)
+    (dispatch: Msg -> unit)
+    =
 
     /// Processes a pre-match, match, or post-match field.
     let processField displayedAttributeIndex maybeOrigCorrIndex maybeLemmaIndex (field: string) =
@@ -115,7 +120,7 @@ let concordanceTable (corpus: Corpus) (pageResults: SearchResult [] option) (dis
     let mainRow (resultLineFields: ResultLineFields) index =
         Html.tr [ Html.td [ prop.style [ style.textAlign.center
                                          style.verticalAlign.middle ]
-                            prop.children [ idColumn corpus resultLineFields.SId index dispatch ] ]
+                            prop.children [ idColumn corpus resultLineFields.SId model.ResultPageNo index dispatch ] ]
                   yield! textColumns resultLineFields ]
 
 

@@ -314,7 +314,7 @@ module ResultsView =
                                                yield! pagination model isSearchingOrFetching numPages dispatch ] ]
               match corpus.Config.Modality with
               | Spoken -> LoadedCorpus.ResultViews.Cwb.Spoken.concordanceTable model corpus resultPage dispatch
-              | Written -> LoadedCorpus.ResultViews.Cwb.Written.concordanceTable corpus resultPage dispatch ]
+              | Written -> LoadedCorpus.ResultViews.Cwb.Written.concordanceTable model corpus resultPage dispatch ]
 
 
     let tabs (model: ShowingResultsModel) (dispatch: ShowingResults.Msg -> unit) =

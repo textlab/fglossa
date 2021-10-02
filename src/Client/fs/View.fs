@@ -9,6 +9,7 @@ open Fable.React
 open Fable.React.Props
 open Feliz
 open Feliz.Bulma
+open Feliz.Recoil
 
 let navbar model dispatch =
     Bulma.navbar [ navbar.isFixedTop
@@ -32,9 +33,11 @@ let navbar model dispatch =
                                                              ) ]
                                    ) ] ]
 
-let view (model: Model) (dispatch: Msg -> unit) =
-    match model with
-    | LoadingCorpus -> Html.none
-    | LoadedCorpus loadedCorpusModel ->
-        Html.span [ navbar model dispatch
-                    LoadedCorpus.view loadedCorpusModel (LoadedCorpusMsg >> dispatch) ]
+// We need to define the view as a component in order to use Recoil.root
+[<ReactComponent>]
+let MainView (model: Model) (dispatch: Msg -> unit) =
+    Recoil.root [ match model with
+                  | LoadingCorpus -> Html.none
+                  | LoadedCorpus loadedCorpusModel ->
+                      Html.span [ navbar model dispatch
+                                  LoadedCorpus.view loadedCorpusModel (LoadedCorpusMsg >> dispatch) ] ]

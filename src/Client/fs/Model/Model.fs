@@ -79,8 +79,9 @@ type Corpus
     member val MetadataMenu = defaultArg metadataMenu []
     member val MetadataTable = defaultArg metadataTable []
     member val MetadataQuickView = defaultArg metadataQuickView []
-    abstract member ResultLinks : unit -> ReactElement
-    default _.ResultLinks() = Html.none
+
+    abstract member ResultLinks : pageNumber: int * rowIndex: int -> ReactElement
+    default _.ResultLinks(_, _) = Html.none
 
 type ConcordanceModel =
     { ContextSizeTextValue: string

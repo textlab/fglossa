@@ -184,7 +184,12 @@ let concordanceTable
         Html.tr [ prop.key $"ort{rowIndex}"
                   prop.children [ Html.td [ prop.style [ style.textAlign.center
                                                          style.verticalAlign.middle ]
-                                            prop.children [ idColumn corpus resultInfo.SId rowIndex dispatch
+                                            prop.children [ idColumn
+                                                                corpus
+                                                                resultInfo.SId
+                                                                model.ResultPageNo
+                                                                rowIndex
+                                                                dispatch
                                                             if not hasPhon then
                                                                 // If we don't have a phonetic transcription, we need to show the audio and video
                                                                 // links in the orthographic row instead
