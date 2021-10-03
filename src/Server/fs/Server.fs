@@ -43,7 +43,10 @@ let createServerApi ctx =
               |> Async.AwaitTask
       GetSearchResults =
           fun (searchParams, pageNumbers) -> Remoting.Search.Core.getSearchResults logger searchParams None pageNumbers
-      SearchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams }
+      SearchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams
+      GetMediaObject =
+          fun (searchParams, resultIndex, contextSize, contextUnit) ->
+              Remoting.Search.Cwb.Spoken.getMediaObject logger searchParams resultIndex contextSize contextUnit }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =
     // do some logging

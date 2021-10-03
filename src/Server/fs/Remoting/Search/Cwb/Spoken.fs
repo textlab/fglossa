@@ -200,3 +200,142 @@ let getSearchResults
                         { PageNumber = pageNumber
                           Results = pageHits })
     }
+
+let extractMediaInfo (corpus: Corpus) result =
+    let result' =
+        result
+
+        // Remove any material from the previous or following transcription
+        |> replace "^(.*\{\{.+)</trans>.*" "$1"
+        |> replace "^.*<trans>(.*\{\{.+)" "$1"
+
+        // If the matching word/phrase is at the beginning of the segment, CQP puts the braces
+        // marking the start of the match before the starting segment tag
+        // (e.g. {{<who_start 38.26><who_stop 30.34>went/go/PAST>...). Probably a
+        // bug in CQP? In any case we have to fix it by moving the braces to the
+        // start of the segment text instead. Similarly if the match is at the end of a segment.
+        |> replace "\{\{((?:<\S+?\s+?\S+?>\s*)+)" "$1{{" // Find start tags with attributes (i.e., not the match)
+        |> replace "((?:</\S+?>\s*)+)\}\}" "}}$1" // Find end tags
+        |> replace "</?who_avfile ?.*?>" ""
+
+    let timestamps =
+        [| for m in Regex.Matches(result, "<who_start\s+([\d\.]+)><who_stop\s+([\d\.]+)>.*?</who_start>") ->
+               (m.Groups.[1].Value, m.Groups.[2].Value) |]
+
+    let starttimes = timestamps |> Array.map fst
+    let endtimes = timestamps |> Array.map snd
+    let overallStarttime = starttimes |> Array.head
+    let overallEndtime = endtimes |> Array.last
+
+    let speakers =
+        [ for m in Regex.Matches(result', "<who_name\s+(.+?)>") -> m.Groups.[1].Value ]
+
+    // If we get at hit at the beginning or end of a session, the context may include
+    // material from the session before or after. Hence, we need to make sure that
+    // we extract the line key from the segment containing the actual match (marked
+    // by double braces).
+    let movieLoc =
+        let m =
+            Regex.Match(result', "<who_avfile\s+([^>]+)>[^<]*\{\{")
+
+        m.Groups.[1].Value
+
+    let result'' =
+        result' |> replace "</?who_avfile ?.*?>" ""
+
+    let mediaObjLines =
+        [ for m in Regex.Matches(result'', "<who_stop.+?>(.*?)</who_stop>") -> m.Groups.[1].Value ]
+
+    // Create the data structure that is needed by jPlayer for a single search result
+    let displayedAttrs =
+        match corpus.Config.LanguageConfig with
+        | Monolingual maybeAttributes ->
+            match maybeAttributes with
+            | Some attributes ->
+                attributes
+                |> List.map (fun attribute -> nameof attribute)
+            | None -> []
+        | Multilingual _ -> failwith "Multilingual spoken corpora not implemented!"
+
+    let annotations =
+        mediaObjLines
+        |> List.mapi
+            (fun index line ->
+                let isMatch = Regex.IsMatch(line, "\{\{")
+                let line' = line |> replace "\{\{|\}\}" ""
+                let tokens = line.Split()
+
+                let annotation =
+                    { Speaker = speakers.[index]
+                      Line =
+                          tokens
+                          |> Array.mapi
+                              (fun index token ->
+                                  let attrNames = "word" :: displayedAttrs |> List.toArray
+                                  let attrValues = token.Split('/')
+
+                                  let attrs =
+                                      Array.zip attrNames attrValues |> Map.ofArray
+
+                                  (index, attrs))
+                      From = starttimes.[index]
+                      To = endtimes.[index]
+                      IsMatch = isMatch }
+
+                (index, annotation))
+        |> Map.ofList
+
+    let matchingLineIndex =
+        mediaObjLines
+        |> List.findIndex (fun line -> Regex.IsMatch(line, "\{\{"))
+
+    let lastLineIndex = mediaObjLines.Length - 1
+
+    { Title = ""
+      LastLine = lastLineIndex
+      DisplayAttribute = "word"
+      CorpusCode = corpus.Config.Code
+      Mov =
+          { Supplied = "m4v"
+            Path = $"media/{corpus.Config.Code}"
+            MovieLoc = movieLoc
+            Start = overallStarttime
+            Stop = overallEndtime }
+      Divs = annotations
+      StartAt = matchingLineIndex
+      EndAt = matchingLineIndex
+      MinStart = 0
+      MaxEnd = lastLineIndex }
+
+let getMediaObject logger (searchParams: SearchParams) resultIndex contextSize contextUnit =
+    async {
+        let corpus =
+            Corpora.Server.getCorpus searchParams.CorpusCode
+
+        let namedQuery =
+            cwbQueryName corpus searchParams.SearchId
+
+        let unitStr =
+            if contextUnit = "episode" then
+                "episode"
+            else
+                "who_start"
+
+        let commands =
+            [ $"set DataDirectory \"tmp\""
+              corpus.Config.Code.ToUpper()
+              $"set Context {contextSize} {unitStr}"
+              "set LD \"{{\""
+              "set RD \"}}\""
+              "show +who_start +who_stop +who_name +who_avfile +trans"
+              $"cat {namedQuery} {resultIndex} {resultIndex}" ]
+
+        let! cqpResults = runCqpCommands logger corpus false commands
+
+        let result =
+            match cqpResults with
+            | Some results, _ -> results.[0]
+            | _ -> failwith "Unable to fetch segment for media player"
+
+        return extractMediaInfo corpus result
+    }

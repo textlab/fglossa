@@ -216,6 +216,32 @@ type SearchParams =
           Start = 0UL
           Step = 1 }
 
+type SpeechSegment =
+    { Speaker: string
+      Line: (int * Map<string, string>) []
+      From: string
+      To: string
+      IsMatch: bool }
+
+type MovieInfo =
+    { Supplied: string
+      Path: string
+      MovieLoc: string
+      Start: string
+      Stop: string }
+
+type MediaObject =
+    { Title: string
+      LastLine: int
+      DisplayAttribute: string
+      CorpusCode: string
+      Mov: MovieInfo
+      Divs: Map<int, SpeechSegment>
+      StartAt: int
+      EndAt: int
+      MinStart: int
+      MaxEnd: int }
+
 type AudioType =
     | Sound
     | Nosound
@@ -259,4 +285,5 @@ type IServerApi =
       GetMetadataForSingleText: CorpusCode * Metadata.CategoryNameAndCode list * TextId -> Async<Metadata.CategoryNameAndValue list>
       GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts>
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
-      SearchCorpus: SearchParams -> Async<SearchResultInfo> }
+      SearchCorpus: SearchParams -> Async<SearchResultInfo>
+      GetMediaObject: SearchParams * int * int * string -> Async<MediaObject> }
