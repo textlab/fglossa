@@ -10,6 +10,9 @@ open Model
 open Update.LoadedCorpus.ShowingResults.Concordance
 open View.LoadedCorpus.ResultViews.Cwb.Common
 
+////////// CHANGE THIS! /////////
+let corpusIds = [ ("ndc2", 52) ] |> Map.ofList
+
 type SearchResultInfo =
     { AudioType: AudioType option
       HasVideo: bool
@@ -20,45 +23,58 @@ type SearchResultInfo =
       FullText: string option }
 
 [<ReactComponent>]
-let MediaPlayerPopup (model: ConcordanceModel) resultRowIndex (dispatch: Msg -> unit) =
-    let navigation =
-        Bulma.buttons [ Common.iconButton
-                            "step-backward"
-                            (resultRowIndex <= 0)
-                            (fun _ -> dispatch (SetMediaPlayerRowIndex(Some(resultRowIndex - 1))))
-                        Common.iconButton
-                            "step-forward"
-                            (resultRowIndex >= model.SearchParams.PageSize)
-                            (fun _ -> dispatch (SetMediaPlayerRowIndex(Some(resultRowIndex + 1)))) ]
+let WaveformPlayerComponent (mediaObj: MediaObject) =
+    let corpusId = corpusIds.[mediaObj.CorpusCode]
+    let start = mediaObj.Divs.[mediaObj.StartAt].From
+    let stop = mediaObj.Divs.[mediaObj.EndAt].To
+
+    let iframeSrc =
+        $"https://tekstlab.uio.no/wave/wfplayer-{corpusId}-{mediaObj.Mov.MovieLoc}-{start}-{stop}"
+
+    Html.div [ Html.iframe [ prop.src iframeSrc
+                             prop.target.blank
+                             prop.height 385
+                             prop.width (length.percent 100)
+                             prop.style [ style.borderWidth 0 ] ] ]
+
+[<ReactComponent>]
+let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) =
+    // let navigation =
+    //     Bulma.buttons [ Common.iconButton
+    //                         "step-backward"
+    //                         (resultRowIndex <= 0)
+    //                         (fun _ -> dispatch (SetMediaPlayerForRow(Some(AudioPlayer(resultRowIndex - 1)))))
+    //                     Common.iconButton
+    //                         "step-forward"
+    //                         (resultRowIndex >= model.SearchParams.PageSize)
+    //                         (fun _ -> dispatch (SetMediaPlayerForRow(Some(AudioPlayer(resultRowIndex + 1))))) ]
 
     let header =
         Bulma.level [ prop.style [ style.padding 20
                                    style.marginBottom 0 ]
-                      prop.children [ Bulma.levelLeft [ Bulma.levelItem [ navigation ] ]
+                      prop.children [ Bulma.levelLeft [ Bulma.levelItem [] ]
                                       Bulma.levelRight [ Bulma.levelItem [ Bulma.delete [ delete.isMedium
                                                                                           prop.title "Close"
                                                                                           prop.style [ style.marginLeft
                                                                                                            40 ]
                                                                                           prop.onClick
                                                                                               (fun _ ->
-                                                                                                  dispatch (
-                                                                                                      SetMediaPlayerRowIndex
-                                                                                                          None
-                                                                                                  )) ] ] ] ] ]
+                                                                                                  dispatch
+                                                                                                      RemoveMediaObject) ] ] ] ] ]
 
-    let mediaDisplay = Bulma.section []
+    let mediaDisplay = Bulma.section [ Html.div "avspiller" ]
 
     let footer =
         Bulma.level [ prop.style [ style.padding 20
                                    style.marginBottom 0 ]
                       prop.children [ Bulma.levelLeft []
-                                      Bulma.levelRight [ Bulma.levelItem [ navigation ]
-                                                         Bulma.levelItem [ Bulma.delete [ delete.isMedium
-                                                                                          prop.title "Close"
-                                                                                          prop.style [ style.marginLeft
-                                                                                                           40 ]
-                                                                                          prop.onClick
-                                                                                              (fun _ -> printfn "hei") ] ] ] ] ]
+                                      Bulma.levelRight [ Bulma.levelItem [ Bulma.button.button [ prop.text "Close"
+                                                                                                 prop.style [ style.marginLeft
+                                                                                                                  40 ]
+                                                                                                 prop.onClick
+                                                                                                     (fun _ ->
+                                                                                                         dispatch
+                                                                                                             RemoveMediaObject) ] ] ] ] ]
 
     let elementRef = React.useElementRef ()
 
@@ -86,7 +102,10 @@ let MediaPlayerPopup (model: ConcordanceModel) resultRowIndex (dispatch: Msg -> 
                    prop.ref elementRef
                    // Set tabIndex so that the lement receives keyboard events
                    prop.tabIndex 0
-                   prop.onKeyUp (fun e -> if e.key = "Escape" then printfn "hei")
+                   prop.onKeyUp
+                       (fun e ->
+                           if e.key = "Escape" then
+                               dispatch RemoveMediaObject)
                    prop.children [ header
                                    mediaDisplay
                                    footer ] ]
@@ -104,8 +123,8 @@ let concordanceTable
     (dispatch: Msg -> unit)
     =
     let mediaPlayer =
-        match model.ResultRowInMediaPlayer with
-        | Some rowIndex -> MediaPlayerPopup model rowIndex dispatch
+        match model.MediaPlayer with
+        | Some mediaPlayerInfo -> MediaPlayerPopup mediaPlayerInfo dispatch
         | None -> Html.none
 
     let extractFields result =
@@ -139,14 +158,14 @@ let concordanceTable
 
         (sId, pre, searchWord, post)
 
-    let audioVideoLinks (resultInfo: SearchResultInfo) : ReactElement =
+    let audioVideoLinks (resultInfo: SearchResultInfo) rowIndex : ReactElement =
         let audioButton title icon =
             Bulma.button.button [ button.isSmall
                                   prop.title title
                                   prop.style [ style.marginLeft 2
                                                style.marginTop 2
                                                style.marginBottom 2 ]
-                                  prop.onClick (fun _ -> printfn "viser lyd")
+                                  prop.onClick (fun _ -> dispatch (FetchMediaObject(AudioPlayer, rowIndex)))
                                   prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"; icon ] ] ] ] ]
 
         Html.span [ prop.style [ style.whitespace.nowrap ]
@@ -155,7 +174,9 @@ let concordanceTable
                                                               prop.title "Show video"
                                                               prop.style [ style.marginTop 2
                                                                            style.marginBottom 2 ]
-                                                              prop.onClick (fun _ -> printfn "viser video")
+                                                              prop.onClick
+                                                                  (fun _ ->
+                                                                      dispatch (FetchMediaObject(VideoPlayer, rowIndex)))
                                                               prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-film" ] ] ] ] ]
                                     match resultInfo.AudioType with
                                     | Some Sound -> audioButton "Play audio" "fa-volume-up"
@@ -170,7 +191,11 @@ let concordanceTable
                                                                            style.marginBottom 2
                                                                            style.paddingLeft 6
                                                                            style.paddingRight 6 ]
-                                                              prop.onClick (fun _ -> printfn "viser spektrogram")
+                                                              prop.onClick
+                                                                  (fun _ ->
+                                                                      dispatch (
+                                                                          FetchMediaObject(WaveformPlayer, rowIndex)
+                                                                      ))
                                                               prop.children [ Html.img [ prop.src "waveform.png"
                                                                                          prop.style [ style.width 12 ] ] ] ] ] ]
 
@@ -196,7 +221,9 @@ let concordanceTable
                                                                 // If we don't have a phonetic transcription, we need to show the audio and video
                                                                 // links in the orthographic row instead
                                                                 Html.div [ prop.style [ style.marginTop 5 ]
-                                                                           prop.children (audioVideoLinks resultInfo) ] ] ]
+                                                                           prop.children (
+                                                                               audioVideoLinks resultInfo rowIndex
+                                                                           ) ] ] ]
                                   yield! textColumns resultLineFields ] ]
 
     let phoneticRow corpus (resultInfo: SearchResultInfo) rowIndex =
@@ -209,7 +236,7 @@ let concordanceTable
         Html.tr [ prop.key $"phon{rowIndex}"
                   prop.children [ Html.td [ prop.style [ style.textAlign.center
                                                          style.verticalAlign.middle ]
-                                            prop.children [ audioVideoLinks resultInfo ] ]
+                                            prop.children [ audioVideoLinks resultInfo rowIndex ] ]
                                   yield! textColumns resultLineFields ] ]
 
     let processToken token index displayedFieldIndex (maybeOrtPhonIndex: int option) maybeLemmaIndex tipFieldIndexes =

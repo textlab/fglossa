@@ -45,8 +45,15 @@ let createServerApi ctx =
           fun (searchParams, pageNumbers) -> Remoting.Search.Core.getSearchResults logger searchParams None pageNumbers
       SearchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams
       GetMediaObject =
-          fun (searchParams, resultIndex, contextSize, contextUnit) ->
-              Remoting.Search.Cwb.Spoken.getMediaObject logger searchParams resultIndex contextSize contextUnit }
+          fun (searchParams, mediaPlayerType, pageNumber, resultIndex, contextSize, contextUnit) ->
+              Remoting.Search.Cwb.Spoken.getMediaObject
+                  logger
+                  searchParams
+                  mediaPlayerType
+                  pageNumber
+                  resultIndex
+                  contextSize
+                  contextUnit }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =
     // do some logging

@@ -253,7 +253,7 @@ let extractMediaInfo (corpus: Corpus) result =
             match maybeAttributes with
             | Some attributes ->
                 attributes
-                |> List.map (fun attribute -> nameof attribute)
+                |> List.map (fun attribute -> attribute.Code)
             | None -> []
         | Multilingual _ -> failwith "Multilingual spoken corpora not implemented!"
 
@@ -271,8 +271,12 @@ let extractMediaInfo (corpus: Corpus) result =
                           tokens
                           |> Array.mapi
                               (fun index token ->
-                                  let attrNames = "word" :: displayedAttrs |> List.toArray
                                   let attrValues = token.Split('/')
+
+                                  let attrNames =
+                                      "word" :: displayedAttrs
+                                      |> List.truncate attrValues.Length
+                                      |> List.toArray
 
                                   let attrs =
                                       Array.zip attrNames attrValues |> Map.ofArray
@@ -307,7 +311,7 @@ let extractMediaInfo (corpus: Corpus) result =
       MinStart = 0
       MaxEnd = lastLineIndex }
 
-let getMediaObject logger (searchParams: SearchParams) resultIndex contextSize contextUnit =
+let getMediaObject logger (searchParams: SearchParams) mediaPlayerType pageNumber rowIndex contextSize contextUnit =
     async {
         let corpus =
             Corpora.Server.getCorpus searchParams.CorpusCode
@@ -320,6 +324,10 @@ let getMediaObject logger (searchParams: SearchParams) resultIndex contextSize c
                 "episode"
             else
                 "who_start"
+
+        let resultIndex =
+            (pageNumber - 1) * searchParams.PageSize
+            + rowIndex
 
         let commands =
             [ $"set DataDirectory \"tmp\""
@@ -337,5 +345,6 @@ let getMediaObject logger (searchParams: SearchParams) resultIndex contextSize c
             | Some results, _ -> results.[0]
             | _ -> failwith "Unable to fetch segment for media player"
 
-        return extractMediaInfo corpus result
+        let mediaObject = extractMediaInfo corpus result
+        return (mediaPlayerType, rowIndex, mediaObject)
     }

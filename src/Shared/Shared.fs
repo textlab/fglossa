@@ -246,6 +246,11 @@ type AudioType =
     | Sound
     | Nosound
 
+type MediaPlayerType =
+    | AudioPlayer
+    | VideoPlayer
+    | WaveformPlayer
+
 type SearchResult =
     { AudioType: AudioType option
       HasVideo: bool
@@ -286,4 +291,4 @@ type IServerApi =
       GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts>
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       SearchCorpus: SearchParams -> Async<SearchResultInfo>
-      GetMediaObject: SearchParams * int * int * string -> Async<MediaObject> }
+      GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject> }

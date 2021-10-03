@@ -79,7 +79,9 @@ module LoadedCorpus =
                 | FetchMetadataForText of corpus: Corpus * textId: string
                 | FetchedMetadataForText of Metadata.CategoryNameAndValue list
                 | CloseQuickView
-                | SetMediaPlayerRowIndex of resultRowIndex: int option
+                | FetchMediaObject of MediaPlayerType * rowIndex: int
+                | FetchedMediaObject of MediaPlayerType * rowIndex: int * MediaObject
+                | RemoveMediaObject
 
             let update (msg: Msg) (model: ConcordanceModel) : ConcordanceModel * Cmd<Msg> =
                 let registerResultPages results =
@@ -356,10 +358,30 @@ module LoadedCorpus =
                           TextIdInQuickView = None },
                     Cmd.none
 
-                | SetMediaPlayerRowIndex maybeResultRowIndex ->
+                | FetchMediaObject (mediaPlayerType, rowIndex) ->
+                    let cmd =
+                        Cmd.OfAsync.perform
+                            serverApi.GetMediaObject
+                            (model.SearchParams,
+                             mediaPlayerType,
+                             model.ResultPageNo,
+                             rowIndex,
+                             model.VideoContextSize,
+                             model.VideoContextUnit)
+                            FetchedMediaObject
+
+                    model, cmd
+
+                | FetchedMediaObject (mediaPlayerType, rowIndex, mediaObject) ->
                     { model with
-                          ResultRowInMediaPlayer = maybeResultRowIndex },
+                          MediaPlayer =
+                              Some
+                                  { Type = mediaPlayerType
+                                    RowIndex = rowIndex
+                                    MediaObject = mediaObject } },
                     Cmd.none
+
+                | RemoveMediaObject -> { model with MediaPlayer = None }, Cmd.none
 
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults

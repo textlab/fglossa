@@ -83,6 +83,11 @@ type Corpus
     abstract member ResultLinks : pageNumber: int * rowIndex: int -> ReactElement
     default _.ResultLinks(_, _) = Html.none
 
+type MediaPlayerInfo =
+    { Type: MediaPlayerType
+      RowIndex: int
+      MediaObject: MediaObject }
+
 type ConcordanceModel =
     { ContextSizeTextValue: string
       IsSearching: bool
@@ -103,7 +108,9 @@ type ConcordanceModel =
       ResultPages: Map<int, SearchResult []>
       SearchParams: SearchParams
       TextIdInQuickView: string option
-      ResultRowInMediaPlayer: int option }
+      MediaPlayer: MediaPlayerInfo option
+      VideoContextSize: int
+      VideoContextUnit: string }
     static member Init(searchParams, numSteps, contextSizeTextValue, quickViewMetadata) =
         { ContextSizeTextValue = contextSizeTextValue
           IsSearching = true
@@ -118,7 +125,9 @@ type ConcordanceModel =
           ResultPages = Map.empty
           SearchParams = searchParams
           TextIdInQuickView = None
-          ResultRowInMediaPlayer = None }
+          MediaPlayer = None
+          VideoContextSize = 25
+          VideoContextUnit = "who_start" }
 
     member this.NumResultPages() =
         match this.NumResults with
