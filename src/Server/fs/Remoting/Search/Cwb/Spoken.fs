@@ -216,7 +216,6 @@ let extractMediaInfo (corpus: Corpus) result =
         // start of the segment text instead. Similarly if the match is at the end of a segment.
         |> replace "\{\{((?:<\S+?\s+?\S+?>\s*)+)" "$1{{" // Find start tags with attributes (i.e., not the match)
         |> replace "((?:</\S+?>\s*)+)\}\}" "}}$1" // Find end tags
-        |> replace "</?who_avfile ?.*?>" ""
 
     let timestamps =
         [| for m in Regex.Matches(result, "<who_start\s+([\d\.]+)><who_stop\s+([\d\.]+)>.*?</who_start>") ->

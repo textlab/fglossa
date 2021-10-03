@@ -35,7 +35,8 @@ let WaveformPlayerComponent (mediaObj: MediaObject) =
                              prop.target.blank
                              prop.height 385
                              prop.width (length.percent 100)
-                             prop.style [ style.borderWidth 0 ] ] ]
+                             prop.style [ style.borderWidth 0 ]
+                             prop.allow.autoplay ] ]
 
 [<ReactComponent>]
 let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) =
@@ -62,7 +63,10 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
                                                                                                   dispatch
                                                                                                       RemoveMediaObject) ] ] ] ] ]
 
-    let mediaDisplay = Bulma.section [ Html.div "avspiller" ]
+    let mediaDisplay =
+        Bulma.section [ match mediaPlayerInfo.Type with
+                        | WaveformPlayer -> WaveformPlayerComponent mediaPlayerInfo.MediaObject
+                        | _ -> Html.none ]
 
     let footer =
         Bulma.level [ prop.style [ style.padding 20
