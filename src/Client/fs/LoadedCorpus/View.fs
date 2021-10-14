@@ -60,7 +60,11 @@ module CorpusStartView =
             | None -> Html.none
 
         Bulma.box [ prop.style [ style.padding 20 ]
-                    prop.children [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.title config.Name ]
+                    prop.children [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ prop.style [ style.minWidth 394
+                                                                                                   style.justifyContent.flexStart ]
+                                                                                      prop.children (
+                                                                                          Bulma.title config.Name
+                                                                                      ) ]
                                                                     Bulma.levelItem logo ] ] ] ]
 
     let corpusInfo (config: CorpusConfig) =
