@@ -1,5 +1,6 @@
 module View.LoadedCorpus.ResultViews.Cwb.Spoken
 
+open Fable.Core.JsInterop
 open System
 open System.Text.RegularExpressions
 open Feliz
@@ -21,6 +22,10 @@ type SearchResultInfo =
       Match: ReactElement []
       PostMatch: ReactElement []
       FullText: string option }
+
+[<ReactComponent(import = "Jplayer", from = "../../../../jplayer.js")>]
+let Jplayer (mediaObj: MediaObject, divs: obj, mediaType: string, hasLocalMedia: bool, hasAudio: bool) =
+    React.imported ()
 
 [<ReactComponent>]
 let WaveformPlayerComponent (mediaObj: MediaObject) =
@@ -64,9 +69,18 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
                                                                                                       RemoveMediaObject) ] ] ] ] ]
 
     let mediaDisplay =
+        // Since JS does not understand F# maps, we need to convert the Divs
+        // map to a JS object
+        let divs =
+            mediaPlayerInfo.MediaObject.Divs
+            |> Map.toArray
+            |> Array.map (fun (key, value) -> string key, box value)
+            |> createObj
+
         Bulma.section [ match mediaPlayerInfo.Type with
                         | WaveformPlayer -> WaveformPlayerComponent mediaPlayerInfo.MediaObject
-                        | _ -> Html.none ]
+                        | AudioPlayer -> Jplayer(mediaPlayerInfo.MediaObject, divs, "audio", false, true)
+                        | VideoPlayer -> Jplayer(mediaPlayerInfo.MediaObject, divs, "video", false, true) ]
 
     let footer =
         Bulma.level [ prop.style [ style.padding 20

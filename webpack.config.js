@@ -58,9 +58,9 @@ module.exports = {
     entry: isProduction ? {
         app: [resolve(CONFIG.fsharpEntry), resolve(CONFIG.cssEntry)]
     } : {
-            app: resolve(CONFIG.fsharpEntry),
-            style: resolve(CONFIG.cssEntry)
-        },
+        app: resolve(CONFIG.fsharpEntry),
+        style: resolve(CONFIG.cssEntry)
+    },
     // Add a hash to the output file name in production
     // to prevent browser caching if code changes
     output: {
@@ -91,7 +91,10 @@ module.exports = {
         ]),
     resolve: {
         // See https://github.com/fable-compiler/Fable/issues/1490
-        symlinks: false
+        symlinks: false,
+        alias: {
+            'jquery-ui': 'jquery-ui-dist/jquery-ui.js'
+        }
     },
     // Configuration for webpack-dev-server
     devServer: {
