@@ -585,21 +585,30 @@ module MetadataMenu =
                           dispatch
                   | FreeTextSearch category -> (freeTextSearch category dispatch) ]
 
-        let showSelectionButton =
-            Bulma.button.button [ button.isSmall
-                                  button.isOutlined
-                                  color.isInfo
-                                  prop.title "Show selection"
-                                  prop.style [ style.marginLeft 10 ]
-                                  prop.onClick (fun _ -> dispatch FetchMetadataForTexts)
-                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-binoculars" ] ] ]
-                                                  Html.span "Show" ] ]
+        let selectionButtons =
+            Bulma.buttons [ prop.style [ style.marginTop 5 ]
+                            prop.children [ Bulma.button.button [ button.isSmall
+                                                                  button.isOutlined
+                                                                  color.isInfo
+                                                                  prop.title "Show selection"
+                                                                  prop.onClick (fun _ -> dispatch FetchMetadataForTexts)
+                                                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-binoculars" ] ] ]
+                                                                                  Html.span "Show" ] ]
+                                            if model.Corpus.Config.GeoCoordinates.IsSome then
+                                                Bulma.button.button [ button.isSmall
+                                                                      button.isOutlined
+                                                                      color.isInfo
+                                                                      prop.title "Show map"
+                                                                      prop.onClick
+                                                                          (fun _ -> dispatch FetchMetadataForTexts)
+                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-globe" ] ] ]
+                                                                                      Html.span "Map" ] ] ] ]
 
         Html.span [ Html.div [ prop.style [ style.width 200
                                             style.paddingLeft (length.em 0.75)
                                             style.marginBottom (length.rem 0.75) ]
                                prop.children [ Html.text (textAndTokenCountText model)
-                                               showSelectionButton ] ]
+                                               selectionButtons ] ]
                     if model.IsSelectionTableOpen then
                         SelectionTablePopup model dispatch
                     Bulma.menu [ prop.style [ style.width 200

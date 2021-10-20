@@ -108,6 +108,7 @@ type LanguageConfig =
 type CorpusConfig =
     { Code: string
       FontFamily: string option
+      GeoCoordinates: (string * float * float) [] option
       Info: string option
       LanguageConfig: LanguageConfig
       Modality: CorpusModality
@@ -117,9 +118,10 @@ type CorpusConfig =
       TotalTexts: int64
       TotalTokens: int64
       SearchEngine: SearchEngine }
-    static member Init(code, name, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine) =
+    static member Init(code, name, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine, ?geoCoordinates) =
         { Code = code
           FontFamily = None
+          GeoCoordinates = defaultArg geoCoordinates None
           Info = None
           LanguageConfig = defaultArg languageConfig (Monolingual None)
           Modality = defaultArg modality Written
