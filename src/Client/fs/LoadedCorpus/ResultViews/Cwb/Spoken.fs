@@ -23,25 +23,12 @@ type SearchResultInfo =
       PostMatch: ReactElement []
       FullText: string option }
 
+[<ReactComponent(import = "WFplayer", from = "../../../../wfplayer.js")>]
+let WFplayer (mediaObj: MediaObject, divs: obj) = React.imported ()
+
 [<ReactComponent(import = "Jplayer", from = "../../../../jplayer.js")>]
 let Jplayer (mediaObj: MediaObject, divs: obj, mediaType: string, hasLocalMedia: bool, hasAudio: bool) =
     React.imported ()
-
-[<ReactComponent>]
-let WaveformPlayerComponent (mediaObj: MediaObject) =
-    let corpusId = corpusIds.[mediaObj.CorpusCode]
-    let start = mediaObj.Divs.[mediaObj.StartAt].From
-    let stop = mediaObj.Divs.[mediaObj.EndAt].To
-
-    let iframeSrc =
-        $"https://tekstlab.uio.no/wave/wfplayer-{corpusId}-{mediaObj.Mov.MovieLoc}-{start}-{stop}"
-
-    Html.div [ Html.iframe [ prop.src iframeSrc
-                             prop.target.blank
-                             prop.height 385
-                             prop.width (length.percent 100)
-                             prop.style [ style.borderWidth 0 ]
-                             prop.allow.autoplay ] ]
 
 [<ReactComponent>]
 let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) =
@@ -70,15 +57,38 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
 
     let mediaDisplay =
         // Since JS does not understand F# maps, we need to convert the Divs
-        // map to a JS object
+        // map and the attribute map for each div to a JS objects
         let divs =
             mediaPlayerInfo.MediaObject.Divs
             |> Map.toArray
-            |> Array.map (fun (key, value) -> string key, box value)
+            |> Array.map
+                (fun (key, value) ->
+                    let tokens =
+                        value.Line
+                        |> Array.map
+                            (fun (tokenIndex, attributeMap) ->
+                                let attrObj =
+                                    attributeMap
+                                    |> Map.toList
+                                    |> List.map (fun (attrName, attrValue) -> (attrName, box attrValue))
+                                    |> createObj
+
+                                (string tokenIndex, attrObj))
+                        |> createObj
+
+                    let valueObj =
+                        [ "Speaker" ==> value.Speaker
+                          "Line" ==> tokens
+                          "From" ==> value.From
+                          "To" ==> value.To
+                          "IsMatch" ==> value.IsMatch ]
+                        |> createObj
+
+                    string key, valueObj)
             |> createObj
 
         Bulma.section [ match mediaPlayerInfo.Type with
-                        | WaveformPlayer -> WaveformPlayerComponent mediaPlayerInfo.MediaObject
+                        | WaveformPlayer -> WFplayer(mediaPlayerInfo.MediaObject, divs)
                         | AudioPlayer -> Jplayer(mediaPlayerInfo.MediaObject, divs, "audio", false, true)
                         | VideoPlayer -> Jplayer(mediaPlayerInfo.MediaObject, divs, "video", false, true) ]
 
@@ -214,7 +224,7 @@ let concordanceTable
                                                                       dispatch (
                                                                           FetchMediaObject(WaveformPlayer, rowIndex)
                                                                       ))
-                                                              prop.children [ Html.img [ prop.src "waveform.png"
+                                                              prop.children [ Html.img [ prop.src "speech/waveform.png"
                                                                                          prop.style [ style.width 12 ] ] ] ] ] ]
 
     let orthographicRow (corpus: Corpus) (resultInfo: SearchResultInfo) rowIndex =

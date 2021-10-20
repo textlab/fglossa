@@ -6,6 +6,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import createReactClass from 'create-react-class';
 import PropTypes from 'prop-types';
+import { WFplayer } from './wfplayer.js';
 
 var TextBox = createReactClass({
     displayName: "TextBox",
@@ -20,16 +21,16 @@ var TextBox = createReactClass({
             wfPlayer: null
         };
     },
-    renderWord: function (line, index) {
+    renderWord: function (word, index) {
         var att, attString;
         attString = "";
-        for (att in line) {
+        for (att in word) {
             if (att === "pos") {
-                line[att] = line[att].replace(/:/g, "/");
+                word[att] = word[att].replace(/:/g, "/");
             }
-            attString += att + " : " + line[att] + "<br>";
+            attString += att + " : " + word[att] + "<br>";
         }
-        return React.createElement("a", { key: index, title: attString, style: line.match ? { color: '#b00', fontWeight: 'bold', fontSize: '0.9em' } : {} }, line[this.props.mediaObj.DisplayAttribute], " ");
+        return React.createElement("a", { key: index, title: attString, style: word.match ? { color: '#b00', fontWeight: 'bold', fontSize: '0.9em' } : {} }, word[this.props.mediaObj.DisplayAttribute], " ");
     },
     renderAnnotation: function (annotation, lineNo) {
         var endTimecode, getStyle, i, segment, speaker, textDivs, innerDivs, timecode;
@@ -73,7 +74,7 @@ var TextBox = createReactClass({
         innerDivs = [];
         if (this.props.mediaObj.Mov.MovieLoc !== '_') {
             innerDivs.push(
-                React.createElement("div", { key: "waveformBtnDiv", className: "waveformBtnDiv" }, React.createElement("button", { title: "Show waveform", className: "btn btn-xs btn-default", style: { marginRight: 10 }, onClick: this.toggleWFplayer.bind(this, lineNo) }, React.createElement("img", { src: "img/speech/waveform.png", style: { width: 12 } })))
+                React.createElement("div", { key: "waveformBtnDiv", className: "waveformBtnDiv" }, React.createElement("button", { title: "Show waveform", className: "btn btn-xs btn-default", style: { marginRight: 10 }, onClick: this.toggleWFplayer.bind(this, lineNo) }, React.createElement("img", { src: "speech/waveform.png", style: { width: 12 } })))
             );
         }
         innerDivs.push(
@@ -88,7 +89,7 @@ var TextBox = createReactClass({
             style: getStyle(),
         }, innerDivs));
         if (this.state.wfPlayer === lineNo) {
-            textDivs.push(React.createElement("div", { className: "waveDiv" }, React.createElement(WFplayer, { mediaObj: this.props.mediaObj, startAt: lineNo, endAt: lineNo })));
+            textDivs.push(React.createElement("div", { className: "waveDiv" }, React.createElement(WFplayer, { mediaObj: this.props.mediaObj, divs: this.props.divs, startAt: lineNo, endAt: lineNo })));
         }
         return textDivs;
     },
@@ -223,7 +224,7 @@ export var Jplayer = createReactClass({
                     $playerNode.jPlayer("setMedia", {
                         rtmpv: path + mov + ext,
                         m4v: path + mov + ext,
-                        poster: "img/speech/_6.6-%27T%27_ligo.skev.graa.jpg"
+                        poster: "speech/_6.6-%27T%27_ligo.skev.graa.jpg"
                     });
                     return $playerNode.jPlayer("play", _this.getStartTime());
                 };
@@ -291,7 +292,7 @@ export var Jplayer = createReactClass({
                 React.createElement("div", { className: "jp-video jp-video-270p", id: "jp_container_1" },
                     React.createElement("div", { className: "jp-type-single" },
                         React.createElement("div", { className: "jp-jplayer", style: this.props.mediaType == 'audio' ? { display: 'none' } : { width: 480, height: 270 } },
-                            React.createElement("img", { id: "jp_poster_1", src: "img/speech/_6.6-%27T%27_ligo.skev.graa.jpg", style: { width: 480, height: 270, display: 'none' } }),
+                            React.createElement("img", { id: "jp_poster_1", src: "speech/_6.6-%27T%27_ligo.skev.graa.jpg", style: { width: 480, height: 270, display: 'none' } }),
                             React.createElement("object", { id: "jp_flash_1", name: "jp_flash_1", data: "swf/Jplayer.swf", type: "application/x-shockwave-flash", width: "1", height: "1", tabIndex: "-1", style: { width: 1, height: 1 } },
                                 React.createElement("param", { name: "flashvars", value: "jQuery=jQuery&id=jplayer&vol=0.8&muted=false" }),
                                 React.createElement("param", { name: "allowscriptaccess", value: "always" }),

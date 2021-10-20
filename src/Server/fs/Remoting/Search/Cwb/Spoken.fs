@@ -262,7 +262,7 @@ let extractMediaInfo (corpus: Corpus) result =
             (fun index line ->
                 let isMatch = Regex.IsMatch(line, "\{\{")
                 let line' = line |> replace "\{\{|\}\}" ""
-                let tokens = line.Split()
+                let tokens = line'.Split()
 
                 let annotation =
                     { Speaker = speakers.[index]
