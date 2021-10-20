@@ -11,7 +11,7 @@ let getConnectionString corpusCode =
 
     $"DataSource=../Corpora/corpora/{code}/{code}.sqlite"
 
-type Corpus(config: CorpusConfig) =
+type Corpus(config: SharedCorpusInfo) =
     let corpusInfo =
         try
             Some(File.ReadAllText($"../Corpora/corpora/{config.Code}/{config.Code}.html"))

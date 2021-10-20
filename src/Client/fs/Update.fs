@@ -33,7 +33,7 @@ module LoadingCorpus =
     ////////////////////////////////
     // Update.LoadingCorpus
     ////////////////////////////////
-    type Msg = FetchedCorpusConfig of CorpusConfig
+    type Msg = FetchedCorpusConfig of SharedCorpusInfo
 
     let update (msg: Msg) (_model: Model) =
         match msg with
@@ -51,7 +51,7 @@ module LoadingCorpus =
                   NumSelectedTexts = None
                   NumSelectedTokens = None
                   OpenMetadataCategoryCode = None
-                  Search = Search.Init(corpus.Config)
+                  Search = Search.Init(corpus.SharedInfo)
                   ShouldShowMetadataMenu = None
                   SelectionTablePageNumber = 1
                   Substate = CorpusStart }
@@ -339,7 +339,7 @@ module LoadedCorpus =
                                   TextIdInQuickView = Some textId },
                             Cmd.OfAsync.perform
                                 serverApi.GetMetadataForSingleText
-                                (corpus.Config.Code, categories, textId)
+                                (corpus.SharedInfo.Code, categories, textId)
                                 FetchedMetadataForText
 
                     newModel, cmd
@@ -898,7 +898,7 @@ module LoadedCorpus =
         | Search ->
             // Do three search steps only if multicpu_bounds is defined for this corpus
             let numSteps =
-                if model.Corpus.Config.MultiCpuBounds.IsSome then
+                if model.Corpus.SharedInfo.MultiCpuBounds.IsSome then
                     3
                 else
                     1
@@ -953,7 +953,7 @@ module LoadedCorpus =
 
         | ResetForm ->
             { model with
-                  Search = Search.Init(model.Corpus.Config)
+                  Search = Search.Init(model.Corpus.SharedInfo)
                   Substate = CorpusStart
                   OpenMetadataCategoryCode = None },
             Cmd.ofMsg (MetadataMsg Update.Metadata.FetchTextAndTokenCounts)

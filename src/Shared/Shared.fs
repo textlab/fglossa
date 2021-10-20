@@ -105,7 +105,8 @@ type LanguageConfig =
     | Monolingual of Cwb.PositionalAttribute list option
     | Multilingual of Language []
 
-type CorpusConfig =
+/// Corpus info that is shared between server and client.
+type SharedCorpusInfo =
     { Code: string
       FontFamily: string option
       GeoCoordinates: (string * float * float) [] option
@@ -194,7 +195,7 @@ type SearchParams =
       SortKey: SortKey
       Start: uint64
       Step: int }
-    static member Init(corpusConfig: CorpusConfig) =
+    static member Init(corpusConfig: SharedCorpusInfo) =
         let languageCode =
             match corpusConfig.LanguageConfig with
             | Monolingual _ -> None
@@ -284,7 +285,7 @@ module Route =
         sprintf "/glossa3/api/%s/%s" typeName methodName
 
 type IServerApi =
-    { GetCorpusConfig: CorpusCode -> Async<CorpusConfig>
+    { GetCorpusConfig: CorpusCode -> Async<SharedCorpusInfo>
       GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
       GetMetadataForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<string []>
       GetMinAndMaxForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<int64 * int64>

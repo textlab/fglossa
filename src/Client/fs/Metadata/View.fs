@@ -11,9 +11,12 @@ open Common
 
 let textAndTokenCountText (model: LoadedCorpusModel) =
     match (model.NumSelectedTexts, model.NumSelectedTokens) with
-    | Some selectedTexts, selectedTokens when selectedTexts <> model.Corpus.Config.TotalTexts ->
-        $"{selectedTexts} of {model.Corpus.Config.TotalTexts} texts ({selectedTokens} of {model.Corpus.Config.TotalTokens} tokens) selected"
-    | _ -> $"All {model.Corpus.Config.TotalTexts} texts ({model.Corpus.Config.TotalTokens} tokens) selected"
+    | Some selectedTexts, selectedTokens when
+        selectedTexts
+        <> model.Corpus.SharedInfo.TotalTexts
+        ->
+        $"{selectedTexts} of {model.Corpus.SharedInfo.TotalTexts} texts ({selectedTokens} of {model.Corpus.SharedInfo.TotalTokens} tokens) selected"
+    | _ -> $"All {model.Corpus.SharedInfo.TotalTexts} texts ({model.Corpus.SharedInfo.TotalTokens} tokens) selected"
 
 [<ReactComponent>]
 let SelectionTablePopup (model: LoadedCorpusModel) dispatch =
@@ -23,7 +26,9 @@ let SelectionTablePopup (model: LoadedCorpusModel) dispatch =
         let numPages =
             match model.NumSelectedTexts with
             | Some selectedTexts -> float selectedTexts / pageSize
-            | None -> float model.Corpus.Config.TotalTexts / pageSize
+            | None ->
+                float model.Corpus.SharedInfo.TotalTexts
+                / pageSize
             |> ceil
             |> int
 
@@ -594,7 +599,7 @@ module MetadataMenu =
                                                                   prop.onClick (fun _ -> dispatch FetchMetadataForTexts)
                                                                   prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-binoculars" ] ] ]
                                                                                   Html.span "Show" ] ]
-                                            if model.Corpus.Config.GeoCoordinates.IsSome then
+                                            if model.Corpus.SharedInfo.GeoCoordinates.IsSome then
                                                 Bulma.button.button [ button.isSmall
                                                                       button.isOutlined
                                                                       color.isInfo

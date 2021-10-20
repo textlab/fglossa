@@ -155,9 +155,9 @@ let AttributeModal
         )
 
     let includeExcludeOptions =
-        let hasLemma = corpus.Config.HasAttribute("lemma")
-        let hasPhon = corpus.Config.HasAttribute("phon")
-        let hasOrig = corpus.Config.HasAttribute("orig")
+        let hasLemma = corpus.SharedInfo.HasAttribute("lemma")
+        let hasPhon = corpus.SharedInfo.HasAttribute("phon")
+        let hasOrig = corpus.SharedInfo.HasAttribute("orig")
 
         let wordName = if hasOrig then "corrected" else "word"
 
@@ -335,7 +335,7 @@ let view
             CwbExtended.Query.Default
 
     let segmentType =
-        match corpus.Config.Modality with
+        match corpus.SharedInfo.Modality with
         | Spoken -> "Utterance"
         | Written -> "Sentence"
 
@@ -529,16 +529,16 @@ let view
                          Bulma.field.div [ field.isGrouped
                                            field.isGroupedMultiline
                                            // TODO: Use TryGetAttribute to get display names also for lemma, orig etc.?
-                                           prop.children [ if corpus.Config.HasAttribute("lemma") then
+                                           prop.children [ if corpus.SharedInfo.HasAttribute("lemma") then
                                                                checkbox "Lemma" "Lemma" term.IsLemma IsLemma
                                                            checkbox "Start" "Start of word" term.IsStart IsStart
                                                            checkbox "End" "End of word" term.IsEnd IsEnd
                                                            checkbox "Middle" "Middle of word" term.IsMiddle IsMiddle
-                                                           match corpus.Config.TryGetAttribute("phon") with
+                                                           match corpus.SharedInfo.TryGetAttribute("phon") with
                                                            | Some attr ->
                                                                checkbox attr.Name attr.Name term.IsPhonetic IsPhonetic
                                                            | None -> ignore None
-                                                           if corpus.Config.HasAttribute("orig") then
+                                                           if corpus.SharedInfo.HasAttribute("orig") then
                                                                checkbox
                                                                    "Original"
                                                                    "Original form"
@@ -553,7 +553,7 @@ let view
                                                            elif termIndex = query.Terms.Length - 1 then
                                                                // TODO: Add optional sentence final punctuation to query
                                                                // to make this work in written text as well
-                                                               match corpus.Config.Modality with
+                                                               match corpus.SharedInfo.Modality with
                                                                | Spoken ->
                                                                    checkbox
                                                                        $"{segmentType} final"

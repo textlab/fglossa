@@ -47,7 +47,7 @@ let topRowButtons (model: LoadedCorpusModel) dispatch =
 
 
 let selectSearchView (corpus: Corpus) (search: Search) dispatch =
-    match corpus.Config.SearchEngine with
+    match corpus.SharedInfo.SearchEngine with
     | Cwb -> SearchViews.Cwb.view corpus search dispatch
     | Fcs -> SearchViews.Fcs.view corpus search dispatch
 
@@ -67,7 +67,7 @@ module CorpusStartView =
                                                                                       ) ]
                                                                     Bulma.levelItem logo ] ] ] ]
 
-    let corpusInfo (config: CorpusConfig) =
+    let corpusInfo (config: SharedCorpusInfo) =
         match config.Info with
         | Some info ->
             Html.div [ prop.style [ style.marginTop 30
@@ -77,9 +77,9 @@ module CorpusStartView =
 
     let view (corpus: Corpus) (search: Search) topRowButtonsElement (dispatch: Update.LoadedCorpus.Msg -> unit) =
         Html.span [ topRowButtonsElement
-                    corpusNameBox corpus.Config
+                    corpusNameBox corpus.SharedInfo
                     selectSearchView corpus search dispatch
-                    corpusInfo corpus.Config ]
+                    corpusInfo corpus.SharedInfo ]
 
 
 module ResultsView =
@@ -313,10 +313,10 @@ module ResultsView =
               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ sortMenu
                                                                 downloadButton ]
                                               Bulma.levelItem resultsInfo ]
-                            Bulma.levelRight [ if corpus.Config.Modality <> Spoken then
+                            Bulma.levelRight [ if corpus.SharedInfo.Modality <> Spoken then
                                                    yield! contextSelector
                                                yield! pagination model isSearchingOrFetching numPages dispatch ] ]
-              match corpus.Config.Modality with
+              match corpus.SharedInfo.Modality with
               | Spoken -> LoadedCorpus.ResultViews.Cwb.Spoken.concordanceTable model corpus resultPage dispatch
               | Written -> LoadedCorpus.ResultViews.Cwb.Written.concordanceTable model corpus resultPage dispatch ]
 

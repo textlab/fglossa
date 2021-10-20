@@ -68,7 +68,7 @@ let concordanceTable
                     Html.span [ prop.key index
                                 tooltip.text tipText
                                 prop.className "has-tooltip-arrow"
-                                match corpus.Config.FontFamily with
+                                match corpus.SharedInfo.FontFamily with
                                 | Some fontFamily -> prop.style [ style.fontFamily fontFamily ]
                                 | None -> ignore None
                                 prop.dangerouslySetInnerHTML (attributes.[displayedAttributeIndex] + " ") ]
@@ -184,7 +184,7 @@ let concordanceTable
     // We need to increment lemmaIndex and origIndex since the first attribute ('word') is
     // not in the list because it is shown by default by CQP
     let maybeLemmaIndex, maybeOrigIndex =
-        match corpus.Config.LanguageConfig with
+        match corpus.SharedInfo.LanguageConfig with
         | Monolingual maybeLangAttributes ->
             match maybeLangAttributes with
             | Some attributes ->

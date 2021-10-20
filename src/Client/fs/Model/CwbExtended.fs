@@ -459,7 +459,7 @@ type Query =
     static member Default = { Terms = [||] }
 
     static member STag(corpus: Corpus) =
-        match corpus.Config.Modality with
+        match corpus.SharedInfo.Modality with
         | Spoken -> "who"
         | Written -> "s"
 

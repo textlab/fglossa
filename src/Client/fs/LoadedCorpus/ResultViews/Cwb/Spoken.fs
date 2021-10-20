@@ -228,7 +228,7 @@ let concordanceTable
                                                                                          prop.style [ style.width 12 ] ] ] ] ] ]
 
     let orthographicRow (corpus: Corpus) (resultInfo: SearchResultInfo) rowIndex =
-        let hasPhon = corpus.Config.HasAttribute("phon")
+        let hasPhon = corpus.SharedInfo.HasAttribute("phon")
 
         let (resultLineFields: ResultLineFields) =
             { SId = resultInfo.SId
@@ -353,7 +353,7 @@ let concordanceTable
             (Html.span [ prop.key $"{index}{tipText}"
                          tooltip.text tipText
                          prop.className "has-tooltip-arrow"
-                         match corpus.Config.FontFamily with
+                         match corpus.SharedInfo.FontFamily with
                          | Some fontFamily -> prop.style [ style.fontFamily fontFamily ]
                          | None -> ignore None
                          prop.children [ displayedText
@@ -484,7 +484,7 @@ let concordanceTable
           separator ]
 
     let attributes =
-        match corpus.Config.LanguageConfig with
+        match corpus.SharedInfo.LanguageConfig with
         | Monolingual (Some attrs) -> attrs
         | Monolingual None -> []
         | Multilingual languages -> failwith "NOT IMPLEMENTED!"

@@ -58,7 +58,7 @@ type SearchInterface =
 type Search =
     { Interface: SearchInterface
       Params: SearchParams }
-    static member Init(corpusConfig: CorpusConfig) =
+    static member Init(corpusConfig: SharedCorpusInfo) =
         { Interface = Simple
           Params = SearchParams.Init(corpusConfig) }
 
@@ -68,13 +68,13 @@ type CwbAttributeMenu = CwbAttributeMenu.AttributeSection list
 // override methods as they are instantiated using object expressions.
 type Corpus
     (
-        config: CorpusConfig,
+        sharedInfo: SharedCorpusInfo,
         ?cwbAttributeMenu: CwbAttributeMenu,
         ?metadataMenu: Metadata.MenuItem list,
         ?metadataTable: Metadata.Category list,
         ?metadataQuickView: Metadata.Category list
     ) =
-    member val Config = config
+    member val SharedInfo = sharedInfo
     member val CwbAttributeMenu = cwbAttributeMenu
     member val MetadataMenu = defaultArg metadataMenu []
     member val MetadataTable = defaultArg metadataTable []

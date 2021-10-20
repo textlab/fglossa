@@ -61,7 +61,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         let cmd =
             Cmd.OfAsync.perform
                 serverApi.GetMetadataForCategory
-                (model.Corpus.Config.Code, category.Code, model.Search.Params.MetadataSelection)
+                (model.Corpus.SharedInfo.Code, category.Code, model.Search.Params.MetadataSelection)
                 FetchedMetadataValuesForCategory
 
         model, cmd
@@ -85,7 +85,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         model,
         Cmd.OfAsync.perform
             serverApi.GetMinAndMaxForCategory
-            (model.Corpus.Config.Code, category.Code, model.Search.Params.MetadataSelection)
+            (model.Corpus.SharedInfo.Code, category.Code, model.Search.Params.MetadataSelection)
             FetchedMinAndMaxForCategory
     | FetchedMinAndMaxForCategory (min, max) ->
         { model with
@@ -95,7 +95,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         let cmd =
             Cmd.OfAsync.perform
                 serverApi.GetTextAndTokenCount
-                (model.Corpus.Config.Code, model.Search.Params.MetadataSelection)
+                (model.Corpus.SharedInfo.Code, model.Search.Params.MetadataSelection)
                 FetchedTextAndTokenCounts
 
         model, cmd
@@ -298,7 +298,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         let cmd =
             Cmd.OfAsync.perform
                 serverApi.GetMetadataForTexts
-                (model.Corpus.Config.Code,
+                (model.Corpus.SharedInfo.Code,
                  model.Search.Params.MetadataSelection,
                  columns,
                  model.SelectionTablePageNumber)
