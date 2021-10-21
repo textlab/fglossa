@@ -365,25 +365,29 @@ module MetadataMenu =
                 (mixOrMaxSelectionFunction: (int64 * int64) -> int64)
                 onChangeMsg
                 =
+                let textInput =
+                    Bulma.input.text [ prop.placeholder (
+                                           fetchedMinAndMax
+                                           |> Option.map (mixOrMaxSelectionFunction >> string)
+                                           |> Option.defaultValue ""
+                                       )
+                                       prop.value (maybeValue |> Option.defaultValue "")
+                                       prop.onChange (fun (v: string) -> dispatch (onChangeMsg (category, v)))
+                                       prop.onKeyUp (key.enter, (fun _ -> dispatch FetchTextAndTokenCounts)) ]
+
+                let checkButton =
+                    Bulma.button.button [ prop.disabled false
+                                          prop.onClick (fun _ -> dispatch FetchTextAndTokenCounts)
+                                          prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-check" ] ] ] ] ]
+
                 Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
                                     prop.text label ]
-                          Html.td [ Bulma.field.div (
-                                        Bulma.control.div (
-                                            Bulma.input.text [ prop.placeholder (
-                                                                   fetchedMinAndMax
-                                                                   |> Option.map (mixOrMaxSelectionFunction >> string)
-                                                                   |> Option.defaultValue ""
-                                                               )
-                                                               prop.value (maybeValue |> Option.defaultValue "")
-                                                               prop.onChange
-                                                                   (fun (v: string) ->
-                                                                       dispatch (onChangeMsg (category, v)))
-                                                               prop.onKeyUp (
-                                                                   key.enter,
-                                                                   fun _ -> dispatch FetchTextAndTokenCounts
-                                                               ) ]
-                                        )
-                                    ) ] ]
+                          Html.td (
+                              Bulma.field.div [ field.hasAddons
+                                                prop.children [ Bulma.control.div [ control.isExpanded
+                                                                                    prop.children textInput ]
+                                                                Bulma.control.div [ checkButton ] ] ]
+                          ) ]
 
             Html.li [ Html.a [ prop.key category.Code
                                if isOpen then
