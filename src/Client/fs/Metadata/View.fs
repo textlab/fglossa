@@ -417,53 +417,31 @@ module MetadataMenu =
                         interval
 
                     if isOpen then
+                        let listButton =
+                            Html.li [ if mode = ListMode then tab.isActive
+                                      prop.onClick
+                                          (fun _ ->
+                                              if mode <> ListMode then
+                                                  dispatch (DeselectAllItems category)
+                                                  dispatch (FetchMetadataValuesForCategory category)
+                                                  dispatch (SetIntervalCategoryMode(category, ListMode)))
+                                      prop.children [ Html.a [ Html.span "List" ] ] ]
+
+                        let intervalButton =
+                            Html.li [ if mode = IntervalMode then tab.isActive
+                                      prop.onClick
+                                          (fun _ ->
+                                              if mode <> IntervalMode then
+                                                  dispatch (DeselectAllItems category)
+                                                  dispatch (FetchMinAndMaxForCategory category)
+                                                  dispatch (SetIntervalCategoryMode(category, IntervalMode)))
+                                      prop.children [ Html.a [ Html.span "Interval" ] ] ]
+
                         Bulma.tabs [ tabs.isToggle
                                      tabs.isSmall
                                      tabs.isCentered
                                      prop.style [ style.marginTop 5 ]
-                                     prop.children [ Html.ul [ Html.li [ if mode = ListMode then tab.isActive
-                                                                         prop.onClick
-                                                                             (fun _ ->
-                                                                                 if mode <> ListMode then
-                                                                                     dispatch (
-                                                                                         DeselectAllItems category
-                                                                                     )
-
-                                                                                     dispatch (
-                                                                                         FetchMetadataValuesForCategory
-                                                                                             category
-                                                                                     )
-
-                                                                                     dispatch (
-                                                                                         SetIntervalCategoryMode(
-                                                                                             category,
-                                                                                             ListMode
-                                                                                         )
-                                                                                     ))
-                                                                         prop.children [ Html.a [ Html.span "List" ] ] ]
-                                                               Html.li [ if mode = IntervalMode then tab.isActive
-                                                                         prop.onClick
-                                                                             (fun _ ->
-                                                                                 if mode <> IntervalMode then
-                                                                                     dispatch (
-                                                                                         DeselectAllItems category
-                                                                                     )
-
-                                                                                     dispatch (
-                                                                                         FetchMinAndMaxForCategory
-                                                                                             category
-                                                                                     )
-
-                                                                                     dispatch (
-                                                                                         SetIntervalCategoryMode(
-                                                                                             category,
-                                                                                             IntervalMode
-                                                                                         )
-                                                                                     ))
-                                                                         prop.children [ Html.a [ Html.span "Interval" ] ] ] ] ] ]
-
-
-                     ]
+                                     prop.children [ Html.ul [ listButton; intervalButton ] ] ] ]
 
     let freeTextSearch (category: LongTextCategory) dispatch =
         Html.li (
