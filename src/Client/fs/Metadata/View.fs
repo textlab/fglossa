@@ -339,6 +339,11 @@ module MetadataMenu =
         (fetchedMinAndMax: (int64 * int64) option)
         dispatch
         =
+        let initialState =
+            [ ("From:", true); ("To:", true) ] |> Map.ofList
+
+        let inSyncWithTextCount, setInSyncWithTextCount =
+            React.useStateWithUpdater (initialState)
 
         let interval =
             let maybeCategorySelection = metadataSelection.TryFind(category.Code)
@@ -372,12 +377,23 @@ module MetadataMenu =
                                            |> Option.defaultValue ""
                                        )
                                        prop.value (maybeValue |> Option.defaultValue "")
-                                       prop.onChange (fun (v: string) -> dispatch (onChangeMsg (category, v)))
-                                       prop.onKeyUp (key.enter, (fun _ -> dispatch FetchTextAndTokenCounts)) ]
+                                       prop.onChange
+                                           (fun (v: string) ->
+                                               setInSyncWithTextCount (fun state -> state.Add(label, false))
+                                               dispatch (onChangeMsg (category, v)))
+                                       prop.onKeyUp (
+                                           key.enter,
+                                           (fun _ ->
+                                               setInSyncWithTextCount (fun _ -> initialState)
+                                               dispatch FetchTextAndTokenCounts)
+                                       ) ]
 
                 let checkButton =
-                    Bulma.button.button [ prop.disabled false
-                                          prop.onClick (fun _ -> dispatch FetchTextAndTokenCounts)
+                    Bulma.button.button [ prop.disabled inSyncWithTextCount.[label]
+                                          prop.onClick
+                                              (fun _ ->
+                                                  setInSyncWithTextCount (fun _ -> initialState)
+                                                  dispatch FetchTextAndTokenCounts)
                                           prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-check" ] ] ] ] ]
 
                 Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
