@@ -339,11 +339,11 @@ module MetadataMenu =
         (fetchedMinAndMax: (int64 * int64) option)
         dispatch
         =
-        let initialState =
+        let initialIntervalSyncState =
             [ ("From:", true); ("To:", true) ] |> Map.ofList
 
         let inSyncWithTextCount, setInSyncWithTextCount =
-            React.useStateWithUpdater (initialState)
+            React.useStateWithUpdater (initialIntervalSyncState)
 
         let interval =
             let maybeCategorySelection = metadataSelection.TryFind(category.Code)
@@ -384,15 +384,19 @@ module MetadataMenu =
                                        prop.onKeyUp (
                                            key.enter,
                                            (fun _ ->
-                                               setInSyncWithTextCount (fun _ -> initialState)
+                                               setInSyncWithTextCount (fun _ -> initialIntervalSyncState)
                                                dispatch FetchTextAndTokenCounts)
                                        ) ]
 
                 let checkButton =
                     Bulma.button.button [ prop.disabled inSyncWithTextCount.[label]
+                                          if (not inSyncWithTextCount.[label]) then
+                                              // Make the button green to alert the user that it needs to be clicked in order
+                                              // to sync the number of texts and tokens to the newly input number
+                                              color.isSuccess
                                           prop.onClick
                                               (fun _ ->
-                                                  setInSyncWithTextCount (fun _ -> initialState)
+                                                  setInSyncWithTextCount (fun _ -> initialIntervalSyncState)
                                                   dispatch FetchTextAndTokenCounts)
                                           prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-check" ] ] ] ] ]
 
@@ -452,6 +456,7 @@ module MetadataMenu =
                                       prop.onClick
                                           (fun _ ->
                                               if mode <> IntervalMode then
+                                                  setInSyncWithTextCount (fun _ -> initialIntervalSyncState)
                                                   dispatch (DeselectAllItems category)
                                                   dispatch (FetchMinAndMaxForCategory category)
                                                   dispatch (SetIntervalCategoryMode(category, IntervalMode)))
