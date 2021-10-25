@@ -70,16 +70,25 @@ let SelectionTablePopup (model: LoadedCorpusModel) dispatch =
     let header =
         Bulma.level [ prop.style [ style.padding 20
                                    style.marginBottom 0 ]
-                      prop.children [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.subtitle (textAndTokenCountText model) ] ]
-                                      Bulma.levelRight [ Bulma.levelItem [ pagination ]
-                                                         Bulma.levelItem [ Bulma.delete [ delete.isMedium
-                                                                                          prop.title "Close"
-                                                                                          prop.style [ style.marginLeft
-                                                                                                           40 ]
-                                                                                          prop.onClick
-                                                                                              (fun _ ->
-                                                                                                  dispatch
-                                                                                                      CloseSelectionTable) ] ] ] ] ]
+                      prop.children [ Bulma.levelLeft (
+                                          Bulma.levelItem (
+                                              Html.span [ Bulma.subtitle (textAndTokenCountText model)
+                                                          Html.div [ prop.style [ style.marginTop 10 ]
+                                                                     prop.children (
+                                                                         Bulma.subtitle [ title.is6
+                                                                                          prop.text
+                                                                                              "Click on a column header to sort; shift-click to edit the metadata selection." ]
+                                                                     ) ] ]
+                                          )
+                                      )
+                                      Bulma.levelRight [ Bulma.levelItem (pagination)
+                                                         Bulma.levelItem (
+                                                             Bulma.delete [ delete.isMedium
+                                                                            prop.title "Close"
+                                                                            prop.style [ style.marginLeft 40 ]
+                                                                            prop.onClick
+                                                                                (fun _ -> dispatch CloseSelectionTable) ]
+                                                         ) ] ] ]
 
     let table =
         let columnHeader (category: Category) =
@@ -374,31 +383,54 @@ module MetadataMenu =
         (fetchedMinAndMax: (int64 * int64) option)
         dispatch
         =
-        let initialIntervalSyncState =
-            [ ("From:", true); ("To:", true) ] |> Map.ofList
+        let maybeCategorySelection = metadataSelection.TryFind(category.Code)
 
-        let inSyncWithTextCount, setInSyncWithTextCount =
-            React.useStateWithUpdater (initialIntervalSyncState)
+        let pickValue choiceName =
+            // If a from or to value already exists, find it
+            maybeCategorySelection
+            |> Option.bind
+                (fun categorySelection ->
+                    categorySelection.Choices
+                    |> Array.tryPick
+                        (fun choice ->
+                            if choice.Name = choiceName then
+                                Some choice.Value
+                            else
+                                None))
+
+        let maybeFrom = pickValue "glossa_interval_from"
+        let maybeTo = pickValue "glossa_interval_to"
+
+        let intervalStateFromProps =
+            [ ("From:", maybeFrom)
+              ("To:", maybeTo) ]
+            |> Map.ofList
+
+        let intervalState, setIntervalState =
+            React.useStateWithUpdater (intervalStateFromProps)
+
+        // Reset the text fields to the values in the model when the category is closed
+        React.useEffect (
+            (fun () ->
+                if not isOpen then
+                    setIntervalState (fun _ -> intervalStateFromProps)),
+            [| box isOpen |]
+        )
+
+        let submitChanges label onChangeMsg =
+            match intervalState.[label] with
+            | Some v ->
+                dispatch (onChangeMsg (category, v))
+                dispatch FetchTextAndTokenCounts
+            | None -> ()
+
+        let hasChanged label =
+            if label = "From:" then
+                intervalState.["From:"] <> maybeFrom
+            else
+                intervalState.["To:"] <> maybeTo
 
         let interval =
-            let maybeCategorySelection = metadataSelection.TryFind(category.Code)
-
-            let pickValue choiceName =
-                // If a from or to value already exists, find it
-                maybeCategorySelection
-                |> Option.bind
-                    (fun categorySelection ->
-                        categorySelection.Choices
-                        |> Array.tryPick
-                            (fun choice ->
-                                if choice.Name = choiceName then
-                                    Some choice.Value
-                                else
-                                    None))
-
-            let maybeFrom = pickValue "glossa_interval_from"
-            let maybeTo = pickValue "glossa_interval_to"
-
             let boundaryInput
                 (label: string)
                 (maybeValue: string option)
@@ -413,27 +445,21 @@ module MetadataMenu =
                                        )
                                        prop.value (maybeValue |> Option.defaultValue "")
                                        prop.onChange
-                                           (fun (v: string) ->
-                                               setInSyncWithTextCount (fun state -> state.Add(label, false))
-                                               dispatch (onChangeMsg (category, v)))
-                                       prop.onKeyUp (
-                                           key.enter,
-                                           (fun _ ->
-                                               setInSyncWithTextCount (fun _ -> initialIntervalSyncState)
-                                               dispatch FetchTextAndTokenCounts)
-                                       ) ]
+                                           (fun (v: string) -> setIntervalState (fun state -> state.Add(label, Some v)))
+                                       prop.onKeyUp (key.enter, (fun _ -> submitChanges label onChangeMsg)) ]
 
                 let checkButton =
-                    Bulma.button.button [ prop.disabled inSyncWithTextCount.[label]
-                                          if (not inSyncWithTextCount.[label]) then
+                    Bulma.button.button [ prop.disabled (not (hasChanged label))
+                                          prop.style [ style.width 50 ]
+                                          if (hasChanged label) then
                                               // Make the button green to alert the user that it needs to be clicked in order
-                                              // to sync the number of texts and tokens to the newly input number
+                                              // to register the newly input value
                                               color.isSuccess
-                                          prop.onClick
-                                              (fun _ ->
-                                                  setInSyncWithTextCount (fun _ -> initialIntervalSyncState)
-                                                  dispatch FetchTextAndTokenCounts)
-                                          prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-check" ] ] ] ] ]
+                                          prop.onClick (fun _ -> submitChanges label onChangeMsg)
+                                          if hasChanged label then
+                                              prop.text "OK"
+                                          else
+                                              prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-check" ] ] ] ] ]
 
                 Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
                                     prop.text label ]
@@ -466,8 +492,12 @@ module MetadataMenu =
                                                     style.marginBottom 5
                                                     style.marginLeft 10 ]
                                        prop.children (
-                                           Html.tbody [ boundaryInput "From:" maybeFrom fst SetIntervalFrom
-                                                        boundaryInput "To:" maybeTo snd SetIntervalTo ]
+                                           Html.tbody [ boundaryInput
+                                                            "From:"
+                                                            intervalState.["From:"]
+                                                            fst
+                                                            SetIntervalFrom
+                                                        boundaryInput "To:" intervalState.["To:"] snd SetIntervalTo ]
                                        ) ] ]
 
         Html.span [ if mode = ListMode then
@@ -491,7 +521,7 @@ module MetadataMenu =
                                       prop.onClick
                                           (fun _ ->
                                               if mode <> IntervalMode then
-                                                  setInSyncWithTextCount (fun _ -> initialIntervalSyncState)
+                                                  setIntervalState (fun _ -> intervalStateFromProps)
                                                   dispatch (DeselectAllItems category)
                                                   dispatch (FetchMinAndMaxForCategory category)
                                                   dispatch (SetIntervalCategoryMode(category, IntervalMode)))
