@@ -393,6 +393,7 @@ let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) 
     let topRowButtonsElement = topRowButtons model dispatch
 
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
+                                prop.onClick (fun _ -> dispatch (MetadataMsg Update.Metadata.Msg.CloseMetadataMenu))
                                 prop.children [ Bulma.columns [ if shouldShowMetadataMenu model then
                                                                     Bulma.column [ column.isNarrow
                                                                                    prop.style [ style.marginRight 20 ]

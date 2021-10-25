@@ -656,6 +656,10 @@ module MetadataMenu =
                         SelectionTablePopup model dispatch
                     Bulma.menu [ prop.style [ style.width 200
                                               style.overflowX.hidden ]
+                                 prop.onClick
+                                     (fun e ->
+                                         // Prevent onclick handlers further up the hierarchy from closing this menu
+                                         e.stopPropagation ())
                                  prop.children [ Bulma.menuList menuItems ] ]
 
                      ]

@@ -6,6 +6,7 @@ open Model
 
 type Msg =
     | OpenMetadataMenu of category: Metadata.Category
+    | CloseMetadataMenu
     | ToggleMetadataMenuOpen of category: Metadata.Category
     | SetIntervalCategoryMode of category: Metadata.NumberCategory * mode: ListOrIntervalMode
     | FetchMetadataValuesForCategory of category: Metadata.Category
@@ -43,6 +44,10 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             newModel, cmd
         else
             model, Cmd.none
+    | CloseMetadataMenu ->
+        { model with
+              OpenMetadataCategoryCode = None },
+        Cmd.none
     | ToggleMetadataMenuOpen category ->
         let newCode, cmd =
             if model.OpenMetadataCategoryCode = Some category.Code then
