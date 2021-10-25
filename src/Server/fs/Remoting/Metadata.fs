@@ -128,6 +128,7 @@ let getMetadataForTexts
     (selection: Metadata.Selection)
     (columns: string list)
     (pageNumber: int)
+    (maybeSortInfo: Metadata.SortInfo option)
     =
 
     task {
@@ -146,8 +147,13 @@ let getMetadataForTexts
         let metadataSelectionSql =
             generateMetadataSelectionSql None selection
 
+        let orderBy =
+            match maybeSortInfo with
+            | Some sortInfo -> $"{sortInfo.CategoryCode} {sortInfo.Direction}"
+            | None -> "tid"
+
         let sql =
-            $"SELECT {columnSql} FROM texts WHERE 1 = 1{metadataSelectionSql} ORDER BY tid LIMIT {limit} OFFSET {offset}"
+            $"SELECT {columnSql} FROM texts WHERE 1 = 1{metadataSelectionSql} ORDER BY {orderBy} LIMIT {limit} OFFSET {offset}"
 
         let parameters = metadataSelectionToParamDict selection
 

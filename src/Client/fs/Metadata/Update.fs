@@ -24,6 +24,7 @@ type Msg =
     | FetchMetadataForTexts
     | FetchedMetadataForTexts of results: string [] []
     | SetSelectionTablePage of pageNumber: int
+    | SetSelectionTableSort of Metadata.SortInfo
     | CloseSelectionTable
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
@@ -301,7 +302,8 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                 (model.Corpus.SharedInfo.Code,
                  model.Search.Params.MetadataSelection,
                  columns,
-                 model.SelectionTablePageNumber)
+                 model.SelectionTablePageNumber,
+                 model.SelectionTableSort)
                 FetchedMetadataForTexts
 
         model, cmd
@@ -316,6 +318,10 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         { model with
               SelectionTablePageNumber = pageNumber },
         Cmd.ofMsg FetchMetadataForTexts
+    | SetSelectionTableSort sortInfo ->
+        { model with
+              SelectionTableSort = Some sortInfo },
+        Cmd.ofMsg (SetSelectionTablePage 1)
     | CloseSelectionTable ->
         { model with
               IsSelectionTableOpen = false },

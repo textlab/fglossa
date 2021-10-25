@@ -180,6 +180,7 @@ type LoadedCorpusModel =
       Search: Search
       ShouldShowMetadataMenu: bool option
       SelectionTablePageNumber: int
+      SelectionTableSort: Metadata.SortInfo option
       Substate: LoadedCorpusSubstate }
 
 type Model =

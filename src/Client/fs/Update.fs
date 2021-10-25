@@ -54,6 +54,7 @@ module LoadingCorpus =
                   Search = Search.Init(corpus.SharedInfo)
                   ShouldShowMetadataMenu = None
                   SelectionTablePageNumber = 1
+                  SelectionTableSort = None
                   Substate = CorpusStart }
 
             LoadedCorpus m, Cmd.none

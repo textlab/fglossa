@@ -82,11 +82,46 @@ let SelectionTablePopup (model: LoadedCorpusModel) dispatch =
                                                                                                       CloseSelectionTable) ] ] ] ] ]
 
     let table =
+        let columnHeader (category: Category) =
+            Html.th [ prop.onClick
+                          (fun _ ->
+                              let direction =
+                                  match model.SelectionTableSort with
+                                  | Some sortInfo ->
+                                      if sortInfo.CategoryCode = category.Code then
+                                          // We were already sorting on this category, so just
+                                          // change direction
+                                          if sortInfo.Direction = Asc then
+                                              Desc
+                                          else
+                                              Asc
+                                      else
+                                          Asc
+                                  | None -> Asc
+
+                              dispatch (
+                                  SetSelectionTableSort
+                                      { CategoryCode = category.Code
+                                        Direction = direction }
+                              ))
+                      prop.children (
+                          match model.SelectionTableSort with
+                          | Some sortInfo when sortInfo.CategoryCode = category.Code ->
+                              Html.span [ prop.className "icon-text"
+                                          prop.children [ Html.span category.Name
+                                                          Bulma.icon [ Html.i [ prop.className [ "fa"
+                                                                                                 if sortInfo.Direction = Asc then
+                                                                                                     "fa-sort-down"
+                                                                                                 else
+                                                                                                     "fa-sort-up" ] ] ] ] ]
+                          | _ -> Html.text category.Name
+                      ) ]
+
         Bulma.tableContainer [ Bulma.table [ table.isStriped
                                              table.isFullWidth
                                              prop.children [ Html.thead [ Html.tr [ for category in
                                                                                         model.Corpus.MetadataTable ->
-                                                                                        Html.th category.Name ] ]
+                                                                                        columnHeader category ] ]
                                                              Html.tbody [ for row in model.FetchedTextMetadata ->
                                                                               Html.tr [ for column in row ->
                                                                                             Html.td column ] ] ] ] ]
