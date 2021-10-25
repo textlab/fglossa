@@ -409,13 +409,8 @@ module MetadataMenu =
         let intervalState, setIntervalState =
             React.useStateWithUpdater (intervalStateFromProps)
 
-        // Reset the text fields to the values in the model when the category is closed
-        React.useEffect (
-            (fun () ->
-                if not isOpen then
-                    setIntervalState (fun _ -> intervalStateFromProps)),
-            [| box isOpen |]
-        )
+        // Reset the text fields to the values in the model when the category is opened or closed
+        React.useEffect ((fun () -> setIntervalState (fun _ -> intervalStateFromProps)), [| box isOpen |])
 
         let submitChanges label onChangeMsg =
             match intervalState.[label] with
