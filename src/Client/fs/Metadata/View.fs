@@ -498,7 +498,19 @@ module MetadataMenu =
                                                             fst
                                                             SetIntervalFrom
                                                         boundaryInput "To:" intervalState.["To:"] snd SetIntervalTo ]
-                                       ) ] ]
+                                       ) ]
+                      else
+                          let fromText = maybeFrom |> Option.defaultValue ""
+                          let toText = maybeTo |> Option.defaultValue ""
+
+                          if fromText <> "" || toText <> "" then
+                              Html.div [ prop.className "selected-interval"
+                                         prop.style [ style.paddingLeft 30
+                                                      style.paddingBottom 10
+                                                      style.fontSize 12
+                                                      style.cursor.pointer ]
+                                         prop.onClick (fun _ -> dispatch (OpenMetadataMenu category))
+                                         prop.text $"{fromText} \u2014 {toText}" ] ]
 
         Html.span [ if mode = ListMode then
                         numberSelect category isOpen metadataSelection fetchedMetadataValues dispatch
