@@ -576,11 +576,6 @@ module MetadataMenu =
                         let isOpen =
                             (Some category.Code = props.OpenCategoryCode)
 
-                        numberSelect category isOpen props.MetadataSelection props.FetchedMetadataValues props.Dispatch
-                    | Interval category ->
-                        let isOpen =
-                            (Some category.Code = props.OpenCategoryCode)
-
                         SelectOrInterval
                             category
                             isOpen
@@ -641,16 +636,6 @@ module MetadataMenu =
                           model.FetchedMetadataValues
                           dispatch
                   | NumberSelect category ->
-                      let isOpen =
-                          (Some category.Code = model.OpenMetadataCategoryCode)
-
-                      numberSelect
-                          category
-                          isOpen
-                          model.Search.Params.MetadataSelection
-                          model.FetchedMetadataValues
-                          dispatch
-                  | Interval category ->
                       let isOpen =
                           (Some category.Code = model.OpenMetadataCategoryCode)
 

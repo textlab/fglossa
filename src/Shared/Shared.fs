@@ -64,7 +64,6 @@ module Metadata =
     type MenuItem =
         | StringSelect of StringCategory
         | NumberSelect of NumberCategory
-        | Interval of NumberCategory
         | FreeTextSearch of LongTextCategory
         // Since a section may have no title, the proper F# way would be to define it
         // as a "string option", but using a normal string (and simply omitting the title
