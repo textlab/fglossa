@@ -20,6 +20,8 @@ let textAndTokenCountText (model: LoadedCorpusModel) =
 
 
 module MetadataMenu =
+    [<ReactComponent>]
+    let FixedSizeList: obj = importMember "react-window"
 
     [<ReactComponent>]
     let MetadataSelect
@@ -49,8 +51,6 @@ module MetadataMenu =
                 selectOptions
                 |> Array.filter (fun option -> option.ToLower().Contains(downCasedFilterText))
 
-        let FixedSizeList: obj = importMember "react-window"
-
         // The components in react-window expect a `children` prop, which should be a
         // component function or class. However, all React functions in Fable.React and
         // Feliz (such as `ofImport`, `ofType`, and even `Fable.React.ReactBindings.React.createElement`)
@@ -60,7 +60,7 @@ module MetadataMenu =
         // React.createElement directly, since it allows us to provide function components as
         // the `children` argument and leaves them uninstantiated.
 
-        let ReactBare: obj = importAll "react"
+        let reactBare: obj = importAll "react"
 
         let selectDropdown
             category
@@ -70,7 +70,7 @@ module MetadataMenu =
             : ReactElement =
 
             /// A single item in a metadata category dropdown list
-            let ListItem (props: {| index: int; style: obj |}) =
+            let listItem (props: {| index: int; style: obj |}) =
                 // let selectOption = fetchedMetadataValues.[props.index]
                 let metadataValue = fetchedMetadataValues.[props.index]
 
@@ -101,12 +101,12 @@ module MetadataMenu =
                            prop.text (selectOption.Name |> truncate 25)
                            prop.title selectOption.Name ]
 
-            ReactBare?createElement (FixedSizeList,
+            reactBare?createElement (FixedSizeList,
                                      createObj [ "height" ==> 200
                                                  "itemCount" ==> fetchedMetadataValues.Length
                                                  "itemSize" ==> 32
                                                  "width" ==> 200 ],
-                                     ListItem)
+                                     listItem)
 
         let categorySelection =
             metadataSelection.TryFind(category.Code)
