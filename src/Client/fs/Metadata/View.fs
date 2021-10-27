@@ -29,6 +29,7 @@ module MetadataMenu =
         isOpen
         (metadataSelection: Shared.Metadata.Selection)
         fetchedMetadataValues
+        isInSidebar
         dispatch
         =
 
@@ -117,31 +118,33 @@ module MetadataMenu =
 
         React.useEffect ((fun () -> if isOpen then focusFilterInput ()), [| box isOpen |])
 
-        Html.li [ Html.a [ prop.key category.Code
-                           if isOpen then
-                               prop.style [ style.lineHeight (length.em 1.7) ]
-                           prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category))
-                           prop.children [ Html.text category.Name
-                                           if isOpen || categorySelection.Choices.Length > 0 then
-                                               Bulma.button.button [ button.isSmall
-                                                                     if categorySelection.ShouldExclude then
-                                                                         color.isDanger
-                                                                     prop.title "Exclude selected values"
-                                                                     prop.style [ style.marginBottom 5
-                                                                                  style.marginLeft 10 ]
-                                                                     prop.onClick (fun e ->
-                                                                         dispatch (ToggleExclude category)
-                                                                         e.stopPropagation ())
-                                                                     prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-minus" ] ] ] ] ]
+        Html.li [ if isInSidebar then
+                      Html.a [ prop.key category.Code
+                               if isOpen then
+                                   prop.style [ style.lineHeight (length.em 1.7) ]
+                               prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category))
+                               prop.children [ Html.text category.Name
+                                               if isOpen || categorySelection.Choices.Length > 0 then
+                                                   Bulma.button.button [ button.isSmall
+                                                                         if categorySelection.ShouldExclude then
+                                                                             color.isDanger
+                                                                         prop.title "Exclude selected values"
+                                                                         prop.style [ style.marginBottom 5
+                                                                                      style.marginLeft 10 ]
+                                                                         prop.onClick (fun e ->
+                                                                             dispatch (ToggleExclude category)
+                                                                             e.stopPropagation ())
+                                                                         prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-minus" ] ] ] ] ]
 
-                                               Bulma.button.button [ button.isSmall
-                                                                     color.isDanger
-                                                                     prop.style [ style.marginLeft 5 ]
-                                                                     prop.title "Remove selection"
-                                                                     prop.onClick (fun _ ->
-                                                                         dispatch (DeselectAllItems category))
-                                                                     prop.children [ Bulma.icon [ Html.i [ prop.className
-                                                                                                               "fa fa-times" ] ] ] ] ] ]
+                                                   Bulma.button.button [ button.isSmall
+                                                                         color.isDanger
+                                                                         prop.style [ style.marginLeft 5 ]
+                                                                         prop.title "Remove selection"
+                                                                         prop.onClick (fun _ ->
+                                                                             dispatch (DeselectAllItems category))
+                                                                         prop.children [ Bulma.icon [ Html.i [ prop.className
+                                                                                                                   "fa fa-times" ] ] ] ] ] ]
+
                   // List of already selected values
                   let choices =
                       [ for choice in categorySelection.Choices do
@@ -186,7 +189,7 @@ module MetadataMenu =
                                      focusFilterInput ()
                                      dispatch (OpenMetadataMenu category))
                                  prop.children [ yield! choices
-                                                 filterInput ] ]
+                                                 if isInSidebar then filterInput ] ]
 
                   if isOpen then
                       // The menu dropdown
@@ -197,11 +200,11 @@ module MetadataMenu =
                                                      (filterSelectOptions fetchedMetadataValues)
                                                      dispatch ] ] ]
 
-    let stringSelect (category: StringCategory) isOpen metadataSelection fetchedMetadataValues dispatch =
-        MetadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
+    let stringSelect (category: StringCategory) isOpen metadataSelection fetchedMetadataValues isInSidebar dispatch =
+        MetadataSelect category isOpen metadataSelection fetchedMetadataValues isInSidebar dispatch
 
-    let numberSelect (category: NumberCategory) isOpen metadataSelection fetchedMetadataValues dispatch =
-        MetadataSelect category isOpen metadataSelection fetchedMetadataValues dispatch
+    let numberSelect (category: NumberCategory) isOpen metadataSelection fetchedMetadataValues isInSidebar dispatch =
+        MetadataSelect category isOpen metadataSelection fetchedMetadataValues isInSidebar dispatch
 
     [<ReactComponent>]
     let SelectOrInterval
@@ -211,6 +214,7 @@ module MetadataMenu =
         (metadataSelection: Selection)
         (fetchedMetadataValues: string [])
         (fetchedMinAndMax: (int64 * int64) option)
+        (isInSidebar: bool)
         dispatch
         =
         let maybeCategorySelection = metadataSelection.TryFind(category.Code)
@@ -291,20 +295,21 @@ module MetadataMenu =
                                                                                           prop.children textInput ]
                                                                       Bulma.control.div [ checkButton ] ] ] ] ]
 
-            Html.li [ Html.a [ prop.key category.Code
-                               if isOpen then
-                                   prop.style [ style.lineHeight (length.em 1.7) ]
-                               prop.onClick (fun _ -> dispatch (ToggleIntervalOpen category))
-                               prop.children [ Html.text category.Name
-                                               if isOpen then
-                                                   Bulma.button.button [ button.isSmall
-                                                                         color.isDanger
-                                                                         prop.style [ style.marginLeft 15 ]
-                                                                         prop.title "Remove selection"
-                                                                         prop.onClick (fun e ->
-                                                                             dispatch (DeselectAllItems category))
-                                                                         prop.children [ Bulma.icon [ Html.i [ prop.className
-                                                                                                                   "fa fa-times" ] ] ] ] ] ]
+            Html.li [ if isInSidebar then
+                          Html.a [ prop.key category.Code
+                                   if isOpen then
+                                       prop.style [ style.lineHeight (length.em 1.7) ]
+                                   prop.onClick (fun _ -> dispatch (ToggleIntervalOpen category))
+                                   prop.children [ Html.text category.Name
+                                                   if isOpen then
+                                                       Bulma.button.button [ button.isSmall
+                                                                             color.isDanger
+                                                                             prop.style [ style.marginLeft 15 ]
+                                                                             prop.title "Remove selection"
+                                                                             prop.onClick (fun e ->
+                                                                                 dispatch (DeselectAllItems category))
+                                                                             prop.children [ Bulma.icon [ Html.i [ prop.className
+                                                                                                                       "fa fa-times" ] ] ] ] ] ]
 
                       if isOpen then
                           Html.table [ prop.className "interval-category-table"
@@ -328,12 +333,13 @@ module MetadataMenu =
                                          prop.style [ style.paddingLeft 30
                                                       style.paddingBottom 10
                                                       style.fontSize 12
-                                                      style.cursor.pointer ]
+                                                      style.cursor.pointer
+                                                      style.whitespace.nowrap ]
                                          prop.onClick (fun _ -> dispatch (OpenMetadataMenu category))
                                          prop.text $"{fromText} \u2014 {toText}" ] ]
 
         Html.span [ if mode = ListMode then
-                        numberSelect category isOpen metadataSelection fetchedMetadataValues dispatch
+                        numberSelect category isOpen metadataSelection fetchedMetadataValues isInSidebar dispatch
                     else
                         interval
 
@@ -394,7 +400,8 @@ module MetadataMenu =
                     let isOpen = (Some cat.Code = openCategoryCode)
 
                     match cat with
-                    | :? StringCategory as c -> stringSelect c isOpen metadataSelection fetchedMetadataValues dispatch
+                    | :? StringCategory as c ->
+                        stringSelect c isOpen metadataSelection fetchedMetadataValues true dispatch
                     | :? NumberCategory as c ->
                         SelectOrInterval
                             c
@@ -404,6 +411,7 @@ module MetadataMenu =
                             metadataSelection
                             fetchedMetadataValues
                             fetchedMinAndMax
+                            true
                             dispatch
                     | :? LongTextCategory as c -> freeTextSearch c dispatch
                     | c -> failwith $"Unhandled category: {c}")
@@ -502,8 +510,10 @@ module MetadataMenu =
                 let isMenuOpen =
                     (Some category.Code = model.OpenMetadataCategoryCode)
 
+                let showMenuHeader = isMenuOpen
+
                 let menu =
-                    if isMenuOpen then
+                    let menuContents =
                         match category with
                         | :? StringCategory as cat ->
                             stringSelect
@@ -511,6 +521,7 @@ module MetadataMenu =
                                 isMenuOpen
                                 model.Search.Params.MetadataSelection
                                 model.FetchedMetadataValues
+                                showMenuHeader
                                 dispatch
                         | :? NumberCategory as cat ->
                             SelectOrInterval
@@ -521,11 +532,37 @@ module MetadataMenu =
                                 model.Search.Params.MetadataSelection
                                 model.FetchedMetadataValues
                                 model.FetchedMinAndMax
+                                showMenuHeader
                                 dispatch
                         | :? LongTextCategory as cat -> freeTextSearch cat dispatch
                         | cat -> failwith $"Unhandled category: {cat}"
+
+                    let closeButton =
+                        Bulma.delete [ prop.onClick (fun e ->
+                                           e.stopPropagation ()
+                                           dispatch CloseMetadataMenu)
+                                       prop.title "Close" ]
+
+                    let menuList =
+                        Bulma.menuList [ prop.onClick (fun e ->
+                                             // Prevent onclick handlers further up the hierarchy from closing this menu
+                                             e.stopPropagation ())
+                                         prop.children menuContents ]
+
+                    if isMenuOpen then
+                        Html.div [ prop.style [ style.position.absolute
+                                                style.backgroundColor "white"
+                                                style.border ("1px", borderStyle.solid, "#a1a1a1")
+                                                style.padding 10
+                                                style.zIndex 1 ]
+                                   prop.children [ Bulma.level [ prop.style [ style.marginBottom 0 ]
+                                                                 prop.children [ Bulma.levelLeft []
+                                                                                 Bulma.levelRight closeButton ] ]
+                                                   menuList
+
+                                                    ] ]
                     else
-                        Html.none
+                        menuList
 
                 Html.th [ prop.onClick (fun e ->
                               if e.altKey then
@@ -556,27 +593,7 @@ module MetadataMenu =
                                           { CategoryCode = category.Code
                                             Direction = direction }
                                   ))
-                          prop.children [ if isMenuOpen then
-                                              let closeButton =
-                                                  Bulma.delete [ prop.onClick (fun e ->
-                                                                     e.stopPropagation ()
-                                                                     dispatch CloseMetadataMenu)
-                                                                 prop.title "Close" ]
-
-                                              Html.div [ prop.style [ style.position.absolute
-                                                                      style.backgroundColor "white"
-                                                                      style.border ("1px", borderStyle.solid, "#a1a1a1")
-                                                                      style.padding 10 ]
-                                                         prop.children [ Bulma.level [ prop.style [ style.marginBottom 0 ]
-                                                                                       prop.children [ Bulma.levelLeft [  ]
-                                                                                                       Bulma.levelRight
-                                                                                                           closeButton ] ]
-                                                                         Bulma.menuList [ prop.onClick (fun e ->
-                                                                                              // Prevent onclick handlers further up the hierarchy from closing this menu
-                                                                                              e.stopPropagation ())
-                                                                                          prop.children menu ]
-
-                                                                          ] ]
+                          prop.children [ menu
                                           match model.SelectionTableSort with
                                           | Some sortInfo when sortInfo.CategoryCode = category.Code ->
                                               Html.span [ prop.className "icon-text"
@@ -679,6 +696,7 @@ module MetadataMenu =
                               isOpen
                               model.Search.Params.MetadataSelection
                               model.FetchedMetadataValues
+                              true
                               dispatch
                       | :? NumberCategory as cat ->
                           SelectOrInterval
@@ -689,6 +707,7 @@ module MetadataMenu =
                               model.Search.Params.MetadataSelection
                               model.FetchedMetadataValues
                               model.FetchedMinAndMax
+                              true
                               dispatch
                       | :? LongTextCategory as cat -> freeTextSearch cat dispatch
                       | cat -> failwith $"Unhandled category: {cat}" ]
