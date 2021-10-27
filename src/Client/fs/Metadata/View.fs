@@ -283,12 +283,10 @@ module MetadataMenu =
 
                 Html.tr [ Html.td [ prop.style [ style.verticalAlign.middle ]
                                     prop.text label ]
-                          Html.td (
-                              Bulma.field.div [ field.hasAddons
-                                                prop.children [ Bulma.control.div [ control.isExpanded
-                                                                                    prop.children textInput ]
-                                                                Bulma.control.div [ checkButton ] ] ]
-                          ) ]
+                          Html.td [ Bulma.field.div [ field.hasAddons
+                                                      prop.children [ Bulma.control.div [ control.isExpanded
+                                                                                          prop.children textInput ]
+                                                                      Bulma.control.div [ checkButton ] ] ] ] ]
 
             Html.li [ Html.a [ prop.key category.Code
                                if isOpen then
