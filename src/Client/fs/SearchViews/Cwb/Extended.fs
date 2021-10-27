@@ -77,7 +77,7 @@ let AttributeModal
                                                   prop.onClick (fun e ->
                                                       let category =
                                                           { Attr = attr.Code
-                                                            Operator = if e.shiftKey then NotEquals else Equals
+                                                            Operator = if e.altKey then NotEquals else Equals
                                                             Value = attrValue
                                                             Subcategories = None }
 
@@ -256,7 +256,8 @@ let AttributeModal
                                                                                       dispatch
                                                                               ) ] ] ]
                             Bulma.level [ Bulma.levelLeft (
-                                              Bulma.levelItem [ prop.text "Click to select; shift-click to exclude" ]
+                                              Bulma.levelItem [ prop.text
+                                                                    "Click to select; alt/option + click to exclude" ]
                                           )
                                           Bulma.levelRight (
                                               Bulma.buttons [ Bulma.button.button [ color.isDanger
