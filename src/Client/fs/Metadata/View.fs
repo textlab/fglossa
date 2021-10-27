@@ -483,7 +483,7 @@ module MetadataMenu =
                                                                          prop.children (
                                                                              Bulma.subtitle [ title.is6
                                                                                               prop.text
-                                                                                                  "Click on a column header to sort; shift-click to edit the metadata selection." ]
+                                                                                                  "Click on a column header to sort; alt/option + click to edit the metadata selection." ]
                                                                          ) ] ]
                                               )
                                           )
@@ -498,63 +498,75 @@ module MetadataMenu =
 
         let table =
             let columnHeader (category: Category) =
+                let isMenuOpen =
+                    (Some category.Code = model.OpenMetadataCategoryCode)
+
                 let menu =
-                    let isOpen =
-                        (Some category.Code = model.OpenMetadataCategoryCode)
+                    if isMenuOpen then
+                        match category with
+                        | :? StringCategory as cat ->
+                            stringSelect
+                                cat
+                                isMenuOpen
+                                model.Search.Params.MetadataSelection
+                                model.FetchedMetadataValues
+                                dispatch
+                        | :? NumberCategory as cat ->
+                            SelectOrInterval
+                                cat
+                                isMenuOpen
+                                (model.IntervalCategoryModes.TryFind(category.Code)
+                                 |> Option.defaultValue ListMode)
+                                model.Search.Params.MetadataSelection
+                                model.FetchedMetadataValues
+                                model.FetchedMinAndMax
+                                dispatch
+                        | :? LongTextCategory as cat -> freeTextSearch cat dispatch
+                        | cat -> failwith $"Unhandled category: {cat}"
+                    else
+                        Html.none
 
-                    match category with
-                    | :? StringCategory as cat ->
-                        stringSelect
-                            cat
-                            isOpen
-                            model.Search.Params.MetadataSelection
-                            model.FetchedMetadataValues
-                            dispatch
-                    | :? NumberCategory as cat ->
-                        SelectOrInterval
-                            cat
-                            isOpen
-                            (model.IntervalCategoryModes.TryFind(category.Code)
-                             |> Option.defaultValue ListMode)
-                            model.Search.Params.MetadataSelection
-                            model.FetchedMetadataValues
-                            model.FetchedMinAndMax
-                            dispatch
-                    | :? LongTextCategory as cat -> freeTextSearch cat dispatch
-                    | cat -> failwith $"Unhandled category: {cat}"
-
-                Html.th [ prop.onClick (fun _ ->
-                              let direction =
-                                  match model.SelectionTableSort with
-                                  | Some sortInfo ->
-                                      if sortInfo.CategoryCode = category.Code then
-                                          // We were already sorting on this category, so just
-                                          // change direction
-                                          if sortInfo.Direction = Asc then
-                                              Desc
+                Html.th [ prop.onClick (fun e ->
+                              if e.altKey then
+                                  e.stopPropagation ()
+                                  dispatch (OpenMetadataMenu category)
+                              else
+                                  let direction =
+                                      match model.SelectionTableSort with
+                                      | Some sortInfo ->
+                                          if sortInfo.CategoryCode = category.Code then
+                                              // We were already sorting on this category, so just
+                                              // change direction
+                                              if sortInfo.Direction = Asc then
+                                                  Desc
+                                              else
+                                                  Asc
                                           else
                                               Asc
-                                      else
-                                          Asc
-                                  | None -> Asc
+                                      | None -> Asc
 
-                              dispatch (
-                                  SetSelectionTableSort
-                                      { CategoryCode = category.Code
-                                        Direction = direction }
-                              ))
-                          prop.children (
-                              match model.SelectionTableSort with
-                              | Some sortInfo when sortInfo.CategoryCode = category.Code ->
-                                  Html.span [ prop.className "icon-text"
-                                              prop.children [ Html.span category.Name
-                                                              Bulma.icon [ Html.i [ prop.className [ "fa"
-                                                                                                     if sortInfo.Direction = Asc then
-                                                                                                         "fa-sort-down"
-                                                                                                     else
-                                                                                                         "fa-sort-up" ] ] ] ] ]
-                              | _ -> Html.text category.Name
-                          ) ]
+                                  dispatch (
+                                      SetSelectionTableSort
+                                          { CategoryCode = category.Code
+                                            Direction = direction }
+                                  ))
+                          prop.children [ if isMenuOpen then
+                                              //   Html.ul [ prop.className "menu-list"; prop.children menu ]
+                                              Bulma.menuList [ prop.onClick (fun e ->
+                                                                   // Prevent onclick handlers further up the hierarchy from closing this menu
+                                                                   e.stopPropagation ())
+                                                               prop.children menu ]
+                                          else
+                                              match model.SelectionTableSort with
+                                              | Some sortInfo when sortInfo.CategoryCode = category.Code ->
+                                                  Html.span [ prop.className "icon-text"
+                                                              prop.children [ Html.span category.Name
+                                                                              Bulma.icon [ Html.i [ prop.className [ "fa"
+                                                                                                                     if sortInfo.Direction = Asc then
+                                                                                                                         "fa-sort-down"
+                                                                                                                     else
+                                                                                                                         "fa-sort-up" ] ] ] ] ]
+                                              | _ -> Html.text category.Name ] ]
 
             Bulma.tableContainer [ Bulma.table [ table.isStriped
                                                  table.isFullWidth
