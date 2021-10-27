@@ -489,11 +489,12 @@ module MetadataMenu =
                                           )
                                           Bulma.levelRight [ Bulma.levelItem (pagination)
                                                              Bulma.levelItem (
-                                                                 Bulma.delete [ delete.isMedium
-                                                                                prop.title "Close"
-                                                                                prop.style [ style.marginLeft 40 ]
-                                                                                prop.onClick (fun _ ->
-                                                                                    dispatch CloseSelectionTable) ]
+                                                                 Bulma.button.button [ color.isInfo
+                                                                                       prop.title "Close"
+                                                                                       prop.style [ style.marginLeft 40 ]
+                                                                                       prop.onClick (fun _ ->
+                                                                                           dispatch CloseSelectionTable)
+                                                                                       prop.text "Close" ]
                                                              ) ] ] ]
 
         let table =
@@ -529,6 +530,11 @@ module MetadataMenu =
                 Html.th [ prop.onClick (fun e ->
                               if e.altKey then
                                   e.stopPropagation ()
+
+                                  match category with
+                                  | :? NumberCategory as cat -> dispatch (FetchMinAndMaxForCategory cat)
+                                  | _ -> ()
+
                                   dispatch (OpenMetadataMenu category)
                               else
                                   let direction =
@@ -551,22 +557,36 @@ module MetadataMenu =
                                             Direction = direction }
                                   ))
                           prop.children [ if isMenuOpen then
-                                              //   Html.ul [ prop.className "menu-list"; prop.children menu ]
-                                              Bulma.menuList [ prop.onClick (fun e ->
-                                                                   // Prevent onclick handlers further up the hierarchy from closing this menu
-                                                                   e.stopPropagation ())
-                                                               prop.children menu ]
-                                          else
-                                              match model.SelectionTableSort with
-                                              | Some sortInfo when sortInfo.CategoryCode = category.Code ->
-                                                  Html.span [ prop.className "icon-text"
-                                                              prop.children [ Html.span category.Name
-                                                                              Bulma.icon [ Html.i [ prop.className [ "fa"
-                                                                                                                     if sortInfo.Direction = Asc then
-                                                                                                                         "fa-sort-down"
-                                                                                                                     else
-                                                                                                                         "fa-sort-up" ] ] ] ] ]
-                                              | _ -> Html.text category.Name ] ]
+                                              let closeButton =
+                                                  Bulma.delete [ prop.onClick (fun e ->
+                                                                     e.stopPropagation ()
+                                                                     dispatch CloseMetadataMenu)
+                                                                 prop.title "Close" ]
+
+                                              Html.div [ prop.style [ style.position.absolute
+                                                                      style.backgroundColor "white"
+                                                                      style.border ("1px", borderStyle.solid, "#a1a1a1")
+                                                                      style.padding 10 ]
+                                                         prop.children [ Bulma.level [ prop.style [ style.marginBottom 0 ]
+                                                                                       prop.children [ Bulma.levelLeft [  ]
+                                                                                                       Bulma.levelRight
+                                                                                                           closeButton ] ]
+                                                                         Bulma.menuList [ prop.onClick (fun e ->
+                                                                                              // Prevent onclick handlers further up the hierarchy from closing this menu
+                                                                                              e.stopPropagation ())
+                                                                                          prop.children menu ]
+
+                                                                          ] ]
+                                          match model.SelectionTableSort with
+                                          | Some sortInfo when sortInfo.CategoryCode = category.Code ->
+                                              Html.span [ prop.className "icon-text"
+                                                          prop.children [ Html.span category.Name
+                                                                          Bulma.icon [ Html.i [ prop.className [ "fa"
+                                                                                                                 if sortInfo.Direction = Asc then
+                                                                                                                     "fa-sort-down"
+                                                                                                                 else
+                                                                                                                     "fa-sort-up" ] ] ] ] ]
+                                          | _ -> Html.text category.Name ] ]
 
             Bulma.tableContainer [ Bulma.table [ table.isStriped
                                                  table.isFullWidth
@@ -582,13 +602,14 @@ module MetadataMenu =
                                        style.marginBottom 0 ]
                           prop.children [ Bulma.levelLeft []
                                           Bulma.levelRight [ Bulma.levelItem [ pagination ]
-                                                             Bulma.levelItem [ Bulma.delete [ delete.isMedium
-                                                                                              prop.title "Close"
-                                                                                              prop.style [ style.marginLeft
-                                                                                                               40 ]
-                                                                                              prop.onClick (fun _ ->
-                                                                                                  dispatch
-                                                                                                      CloseSelectionTable) ] ] ] ] ]
+                                                             Bulma.levelItem (
+                                                                 Bulma.button.button [ color.isInfo
+                                                                                       prop.title "Close"
+                                                                                       prop.style [ style.marginLeft 40 ]
+                                                                                       prop.onClick (fun _ ->
+                                                                                           dispatch CloseSelectionTable)
+                                                                                       prop.text "Close" ]
+                                                             ) ] ] ]
 
         let elementRef = React.useElementRef ()
 

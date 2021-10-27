@@ -87,13 +87,23 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             FetchedMinAndMaxForCategory
     | FetchedMinAndMaxForCategory (min, max) -> { model with FetchedMinAndMax = Some(min, max) }, Cmd.none
     | FetchTextAndTokenCounts ->
-        let cmd =
+        let countCmd =
             Cmd.OfAsync.perform
                 serverApi.GetTextAndTokenCount
                 (model.Corpus.SharedInfo.Code, model.Search.Params.MetadataSelection)
                 FetchedTextAndTokenCounts
 
-        model, cmd
+        let newModel, cmd =
+            if model.IsSelectionTableOpen then
+                // If the metadata selection table is open, fetch text metadata as well as
+                // calculating text and token counts, so that the table will be updated immediately
+                { model with SelectionTablePageNumber = 1 },
+                Cmd.batch [ countCmd
+                            Cmd.ofMsg FetchMetadataForTexts ]
+            else
+                model, countCmd
+
+        newModel, cmd
     | FetchedTextAndTokenCounts counts ->
         { model with
             NumSelectedTexts = Some counts.NumTexts
