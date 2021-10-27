@@ -496,53 +496,30 @@ module MetadataMenu =
 
         let table =
             let columnHeader (category: Category) =
-                let maybeMenu =
-                    let rec createMenu item =
-                        match item with
-                        | Section (_, _, items) -> items |> List.tryPick createMenu
-                        | CategoryMenu cat ->
-                            if cat.Code = category.Code then
-                                let isOpen =
-                                    (Some cat.Code = model.OpenMetadataCategoryCode)
+                let menu =
+                    let isOpen =
+                        (Some category.Code = model.OpenMetadataCategoryCode)
 
-                                let elm =
-                                    match cat with
-                                    | :? StringCategory as c ->
-                                        stringSelect
-                                            c
-                                            isOpen
-                                            model.Search.Params.MetadataSelection
-                                            model.FetchedMetadataValues
-                                            dispatch
-                                    | :? NumberCategory as c ->
-                                        SelectOrInterval
-                                            c
-                                            isOpen
-                                            (model.IntervalCategoryModes.TryFind(cat.Code)
-                                             |> Option.defaultValue ListMode)
-                                            model.Search.Params.MetadataSelection
-                                            model.FetchedMetadataValues
-                                            model.FetchedMinAndMax
-                                            dispatch
-                                    | :? LongTextCategory as c -> freeTextSearch c dispatch
-                                    | c -> failwith $"Unhandled category: {c}"
-
-                                Some elm
-                            else
-                                None
-
-                    // Go through the metadata menu that has been configured for this corpus, and see if
-                    // we find a configuration for the current category. If not (i.e., a category is
-                    // included in the metadata selection table but not in the metadata menu on the left),
-                    // we select a default meny type.
-                    model.Corpus.MetadataMenu
-                    |> List.tryPick createMenu
-                    |> Option.defaultWith (fun () ->
-                        match category with
-                        | :? StringCategory as cat -> failwith "a"
-                        | :? NumberCategory as cat -> failwith "a"
-                        | :? LongTextCategory as cat -> failwith "a"
-                        | cat -> failwith $"Unhandled category: {cat}")
+                    match category with
+                    | :? StringCategory as cat ->
+                        stringSelect
+                            cat
+                            isOpen
+                            model.Search.Params.MetadataSelection
+                            model.FetchedMetadataValues
+                            dispatch
+                    | :? NumberCategory as cat ->
+                        SelectOrInterval
+                            cat
+                            isOpen
+                            (model.IntervalCategoryModes.TryFind(category.Code)
+                             |> Option.defaultValue ListMode)
+                            model.Search.Params.MetadataSelection
+                            model.FetchedMetadataValues
+                            model.FetchedMinAndMax
+                            dispatch
+                    | :? LongTextCategory as cat -> freeTextSearch cat dispatch
+                    | cat -> failwith $"Unhandled category: {cat}"
 
                 Html.th [ prop.onClick (fun _ ->
                               let direction =
