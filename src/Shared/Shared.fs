@@ -62,22 +62,20 @@ module Metadata =
         | Closed
 
     type MenuItem =
-        | StringSelect of StringCategory
-        | NumberSelect of NumberCategory
-        | FreeTextSearch of LongTextCategory
+        | CategoryMenu of Category
         // Since a section may have no title, the proper F# way would be to define it
         // as a "string option", but using a normal string (and simply omitting the title
         // bar if the title is empty) makes it easier for non-programmers to define menus.
         | Section of MenuState * title: string * items: MenuItem list
 
     type CategoryCode = string
-    type StringSelectOption = { Name: string; Value: string }
+    type CategoryMenuOption = { Name: string; Value: string }
 
     type CategoryNameAndCode = { Name: string; Code: string }
-    type CategoryNameAndValue = StringSelectOption
+    type CategoryNameAndValue = CategoryMenuOption
 
     type CategorySelection =
-        { Choices: StringSelectOption []
+        { Choices: CategoryMenuOption []
           ShouldExclude: bool }
         static member Default =
             { Choices = [||]

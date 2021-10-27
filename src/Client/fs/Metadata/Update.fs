@@ -17,8 +17,8 @@ type Msg =
     | FetchTextAndTokenCounts
     | FetchedTextAndTokenCounts of TextAndTokenCounts
     | ToggleExclude of category: Metadata.Category
-    | SelectItem of Metadata.Category * Metadata.StringSelectOption
-    | DeselectItem of Metadata.Category * Metadata.StringSelectOption
+    | SelectItem of Metadata.Category * Metadata.CategoryMenuOption
+    | DeselectItem of Metadata.Category * Metadata.CategoryMenuOption
     | DeselectAllItems of Metadata.Category
     | SetIntervalFrom of Metadata.NumberCategory * string
     | SetIntervalTo of Metadata.NumberCategory * string
@@ -224,7 +224,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
     | SetIntervalFrom (category, number) ->
         let (newCategoryValues: Metadata.CategorySelection) =
-            let fromValue: Metadata.StringSelectOption =
+            let fromValue: Metadata.CategoryMenuOption =
                 { Name = "glossa_interval_from"
                   Value = number }
 
@@ -261,7 +261,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
     | SetIntervalTo (category, number) ->
         let (newCategoryValues: Metadata.CategorySelection) =
-            let toValue: Metadata.StringSelectOption =
+            let toValue: Metadata.CategoryMenuOption =
                 { Name = "glossa_interval_to"
                   Value = number }
 
