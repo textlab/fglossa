@@ -208,17 +208,16 @@ let addOrRemoveExtraForms term attrName operator attrValue =
     let mutable foundForms = false
 
     term.ExtraForms
-    |> List.map
-        (fun forms ->
-            if forms.Attr = attrName then
-                // A set of values already exists for this attribute name
-                foundForms <- true
+    |> List.map (fun forms ->
+        if forms.Attr = attrName then
+            // A set of values already exists for this attribute name
+            foundForms <- true
 
-                let newValues = forms.Values.Add(attrValue)
+            let newValues = forms.Values.Add(attrValue)
 
-                { forms with Values = newValues }
-            else
-                forms)
+            { forms with Values = newValues }
+        else
+            forms)
     |> fun extraFormsList ->
         if foundForms then
             extraFormsList
@@ -272,17 +271,17 @@ let handleQuotedOrEmptyTerm (termStr: string) interval (maybeCwbAttributeMenu: C
         let isMiddle = isStart && isEnd
 
         { QueryTerm.Default with
-              MainStringValue = Some form
-              IsStart = if isMiddle then false else isStart
-              IsEnd = if isMiddle then false else isEnd
-              IsMiddle = isMiddle
-              CategorySections = categorySections
-              PrecedingInterval = interval }
+            MainStringValue = Some form
+            IsStart = if isMiddle then false else isStart
+            IsEnd = if isMiddle then false else isEnd
+            IsMiddle = isMiddle
+            CategorySections = categorySections
+            PrecedingInterval = interval }
     else
         // empty term
         { QueryTerm.Default with
-              CategorySections = categorySections
-              PrecedingInterval = interval }
+            CategorySections = categorySections
+            PrecedingInterval = interval }
 
 let handleAttributeValue
     (inputStr: string)
@@ -307,13 +306,13 @@ let handleAttributeValue
         let isMiddle = isStart && isEnd
 
         { QueryTerm.Default with
-              MainStringValue = Some(unescapeForm value)
-              IsLemma = isLemma
-              IsPhonetic = isPhon
-              IsOriginal = isOrig
-              IsStart = if isMiddle then false else isStart
-              IsEnd = if isMiddle then false else isEnd
-              IsMiddle = isMiddle }
+            MainStringValue = Some(unescapeForm value)
+            IsLemma = isLemma
+            IsPhonetic = isPhon
+            IsOriginal = isOrig
+            IsStart = if isMiddle then false else isStart
+            IsEnd = if isMiddle then false else isEnd
+            IsMiddle = isMiddle }
 
     let processOtherForms (term: QueryTerm) (name, operator, value) =
         let newExtraForms =
@@ -401,15 +400,15 @@ let handleAttributeValue
                                         { Attr = firstPair.Attr
                                           Operator = firstPair.Operator
                                           Value =
-                                              if firstPair.Values.Count <> 1 then
-                                                  failwith
-                                                      $"Main category should not have pipe in value: {firstPair.Values}"
+                                            if firstPair.Values.Count <> 1 then
+                                                failwith
+                                                    $"Main category should not have pipe in value: {firstPair.Values}"
 
-                                              firstPair.Values.MinimumElement
+                                            firstPair.Values.MinimumElement
                                           Subcategories =
-                                              match List.tail attributeValuePairs with
-                                              | [] -> None
-                                              | pairs -> pairs |> Set.ofList |> Some } ]
+                                            match List.tail attributeValuePairs with
+                                            | [] -> None
+                                            | pairs -> pairs |> Set.ofList |> Some } ]
 
                               // Look at the first main category in this section and find the first (which should also be the
                               // only) section in the CwbAttributeMenu for this corpus that contains the same combination of
@@ -418,13 +417,13 @@ let handleAttributeValue
 
                               let menuSectionIndex =
                                   cwbAttributeMenu
-                                  |> List.findIndex
-                                      (fun menuSection ->
-                                          menuSection.Values
-                                          |> List.exists
-                                              (fun ((attr, attrValue, _, _): CwbAttributeMenu.MainCategoryValue) ->
-                                                  attr.Code = firstCategory.Attr
-                                                  && attrValue = firstCategory.Value))
+                                  |> List.findIndex (fun menuSection ->
+                                      menuSection.Values
+                                      |> List.exists
+
+                                          (fun ((attr, attrValue, _, _): CwbAttributeMenu.MainCategoryValue) ->
+                                              attr.Code = firstCategory.Attr
+                                              && attrValue = firstCategory.Value))
 
                               (menuSectionIndex, categories |> Set.ofList) ]
                         |> Map.ofList
@@ -446,13 +445,12 @@ let handleAttributeValue
                 // The corpus does not contain an attribute menu
                 []
 
-        { termWithNonCategories with
-              CategorySections = categories }
+        { termWithNonCategories with CategorySections = categories }
 
     { processForms with
-          PrecedingInterval = interval
-          IsInitial = isSegmentInitial
-          IsFinal = isSegmentFinal }
+        PrecedingInterval = interval
+        IsInitial = isSegmentInitial
+        IsFinal = isSegmentFinal }
 
 type Query =
     { Terms: QueryTerm [] }
@@ -495,30 +493,29 @@ type Query =
             let mutable latestInterval = None
 
             termStrings
-            |> List.iter
-                (fun (termStr, groups) ->
-                    if Regex.IsMatch(termStr, intervalRx) then
-                        latestInterval <- handleInterval groups.[1]
-                    elif Regex.IsMatch(termStr, attributeValueRx) then
-                        let isSegmentInitial = Regex.IsMatch(termStr, $"<{sTag}>")
-                        let isSegmentFinal = Regex.IsMatch(termStr, $"</{sTag}>")
+            |> List.iter (fun (termStr, groups) ->
+                if Regex.IsMatch(termStr, intervalRx) then
+                    latestInterval <- handleInterval groups.[1]
+                elif Regex.IsMatch(termStr, attributeValueRx) then
+                    let isSegmentInitial = Regex.IsMatch(termStr, $"<{sTag}>")
+                    let isSegmentFinal = Regex.IsMatch(termStr, $"</{sTag}>")
 
-                        let term =
-                            handleAttributeValue
-                                (List.last groups)
-                                latestInterval
-                                isSegmentInitial
-                                isSegmentFinal
-                                corpus.CwbAttributeMenu
+                    let term =
+                        handleAttributeValue
+                            (List.last groups)
+                            latestInterval
+                            isSegmentInitial
+                            isSegmentFinal
+                            corpus.CwbAttributeMenu
 
-                        terms <- Array.append terms [| term |]
-                        latestInterval <- None
-                    elif Regex.IsMatch(termStr, quotedOrEmptyTermRx) then
-                        let term =
-                            handleQuotedOrEmptyTerm termStr latestInterval corpus.CwbAttributeMenu
+                    terms <- Array.append terms [| term |]
+                    latestInterval <- None
+                elif Regex.IsMatch(termStr, quotedOrEmptyTermRx) then
+                    let term =
+                        handleQuotedOrEmptyTerm termStr latestInterval corpus.CwbAttributeMenu
 
-                        terms <- Array.append terms [| term |]
-                        latestInterval <- None)
+                    terms <- Array.append terms [| term |]
+                    latestInterval <- None)
 
             { Terms = terms }
 
@@ -537,19 +534,13 @@ let updateQuery model query queryIndex newQueryTerms =
 
     let newQueries =
         model.Search.Params.Queries
-        |> Array.mapi
-            (fun i q ->
-                if i = queryIndex then
-                    { q with QueryString = newQueryCqp }
-                else
-                    q)
+        |> Array.mapi (fun i q ->
+            if i = queryIndex then
+                { q with QueryString = newQueryCqp }
+            else
+                q)
 
-    { model with
-          Search =
-              { model.Search with
-                    Params =
-                        { model.Search.Params with
-                              Queries = newQueries } } }
+    { model with Search = { model.Search with Params = { model.Search.Params with Queries = newQueries } } }
 
 
 let updateQueryTerm model query queryIndex newTerm termIndex =

@@ -71,8 +71,7 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                     searchParams.SearchId
 
             let searchParamsWithSearchId =
-                { searchParams with
-                      SearchId = searchId }
+                { searchParams with SearchId = searchId }
 
             let! searchResults =
                 match corpus.Config.Modality with
@@ -85,29 +84,26 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                   SearchId = searchId
                   SearchStep = searchParams.Step
                   ResultPages =
-                      match corpus.Config.Modality with
-                      | Spoken ->
-                          searchResults.Hits
-                          |> Spoken.transformResults corpus searchParams.Queries
-                          |> Array.chunkBySize searchParams.PageSize
-                          |> Array.mapi
-                              (fun index results ->
-                                  { PageNumber = index + 1
-                                    Results = results })
-                      | Written ->
-                          searchResults.Hits
-                          |> Written.transformResults searchParams.Queries
-                          |> Array.chunkBySize searchParams.PageSize
-                          |> Array.mapi
-                              (fun index results ->
-                                  { PageNumber = index + 1
-                                    Results =
-                                        results
-                                        |> Array.map
-                                            (fun resultLines ->
-                                                { AudioType = None
-                                                  HasVideo = false
-                                                  Text = resultLines }) }) }
+                    match corpus.Config.Modality with
+                    | Spoken ->
+                        searchResults.Hits
+                        |> Spoken.transformResults corpus searchParams.Queries
+                        |> Array.chunkBySize searchParams.PageSize
+                        |> Array.mapi (fun index results ->
+                            { PageNumber = index + 1
+                              Results = results })
+                    | Written ->
+                        searchResults.Hits
+                        |> Written.transformResults searchParams.Queries
+                        |> Array.chunkBySize searchParams.PageSize
+                        |> Array.mapi (fun index results ->
+                            { PageNumber = index + 1
+                              Results =
+                                results
+                                |> Array.map (fun resultLines ->
+                                    { AudioType = None
+                                      HasVideo = false
+                                      Text = resultLines }) }) }
         else
             return failwith $"TOO MANY CQP PROCESSES: {nCqpProcs}; aborting search at {System.DateTime.Now}"
     }

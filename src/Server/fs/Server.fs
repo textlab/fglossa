@@ -18,42 +18,42 @@ let createServerApi ctx =
 
     { GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
       GetCorpusConfig =
-          fun code ->
-              Remoting.Corpus.getCorpusConfig logger code
-              |> Async.AwaitTask
+        fun code ->
+            Remoting.Corpus.getCorpusConfig logger code
+            |> Async.AwaitTask
       GetMetadataForCategory =
-          fun (corpusCode, categoryCode, selection) ->
-              Remoting.Metadata.getMetadataForCategory logger corpusCode categoryCode selection
-              |> Async.AwaitTask
+        fun (corpusCode, categoryCode, selection) ->
+            Remoting.Metadata.getMetadataForCategory logger corpusCode categoryCode selection
+            |> Async.AwaitTask
       GetMinAndMaxForCategory =
-          fun (corpusCode, categoryCode, selection) ->
-              Remoting.Metadata.getMinAndMaxForCategory logger corpusCode categoryCode selection
-              |> Async.AwaitTask
+        fun (corpusCode, categoryCode, selection) ->
+            Remoting.Metadata.getMinAndMaxForCategory logger corpusCode categoryCode selection
+            |> Async.AwaitTask
       GetMetadataForTexts =
-          fun (corpusCode, selection, columns, pageNumber, maybeSortInfo) ->
-              Remoting.Metadata.getMetadataForTexts logger corpusCode selection columns pageNumber maybeSortInfo
-              |> Async.AwaitTask
+        fun (corpusCode, selection, columns, pageNumber, maybeSortInfo) ->
+            Remoting.Metadata.getMetadataForTexts logger corpusCode selection columns pageNumber maybeSortInfo
+            |> Async.AwaitTask
       GetMetadataForSingleText =
-          fun (corpusCode, categories, textId) ->
-              Remoting.Metadata.getMetadataForSingleText logger corpusCode categories textId
-              |> Async.AwaitTask
+        fun (corpusCode, categories, textId) ->
+            Remoting.Metadata.getMetadataForSingleText logger corpusCode categories textId
+            |> Async.AwaitTask
       GetTextAndTokenCount =
-          fun (corpusCode, selection) ->
-              Remoting.Corpus.getTextAndTokenCount logger corpusCode selection
-              |> Async.AwaitTask
+        fun (corpusCode, selection) ->
+            Remoting.Corpus.getTextAndTokenCount logger corpusCode selection
+            |> Async.AwaitTask
       GetSearchResults =
-          fun (searchParams, pageNumbers) -> Remoting.Search.Core.getSearchResults logger searchParams None pageNumbers
+        fun (searchParams, pageNumbers) -> Remoting.Search.Core.getSearchResults logger searchParams None pageNumbers
       SearchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams
       GetMediaObject =
-          fun (searchParams, mediaPlayerType, pageNumber, resultIndex, contextSize, contextUnit) ->
-              Remoting.Search.Cwb.Spoken.getMediaObject
-                  logger
-                  searchParams
-                  mediaPlayerType
-                  pageNumber
-                  resultIndex
-                  contextSize
-                  contextUnit }
+        fun (searchParams, mediaPlayerType, pageNumber, resultIndex, contextSize, contextUnit) ->
+            Remoting.Search.Cwb.Spoken.getMediaObject
+                logger
+                searchParams
+                mediaPlayerType
+                pageNumber
+                resultIndex
+                contextSize
+                contextUnit }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =
     // do some logging

@@ -192,10 +192,9 @@ module ResultsView =
 
             let focusQuickView () =
                 elementRef.current
-                |> Option.iter
-                    (fun quickViewElement ->
-                        if model.ShouldShowQuickView then
-                            quickViewElement.focus ())
+                |> Option.iter (fun quickViewElement ->
+                    if model.ShouldShowQuickView then
+                        quickViewElement.focus ())
 
             // Focus the QuickView when mounted to enable it to receive keyboard events
             React.useEffect (focusQuickView, [| box model |])
@@ -206,17 +205,15 @@ module ResultsView =
                                   prop.ref elementRef
                                   // Set tabIndex so that the lement receives keyboard events
                                   prop.tabIndex 0
-                                  prop.onKeyUp
-                                      (fun e ->
-                                          if e.key = "Escape" then
-                                              dispatch ShowingResults.Concordance.CloseQuickView)
+                                  prop.onKeyUp (fun e ->
+                                      if e.key = "Escape" then
+                                          dispatch ShowingResults.Concordance.CloseQuickView)
                                   prop.children [ QuickView.header [ Html.div [ prop.style [ style.fontSize 16
                                                                                              style.fontWeight.bold ]
                                                                                 prop.text "Metadata" ]
-                                                                     Bulma.delete [ prop.onClick
-                                                                                        (fun _ ->
-                                                                                            dispatch
-                                                                                                ShowingResults.Concordance.CloseQuickView) ] ]
+                                                                     Bulma.delete [ prop.onClick (fun _ ->
+                                                                                        dispatch
+                                                                                            ShowingResults.Concordance.CloseQuickView) ] ]
                                                   QuickView.body [ QuickView.block [ Bulma.table [ prop.style [ style.margin
                                                                                                                     5 ]
                                                                                                    prop.children [ Html.tbody [ for category in
@@ -242,11 +239,10 @@ module ResultsView =
 
             let sortMenu =
                 Bulma.select [ prop.disabled isSearchingOrFetching
-                               prop.onChange
-                                   (fun (s: string) ->
-                                       let sortKey = SortKey.OfString(s)
+                               prop.onChange (fun (s: string) ->
+                                   let sortKey = SortKey.OfString(s)
 
-                                       dispatch (ShowingResults.Concordance.SetPaginatorPage(Some 1, Some sortKey)))
+                                   dispatch (ShowingResults.Concordance.SetPaginatorPage(Some 1, Some sortKey)))
                                prop.children [ Html.option [ prop.value "Position"
                                                              prop.text "Sort by position" ]
                                                Html.option [ prop.value "Match"
@@ -332,26 +328,24 @@ module ResultsView =
                      tabs.isToggleRounded
                      prop.children [ Html.ul [ Html.li [ if activeTab = "Concordance" then
                                                              tab.isActive
-                                                         prop.onClick
-                                                             (fun _ ->
-                                                                 dispatch (
-                                                                     ShowingResults.SelectResultTab(
-                                                                         Concordance(
-                                                                             ConcordanceModel.Init(
-                                                                                 model.SearchParams,
-                                                                                 model.NumSteps,
-                                                                                 string model.SearchParams.ContextSize,
-                                                                                 []
-                                                                             )
+                                                         prop.onClick (fun _ ->
+                                                             dispatch (
+                                                                 ShowingResults.SelectResultTab(
+                                                                     Concordance(
+                                                                         ConcordanceModel.Init(
+                                                                             model.SearchParams,
+                                                                             model.NumSteps,
+                                                                             string model.SearchParams.ContextSize,
+                                                                             []
                                                                          )
                                                                      )
-                                                                 ))
+                                                                 )
+                                                             ))
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
                                                Html.li [ if activeTab = "Statistics" then
                                                              tab.isActive
-                                                         prop.onClick
-                                                             (fun _ ->
-                                                                 dispatch (ShowingResults.SelectResultTab Statistics))
+                                                         prop.onClick (fun _ ->
+                                                             dispatch (ShowingResults.SelectResultTab Statistics))
                                                          prop.children [ Html.a [ prop.text "Statistics" ] ] ] ] ] ]
 
     ///////////////////////////////////////
@@ -395,10 +389,9 @@ let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) 
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
                                 prop.tabIndex 0
                                 prop.onClick (fun _ -> dispatch (MetadataMsg Update.Metadata.Msg.CloseMetadataMenu))
-                                prop.onKeyUp
-                                    (fun e ->
-                                        if e.key = "Escape" then
-                                            dispatch (MetadataMsg Update.Metadata.Msg.CloseMetadataMenu))
+                                prop.onKeyUp (fun e ->
+                                    if e.key = "Escape" then
+                                        dispatch (MetadataMsg Update.Metadata.Msg.CloseMetadataMenu))
                                 prop.children [ Bulma.columns [ if shouldShowMetadataMenu model then
                                                                     Bulma.column [ column.isNarrow
                                                                                    prop.style [ style.marginRight 20 ]

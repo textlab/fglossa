@@ -195,10 +195,9 @@ let getSearchResults
 
         return
             (hitPages, pageNumbers)
-            ||> Array.map2
-                    (fun pageHits pageNumber ->
-                        { PageNumber = pageNumber
-                          Results = pageHits })
+            ||> Array.map2 (fun pageHits pageNumber ->
+                { PageNumber = pageNumber
+                  Results = pageHits })
     }
 
 let extractMediaInfo (corpus: Corpus) result =
@@ -258,34 +257,32 @@ let extractMediaInfo (corpus: Corpus) result =
 
     let annotations =
         mediaObjLines
-        |> List.mapi
-            (fun index line ->
-                let isMatch = Regex.IsMatch(line, "\{\{")
-                let line' = line |> replace "\{\{|\}\}" ""
-                let tokens = line'.Split()
+        |> List.mapi (fun index line ->
+            let isMatch = Regex.IsMatch(line, "\{\{")
+            let line' = line |> replace "\{\{|\}\}" ""
+            let tokens = line'.Split()
 
-                let annotation =
-                    { Speaker = speakers.[index]
-                      Line =
-                          tokens
-                          |> Array.mapi
-                              (fun index token ->
-                                  let attrValues = token.Split('/')
+            let annotation =
+                { Speaker = speakers.[index]
+                  Line =
+                    tokens
+                    |> Array.mapi (fun index token ->
+                        let attrValues = token.Split('/')
 
-                                  let attrNames =
-                                      "word" :: displayedAttrs
-                                      |> List.truncate attrValues.Length
-                                      |> List.toArray
+                        let attrNames =
+                            "word" :: displayedAttrs
+                            |> List.truncate attrValues.Length
+                            |> List.toArray
 
-                                  let attrs =
-                                      Array.zip attrNames attrValues |> Map.ofArray
+                        let attrs =
+                            Array.zip attrNames attrValues |> Map.ofArray
 
-                                  (index, attrs))
-                      From = starttimes.[index]
-                      To = endtimes.[index]
-                      IsMatch = isMatch }
+                        (index, attrs))
+                  From = starttimes.[index]
+                  To = endtimes.[index]
+                  IsMatch = isMatch }
 
-                (index, annotation))
+            (index, annotation))
         |> Map.ofList
 
     let matchingLineIndex =
@@ -299,11 +296,11 @@ let extractMediaInfo (corpus: Corpus) result =
       DisplayAttribute = "word"
       CorpusCode = corpus.Config.Code
       Mov =
-          { Supplied = "m4v"
-            Path = $"media/{corpus.Config.Code}"
-            MovieLoc = movieLoc
-            Start = overallStarttime
-            Stop = overallEndtime }
+        { Supplied = "m4v"
+          Path = $"media/{corpus.Config.Code}"
+          MovieLoc = movieLoc
+          Start = overallStarttime
+          Stop = overallEndtime }
       Divs = annotations
       StartAt = matchingLineIndex
       EndAt = matchingLineIndex

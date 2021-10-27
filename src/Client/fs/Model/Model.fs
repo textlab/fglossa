@@ -154,7 +154,7 @@ type ShowingResultsModel =
           quickViewMetadata: Metadata.CategoryNameAndValue list))
         =
         { ActiveTab =
-              Concordance(ConcordanceModel.Init(searchParams, numSteps, contextSizeTextValue, quickViewMetadata))
+            Concordance(ConcordanceModel.Init(searchParams, numSteps, contextSizeTextValue, quickViewMetadata))
           SearchParams = searchParams
           SearchResults = None
           NumSteps = numSteps }

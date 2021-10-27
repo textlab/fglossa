@@ -47,12 +47,11 @@ module Spoken =
                     bounds
                     |> Seq.filter (not << String.IsNullOrWhiteSpace)
                     |> Seq.collect (fun b -> b.Split(':'))
-                    |> Seq.sumBy
-                        (fun b ->
-                            let parts = b.Split('-')
-                            let startBound = Int64.Parse(parts.[0])
-                            let endBound = Int64.Parse(parts.[1])
-                            endBound - startBound + 1L)
+                    |> Seq.sumBy (fun b ->
+                        let parts = b.Split('-')
+                        let startBound = Int64.Parse(parts.[0])
+                        let endBound = Int64.Parse(parts.[1])
+                        endBound - startBound + 1L)
                 | Error ex -> raise ex
 
             return
@@ -100,8 +99,8 @@ let getCorpusConfig (logger: ILogger) (corpusCode: string) =
 
         return
             { corpus.Config with
-                  TotalTexts = numTextsAndTokens.NumTexts
-                  TotalTokens = numTextsAndTokens.NumTokens }
+                TotalTexts = numTextsAndTokens.NumTexts
+                TotalTokens = numTextsAndTokens.NumTokens }
     }
 
 let getTextAndTokenCount (logger: ILogger) (corpusCode: string) (selection: Metadata.Selection) =

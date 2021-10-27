@@ -27,10 +27,9 @@ let idColumn (corpus: Corpus) sId (pageNumber: int) rowIndex (dispatch: Msg -> u
     let textId = Regex.Replace(sId, "\..+", "")
 
     Html.div [ Html.a [ prop.href ""
-                        prop.onClick
-                            (fun e ->
-                                e.preventDefault ()
-                                dispatch (FetchMetadataForText(corpus, textId)))
+                        prop.onClick (fun e ->
+                            e.preventDefault ()
+                            dispatch (FetchMetadataForText(corpus, textId)))
                         prop.children [ Html.span textId ] ]
                corpus.ResultLinks(pageNumber, rowIndex) ]
 

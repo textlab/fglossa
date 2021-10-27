@@ -63,18 +63,17 @@ let buildMultilingualQuery (corpus: Corpus) (queries: Query []) (sTag: string) =
     let alignedQueries =
         queries
         |> Array.tail
-        |> Array.choose
-            (fun query ->
-                // TODO: In case of mandatory alignment, include even empty queries
-                if String.IsNullOrWhiteSpace(query.QueryString) then
-                    None
-                else
-                    let languageCode =
-                        match query.LanguageCode with
-                        | Some code -> code.ToUpper()
-                        | None -> failwith "Missing language code!"
+        |> Array.choose (fun query ->
+            // TODO: In case of mandatory alignment, include even empty queries
+            if String.IsNullOrWhiteSpace(query.QueryString) then
+                None
+            else
+                let languageCode =
+                    match query.LanguageCode with
+                    | Some code -> code.ToUpper()
+                    | None -> failwith "Missing language code!"
 
-                    Some $"{corpus.Config.Code}_{languageCode} {query.QueryString}")
+                Some $"{corpus.Config.Code}_{languageCode} {query.QueryString}")
 
     (Array.append [| mainQuery |] alignedQueries)
     |> String.concat " :"
@@ -237,11 +236,10 @@ let alignedLanguagesCommand (corpus: Corpus) (queries: Query []) =
     | Multilingual _ ->
         let languageCodes =
             queries
-            |> Array.map
-                (fun q ->
-                    match q.LanguageCode with
-                    | Some code -> code
-                    | None -> failwith "Missing language code!")
+            |> Array.map (fun q ->
+                match q.LanguageCode with
+                | Some code -> code
+                | None -> failwith "Missing language code!")
 
         let firstLanguageCode =
             match Array.tryHead languageCodes with
@@ -275,10 +273,9 @@ let sortCommand (namedQuery: string) (sortKey: SortKey) =
     | Match -> Some ""
     | Left -> Some " on match[-1]"
     | Right -> Some " on matchend[1]"
-    |> Option.map
-        (fun c ->
-            [ "set ExternalSort on"
-              $"sort {namedQuery} by word %%c{c}" ])
+    |> Option.map (fun c ->
+        [ "set ExternalSort on"
+          $"sort {namedQuery} by word %%c{c}" ])
 
 let constructQueryCommands
     (logger: ILogger)

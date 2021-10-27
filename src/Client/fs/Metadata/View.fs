@@ -95,10 +95,9 @@ module MetadataMenu =
                                                 style.backgroundColor "#f14668"
                                             else
                                                 style.backgroundColor "#ddd" ]
-                           prop.onClick
-                               (fun _ ->
-                                   setFilterInputText ""
-                                   dispatch (SelectItem(category, selectOption)))
+                           prop.onClick (fun _ ->
+                               setFilterInputText ""
+                               dispatch (SelectItem(category, selectOption)))
                            prop.text (selectOption.Name |> truncate 25)
                            prop.title selectOption.Name ]
 
@@ -127,18 +126,17 @@ module MetadataMenu =
                                                                      prop.title "Exclude selected values"
                                                                      prop.style [ style.marginBottom 5
                                                                                   style.marginLeft 10 ]
-                                                                     prop.onClick
-                                                                         (fun e ->
-                                                                             dispatch (ToggleExclude category)
-                                                                             e.stopPropagation ())
+                                                                     prop.onClick (fun e ->
+                                                                         dispatch (ToggleExclude category)
+                                                                         e.stopPropagation ())
                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-minus" ] ] ] ] ]
 
                                                Bulma.button.button [ button.isSmall
                                                                      color.isDanger
                                                                      prop.style [ style.marginLeft 5 ]
                                                                      prop.title "Remove selection"
-                                                                     prop.onClick
-                                                                         (fun _ -> dispatch (DeselectAllItems category))
+                                                                     prop.onClick (fun _ ->
+                                                                         dispatch (DeselectAllItems category))
                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className
                                                                                                                "fa fa-times" ] ] ] ] ] ]
                   // List of already selected values
@@ -151,14 +149,13 @@ module MetadataMenu =
                                        prop.children [ Html.span [ prop.className "metadata-choice-cross"
                                                                    if categorySelection.ShouldExclude then
                                                                        prop.style [ style.color "white" ]
-                                                                   prop.children [ Html.span [ prop.onClick
-                                                                                                   (fun _ ->
-                                                                                                       dispatch (
-                                                                                                           DeselectItem(
-                                                                                                               category,
-                                                                                                               choice
-                                                                                                           )
-                                                                                                       ))
+                                                                   prop.children [ Html.span [ prop.onClick (fun _ ->
+                                                                                                   dispatch (
+                                                                                                       DeselectItem(
+                                                                                                           category,
+                                                                                                           choice
+                                                                                                       )
+                                                                                                   ))
                                                                                                prop.text "x" ] ] ]
                                                        Html.span [ prop.text choice.Name
                                                                    prop.title choice.Name ] ] ] ]
@@ -174,19 +171,17 @@ module MetadataMenu =
                                                         style.outlineWidth 0
                                                         style.padding 0 ]
                                            prop.value filterInputText
-                                           prop.onChange
-                                               (fun (s: string) ->
-                                                   setFilterInputText s
-                                                   setFilterInputNumChars (float s.Length)) ]
+                                           prop.onChange (fun (s: string) ->
+                                               setFilterInputText s
+                                               setFilterInputNumChars (float s.Length)) ]
 
                   if isOpen || categorySelection.Choices.Length > 0 then
                       // The box containing already selected values
                       Html.div [ prop.className "metadata-menu-selection"
-                                 prop.onClick
-                                     (fun _ ->
-                                         setFilterInputText ""
-                                         focusFilterInput ()
-                                         dispatch (OpenMetadataMenu category))
+                                 prop.onClick (fun _ ->
+                                     setFilterInputText ""
+                                     focusFilterInput ()
+                                     dispatch (OpenMetadataMenu category))
                                  prop.children [ yield! choices
                                                  filterInput ] ]
 
@@ -220,15 +215,13 @@ module MetadataMenu =
         let pickValue choiceName =
             // If a from or to value already exists, find it
             maybeCategorySelection
-            |> Option.bind
-                (fun categorySelection ->
-                    categorySelection.Choices
-                    |> Array.tryPick
-                        (fun choice ->
-                            if choice.Name = choiceName then
-                                Some choice.Value
-                            else
-                                None))
+            |> Option.bind (fun categorySelection ->
+                categorySelection.Choices
+                |> Array.tryPick (fun choice ->
+                    if choice.Name = choiceName then
+                        Some choice.Value
+                    else
+                        None))
 
         let maybeFrom = pickValue "glossa_interval_from"
         let maybeTo = pickValue "glossa_interval_to"
@@ -271,8 +264,8 @@ module MetadataMenu =
                                            |> Option.defaultValue ""
                                        )
                                        prop.value (maybeValue |> Option.defaultValue "")
-                                       prop.onChange
-                                           (fun (v: string) -> setIntervalState (fun state -> state.Add(label, Some v)))
+                                       prop.onChange (fun (v: string) ->
+                                           setIntervalState (fun state -> state.Add(label, Some v)))
                                        prop.onKeyUp (key.enter, (fun _ -> submitChanges label onChangeMsg)) ]
 
                 let checkButton =
@@ -307,9 +300,8 @@ module MetadataMenu =
                                                                          color.isDanger
                                                                          prop.style [ style.marginLeft 15 ]
                                                                          prop.title "Remove selection"
-                                                                         prop.onClick
-                                                                             (fun e ->
-                                                                                 dispatch (DeselectAllItems category))
+                                                                         prop.onClick (fun e ->
+                                                                             dispatch (DeselectAllItems category))
                                                                          prop.children [ Bulma.icon [ Html.i [ prop.className
                                                                                                                    "fa fa-times" ] ] ] ] ] ]
 
@@ -347,23 +339,21 @@ module MetadataMenu =
                     if isOpen then
                         let listButton =
                             Html.li [ if mode = ListMode then tab.isActive
-                                      prop.onClick
-                                          (fun _ ->
-                                              if mode <> ListMode then
-                                                  dispatch (DeselectAllItems category)
-                                                  dispatch (FetchMetadataValuesForCategory category)
-                                                  dispatch (SetIntervalCategoryMode(category, ListMode)))
+                                      prop.onClick (fun _ ->
+                                          if mode <> ListMode then
+                                              dispatch (DeselectAllItems category)
+                                              dispatch (FetchMetadataValuesForCategory category)
+                                              dispatch (SetIntervalCategoryMode(category, ListMode)))
                                       prop.children [ Html.a [ Html.span "List" ] ] ]
 
                         let intervalButton =
                             Html.li [ if mode = IntervalMode then tab.isActive
-                                      prop.onClick
-                                          (fun _ ->
-                                              if mode <> IntervalMode then
-                                                  setIntervalState (fun _ -> intervalStateFromProps)
-                                                  dispatch (DeselectAllItems category)
-                                                  dispatch (FetchMinAndMaxForCategory category)
-                                                  dispatch (SetIntervalCategoryMode(category, IntervalMode)))
+                                      prop.onClick (fun _ ->
+                                          if mode <> IntervalMode then
+                                              setIntervalState (fun _ -> intervalStateFromProps)
+                                              dispatch (DeselectAllItems category)
+                                              dispatch (FetchMinAndMaxForCategory category)
+                                              dispatch (SetIntervalCategoryMode(category, IntervalMode)))
                                       prop.children [ Html.a [ Html.span "Interval" ] ] ]
 
                         Bulma.tabs [ tabs.isToggle
@@ -396,28 +386,27 @@ module MetadataMenu =
 
         let children =
             props.Items
-            |> List.map
-                (fun item ->
-                    match item with
-                    | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}"
-                    | CategoryMenu cat ->
-                        let isOpen = (Some cat.Code = props.OpenCategoryCode)
+            |> List.map (fun item ->
+                match item with
+                | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}"
+                | CategoryMenu cat ->
+                    let isOpen = (Some cat.Code = props.OpenCategoryCode)
 
-                        match cat with
-                        | :? StringCategory as c ->
-                            stringSelect c isOpen props.MetadataSelection props.FetchedMetadataValues props.Dispatch
-                        | :? NumberCategory as c ->
-                            SelectOrInterval
-                                c
-                                isOpen
-                                (props.IntervalCategoryModes.TryFind(cat.Code)
-                                 |> Option.defaultValue ListMode)
-                                props.MetadataSelection
-                                props.FetchedMetadataValues
-                                props.FetchedMinAndMax
-                                props.Dispatch
-                        | :? LongTextCategory as c -> freeTextSearch c props.Dispatch
-                        | c -> failwith $"Unhandled category: {c}")
+                    match cat with
+                    | :? StringCategory as c ->
+                        stringSelect c isOpen props.MetadataSelection props.FetchedMetadataValues props.Dispatch
+                    | :? NumberCategory as c ->
+                        SelectOrInterval
+                            c
+                            isOpen
+                            (props.IntervalCategoryModes.TryFind(cat.Code)
+                             |> Option.defaultValue ListMode)
+                            props.MetadataSelection
+                            props.FetchedMetadataValues
+                            props.FetchedMinAndMax
+                            props.Dispatch
+                    | :? LongTextCategory as c -> freeTextSearch c props.Dispatch
+                    | c -> failwith $"Unhandled category: {c}")
 
         Html.span [ if props.Title <> "" then
                         Bulma.menuLabel [ prop.style [ style.cursor "pointer"
@@ -466,20 +455,14 @@ module MetadataMenu =
                                                      prop.children [ Html.span [ prop.className "pagination-ellipsis"
                                                                                  prop.text "…" ] ] ]
                                        if model.SelectionTablePageNumber >= 3 then
-                                           Bulma.paginationLink.a [ prop.onClick
-                                                                        (fun e ->
-                                                                            setPage
-                                                                                e
-                                                                                (model.SelectionTablePageNumber - 1))
+                                           Bulma.paginationLink.a [ prop.onClick (fun e ->
+                                                                        setPage e (model.SelectionTablePageNumber - 1))
                                                                     prop.text (model.SelectionTablePageNumber - 1) ]
                                        Bulma.paginationLink.a [ paginationLink.isCurrent
                                                                 prop.text model.SelectionTablePageNumber ]
                                        if model.SelectionTablePageNumber <= numPages - 2 then
-                                           Bulma.paginationLink.a [ prop.onClick
-                                                                        (fun e ->
-                                                                            setPage
-                                                                                e
-                                                                                (model.SelectionTablePageNumber + 1))
+                                           Bulma.paginationLink.a [ prop.onClick (fun e ->
+                                                                        setPage e (model.SelectionTablePageNumber + 1))
                                                                     prop.text (model.SelectionTablePageNumber + 1) ]
                                        if model.SelectionTablePageNumber <= numPages - 3 then
                                            Html.li [ prop.key "ellipse-right"
@@ -509,9 +492,8 @@ module MetadataMenu =
                                                                  Bulma.delete [ delete.isMedium
                                                                                 prop.title "Close"
                                                                                 prop.style [ style.marginLeft 40 ]
-                                                                                prop.onClick
-                                                                                    (fun _ ->
-                                                                                        dispatch CloseSelectionTable) ]
+                                                                                prop.onClick (fun _ ->
+                                                                                    dispatch CloseSelectionTable) ]
                                                              ) ] ] ]
 
         let table =
@@ -557,35 +539,33 @@ module MetadataMenu =
                     // we select a default meny type.
                     model.Corpus.MetadataMenu
                     |> List.tryPick createMenu
-                    |> Option.defaultWith
-                        (fun () ->
-                            match category with
-                            | :? StringCategory as cat -> failwith "a"
-                            | :? NumberCategory as cat -> failwith "a"
-                            | :? LongTextCategory as cat -> failwith "a"
-                            | cat -> failwith $"Unhandled category: {cat}")
+                    |> Option.defaultWith (fun () ->
+                        match category with
+                        | :? StringCategory as cat -> failwith "a"
+                        | :? NumberCategory as cat -> failwith "a"
+                        | :? LongTextCategory as cat -> failwith "a"
+                        | cat -> failwith $"Unhandled category: {cat}")
 
-                Html.th [ prop.onClick
-                              (fun _ ->
-                                  let direction =
-                                      match model.SelectionTableSort with
-                                      | Some sortInfo ->
-                                          if sortInfo.CategoryCode = category.Code then
-                                              // We were already sorting on this category, so just
-                                              // change direction
-                                              if sortInfo.Direction = Asc then
-                                                  Desc
-                                              else
-                                                  Asc
+                Html.th [ prop.onClick (fun _ ->
+                              let direction =
+                                  match model.SelectionTableSort with
+                                  | Some sortInfo ->
+                                      if sortInfo.CategoryCode = category.Code then
+                                          // We were already sorting on this category, so just
+                                          // change direction
+                                          if sortInfo.Direction = Asc then
+                                              Desc
                                           else
                                               Asc
-                                      | None -> Asc
+                                      else
+                                          Asc
+                                  | None -> Asc
 
-                                  dispatch (
-                                      SetSelectionTableSort
-                                          { CategoryCode = category.Code
-                                            Direction = direction }
-                                  ))
+                              dispatch (
+                                  SetSelectionTableSort
+                                      { CategoryCode = category.Code
+                                        Direction = direction }
+                              ))
                           prop.children (
                               match model.SelectionTableSort with
                               | Some sortInfo when sortInfo.CategoryCode = category.Code ->
@@ -617,10 +597,9 @@ module MetadataMenu =
                                                                                               prop.title "Close"
                                                                                               prop.style [ style.marginLeft
                                                                                                                40 ]
-                                                                                              prop.onClick
-                                                                                                  (fun _ ->
-                                                                                                      dispatch
-                                                                                                          CloseSelectionTable) ] ] ] ] ]
+                                                                                              prop.onClick (fun _ ->
+                                                                                                  dispatch
+                                                                                                      CloseSelectionTable) ] ] ] ] ]
 
         let elementRef = React.useElementRef ()
 
@@ -648,10 +627,9 @@ module MetadataMenu =
                        prop.ref elementRef
                        // Set tabIndex so that the lement receives keyboard events
                        prop.tabIndex 0
-                       prop.onKeyUp
-                           (fun e ->
-                               if e.key = "Escape" then
-                                   dispatch CloseSelectionTable)
+                       prop.onKeyUp (fun e ->
+                           if e.key = "Escape" then
+                               dispatch CloseSelectionTable)
                        prop.children [ header; table; footer ] ]
 
         let root =
@@ -667,9 +645,9 @@ module MetadataMenu =
                   | Section (state, title, items) ->
                       Section
                           {| StartExpanded =
-                                 match state with
-                                 | Open -> true
-                                 | Closed -> false
+                              match state with
+                              | Open -> true
+                              | Closed -> false
                              Title = title
                              Items = items
                              OpenCategoryCode = model.OpenMetadataCategoryCode
@@ -717,8 +695,8 @@ module MetadataMenu =
                                                                       button.isOutlined
                                                                       color.isInfo
                                                                       prop.title "Show map"
-                                                                      prop.onClick
-                                                                          (fun _ -> dispatch FetchMetadataForTexts)
+                                                                      prop.onClick (fun _ ->
+                                                                          dispatch FetchMetadataForTexts)
                                                                       prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-globe" ] ] ]
                                                                                       Html.span "Map" ] ] ] ]
 
@@ -731,10 +709,9 @@ module MetadataMenu =
                         SelectionTablePopup model dispatch
                     Bulma.menu [ prop.style [ style.width 200
                                               style.overflowX.hidden ]
-                                 prop.onClick
-                                     (fun e ->
-                                         // Prevent onclick handlers further up the hierarchy from closing this menu
-                                         e.stopPropagation ())
+                                 prop.onClick (fun e ->
+                                     // Prevent onclick handlers further up the hierarchy from closing this menu
+                                     e.stopPropagation ())
                                  prop.children [ Bulma.menuList menuItems ] ]
 
                      ]

@@ -14,10 +14,9 @@ type MinAndMax = { Min: int64; Max: int64 }
 
 let metadataSelectionToParamDict (selection: Metadata.Selection) =
     selection
-    |> Map.map
-        (fun key sel ->
-            sel.Choices
-            |> Array.map (fun choice -> choice.Value))
+    |> Map.map (fun key sel ->
+        sel.Choices
+        |> Array.map (fun choice -> choice.Value))
     |> mapToParamDict
 
 let generateMetadataSelectionSql (maybeRequestedCategoryCode: string option) (selection: Metadata.Selection) =
