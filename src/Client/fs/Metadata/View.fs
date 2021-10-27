@@ -69,7 +69,10 @@ module MetadataMenu =
             (dispatch: Msg -> unit)
             : ReactElement =
 
-            /// A single item in a metadata category dropdown list
+            /// A single item in a metadata category dropdown list. Note that, unlike when we define
+            /// components using the ReactComponent attribute, in this case we actully need
+            /// to define the argument as a props object and not as separate arguments, since this
+            /// function will be called directly by React code and not transformed by Feliz.
             let listItem (props: {| index: int; style: obj |}) =
                 // let selectOption = fetchedMetadataValues.[props.index]
                 let metadataValue = fetchedMetadataValues.[props.index]
@@ -370,48 +373,47 @@ module MetadataMenu =
     /// A collapsible section in a metadata menu
     [<ReactComponent>]
     let Section
-        (props: {| StartExpanded: bool
-                   Title: string
-                   Items: MenuItem list
-                   OpenCategoryCode: string option
-                   IntervalCategoryModes: Map<CategoryCode, ListOrIntervalMode>
-                   MetadataSelection: Shared.Metadata.Selection
-                   FetchedMetadataValues: string []
-                   FetchedMinAndMax: (int64 * int64) option
-                   Dispatch: (Msg -> unit) |})
+        (startExpanded: bool)
+        (title: string)
+        (items: MenuItem list)
+        (openCategoryCode: string option)
+        (intervalCategoryModes: Map<CategoryCode, ListOrIntervalMode>)
+        (metadataSelection: Shared.Metadata.Selection)
+        (fetchedMetadataValues: string [])
+        (fetchedMinAndMax: (int64 * int64) option)
+        (dispatch: (Msg -> unit))
         =
-        let (isExpanded, setIsExpanded) = React.useState (props.StartExpanded)
+        let (isExpanded, setIsExpanded) = React.useState (startExpanded)
 
         let children =
-            props.Items
+            items
             |> List.map (fun item ->
                 match item with
                 | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}"
                 | CategoryMenu cat ->
-                    let isOpen = (Some cat.Code = props.OpenCategoryCode)
+                    let isOpen = (Some cat.Code = openCategoryCode)
 
                     match cat with
-                    | :? StringCategory as c ->
-                        stringSelect c isOpen props.MetadataSelection props.FetchedMetadataValues props.Dispatch
+                    | :? StringCategory as c -> stringSelect c isOpen metadataSelection fetchedMetadataValues dispatch
                     | :? NumberCategory as c ->
                         SelectOrInterval
                             c
                             isOpen
-                            (props.IntervalCategoryModes.TryFind(cat.Code)
+                            (intervalCategoryModes.TryFind(cat.Code)
                              |> Option.defaultValue ListMode)
-                            props.MetadataSelection
-                            props.FetchedMetadataValues
-                            props.FetchedMinAndMax
-                            props.Dispatch
-                    | :? LongTextCategory as c -> freeTextSearch c props.Dispatch
+                            metadataSelection
+                            fetchedMetadataValues
+                            fetchedMinAndMax
+                            dispatch
+                    | :? LongTextCategory as c -> freeTextSearch c dispatch
                     | c -> failwith $"Unhandled category: {c}")
 
-        Html.span [ if props.Title <> "" then
+        Html.span [ if title <> "" then
                         Bulma.menuLabel [ prop.style [ style.cursor "pointer"
                                                        style.marginTop 10
                                                        style.marginBottom 0 ]
                                           prop.onClick (fun _ -> setIsExpanded (not isExpanded))
-                                          prop.children [ Html.text props.Title
+                                          prop.children [ Html.text title
                                                           Bulma.icon [ Html.i [ prop.className [ "fa"
                                                                                                  if isExpanded then
                                                                                                      "fa-angle-up"
@@ -618,19 +620,21 @@ module MetadataMenu =
             [ for item in model.Corpus.MetadataMenu do
                   match item with
                   | Section (state, title, items) ->
+                      let startExpanded =
+                          match state with
+                          | Open -> true
+                          | Closed -> false
+
                       Section
-                          {| StartExpanded =
-                              match state with
-                              | Open -> true
-                              | Closed -> false
-                             Title = title
-                             Items = items
-                             OpenCategoryCode = model.OpenMetadataCategoryCode
-                             IntervalCategoryModes = model.IntervalCategoryModes
-                             MetadataSelection = model.Search.Params.MetadataSelection
-                             FetchedMetadataValues = model.FetchedMetadataValues
-                             FetchedMinAndMax = model.FetchedMinAndMax
-                             Dispatch = dispatch |}
+                          startExpanded
+                          title
+                          items
+                          model.OpenMetadataCategoryCode
+                          model.IntervalCategoryModes
+                          model.Search.Params.MetadataSelection
+                          model.FetchedMetadataValues
+                          model.FetchedMinAndMax
+                          dispatch
                   | CategoryMenu category ->
                       let isOpen =
                           (Some category.Code = model.OpenMetadataCategoryCode)
