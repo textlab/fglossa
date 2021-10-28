@@ -46,12 +46,18 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
         Bulma.level [ prop.style [ style.padding 20
                                    style.marginBottom 0 ]
                       prop.children [ Bulma.levelLeft [ Bulma.levelItem [] ]
-                                      Bulma.levelRight [ Bulma.levelItem [ Bulma.delete [ delete.isMedium
-                                                                                          prop.title "Close"
-                                                                                          prop.style [ style.marginLeft
-                                                                                                           40 ]
-                                                                                          prop.onClick (fun _ ->
-                                                                                              dispatch RemoveMediaObject) ] ] ] ] ]
+                                      Bulma.levelRight [ Bulma.levelItem [ Bulma.button.button [ prop.title "Close"
+                                                                                                 prop.text "Close"
+                                                                                                 color.isInfo
+                                                                                                 prop.style [ style.marginLeft
+                                                                                                                  40 ]
+                                                                                                 prop.onClick
+
+
+
+                                                                                                     (fun _ ->
+                                                                                                         dispatch
+                                                                                                             RemoveMediaObject) ] ] ] ] ]
 
     let mediaDisplay =
         // Since JS does not understand F# maps, we need to convert the Divs
@@ -92,14 +98,14 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
         Bulma.level [ prop.style [ style.padding 20
                                    style.marginBottom 0 ]
                       prop.children [ Bulma.levelLeft []
-                                      Bulma.levelRight [ Bulma.levelItem [ Bulma.button.button [ prop.text "Close"
-                                                                                                 prop.style [ style.marginLeft
-                                                                                                                  40 ]
-                                                                                                 prop.onClick
-
-                                                                                                     (fun _ ->
-                                                                                                         dispatch
-                                                                                                             RemoveMediaObject) ] ] ] ] ]
+                                      Bulma.levelRight [ Bulma.levelItem (
+                                                             Bulma.button.button [ prop.title "Close"
+                                                                                   prop.text "Close"
+                                                                                   color.isInfo
+                                                                                   prop.style [ style.marginLeft 40 ]
+                                                                                   prop.onClick (fun _ ->
+                                                                                       dispatch RemoveMediaObject) ]
+                                                         ) ] ] ]
 
     let elementRef = React.useElementRef ()
 
