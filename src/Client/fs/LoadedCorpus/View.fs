@@ -321,7 +321,8 @@ module ResultsView =
         let activeTab =
             match model.ActiveTab with
             | Concordance _ -> "Concordance"
-            | Statistics -> "Statistics"
+            | FrequencyLists -> "Frequency lists"
+            | MetadataDistribution -> "Metadata distribution"
 
         Bulma.tabs [ prop.style [ style.marginTop 15 ]
                      tabs.isToggle
@@ -342,11 +343,18 @@ module ResultsView =
                                                                  )
                                                              ))
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
-                                               Html.li [ if activeTab = "Statistics" then
+                                               Html.li [ if activeTab = "Frequency lists" then
                                                              tab.isActive
                                                          prop.onClick (fun _ ->
-                                                             dispatch (ShowingResults.SelectResultTab Statistics))
-                                                         prop.children [ Html.a [ prop.text "Statistics" ] ] ] ] ] ]
+                                                             dispatch (ShowingResults.SelectResultTab FrequencyLists))
+                                                         prop.children [ Html.a [ prop.text "Frequency lists" ] ] ]
+                                               Html.li [ if activeTab = "Metadata distribution" then
+                                                             tab.isActive
+                                                         prop.onClick (fun _ ->
+                                                             dispatch (
+                                                                 ShowingResults.SelectResultTab MetadataDistribution
+                                                             ))
+                                                         prop.children [ Html.a [ prop.text "Metadata distribution" ] ] ] ] ] ]
 
     ///////////////////////////////////////
     /// View.LoadedCorpus.ResultsView.view
@@ -364,7 +372,8 @@ module ResultsView =
               match model.ActiveTab with
               | Concordance concordanceModel ->
                   yield! Concordance.view concordanceModel corpus (ShowingResults.ConcordanceMsg >> dispatch)
-              | Statistics -> failwith "NOT IMPLEMENTED" ]
+              | FrequencyLists -> failwith "NOT IMPLEMENTED"
+              | MetadataDistribution -> failwith "NOT IMPLEMENTED" ]
 
         let shouldShowResultsTableSpinner =
             match model.ActiveTab with

@@ -140,7 +140,8 @@ type ConcordanceModel =
 
 type ResultTab =
     | Concordance of ConcordanceModel
-    | Statistics
+    | FrequencyLists
+    | MetadataDistribution
 
 type ShowingResultsModel =
     { ActiveTab: ResultTab
