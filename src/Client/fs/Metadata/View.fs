@@ -507,18 +507,15 @@ module MetadataMenu =
 
         let table =
             let columnHeader (category: Category) =
-                let isMenuOpen =
-                    (Some category.Code = model.OpenMetadataCategoryCode)
+                let getMenu showAsOpen =
+                    let showMenuHeader = showAsOpen
 
-                let showMenuHeader = isMenuOpen
-
-                let menu =
                     let menuContents =
                         match category with
                         | :? StringCategory as cat ->
                             stringSelect
                                 cat
-                                isMenuOpen
+                                showAsOpen
                                 model.Search.Params.MetadataSelection
                                 model.FetchedMetadataValues
                                 showMenuHeader
@@ -526,7 +523,7 @@ module MetadataMenu =
                         | :? NumberCategory as cat ->
                             SelectOrInterval
                                 cat
-                                isMenuOpen
+                                showAsOpen
                                 (model.IntervalCategoryModes.TryFind(category.Code)
                                  |> Option.defaultValue ListMode)
                                 model.Search.Params.MetadataSelection
@@ -549,7 +546,7 @@ module MetadataMenu =
                                              e.stopPropagation ())
                                          prop.children menuContents ]
 
-                    if isMenuOpen then
+                    if showAsOpen then
                         Html.div [ prop.style [ style.position.absolute
                                                 style.maxWidth 225
                                                 style.backgroundColor "white"
@@ -565,6 +562,9 @@ module MetadataMenu =
                                                     ] ]
                     else
                         menuList
+
+                let isMenuOpen =
+                    (Some category.Code = model.OpenMetadataCategoryCode)
 
                 Html.th [ prop.onClick (fun e ->
                               if e.altKey then
@@ -595,11 +595,13 @@ module MetadataMenu =
                                           { CategoryCode = category.Code
                                             Direction = direction }
                                   ))
-                          // Note that if the menu is open, we render it before the heading, so that it will
-                          // cover and hide the heading (which is then only rendered in order to keep the column width),
-                          // On the other hand, if the menu is *not* open, we render it *after* the heading, so that
-                          // any selected values are shown below the heading.
-                          prop.children [ if isMenuOpen then menu
+                          // Note that if the menu is open, we render it in its open form before the heading, so that it will
+                          // cover and hide the heading (which is then only rendered in order to keep the column width).
+                          // In addition, we render it in its closed form after the heading regardless of whether it is actually
+                          // open. If the open menu is shown, showing its closed form in addition (hidden behind
+                          // the open one) ensures that the column width stays the same whether or not the menu is opened,
+                          // which prevents a lot of jarring layout changes as the user opens and closes menus.
+                          prop.children [ if isMenuOpen then getMenu true
                                           match model.SelectionTableSort with
                                           | Some sortInfo when sortInfo.CategoryCode = category.Code ->
                                               Html.span [ prop.className "icon-text"
@@ -610,10 +612,9 @@ module MetadataMenu =
                                                                                                                  else
                                                                                                                      "fa-sort-up" ] ] ] ] ]
                                           | _ -> Html.text category.Name
-                                          if not isMenuOpen then
-                                              Html.div [ prop.style [ style.marginTop 5
-                                                                      style.marginBottom 5 ]
-                                                         prop.children menu ] ] ]
+                                          Html.div [ prop.style [ style.marginTop 5
+                                                                  style.marginBottom 5 ]
+                                                     prop.children (getMenu false) ] ] ]
 
             Bulma.tableContainer [ Bulma.table [ table.isStriped
                                                  table.isFullWidth
