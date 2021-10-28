@@ -330,7 +330,7 @@ module MetadataMenu =
 
                           if fromText <> "" || toText <> "" then
                               Html.div [ prop.className "selected-interval"
-                                         prop.style [ style.paddingLeft 30
+                                         prop.style [ if isInSidebar then style.paddingLeft 30
                                                       style.paddingBottom 10
                                                       style.fontSize 12
                                                       style.cursor.pointer
@@ -551,8 +551,10 @@ module MetadataMenu =
 
                     if isMenuOpen then
                         Html.div [ prop.style [ style.position.absolute
+                                                style.maxWidth 225
                                                 style.backgroundColor "white"
                                                 style.border ("1px", borderStyle.solid, "#a1a1a1")
+                                                style.borderRadius 7
                                                 style.padding 10
                                                 style.zIndex 1 ]
                                    prop.children [ Bulma.level [ prop.style [ style.marginBottom 0 ]
@@ -593,7 +595,11 @@ module MetadataMenu =
                                           { CategoryCode = category.Code
                                             Direction = direction }
                                   ))
-                          prop.children [ menu
+                          // Note that if the menu is open, we render it before the heading, so that it will
+                          // cover and hide the heading (which is then only rendered in order to keep the column width),
+                          // On the other hand, if the menu is *not* open, we render it *after* the heading, so that
+                          // any selected values are shown below the heading.
+                          prop.children [ if isMenuOpen then menu
                                           match model.SelectionTableSort with
                                           | Some sortInfo when sortInfo.CategoryCode = category.Code ->
                                               Html.span [ prop.className "icon-text"
@@ -603,7 +609,11 @@ module MetadataMenu =
                                                                                                                      "fa-sort-down"
                                                                                                                  else
                                                                                                                      "fa-sort-up" ] ] ] ] ]
-                                          | _ -> Html.text category.Name ] ]
+                                          | _ -> Html.text category.Name
+                                          if not isMenuOpen then
+                                              Html.div [ prop.style [ style.marginTop 5
+                                                                      style.marginBottom 5 ]
+                                                         prop.children menu ] ] ]
 
             Bulma.tableContainer [ Bulma.table [ table.isStriped
                                                  table.isFullWidth
