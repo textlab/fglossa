@@ -138,9 +138,16 @@ type ConcordanceModel =
             |> int
         | None -> 0
 
+type FrequencyListsModel =
+    { Attributes: string list
+      SearchParams: SearchParams }
+    static member Init(searchParams) =
+        { Attributes = [ "word" ]
+          SearchParams = searchParams }
+
 type ResultTab =
     | Concordance of ConcordanceModel
-    | FrequencyLists
+    | FrequencyLists of FrequencyListsModel
     | MetadataDistribution
 
 type ShowingResultsModel =

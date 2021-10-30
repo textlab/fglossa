@@ -317,11 +317,18 @@ module ResultsView =
               | Written -> LoadedCorpus.ResultViews.Cwb.Written.concordanceTable model corpus resultPage dispatch ]
 
 
+    module FrequencyLists =
+        ////////////////////////////////////////////////////
+        /// View.LoadedCorpus.ResultsView.FrequencyLists.view
+        ////////////////////////////////////////////////////
+        let view (model: FrequencyListsModel) (corpus: Corpus) (dispatch: ShowingResults.FrequencyLists.Msg -> unit) =
+            Html.span "hei"
+
     let tabs (model: ShowingResultsModel) (dispatch: ShowingResults.Msg -> unit) =
         let activeTab =
             match model.ActiveTab with
             | Concordance _ -> "Concordance"
-            | FrequencyLists -> "Frequency lists"
+            | FrequencyLists _ -> "Frequency lists"
             | MetadataDistribution -> "Metadata distribution"
 
         Bulma.tabs [ prop.style [ style.marginTop 15 ]
@@ -346,7 +353,13 @@ module ResultsView =
                                                Html.li [ if activeTab = "Frequency lists" then
                                                              tab.isActive
                                                          prop.onClick (fun _ ->
-                                                             dispatch (ShowingResults.SelectResultTab FrequencyLists))
+                                                             dispatch (
+                                                                 ShowingResults.SelectResultTab(
+                                                                     FrequencyLists(
+                                                                         FrequencyListsModel.Init(model.SearchParams)
+                                                                     )
+                                                                 )
+                                                             ))
                                                          prop.children [ Html.a [ prop.text "Frequency lists" ] ] ]
                                                Html.li [ if activeTab = "Metadata distribution" then
                                                              tab.isActive
@@ -372,7 +385,8 @@ module ResultsView =
               match model.ActiveTab with
               | Concordance concordanceModel ->
                   yield! Concordance.view concordanceModel corpus (ShowingResults.ConcordanceMsg >> dispatch)
-              | FrequencyLists -> failwith "NOT IMPLEMENTED"
+              | FrequencyLists frequencyListsModel ->
+                  FrequencyLists.view frequencyListsModel corpus (ShowingResults.FrequencyListsMsg >> dispatch)
               | MetadataDistribution -> failwith "NOT IMPLEMENTED" ]
 
         let shouldShowResultsTableSpinner =

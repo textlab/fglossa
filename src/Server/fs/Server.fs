@@ -53,7 +53,16 @@ let createServerApi ctx =
                 pageNumber
                 resultIndex
                 contextSize
-                contextUnit }
+                contextUnit
+      GetFrequencyList =
+        fun (searchParams, attribute, isCaseSensitive) ->
+            Remoting.Search.Cwb.Core.getFrequencyList searchParams attribute isCaseSensitive
+      DownloadFrequencyList =
+        fun (searchParams, attribute, isCaseSensitive, format) ->
+            Remoting.Search.Cwb.Core.downloadFrequencyList searchParams attribute isCaseSensitive format
+
+
+    }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =
     // do some logging

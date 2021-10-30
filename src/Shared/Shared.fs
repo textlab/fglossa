@@ -279,11 +279,18 @@ type TextAndTokenCounts = { NumTexts: int64; NumTokens: int64 }
 
 type ResultPageNumbers = int []
 
+type DownloadFormat =
+    | Excel
+    | Csv
+    | Tsv
+
 type DatabaseColumn = string
 
 type PageNumber = int
 
 type TextId = string
+
+type IsCaseSensitive = bool
 
 module Route =
     let builder typeName methodName =
@@ -299,4 +306,6 @@ type IServerApi =
       GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts>
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       SearchCorpus: SearchParams -> Async<SearchResultInfo>
-      GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject> }
+      GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
+      GetFrequencyList: SearchParams * Cwb.PositionalAttribute * IsCaseSensitive -> Async<string []>
+      DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute * IsCaseSensitive * DownloadFormat -> Async<string> }

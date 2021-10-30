@@ -107,3 +107,7 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
         else
             return failwith $"TOO MANY CQP PROCESSES: {nCqpProcs}; aborting search at {System.DateTime.Now}"
     }
+
+let getFrequencyList searchParams attribute isCaseSensitive = async { return [| "a"; "b" |] }
+
+let downloadFrequencyList searchParams attribute isCaseSensitive format = async { return "hei" }

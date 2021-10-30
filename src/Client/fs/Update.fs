@@ -380,11 +380,22 @@ module LoadedCorpus =
 
                 | RemoveMediaObject -> { model with MediaPlayer = None }, Cmd.none
 
+        module FrequencyLists =
+            //////////////////////////////////////////////////
+            // Update.LoadedCorpus.ShowingResults.Concordance
+            //////////////////////////////////////////////////
+            type Msg = ToggleAttribute of Cwb.PositionalAttribute
+
+            let update (msg: Msg) (model: FrequencyListsModel) : FrequencyListsModel * Cmd<Msg> =
+                match msg with
+                | ToggleAttribute attribute -> model, Cmd.none
+
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults
         ///////////////////////////////////////////
         type Msg =
             | ConcordanceMsg of Concordance.Msg
+            | FrequencyListsMsg of FrequencyLists.Msg
 
             | SelectResultTab of ResultTab
 
@@ -396,6 +407,13 @@ module LoadedCorpus =
                     let newM, cmd = Concordance.update msg' m
 
                     { model with ActiveTab = Concordance newM }, Cmd.map ConcordanceMsg cmd
+                | otherSubstate -> failwith $"Invalid substate for ConcordanceMsg: {otherSubstate}"
+            | FrequencyListsMsg msg' ->
+                match model.ActiveTab with
+                | FrequencyLists m ->
+                    let newM, cmd = FrequencyLists.update msg' m
+
+                    { model with ActiveTab = FrequencyLists newM }, Cmd.map FrequencyListsMsg cmd
                 | otherSubstate -> failwith $"Invalid substate for ConcordanceMsg: {otherSubstate}"
 
             | SelectResultTab tab -> { model with ActiveTab = tab }, Cmd.none
