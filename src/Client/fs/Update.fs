@@ -384,11 +384,15 @@ module LoadedCorpus =
             //////////////////////////////////////////////////
             // Update.LoadedCorpus.ShowingResults.Concordance
             //////////////////////////////////////////////////
-            type Msg = ToggleAttribute of Cwb.PositionalAttribute
+            type Msg =
+                | ToggleAttribute of Cwb.PositionalAttribute
+                | ToggleIsCaseSensitive
 
             let update (msg: Msg) (model: FrequencyListsModel) : FrequencyListsModel * Cmd<Msg> =
                 match msg with
-                | ToggleAttribute attribute -> model, Cmd.none
+                | ToggleAttribute attribute ->
+                    { model with Attributes = model.Attributes.Add(attribute.Code) }, Cmd.none
+                | ToggleIsCaseSensitive -> { model with IsCaseSensitive = not model.IsCaseSensitive }, Cmd.none
 
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults

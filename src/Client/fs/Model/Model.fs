@@ -139,10 +139,12 @@ type ConcordanceModel =
         | None -> 0
 
 type FrequencyListsModel =
-    { Attributes: string list
+    { Attributes: Set<string>
+      IsCaseSensitive: bool
       SearchParams: SearchParams }
     static member Init(searchParams) =
-        { Attributes = [ "word" ]
+        { Attributes = Set.empty
+          IsCaseSensitive = false
           SearchParams = searchParams }
 
 type ResultTab =

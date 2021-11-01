@@ -322,7 +322,50 @@ module ResultsView =
         /// View.LoadedCorpus.ResultsView.FrequencyLists.view
         ////////////////////////////////////////////////////
         let view (model: FrequencyListsModel) (corpus: Corpus) (dispatch: ShowingResults.FrequencyLists.Msg -> unit) =
-            Html.span "hei"
+
+            let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
+                Html.label [ prop.style [ style.marginRight 15 ]
+                             prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
+                                                                    prop.onCheckedChange (fun isChecked ->
+                                                                        dispatch (
+                                                                            ShowingResults.FrequencyLists.ToggleAttribute
+                                                                                attribute
+                                                                        )) ]
+                                             Bulma.text.span $" {attribute.Name}" ] ]
+
+            let caseSensitiveCheckbox =
+                Bulma.field.p (
+                    Html.label [ prop.style [ style.marginRight 15 ]
+                                 prop.children [ Bulma.input.checkbox [ prop.isChecked model.IsCaseSensitive
+                                                                        prop.onCheckedChange (fun _ ->
+                                                                            dispatch (
+                                                                                ShowingResults.FrequencyLists.ToggleIsCaseSensitive
+                                                                            )) ]
+                                                 Bulma.text.span " Case sensitive" ] ]
+                )
+
+            match corpus.SharedInfo.LanguageConfig with
+            | Monolingual maybeAttrs ->
+                match maybeAttrs with
+                | Some attrs ->
+                    let (wordAttr: Cwb.PositionalAttribute) =
+                        { Code = "word"
+                          Name =
+                            if corpus.SharedInfo.HasAttribute("orig") then
+                                "Corrected form"
+                            else
+                                "Word form" }
+
+                    let checkboxes =
+                        [ for attr in wordAttr :: attrs ->
+                              Bulma.control.div [ checkbox (model.Attributes.Contains(attr.Code)) attr ] ]
+
+                    Html.span [ Bulma.field.p [ field.isGrouped
+                                                field.isGroupedMultiline
+                                                prop.children checkboxes ]
+                                caseSensitiveCheckbox ]
+                | None -> Html.span caseSensitiveCheckbox
+            | Multilingual languages -> failwith "NOT IMPLEMENTED"
 
     let tabs (model: ShowingResultsModel) (dispatch: ShowingResults.Msg -> unit) =
         let activeTab =

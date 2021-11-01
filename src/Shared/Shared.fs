@@ -150,6 +150,7 @@ type SharedCorpusInfo =
         | Monolingual (Some attributes) ->
             attributes
             |> List.exists (fun a -> a.Code = attrCode)
+        | Monolingual None -> false
         | _ -> failwith "NOT IMPLEMENTED!"
 
 type CorpusCode = string
