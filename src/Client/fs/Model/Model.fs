@@ -138,12 +138,18 @@ type ConcordanceModel =
             |> int
         | None -> 0
 
+type FrequencyListItem =
+    { Frequency: uint64
+      AttributeValues: string [] }
+
 type FrequencyListsModel =
-    { Attributes: Set<string>
+    { Attributes: Cwb.PositionalAttribute list
+      Frequencies: FrequencyListItem [] option
       IsCaseSensitive: bool
       SearchParams: SearchParams }
     static member Init(searchParams) =
-        { Attributes = Set.empty
+        { Attributes = []
+          Frequencies = None
           IsCaseSensitive = false
           SearchParams = searchParams }
 

@@ -387,12 +387,44 @@ module LoadedCorpus =
             type Msg =
                 | ToggleAttribute of Cwb.PositionalAttribute
                 | ToggleIsCaseSensitive
+                | FetchFrequencyList
+                | FetchedFrequencyList of string []
 
             let update (msg: Msg) (model: FrequencyListsModel) : FrequencyListsModel * Cmd<Msg> =
                 match msg with
                 | ToggleAttribute attribute ->
-                    { model with Attributes = model.Attributes.Add(attribute.Code) }, Cmd.none
+                    let alreadyExists =
+                        model.Attributes |> List.contains attribute
+
+                    let newAttributes =
+                        if alreadyExists then
+                            model.Attributes
+                            |> List.filter (fun attr -> attr <> attribute)
+                        else
+                            model.Attributes @ [ attribute ]
+
+                    { model with Attributes = newAttributes }, Cmd.none
                 | ToggleIsCaseSensitive -> { model with IsCaseSensitive = not model.IsCaseSensitive }, Cmd.none
+                | FetchFrequencyList ->
+                    model,
+                    Cmd.OfAsync.perform
+                        serverApi.GetFrequencyList
+                        (model.SearchParams, model.Attributes, model.IsCaseSensitive)
+                        FetchedFrequencyList
+                | FetchedFrequencyList rows ->
+                    let listItems =
+                        [| for row in rows ->
+                               let m = Regex.Match(row, "(\d+)\s+(.+)")
+                               let freq = System.UInt64.Parse(m.Groups.[1].Value)
+
+                               let attrValues =
+                                   m.Groups.[2].Value.Split('\t')
+                                   |> Array.map (replace "__UNDEF__" "")
+
+                               { Frequency = freq
+                                 AttributeValues = attrValues } |]
+
+                    { model with Frequencies = Some listItems }, Cmd.none
 
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults

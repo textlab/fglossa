@@ -108,6 +108,34 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
             return failwith $"TOO MANY CQP PROCESSES: {nCqpProcs}; aborting search at {System.DateTime.Now}"
     }
 
-let getFrequencyList searchParams attribute isCaseSensitive = async { return [| "a"; "b" |] }
+let getFrequencyList
+    (logger: ILogger)
+    (searchParams: SearchParams)
+    (attributes: Cwb.PositionalAttribute list)
+    (isCaseSensitive: bool)
+    : Async<string []> =
+    async {
+        let corpus =
+            Corpora.Server.getCorpus searchParams.CorpusCode
+
+        let! results =
+            let caseStr = if isCaseSensitive then " %c" else ""
+
+            let attrs =
+                [ for attr in attributes -> $"match .. matchend {attr.Code}{caseStr}" ]
+                |> String.concat ", "
+
+            let awk =
+                "|LC_ALL=C awk '{f[$0]++}END{for(k in f){print f[k], k}}' |LC_ALL=C sort -nr"
+
+            let cmd = $"tabulate QUERY {attrs} >\" {awk}\""
+
+            match corpus.Config.Modality with
+            | Spoken -> Spoken.runQueries logger corpus searchParams (Some cmd)
+            | Written -> Written.runQueries logger corpus searchParams (Some cmd)
+
+        return results.Hits
+    }
+
 
 let downloadFrequencyList searchParams attribute isCaseSensitive format = async { return "hei" }

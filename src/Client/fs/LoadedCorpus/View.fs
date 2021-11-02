@@ -344,28 +344,69 @@ module ResultsView =
                                                  Bulma.text.span " Case sensitive" ] ]
                 )
 
-            match corpus.SharedInfo.LanguageConfig with
-            | Monolingual maybeAttrs ->
-                match maybeAttrs with
-                | Some attrs ->
-                    let (wordAttr: Cwb.PositionalAttribute) =
-                        { Code = "word"
-                          Name =
-                            if corpus.SharedInfo.HasAttribute("orig") then
-                                "Corrected form"
-                            else
-                                "Word form" }
+            let buttonRow =
+                Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.button.button [ color.isSuccess
+                                                                                        prop.onClick (fun _ ->
+                                                                                            dispatch (
+                                                                                                ShowingResults.FrequencyLists.Msg.FetchFrequencyList
+                                                                                            ))
+                                                                                        prop.text "Update stats" ] ]
+                                                Bulma.levelItem [ prop.style [ style.marginLeft 20 ]
+                                                                  prop.text "Download:" ]
+                                                Bulma.levelItem [ Bulma.buttons [ Bulma.button.button [ prop.text
+                                                                                                            "Excel" ]
+                                                                                  Bulma.button.button [ prop.text
+                                                                                                            "Tab-separated" ]
+                                                                                  Bulma.button.button [ prop.text
+                                                                                                            "Commma-separated" ] ] ] ] ]
 
-                    let checkboxes =
-                        [ for attr in wordAttr :: attrs ->
-                              Bulma.control.div [ checkbox (model.Attributes.Contains(attr.Code)) attr ] ]
+            let controls =
+                match corpus.SharedInfo.LanguageConfig with
+                | Monolingual maybeAttrs ->
+                    match maybeAttrs with
+                    | Some attrs ->
+                        let (wordAttr: Cwb.PositionalAttribute) =
+                            { Code = "word"
+                              Name =
+                                if corpus.SharedInfo.HasAttribute("orig") then
+                                    "Corrected form"
+                                else
+                                    "Word form" }
 
-                    Html.span [ Bulma.field.p [ field.isGrouped
-                                                field.isGroupedMultiline
-                                                prop.children checkboxes ]
-                                caseSensitiveCheckbox ]
-                | None -> Html.span caseSensitiveCheckbox
-            | Multilingual languages -> failwith "NOT IMPLEMENTED"
+                        let checkboxes =
+                            [ for attr in wordAttr :: attrs ->
+                                  Bulma.control.div [ checkbox (model.Attributes |> List.contains attr) attr ] ]
+
+                        Html.span [ Bulma.field.div [ field.isGrouped
+                                                      field.isGroupedMultiline
+                                                      prop.children checkboxes ]
+                                    caseSensitiveCheckbox
+                                    buttonRow ]
+                    | None -> Html.span caseSensitiveCheckbox
+                | Multilingual languages -> failwith "NOT IMPLEMENTED"
+
+            let frequencyTable =
+                match model.Frequencies with
+                | Some frequencyRows ->
+                    Bulma.tableContainer [ prop.style [ style.marginTop 20 ]
+                                           prop.children [ Bulma.table [ Html.thead [ Html.th "Count"
+                                                                                      yield!
+                                                                                          [ for attr in model.Attributes ->
+                                                                                                Html.th attr.Name ] ]
+                                                                         Html.tbody [ for row in frequencyRows ->
+                                                                                          Html.tr [ Html.td [ prop.style [ style.textAlign.right ]
+                                                                                                              prop.text (
+                                                                                                                  string
+                                                                                                                      row.Frequency
+                                                                                                              ) ]
+                                                                                                    yield!
+                                                                                                        [ for attrValue in
+                                                                                                              row.AttributeValues ->
+                                                                                                              Html.td
+                                                                                                                  attrValue ] ] ] ] ] ]
+                | None -> Html.none
+
+            Html.span [ controls; frequencyTable ]
 
     let tabs (model: ShowingResultsModel) (dispatch: ShowingResults.Msg -> unit) =
         let activeTab =

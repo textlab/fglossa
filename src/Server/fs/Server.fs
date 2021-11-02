@@ -55,11 +55,11 @@ let createServerApi ctx =
                 contextSize
                 contextUnit
       GetFrequencyList =
-        fun (searchParams, attribute, isCaseSensitive) ->
-            Remoting.Search.Cwb.Core.getFrequencyList searchParams attribute isCaseSensitive
+        fun (searchParams, attributes, isCaseSensitive) ->
+            Remoting.Search.Cwb.Core.getFrequencyList logger searchParams attributes isCaseSensitive
       DownloadFrequencyList =
-        fun (searchParams, attribute, isCaseSensitive, format) ->
-            Remoting.Search.Cwb.Core.downloadFrequencyList searchParams attribute isCaseSensitive format
+        fun (searchParams, attributes, isCaseSensitive, format) ->
+            Remoting.Search.Cwb.Core.downloadFrequencyList searchParams attributes isCaseSensitive format
 
 
     }

@@ -308,5 +308,5 @@ type IServerApi =
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       SearchCorpus: SearchParams -> Async<SearchResultInfo>
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
-      GetFrequencyList: SearchParams * Cwb.PositionalAttribute * IsCaseSensitive -> Async<string []>
-      DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute * IsCaseSensitive * DownloadFormat -> Async<string> }
+      GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive -> Async<string []>
+      DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * DownloadFormat -> Async<string> }
