@@ -59,7 +59,7 @@ let createServerApi ctx =
             Remoting.Search.Cwb.Core.getFrequencyList logger searchParams attributes isCaseSensitive
       DownloadFrequencyList =
         fun (searchParams, attributes, isCaseSensitive, format) ->
-            Remoting.Search.Cwb.Core.downloadFrequencyList searchParams attributes isCaseSensitive format
+            Remoting.Search.Cwb.Core.downloadFrequencyList logger searchParams attributes isCaseSensitive format
 
 
     }

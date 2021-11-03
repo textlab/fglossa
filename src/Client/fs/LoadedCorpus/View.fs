@@ -321,7 +321,12 @@ module ResultsView =
         ////////////////////////////////////////////////////
         /// View.LoadedCorpus.ResultsView.FrequencyLists.view
         ////////////////////////////////////////////////////
-        let view (model: FrequencyListsModel) (corpus: Corpus) (dispatch: ShowingResults.FrequencyLists.Msg -> unit) =
+        let view
+            (model: FrequencyListsModel)
+            (corpus: Corpus)
+            (searchParams: SearchParams)
+            (dispatch: ShowingResults.FrequencyLists.Msg -> unit)
+            =
 
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
@@ -349,16 +354,23 @@ module ResultsView =
                                                                                         prop.onClick (fun _ ->
                                                                                             dispatch (
                                                                                                 ShowingResults.FrequencyLists.Msg.FetchFrequencyList
+                                                                                                    searchParams
                                                                                             ))
                                                                                         prop.text "Update stats" ] ]
                                                 Bulma.levelItem [ prop.style [ style.marginLeft 20 ]
                                                                   prop.text "Download:" ]
-                                                Bulma.levelItem [ Bulma.buttons [ Bulma.button.button [ prop.text
-                                                                                                            "Excel" ]
-                                                                                  Bulma.button.button [ prop.text
-                                                                                                            "Tab-separated" ]
-                                                                                  Bulma.button.button [ prop.text
-                                                                                                            "Commma-separated" ] ] ] ] ]
+                                                Bulma.levelItem (
+                                                    Bulma.buttons [ Bulma.button.button [ prop.onClick (fun _ ->
+                                                                                              dispatch (
+                                                                                                  ShowingResults.FrequencyLists.Msg.DownloadFrequencyList(
+                                                                                                      searchParams,
+                                                                                                      Excel
+                                                                                                  )
+                                                                                              ))
+                                                                                          prop.text "Excel" ]
+                                                                    Bulma.button.button [ prop.text "Tab-separated" ]
+                                                                    Bulma.button.button [ prop.text "Commma-separated" ] ]
+                                                ) ] ]
 
             let controls =
                 match corpus.SharedInfo.LanguageConfig with
@@ -470,7 +482,11 @@ module ResultsView =
               | Concordance concordanceModel ->
                   yield! Concordance.view concordanceModel corpus (ShowingResults.ConcordanceMsg >> dispatch)
               | FrequencyLists frequencyListsModel ->
-                  FrequencyLists.view frequencyListsModel corpus (ShowingResults.FrequencyListsMsg >> dispatch)
+                  FrequencyLists.view
+                      frequencyListsModel
+                      corpus
+                      model.SearchParams
+                      (ShowingResults.FrequencyListsMsg >> dispatch)
               | MetadataDistribution -> failwith "NOT IMPLEMENTED" ]
 
         let shouldShowResultsTableSpinner =

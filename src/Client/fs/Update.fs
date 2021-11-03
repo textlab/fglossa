@@ -387,8 +387,10 @@ module LoadedCorpus =
             type Msg =
                 | ToggleAttribute of Cwb.PositionalAttribute
                 | ToggleIsCaseSensitive
-                | FetchFrequencyList
+                | FetchFrequencyList of SearchParams
                 | FetchedFrequencyList of string []
+                | DownloadFrequencyList of SearchParams * DownloadFormat
+                | DownloadedFrequencyList of string
 
             let update (msg: Msg) (model: FrequencyListsModel) : FrequencyListsModel * Cmd<Msg> =
                 match msg with
@@ -405,11 +407,11 @@ module LoadedCorpus =
 
                     { model with Attributes = newAttributes }, Cmd.none
                 | ToggleIsCaseSensitive -> { model with IsCaseSensitive = not model.IsCaseSensitive }, Cmd.none
-                | FetchFrequencyList ->
+                | FetchFrequencyList searchParams ->
                     model,
                     Cmd.OfAsync.perform
                         serverApi.GetFrequencyList
-                        (model.SearchParams, model.Attributes, model.IsCaseSensitive)
+                        (searchParams, model.Attributes, model.IsCaseSensitive)
                         FetchedFrequencyList
                 | FetchedFrequencyList rows ->
                     let listItems =
@@ -425,6 +427,13 @@ module LoadedCorpus =
                                  AttributeValues = attrValues } |]
 
                     { model with Frequencies = Some listItems }, Cmd.none
+                | DownloadFrequencyList (searchParams, format) ->
+                    model,
+                    Cmd.OfAsync.perform
+                        serverApi.DownloadFrequencyList
+                        (searchParams, model.Attributes, model.IsCaseSensitive, format)
+                        DownloadedFrequencyList
+                | DownloadedFrequencyList path -> model, Cmd.none
 
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults

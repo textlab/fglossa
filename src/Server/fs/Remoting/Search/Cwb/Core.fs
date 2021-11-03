@@ -138,4 +138,27 @@ let getFrequencyList
     }
 
 
-let downloadFrequencyList searchParams attribute isCaseSensitive format = async { return "hei" }
+let downloadFrequencyList
+    (logger: ILogger)
+    (searchParams: SearchParams)
+    (attributes: Cwb.PositionalAttribute list)
+    (isCaseSensitive: bool)
+    (format: DownloadFormat)
+    : Async<string> =
+    async {
+        let! list = getFrequencyList logger searchParams attributes isCaseSensitive
+
+        match format with
+        | Excel ->
+            let filename = $"tmp/{searchParams.SearchId}_freq.xlsx"
+            printfn $"{filename}"
+            return filename
+        | Tsv ->
+            let filename = $"tmp/{searchParams.SearchId}_freq.tsv"
+            printfn $"{filename}"
+            return filename
+        | Csv ->
+            let filename = $"tmp/{searchParams.SearchId}_freq.csv"
+            printfn $"{filename}"
+            return filename
+    }
