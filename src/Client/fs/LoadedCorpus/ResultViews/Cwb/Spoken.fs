@@ -32,16 +32,6 @@ let Jplayer (mediaObj: MediaObject, divs: obj, mediaType: string, hasLocalMedia:
 
 [<ReactComponent>]
 let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) =
-    // let navigation =
-    //     Bulma.buttons [ Common.iconButton
-    //                         "step-backward"
-    //                         (resultRowIndex <= 0)
-    //                         (fun _ -> dispatch (SetMediaPlayerForRow(Some(AudioPlayer(resultRowIndex - 1)))))
-    //                     Common.iconButton
-    //                         "step-forward"
-    //                         (resultRowIndex >= model.SearchParams.PageSize)
-    //                         (fun _ -> dispatch (SetMediaPlayerForRow(Some(AudioPlayer(resultRowIndex + 1))))) ]
-
     let header =
         Bulma.level [ prop.style [ style.padding 20
                                    style.marginBottom 0 ]
