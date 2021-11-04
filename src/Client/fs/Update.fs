@@ -445,23 +445,19 @@ module LoadedCorpus =
             | SelectResultTab of ResultTab
 
         let update (msg: Msg) (model: ShowingResultsModel) : ShowingResultsModel * Cmd<Msg> =
-            match msg with
-            | ConcordanceMsg msg' ->
-                match model.ActiveTab with
-                | Concordance m ->
-                    let newM, cmd = Concordance.update msg' m
+            match msg, model.ActiveTab with
+            | ConcordanceMsg msg', Concordance m ->
+                let newM, cmd = Concordance.update msg' m
 
-                    { model with ActiveTab = Concordance newM }, Cmd.map ConcordanceMsg cmd
-                | otherSubstate -> failwith $"Invalid substate for ConcordanceMsg: {otherSubstate}"
-            | FrequencyListsMsg msg' ->
-                match model.ActiveTab with
-                | FrequencyLists m ->
-                    let newM, cmd = FrequencyLists.update msg' m
+                { model with ActiveTab = Concordance newM }, Cmd.map ConcordanceMsg cmd
+            | FrequencyListsMsg msg', FrequencyLists m ->
+                let newM, cmd = FrequencyLists.update msg' m
 
-                    { model with ActiveTab = FrequencyLists newM }, Cmd.map FrequencyListsMsg cmd
-                | otherSubstate -> failwith $"Invalid substate for ConcordanceMsg: {otherSubstate}"
+                { model with ActiveTab = FrequencyLists newM }, Cmd.map FrequencyListsMsg cmd
 
-            | SelectResultTab tab -> { model with ActiveTab = tab }, Cmd.none
+            | SelectResultTab tab, _ -> { model with ActiveTab = tab }, Cmd.none
+
+            | _ -> failwithf $"Incompatible message and model: {msg}; {model}"
 
 
     ////////////////////////////////
