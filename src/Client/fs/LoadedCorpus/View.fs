@@ -115,7 +115,8 @@ module ResultsView =
                                ) ]
 
         let pagination
-            (model: ConcordanceModel)
+            (loadedCorpusModel: LoadedCorpusModel)
+            (concordanceModel: ConcordanceModel)
             (isSearchingOrFetching: bool)
             (numPages: int)
             (dispatch: ShowingResults.Concordance.Msg -> unit)
@@ -131,25 +132,31 @@ module ResultsView =
                    && pageNo <= numPages then
                     dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage(Some pageNo, None))
 
-            match model.NumResults with
-            | Some results when results > uint64 model.SearchParams.PageSize ->
+            match concordanceModel.NumResults with
+            | Some results when results > uint64 loadedCorpusModel.Search.Params.PageSize ->
                 [ Bulma.levelItem [ Bulma.buttons [ iconButton
                                                         "fa-angle-double-left"
-                                                        (model.PaginatorPageNo = 1 || isSearchingOrFetching)
+                                                        (concordanceModel.PaginatorPageNo = 1
+                                                         || isSearchingOrFetching)
                                                         (fun e -> setPage e 1)
                                                     iconButton
                                                         "fa-angle-left"
-                                                        (model.PaginatorPageNo = 1 || isSearchingOrFetching)
-                                                        (fun e -> setPage e (model.PaginatorPageNo - 1)) ] ]
-                  Bulma.levelItem [ PaginationTextInput(model.PaginatorTextValue, isSearchingOrFetching, dispatch) ]
+                                                        (concordanceModel.PaginatorPageNo = 1
+                                                         || isSearchingOrFetching)
+                                                        (fun e -> setPage e (concordanceModel.PaginatorPageNo - 1)) ] ]
+                  Bulma.levelItem [ PaginationTextInput(
+                                        concordanceModel.PaginatorTextValue,
+                                        isSearchingOrFetching,
+                                        dispatch
+                                    ) ]
                   Bulma.levelItem [ Bulma.buttons [ iconButton
                                                         "fa-angle-right"
-                                                        (model.PaginatorPageNo = numPages
+                                                        (concordanceModel.PaginatorPageNo = numPages
                                                          || isSearchingOrFetching)
-                                                        (fun e -> setPage e (model.PaginatorPageNo + 1))
+                                                        (fun e -> setPage e (concordanceModel.PaginatorPageNo + 1))
                                                     iconButton
                                                         "fa-angle-double-right"
-                                                        (model.PaginatorPageNo = numPages
+                                                        (concordanceModel.PaginatorPageNo = numPages
                                                          || isSearchingOrFetching)
                                                         (fun e -> setPage e numPages) ] ] ]
             | _ -> []
@@ -230,12 +237,18 @@ module ResultsView =
         ////////////////////////////////////////////////////
         /// View.LoadedCorpus.ResultsView.Concordance.view
         ////////////////////////////////////////////////////
-        let view (model: ConcordanceModel) (corpus: Corpus) (dispatch: ShowingResults.Concordance.Msg -> unit) =
-            let numPages = model.NumResultPages()
+        let view
+            (loadedCorpusModel: LoadedCorpusModel)
+            (concordanceModel: ConcordanceModel)
+            (corpus: Corpus)
+            (dispatch: ShowingResults.Concordance.Msg -> unit)
+            =
+            let numPages =
+                concordanceModel.NumResultPages(loadedCorpusModel.Search.Params.PageSize)
 
             let isSearchingOrFetching =
-                model.PagesBeingFetched.Length > 0
-                || model.IsSearching
+                concordanceModel.PagesBeingFetched.Length > 0
+                || concordanceModel.IsSearching
 
             let sortMenu =
                 Bulma.select [ prop.disabled isSearchingOrFetching
@@ -259,13 +272,13 @@ module ResultsView =
 
             let resultsInfo =
                 let text =
-                    match model.NumResults with
+                    match concordanceModel.NumResults with
                     | Some numResults ->
                         if numResults > 0UL then
                             // We have received a non-zero number of results
                             let pagesStr = if numPages = 1 then "page" else "pages"
 
-                            if model.IsSearching then
+                            if concordanceModel.IsSearching then
                                 $"Showing {numResults} matches ({numPages} {pagesStr}); searching..."
                             else
                                 $"Found {numResults} matches ({numPages} pages)"
@@ -274,7 +287,7 @@ module ResultsView =
                             "No matches found"
                     | None ->
                         // We have not yet received any results
-                        if model.IsSearching then
+                        if concordanceModel.IsSearching then
                             "Searching..."
                         else
                             ""
@@ -283,7 +296,8 @@ module ResultsView =
                 // avoid showing spinners both here and over the result table at the same time (since we show
                 // a spinner over the result table until we have found some results)
                 let shouldShowSpnner =
-                    model.IsSearching && model.ResultPages.Count > 0
+                    concordanceModel.IsSearching
+                    && concordanceModel.ResultPages.Count > 0
 
                 Html.span [ Html.div [ prop.style [ style.width 400
                                                     style.textAlign.right
@@ -298,23 +312,35 @@ module ResultsView =
 
             let contextSelector =
                 [ Bulma.levelItem [ prop.text "Context:" ]
-                  Bulma.levelItem [ ContextSizeTextInput(model.ContextSizeTextValue, isSearchingOrFetching, dispatch) ]
+                  Bulma.levelItem [ ContextSizeTextInput(
+                                        concordanceModel.ContextSizeTextValue,
+                                        isSearchingOrFetching,
+                                        dispatch
+                                    ) ]
                   Bulma.levelItem [ prop.style [ style.marginRight 50 ]
                                     prop.text "words" ] ]
 
             let resultPage =
-                model.ResultPages.TryFind(model.ResultPageNo)
+                concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
 
-            [ MetadataQuickView model dispatch
+            [ MetadataQuickView concordanceModel dispatch
               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ sortMenu
                                                                 downloadButton ]
                                               Bulma.levelItem resultsInfo ]
                             Bulma.levelRight [ if corpus.SharedInfo.Modality <> Spoken then
                                                    yield! contextSelector
-                                               yield! pagination model isSearchingOrFetching numPages dispatch ] ]
+                                               yield!
+                                                   pagination
+                                                       loadedCorpusModel
+                                                       concordanceModel
+                                                       isSearchingOrFetching
+                                                       numPages
+                                                       dispatch ] ]
               match corpus.SharedInfo.Modality with
-              | Spoken -> LoadedCorpus.ResultViews.Cwb.Spoken.concordanceTable model corpus resultPage dispatch
-              | Written -> LoadedCorpus.ResultViews.Cwb.Written.concordanceTable model corpus resultPage dispatch ]
+              | Spoken ->
+                  LoadedCorpus.ResultViews.Cwb.Spoken.concordanceTable concordanceModel corpus resultPage dispatch
+              | Written ->
+                  LoadedCorpus.ResultViews.Cwb.Written.concordanceTable concordanceModel corpus resultPage dispatch ]
 
 
     module FrequencyLists =
@@ -420,9 +446,13 @@ module ResultsView =
 
             Html.span [ controls; frequencyTable ]
 
-    let tabs (model: ShowingResultsModel) (dispatch: ShowingResults.Msg -> unit) =
+    let tabs
+        (loadedCorpusModel: LoadedCorpusModel)
+        (showingResultsModel: ShowingResultsModel)
+        (dispatch: ShowingResults.Msg -> unit)
+        =
         let activeTab =
-            match model.ActiveTab with
+            match showingResultsModel.ActiveTab with
             | Concordance _ -> "Concordance"
             | FrequencyLists _ -> "Frequency lists"
             | MetadataDistribution -> "Metadata distribution"
@@ -437,9 +467,9 @@ module ResultsView =
                                                                  ShowingResults.SelectResultTab(
                                                                      Concordance(
                                                                          ConcordanceModel.Init(
-                                                                             model.SearchParams,
-                                                                             model.NumSteps,
-                                                                             string model.SearchParams.ContextSize,
+                                                                             showingResultsModel.NumSteps,
+                                                                             string
+                                                                                 loadedCorpusModel.Search.Params.ContextSize,
                                                                              []
                                                                          )
                                                                      )
@@ -452,7 +482,9 @@ module ResultsView =
                                                              dispatch (
                                                                  ShowingResults.SelectResultTab(
                                                                      FrequencyLists(
-                                                                         FrequencyListsModel.Init(model.SearchParams)
+                                                                         FrequencyListsModel.Init(
+                                                                             loadedCorpusModel.Search.Params
+                                                                         )
                                                                      )
                                                                  )
                                                              ))
@@ -469,7 +501,8 @@ module ResultsView =
     /// View.LoadedCorpus.ResultsView.view
     ///////////////////////////////////////
     let view
-        (model: ShowingResultsModel)
+        (loadedCorpusModel: LoadedCorpusModel)
+        (showingResultsModel: ShowingResultsModel)
         (corpus: Corpus)
         (search: Search)
         topRowButtonsElement
@@ -477,20 +510,25 @@ module ResultsView =
         dispatch
         =
         let resultsView =
-            [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ tabs model dispatch ] ] ]
-              match model.ActiveTab with
+            [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ tabs loadedCorpusModel showingResultsModel dispatch ] ] ]
+              match showingResultsModel.ActiveTab with
               | Concordance concordanceModel ->
-                  yield! Concordance.view concordanceModel corpus (ShowingResults.ConcordanceMsg >> dispatch)
+                  yield!
+                      Concordance.view
+                          loadedCorpusModel
+                          concordanceModel
+                          corpus
+                          (ShowingResults.ConcordanceMsg >> dispatch)
               | FrequencyLists frequencyListsModel ->
                   FrequencyLists.view
                       frequencyListsModel
                       corpus
-                      model.SearchParams
+                      loadedCorpusModel.Search.Params
                       (ShowingResults.FrequencyListsMsg >> dispatch)
               | MetadataDistribution -> failwith "NOT IMPLEMENTED" ]
 
         let shouldShowResultsTableSpinner =
-            match model.ActiveTab with
+            match showingResultsModel.ActiveTab with
             | Concordance concordanceModel when
                 concordanceModel.IsSearching
                 && concordanceModel.NumResults.IsNone
@@ -531,6 +569,7 @@ let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) 
                                                                                        dispatch
                                                                                | ShowingResults showingResultsModel ->
                                                                                    ResultsView.view
+                                                                                       model
                                                                                        showingResultsModel
                                                                                        model.Corpus
                                                                                        model.Search

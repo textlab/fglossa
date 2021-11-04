@@ -106,12 +106,11 @@ type ConcordanceModel =
       // The nmber of the result page actually being shown at the moment
       ResultPageNo: int
       ResultPages: Map<int, SearchResult []>
-      SearchParams: SearchParams
       TextIdInQuickView: string option
       MediaPlayer: MediaPlayerInfo option
       VideoContextSize: int
       VideoContextUnit: string }
-    static member Init(searchParams, numSteps, contextSizeTextValue, quickViewMetadata) =
+    static member Init(numSteps, contextSizeTextValue, quickViewMetadata) =
         { ContextSizeTextValue = contextSizeTextValue
           IsSearching = true
           QuickViewMetadata = quickViewMetadata
@@ -123,19 +122,14 @@ type ConcordanceModel =
           PaginatorTextValue = "1"
           ResultPageNo = 1
           ResultPages = Map.empty
-          SearchParams = searchParams
           TextIdInQuickView = None
           MediaPlayer = None
           VideoContextSize = 25
           VideoContextUnit = "who_start" }
 
-    member this.NumResultPages() =
+    member this.NumResultPages(pageSize) =
         match this.NumResults with
-        | Some numResults ->
-            float numResults
-            / float this.SearchParams.PageSize
-            |> ceil
-            |> int
+        | Some numResults -> float numResults / float pageSize |> ceil |> int
         | None -> 0
 
 type FrequencyListItem =
@@ -158,18 +152,15 @@ type ResultTab =
 
 type ShowingResultsModel =
     { ActiveTab: ResultTab
-      SearchParams: SearchParams
       SearchResults: SearchResultInfo option
       NumSteps: int }
     static member Init
-        ((searchParams: SearchParams,
-          numSteps: int,
-          contextSizeTextValue: string,
-          quickViewMetadata: Metadata.CategoryNameAndValue list))
-        =
-        { ActiveTab =
-            Concordance(ConcordanceModel.Init(searchParams, numSteps, contextSizeTextValue, quickViewMetadata))
-          SearchParams = searchParams
+        (
+            numSteps: int,
+            contextSizeTextValue: string,
+            quickViewMetadata: Metadata.CategoryNameAndValue list
+        ) =
+        { ActiveTab = Concordance(ConcordanceModel.Init(numSteps, contextSizeTextValue, quickViewMetadata))
           SearchResults = None
           NumSteps = numSteps }
 

@@ -84,14 +84,18 @@ module LoadedCorpus =
                 | FetchedMediaObject of MediaPlayerType * rowIndex: int * MediaObject
                 | RemoveMediaObject
 
-            let update (msg: Msg) (model: ConcordanceModel) : ConcordanceModel * Cmd<Msg> =
+            let update
+                (msg: Msg)
+                (loadedCorpusModel: LoadedCorpusModel)
+                (concordanceModel: ConcordanceModel)
+                : LoadedCorpusModel * ConcordanceModel * Cmd<Msg> =
                 let registerResultPages results =
                     let fetchedPages =
                         results |> Array.map (fun page -> page.PageNumber)
 
                     // Remove the fetched pages from the set of pages currently being fetched...
                     let pagesBeingFetched =
-                        model.PagesBeingFetched
+                        concordanceModel.PagesBeingFetched
                         |> Array.except fetchedPages
 
                     // ...and add them to the map of fetched pages
@@ -100,24 +104,25 @@ module LoadedCorpus =
                         |> Array.fold
                             (fun (pageMap: Map<int, SearchResult []>) result ->
                                 pageMap.Add(result.PageNumber, result.Results |> Array.map cleanupResult))
-                            model.ResultPages
+                            concordanceModel.ResultPages
 
-                    { model with
+                    { concordanceModel with
                         PagesBeingFetched = pagesBeingFetched
                         ResultPages = resultPages }
 
                 match msg with
                 | PerformSearchStep ->
                     let cmd =
-                        Cmd.OfAsync.perform serverApi.SearchCorpus model.SearchParams SearchResultsReceived
+                        Cmd.OfAsync.perform serverApi.SearchCorpus loadedCorpusModel.Search.Params SearchResultsReceived
 
-                    model, cmd
+                    loadedCorpusModel, concordanceModel, cmd
 
                 | SearchResultsReceived results ->
-                    let shouldRunMoreSteps = model.NumSteps > results.SearchStep
+                    let shouldRunMoreSteps =
+                        concordanceModel.NumSteps > results.SearchStep
 
                     let newSearchParams =
-                        model.SearchParams
+                        loadedCorpusModel.Search.Params
                         |> fun p ->
                             let lastCount = results.Count
 
@@ -150,7 +155,7 @@ module LoadedCorpus =
 
                     // Remove the fetched pages from the set of pages currently being fetched...
                     let pagesBeingFetched =
-                        model.PagesBeingFetched
+                        concordanceModel.PagesBeingFetched
                         |> Array.except fetchedPages
 
                     // ...and put them into the map of fetched pages. Since we may already have
@@ -158,7 +163,7 @@ module LoadedCorpus =
                     // all previsous and current results together and chunk them into page-sized
                     // chunks to make sure we get the correct page sizes.
                     let existingResults =
-                        model.ResultPages
+                        concordanceModel.ResultPages
                         |> Map.toArray
                         |> Array.collect snd
 
@@ -169,19 +174,21 @@ module LoadedCorpus =
                     let resultPages =
                         Array.append existingResults newResults
                         |> Array.map cleanupResult
-                        |> Array.chunkBySize model.SearchParams.PageSize
+                        |> Array.chunkBySize loadedCorpusModel.Search.Params.PageSize
                         |> Array.mapi (fun index page -> (index + 1, page))
                         |> Map.ofArray
 
-                    let newModel =
-                        { model with
+                    let newConcordanceModel =
+                        { concordanceModel with
                             PagesBeingFetched = pagesBeingFetched
                             ResultPages = resultPages
                             IsSearching = shouldRunMoreSteps
-                            NumResults = Some results.Count
-                            SearchParams = newSearchParams }
+                            NumResults = Some results.Count }
 
-                    newModel, cmd
+                    let newLoadedCorpusModel =
+                        { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = newSearchParams } }
+
+                    newLoadedCorpusModel, newConcordanceModel, cmd
 
                 // Fetch a window of search result pages centred on centrePageNo. Ignores pages that have
                 // already been fetched or that are currently being fetched in another request (note that such
@@ -190,16 +197,18 @@ module LoadedCorpus =
                 | FetchResultWindow (centrePageNo, maybeSortKey) ->
                     let sortKey =
                         maybeSortKey
-                        |> Option.defaultValue model.SearchParams.SortKey
+                        |> Option.defaultValue loadedCorpusModel.Search.Params.SortKey
 
                     // Make sure the edges of the window are between 1 and the last page number
                     let startPage = max (centrePageNo - 1) 1
 
                     let endPage =
-                        min (centrePageNo + 1) (model.NumResultPages())
+                        min
+                            (centrePageNo + 1)
+                            (concordanceModel.NumResultPages(loadedCorpusModel.Search.Params.PageSize))
 
                     let pageNumbers =
-                        if sortKey <> model.SearchParams.SortKey then
+                        if sortKey <> loadedCorpusModel.Search.Params.SortKey then
                             // If we are changing the sort order, we need to fetch all specified pages
                             // regardless of whether those page numbers have already been fetched
                             [| startPage .. endPage |]
@@ -207,11 +216,14 @@ module LoadedCorpus =
                             [| startPage .. endPage |]
                             // Ignore pages currently being fetched by another request
                             |> Array.filter (fun page ->
-                                model.PagesBeingFetched
+                                concordanceModel.PagesBeingFetched
                                 |> Array.contains page
                                 |> not)
                             // Ignore pages that have already been fetched
-                            |> Array.filter (fun page -> model.ResultPages |> Map.containsKey page |> not)
+                            |> Array.filter (fun page ->
+                                concordanceModel.ResultPages
+                                |> Map.containsKey page
+                                |> not)
                             // Create a new sequence to make sure we didn't create any "holes" in
                             // it (although that should not really happen in practice since we
                             // always fetch whole windows of pages)
@@ -223,31 +235,33 @@ module LoadedCorpus =
 
                     if Array.isEmpty pageNumbers then
                         // All pages are either being fetched or already fetched, so there is nothing to do
-                        model, Cmd.none
+                        loadedCorpusModel, concordanceModel, Cmd.none
                     else
                         // Calculate the first and last result index (zero-based) to request from the server
                         let firstResult =
                             (pageNumbers.[0] - 1)
-                            * model.SearchParams.PageSize
+                            * loadedCorpusModel.Search.Params.PageSize
                             |> uint64
 
                         let lastResult =
                             ((pageNumbers |> Array.last)
-                             * model.SearchParams.PageSize)
+                             * loadedCorpusModel.Search.Params.PageSize)
                             - 1
                             |> uint64
 
                         let searchParams =
-                            { model.SearchParams with
+                            { loadedCorpusModel.Search.Params with
                                 Start = firstResult
                                 End = lastResult
                                 SortKey = sortKey }
 
-                        let newModel =
-                            { model with
-                                SearchParams = searchParams
+                        let newConcordanceModel =
+                            { concordanceModel with
                                 // Register the pages as being fetched
-                                PagesBeingFetched = Array.append model.PagesBeingFetched pageNumbers }
+                                PagesBeingFetched = Array.append concordanceModel.PagesBeingFetched pageNumbers }
+
+                        let newLoadedCorpusModel =
+                            { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = searchParams } }
 
                         let cmd =
                             Cmd.OfAsync.perform
@@ -255,20 +269,21 @@ module LoadedCorpus =
                                 (searchParams, pageNumbers)
                                 FetchedResultWindow
 
-                        newModel, cmd
+                        newLoadedCorpusModel, newConcordanceModel, cmd
 
                 | FetchedResultWindow results ->
                     // TODO: Check if we get a 401 Unauthorized
-                    let newModel =
+                    let newConcordanceModel =
                         results
                         |> registerResultPages
                         // Now that result pages have been fetched, make sure we actually show the page that was
                         // selected in the paginator
                         |> fun m -> { m with ResultPageNo = m.PaginatorPageNo }
 
-                    newModel, Cmd.none
+                    loadedCorpusModel, newConcordanceModel, Cmd.none
 
-                | SetPaginatorTextValue s -> { model with PaginatorTextValue = s }, Cmd.none
+                | SetPaginatorTextValue s ->
+                    loadedCorpusModel, { concordanceModel with PaginatorTextValue = s }, Cmd.none
 
                 | SetPaginatorPage (maybePageNo, maybeSortKey) ->
                     let pageNo =
@@ -278,19 +293,19 @@ module LoadedCorpus =
                         // If we didn't get an explicit page number, try to parse the current PaginatorTextValue
                         // as an int. If successful, use the result of that, otherwise keep the current page number
                         | None ->
-                            match Int32.TryParse(model.PaginatorTextValue) with
+                            match Int32.TryParse(concordanceModel.PaginatorTextValue) with
                             | (true, v) -> v
-                            | (false, _) -> model.PaginatorPageNo
+                            | (false, _) -> concordanceModel.PaginatorPageNo
 
-                    let newModel =
-                        { model with
+                    let newConcordanceModel =
+                        { concordanceModel with
                             // Set the value of the page number shown in the paginator; it may
                             // differ from the page shown in the result table until we have
                             // actually fetched the data from the server
                             PaginatorPageNo = pageNo
                             PaginatorTextValue = string pageNo
                             ResultPageNo =
-                                if model.ResultPages.ContainsKey(pageNo) then
+                                if concordanceModel.ResultPages.ContainsKey(pageNo) then
                                     // If the newly selected result page has already been fetched from the
                                     // server, it can be shown in the result table immediately
                                     pageNo
@@ -298,14 +313,14 @@ module LoadedCorpus =
                                     // Otherwise, we need to wait until the results from the server
                                     // arrive before changing the page to be shown in the result
                                     // table
-                                    model.PaginatorPageNo
+                                    concordanceModel.PaginatorPageNo
                             ResultPages =
                                 match maybeSortKey with
-                                | Some sortKey when sortKey <> model.SearchParams.SortKey ->
+                                | Some sortKey when sortKey <> loadedCorpusModel.Search.Params.SortKey ->
                                     // If we have received a sort key that is different from the one currently
                                     // set in the model, invalidate all previously fetched search result pages
                                     Map.empty
-                                | _ -> model.ResultPages }
+                                | _ -> concordanceModel.ResultPages }
 
 
                     let cmd =
@@ -314,9 +329,10 @@ module LoadedCorpus =
                         // to nearby pages. No need to wait for it to finish though.
                         Cmd.ofMsg (FetchResultWindow(pageNo, maybeSortKey))
 
-                    newModel, cmd
+                    loadedCorpusModel, newConcordanceModel, cmd
 
-                | SetContextSizeTextValue v -> { model with ContextSizeTextValue = v }, Cmd.none
+                | SetContextSizeTextValue v ->
+                    loadedCorpusModel, { concordanceModel with ContextSizeTextValue = v }, Cmd.none
 
                 | SetContextSize _ -> failwith "The SetContextSize message should be handled by a parent!"
 
@@ -326,31 +342,32 @@ module LoadedCorpus =
                               { Name = category.Name
                                 Code = category.Code } ]
 
-                    let newModel, cmd =
-                        match model.TextIdInQuickView with
+                    let newConcordanceModel, cmd =
+                        match concordanceModel.TextIdInQuickView with
                         | Some textIdInQuickView when textIdInQuickView = textId ->
                             // We were already showing metadata for this text, so close the quickview instead
-                            { model with TextIdInQuickView = None }, Cmd.ofMsg CloseQuickView
+                            { concordanceModel with TextIdInQuickView = None }, Cmd.ofMsg CloseQuickView
                         | _ ->
                             // We were NOT already showing metadata for this text, so mark it as being shown and fetch its metadata
-                            { model with TextIdInQuickView = Some textId },
+                            { concordanceModel with TextIdInQuickView = Some textId },
                             Cmd.OfAsync.perform
                                 serverApi.GetMetadataForSingleText
                                 (corpus.SharedInfo.Code, categories, textId)
                                 FetchedMetadataForText
 
-                    newModel, cmd
+                    loadedCorpusModel, newConcordanceModel, cmd
 
                 | FetchedMetadataForText metadata ->
-                    let newModel =
-                        { model with
+                    let newConcordanceModel =
+                        { concordanceModel with
                             QuickViewMetadata = metadata
                             ShouldShowQuickView = true }
 
-                    newModel, Cmd.none
+                    loadedCorpusModel, newConcordanceModel, Cmd.none
 
                 | CloseQuickView ->
-                    { model with
+                    loadedCorpusModel,
+                    { concordanceModel with
                         ShouldShowQuickView = false
                         TextIdInQuickView = None },
                     Cmd.none
@@ -359,18 +376,19 @@ module LoadedCorpus =
                     let cmd =
                         Cmd.OfAsync.perform
                             serverApi.GetMediaObject
-                            (model.SearchParams,
+                            (loadedCorpusModel.Search.Params,
                              mediaPlayerType,
-                             model.ResultPageNo,
+                             concordanceModel.ResultPageNo,
                              rowIndex,
-                             model.VideoContextSize,
-                             model.VideoContextUnit)
+                             concordanceModel.VideoContextSize,
+                             concordanceModel.VideoContextUnit)
                             FetchedMediaObject
 
-                    model, cmd
+                    loadedCorpusModel, concordanceModel, cmd
 
                 | FetchedMediaObject (mediaPlayerType, rowIndex, mediaObject) ->
-                    { model with
+                    loadedCorpusModel,
+                    { concordanceModel with
                         MediaPlayer =
                             Some
                                 { Type = mediaPlayerType
@@ -378,7 +396,7 @@ module LoadedCorpus =
                                   MediaObject = mediaObject } },
                     Cmd.none
 
-                | RemoveMediaObject -> { model with MediaPlayer = None }, Cmd.none
+                | RemoveMediaObject -> loadedCorpusModel, { concordanceModel with MediaPlayer = None }, Cmd.none
 
         module FrequencyLists =
             //////////////////////////////////////////////////
@@ -392,26 +410,35 @@ module LoadedCorpus =
                 | DownloadFrequencyList of SearchParams * DownloadFormat
                 | DownloadedFrequencyList of string
 
-            let update (msg: Msg) (model: FrequencyListsModel) : FrequencyListsModel * Cmd<Msg> =
+            let update
+                (msg: Msg)
+                (loadedCorpusModel: LoadedCorpusModel)
+                (frequencyListsModel: FrequencyListsModel)
+                : LoadedCorpusModel * FrequencyListsModel * Cmd<Msg> =
                 match msg with
                 | ToggleAttribute attribute ->
                     let alreadyExists =
-                        model.Attributes |> List.contains attribute
+                        frequencyListsModel.Attributes
+                        |> List.contains attribute
 
                     let newAttributes =
                         if alreadyExists then
-                            model.Attributes
+                            frequencyListsModel.Attributes
                             |> List.filter (fun attr -> attr <> attribute)
                         else
-                            model.Attributes @ [ attribute ]
+                            frequencyListsModel.Attributes @ [ attribute ]
 
-                    { model with Attributes = newAttributes }, Cmd.none
-                | ToggleIsCaseSensitive -> { model with IsCaseSensitive = not model.IsCaseSensitive }, Cmd.none
+                    loadedCorpusModel, { frequencyListsModel with Attributes = newAttributes }, Cmd.none
+                | ToggleIsCaseSensitive ->
+                    loadedCorpusModel,
+                    { frequencyListsModel with IsCaseSensitive = not frequencyListsModel.IsCaseSensitive },
+                    Cmd.none
                 | FetchFrequencyList searchParams ->
-                    model,
+                    loadedCorpusModel,
+                    frequencyListsModel,
                     Cmd.OfAsync.perform
                         serverApi.GetFrequencyList
-                        (searchParams, model.Attributes, model.IsCaseSensitive)
+                        (searchParams, frequencyListsModel.Attributes, frequencyListsModel.IsCaseSensitive)
                         FetchedFrequencyList
                 | FetchedFrequencyList rows ->
                     let listItems =
@@ -426,14 +453,15 @@ module LoadedCorpus =
                                { Frequency = freq
                                  AttributeValues = attrValues } |]
 
-                    { model with Frequencies = Some listItems }, Cmd.none
+                    loadedCorpusModel, { frequencyListsModel with Frequencies = Some listItems }, Cmd.none
                 | DownloadFrequencyList (searchParams, format) ->
-                    model,
+                    loadedCorpusModel,
+                    frequencyListsModel,
                     Cmd.OfAsync.perform
                         serverApi.DownloadFrequencyList
-                        (searchParams, model.Attributes, model.IsCaseSensitive, format)
+                        (searchParams, frequencyListsModel.Attributes, frequencyListsModel.IsCaseSensitive, format)
                         DownloadedFrequencyList
-                | DownloadedFrequencyList path -> model, Cmd.none
+                | DownloadedFrequencyList path -> loadedCorpusModel, frequencyListsModel, Cmd.none
 
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults
@@ -444,20 +472,30 @@ module LoadedCorpus =
 
             | SelectResultTab of ResultTab
 
-        let update (msg: Msg) (model: ShowingResultsModel) : ShowingResultsModel * Cmd<Msg> =
-            match msg, model.ActiveTab with
+        let update
+            (msg: Msg)
+            (loadedCorpusModel: LoadedCorpusModel)
+            (showingResultsModel: ShowingResultsModel)
+            : LoadedCorpusModel * ShowingResultsModel * Cmd<Msg> =
+            match msg, showingResultsModel.ActiveTab with
             | ConcordanceMsg msg', Concordance m ->
-                let newM, cmd = Concordance.update msg' m
+                let newLoadedCorpusModel, newConcordanceModel, cmd =
+                    Concordance.update msg' loadedCorpusModel m
 
-                { model with ActiveTab = Concordance newM }, Cmd.map ConcordanceMsg cmd
+                newLoadedCorpusModel,
+                { showingResultsModel with ActiveTab = Concordance newConcordanceModel },
+                Cmd.map ConcordanceMsg cmd
             | FrequencyListsMsg msg', FrequencyLists m ->
-                let newM, cmd = FrequencyLists.update msg' m
+                let newLoadedCorpusModel, newFrequencyListsModel, cmd =
+                    FrequencyLists.update msg' loadedCorpusModel m
 
-                { model with ActiveTab = FrequencyLists newM }, Cmd.map FrequencyListsMsg cmd
+                newLoadedCorpusModel,
+                { showingResultsModel with ActiveTab = FrequencyLists newFrequencyListsModel },
+                Cmd.map FrequencyListsMsg cmd
 
-            | SelectResultTab tab, _ -> { model with ActiveTab = tab }, Cmd.none
+            | SelectResultTab tab, _ -> loadedCorpusModel, { showingResultsModel with ActiveTab = tab }, Cmd.none
 
-            | _ -> failwithf $"Incompatible message and model: {msg}; {model}"
+            | _ -> failwithf $"Incompatible message and model: {msg}; {showingResultsModel}"
 
 
     ////////////////////////////////
@@ -533,39 +571,44 @@ module LoadedCorpus =
         | Search
         | ResetForm
 
-    let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
+    let update (msg: Msg) (loadedCorpusModel: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
         match msg with
         | MetadataMsg msg' ->
-            let model', cmd = Update.Metadata.update msg' model
-            model', Cmd.map MetadataMsg cmd
+            let newLoadedCorpusModel, cmd =
+                Update.Metadata.update msg' loadedCorpusModel
+
+            newLoadedCorpusModel, Cmd.map MetadataMsg cmd
 
         // The SetContextSize message is dispatched from the concordance view, but needs to be handled here
         // where the search params are available in the model and the Search message is also available
         | ShowingResultsMsg (ShowingResults.ConcordanceMsg (ShowingResults.Concordance.SetContextSize size)) ->
             let newSearchParams =
-                { model.Search.Params with ContextSize = size }
+                { loadedCorpusModel.Search.Params with ContextSize = size }
 
-            let newModel =
-                { model with Search = { model.Search with Params = newSearchParams } }
+            let newLoadedCorpusModel =
+                { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = newSearchParams } }
 
-            newModel, Cmd.ofMsg Search
+            newLoadedCorpusModel, Cmd.ofMsg Search
 
         | ShowingResultsMsg msg' ->
-            match model.Substate with
+            match loadedCorpusModel.Substate with
             | ShowingResults m ->
-                let newM, cmd = ShowingResults.update msg' m
+                let newLoadedCorpusModel, newShowingResultsModel, cmd =
+                    ShowingResults.update msg' loadedCorpusModel m
 
-                { model with Substate = ShowingResults newM }, Cmd.map ShowingResultsMsg cmd
+                { newLoadedCorpusModel with Substate = ShowingResults newShowingResultsModel },
+                Cmd.map ShowingResultsMsg cmd
             | otherSubstate -> failwith $"Invalid substate for ShowingResultsMsg: {otherSubstate}"
 
-        | SetShouldShowMetadataMenu shouldShow -> { model with ShouldShowMetadataMenu = Some shouldShow }, Cmd.none
+        | SetShouldShowMetadataMenu shouldShow ->
+            { loadedCorpusModel with ShouldShowMetadataMenu = Some shouldShow }, Cmd.none
 
         | SetSearchInterface ``interface`` ->
-            { model with Search = { model.Search with Interface = ``interface`` } }, Cmd.none
+            { loadedCorpusModel with Search = { loadedCorpusModel.Search with Interface = ``interface`` } }, Cmd.none
 
         | SetQueryText (text, queryIndex, hasFinalSpace) ->
             let newQueries =
-                model.Search.Params.Queries
+                loadedCorpusModel.Search.Params.Queries
                 |> Array.mapi (fun index query ->
                     if index = queryIndex then
                         { query with
@@ -575,25 +618,28 @@ module LoadedCorpus =
                         query)
 
             let newSearchParams =
-                { model.Search.Params with Queries = newQueries }
+                { loadedCorpusModel.Search.Params with Queries = newQueries }
 
-            let newModel =
-                { model with Search = { model.Search with Params = newSearchParams } }
+            let newLoadedCorpusModel =
+                { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = newSearchParams } }
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | AddQueryRow ->
             let newQueries =
-                Array.append model.Search.Params.Queries [| Query.Init(None) |]
+                Array.append loadedCorpusModel.Search.Params.Queries [| Query.Init(None) |]
 
-            let newModel =
-                { model with Search = { model.Search with Params = { model.Search.Params with Queries = newQueries } } }
+            let newLoadedCorpusModel =
+                { loadedCorpusModel with
+                    Search =
+                        { loadedCorpusModel.Search with
+                            Params = { loadedCorpusModel.Search.Params with Queries = newQueries } } }
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | RemoveQueryRow queryIndex ->
             let newQueries =
-                model.Search.Params.Queries
+                loadedCorpusModel.Search.Params.Queries
                 |> Array.indexed
                 |> Array.choose (fun (index, query) ->
                     if index <> queryIndex then
@@ -601,19 +647,22 @@ module LoadedCorpus =
                     else
                         None)
 
-            let newModel =
-                { model with Search = { model.Search with Params = { model.Search.Params with Queries = newQueries } } }
+            let newLoadedCorpusModel =
+                { loadedCorpusModel with
+                    Search =
+                        { loadedCorpusModel.Search with
+                            Params = { loadedCorpusModel.Search.Params with Queries = newQueries } } }
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedSetMainString (query, queryIndex, term, termIndex, maybeValue) ->
             let newTerm =
                 { term with MainStringValue = maybeValue }
 
-            let newModel =
-                updateQueryTerm model query queryIndex newTerm termIndex
+            let newLoadedCorpusModel =
+                updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedSetQueryProperty (query, queryIndex, term, termIndex, property, isChecked) ->
             let newTerm =
@@ -667,25 +716,25 @@ module LoadedCorpus =
                 | IsInitial -> { term with IsInitial = isChecked }
                 | IsFinal -> { term with IsFinal = isChecked }
 
-            let newModel =
-                updateQueryTerm model query queryIndex newTerm termIndex
+            let newLoadedCorpusModel =
+                updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedSetExtraForm value ->
-            let newModel =
-                match model.Search.Interface with
+            let newLoadedCorpusModel =
+                match loadedCorpusModel.Search.Interface with
                 | Extended (Some attrModalModel) ->
-                    { model with
+                    { loadedCorpusModel with
                         Search =
-                            { model.Search with
+                            { loadedCorpusModel.Search with
                                 Interface = Extended(Some { attrModalModel with IncludeExcludeInput = value }) } }
-                | _ -> model
+                | _ -> loadedCorpusModel
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedIncludeOrExcludeExtraForm (query, queryIndex, term, termIndex, command) ->
-            match model.Search.Interface with
+            match loadedCorpusModel.Search.Interface with
             | Extended (Some attrModalModel) ->
                 let attrName, operator =
                     match command with
@@ -704,16 +753,16 @@ module LoadedCorpus =
 
                 let newTerm = { term with ExtraForms = newExtraForms }
 
-                let newModel =
-                    updateQueryTerm model query queryIndex newTerm termIndex
+                let newLoadedCorpusModel =
+                    updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
                     |> fun m ->
                         { m with
                             Search =
                                 { m.Search with
                                     Interface = Extended(Some { attrModalModel with IncludeExcludeInput = "" }) } }
 
-                newModel, Cmd.none
-            | _ -> model, Cmd.none
+                newLoadedCorpusModel, Cmd.none
+            | _ -> loadedCorpusModel, Cmd.none
 
         | CwbExtendedRemoveExtraForms (query, queryIndex, term, termIndex, attrName) ->
             // Remove all extra forms for a given attribute name
@@ -723,10 +772,10 @@ module LoadedCorpus =
 
             let newTerm = { term with ExtraForms = newExtraForms }
 
-            let newModel =
-                updateQueryTerm model query queryIndex newTerm termIndex
+            let newLoadedCorpusModel =
+                updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedToggleAttributeCategory (query, queryIndex, term, termIndex, categorySectionIndex, category) ->
             let newCategorySections =
@@ -756,10 +805,10 @@ module LoadedCorpus =
             let newTerm =
                 { term with CategorySections = newCategorySections }
 
-            let newModel =
-                updateQueryTerm model query queryIndex newTerm termIndex
+            let newLoadedCorpusModel =
+                updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedToggleAttributeSubcategory (query,
                                                  queryIndex,
@@ -805,10 +854,10 @@ module LoadedCorpus =
             let newTerm =
                 { term with CategorySections = newCategorySections }
 
-            let newModel =
-                updateQueryTerm model query queryIndex newTerm termIndex
+            let newLoadedCorpusModel =
+                updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedClearAttributeCategories (query, queryIndex, term, termIndex) ->
             let newTerm =
@@ -816,10 +865,10 @@ module LoadedCorpus =
                     CategorySections = []
                     ExtraForms = [] }
 
-            let newModel =
-                updateQueryTerm model query queryIndex newTerm termIndex
+            let newLoadedCorpusModel =
+                updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
         | CwbExtendedSetIntervalValue (query, queryIndex, term, termIndex, minMax, maybeValue) ->
             let maybeNewInterval =
                 let i =
@@ -838,19 +887,19 @@ module LoadedCorpus =
             let newTerm =
                 { term with PrecedingInterval = maybeNewInterval }
 
-            let newModel =
-                updateQueryTerm model query queryIndex newTerm termIndex
+            let newLoadedCorpusModel =
+                updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedAddTerm (query, queryIndex) ->
             let newQueryTerms =
                 Array.append query.Terms [| QueryTerm.Default |]
 
-            let newModel =
-                updateQuery model query queryIndex newQueryTerms
+            let newLoadedCorpusModel =
+                updateQuery loadedCorpusModel query queryIndex newQueryTerms
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedRemoveTerm (query, queryIndex, termIndex) ->
             let newQueryTerms =
@@ -867,42 +916,47 @@ module LoadedCorpus =
                     else
                         None)
 
-            let newModel =
-                updateQuery model query queryIndex newQueryTerms
+            let newLoadedCorpusModel =
+                updateQuery loadedCorpusModel query queryIndex newQueryTerms
 
-            newModel, Cmd.none
+            newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedToggleAttrModal maybeTermIndex ->
-            { model with
+            { loadedCorpusModel with
                 Search =
-                    { model.Search with
+                    { loadedCorpusModel.Search with
                         Interface =
                             match maybeTermIndex with
                             | Some termIndex -> Extended(Some(AttributeModalModel.Init(termIndex)))
                             | None ->
-                                match model.Search.Interface with
+                                match loadedCorpusModel.Search.Interface with
                                 | Extended _ -> Extended None
                                 | someInterface -> someInterface } },
             Cmd.none
 
         | SetNumRandomHits maybeNumHits ->
-            { model with
-                Search = { model.Search with Params = { model.Search.Params with NumRandomHits = maybeNumHits } } },
+            { loadedCorpusModel with
+                Search =
+                    { loadedCorpusModel.Search with
+                        Params = { loadedCorpusModel.Search.Params with NumRandomHits = maybeNumHits } } },
             Cmd.none
         | SetRandomHitsSeed maybeSeed ->
-            { model with Search = { model.Search with Params = { model.Search.Params with RandomHitsSeed = maybeSeed } } },
+            { loadedCorpusModel with
+                Search =
+                    { loadedCorpusModel.Search with
+                        Params = { loadedCorpusModel.Search.Params with RandomHitsSeed = maybeSeed } } },
             Cmd.none
         | Search ->
             // Do three search steps only if multicpu_bounds is defined for this corpus
             let numSteps =
-                if model.Corpus.SharedInfo.MultiCpuBounds.IsSome then
+                if loadedCorpusModel.Corpus.SharedInfo.MultiCpuBounds.IsSome then
                     3
                 else
                     1
 
             // If we have an empty query, don't do the search
             let shouldSearch =
-                model.Search.Params.Queries
+                loadedCorpusModel.Search.Params.Queries
                 |> Array.forall (fun query -> not query.IsEmpty)
 
             // TODO: Implement cancellation of searches. In the Clojure version, we simply cancel
@@ -911,7 +965,7 @@ module LoadedCorpus =
 
             if shouldSearch then
                 let queries =
-                    model.Search.Params.Queries
+                    loadedCorpusModel.Search.Params.Queries
                     |> Array.map (fun query ->
                         { query with
                             QueryString =
@@ -919,16 +973,15 @@ module LoadedCorpus =
                                 |> replace "\"__QUOTE__\"" "'\"'" })
 
                 let searchParams =
-                    { model.Search.Params with Queries = queries }
+                    { loadedCorpusModel.Search.Params with Queries = queries }
 
-                let newModel =
-                    { model with
+                let newLoadedCorpusModel =
+                    { loadedCorpusModel with
                         Substate =
                             ShowingResults(
                                 ShowingResultsModel.Init(
-                                    searchParams,
                                     numSteps,
-                                    string model.Search.Params.ContextSize,
+                                    string loadedCorpusModel.Search.Params.ContextSize,
                                     []
                                 )
                             ) }
@@ -940,15 +993,15 @@ module LoadedCorpus =
                       ) ]
                     |> Cmd.batch
 
-                newModel, cmds
+                newLoadedCorpusModel, cmds
 
             else
                 printfn "Empty query!"
-                model, Cmd.none
+                loadedCorpusModel, Cmd.none
 
         | ResetForm ->
-            { model with
-                Search = Search.Init(model.Corpus.SharedInfo)
+            { loadedCorpusModel with
+                Search = Search.Init(loadedCorpusModel.Corpus.SharedInfo)
                 Substate = CorpusStart
                 OpenMetadataCategoryCode = None },
             Cmd.ofMsg (MetadataMsg Update.Metadata.FetchTextAndTokenCounts)
