@@ -1,5 +1,6 @@
 module Remoting.Search.Cwb.Core
 
+open System.IO
 open System.Threading.Tasks
 open FSharp.Control.Tasks
 open System.Data.SQLite
@@ -148,17 +149,21 @@ let downloadFrequencyList
     async {
         let! list = getFrequencyList logger searchParams attributes isCaseSensitive
 
+        let extension =
+            match format with
+            | Excel -> ".xlsx"
+            | Tsv -> ".tsv"
+            | Csv -> ".csv"
+
+        let downloadFilename =
+            $"tmp/{searchParams.SearchId}_freq{extension}"
+
+        let outputFilename = $"../Client/public/{downloadFilename}"
+
         match format with
-        | Excel ->
-            let filename = $"tmp/{searchParams.SearchId}_freq.xlsx"
-            printfn $"{filename}"
-            return filename
-        | Tsv ->
-            let filename = $"tmp/{searchParams.SearchId}_freq.tsv"
-            printfn $"{filename}"
-            return filename
-        | Csv ->
-            let filename = $"tmp/{searchParams.SearchId}_freq.csv"
-            printfn $"{filename}"
-            return filename
+        | Excel -> File.WriteAllText(outputFilename, "excel")
+        | Tsv -> File.WriteAllText(outputFilename, "tsv")
+        | Csv -> File.WriteAllText(outputFilename, "csv")
+
+        return downloadFilename
     }

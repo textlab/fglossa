@@ -461,7 +461,9 @@ module LoadedCorpus =
                         serverApi.DownloadFrequencyList
                         (searchParams, frequencyListsModel.Attributes, frequencyListsModel.IsCaseSensitive, format)
                         DownloadedFrequencyList
-                | DownloadedFrequencyList path -> loadedCorpusModel, frequencyListsModel, Cmd.none
+                | DownloadedFrequencyList path ->
+                    Browser.Dom.window.location.href <- path
+                    loadedCorpusModel, frequencyListsModel, Cmd.none
 
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults

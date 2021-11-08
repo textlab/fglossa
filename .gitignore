@@ -19,3 +19,4 @@ release.sh
 build/
 src/Corpora
 /src/Server/db/fglossa.sqlite
+/src/Client/public/tmp
