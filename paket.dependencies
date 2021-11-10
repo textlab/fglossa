@@ -2,6 +2,7 @@ source https://api.nuget.org/v3/index.json
 framework: net5.0
 storage: none
 
+nuget ClosedXML
 nuget Fable.Remoting.Giraffe
 nuget Feliz.Bulma.QuickView
 nuget Feliz.Bulma.Tooltip

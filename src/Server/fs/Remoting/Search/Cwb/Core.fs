@@ -5,6 +5,7 @@ open System.Threading.Tasks
 open FSharp.Control.Tasks
 open System.Data.SQLite
 open Serilog
+open ClosedXML
 open ServerTypes
 open Shared
 open Database
@@ -161,7 +162,15 @@ let downloadFrequencyList
         let outputFilename = $"../Client/public/{downloadFilename}"
 
         match format with
-        | Excel -> File.WriteAllText(outputFilename, "excel")
+        | Excel ->
+            use workbook = new Excel.XLWorkbook()
+
+            let worksheet =
+                workbook.Worksheets.Add("Frequency list")
+
+            worksheet.Cell(1, 1).Value <- "Hello World"
+
+            workbook.SaveAs(outputFilename)
         | Tsv -> File.WriteAllText(outputFilename, "tsv")
         | Csv -> File.WriteAllText(outputFilename, "csv")
 
