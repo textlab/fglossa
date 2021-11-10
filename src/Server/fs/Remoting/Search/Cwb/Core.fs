@@ -3,6 +3,7 @@ module Remoting.Search.Cwb.Core
 open System.IO
 open System.Threading.Tasks
 open FSharp.Control.Tasks
+open System.Text.RegularExpressions
 open System.Data.SQLite
 open Serilog
 open ClosedXML
@@ -136,7 +137,9 @@ let getFrequencyList
             | Spoken -> Spoken.runQueries logger corpus searchParams (Some cmd)
             | Written -> Written.runQueries logger corpus searchParams (Some cmd)
 
-        return results.Hits
+        return
+            results.Hits
+            |> Array.map (fun hit -> Regex.Replace(hit, "__UNDEF__", ""))
     }
 
 
@@ -148,7 +151,7 @@ let downloadFrequencyList
     (format: DownloadFormat)
     : Async<string> =
     async {
-        let! list = getFrequencyList logger searchParams attributes isCaseSensitive
+        let! freqList = getFrequencyList logger searchParams attributes isCaseSensitive
 
         let extension =
             match format with
@@ -168,11 +171,58 @@ let downloadFrequencyList
             let worksheet =
                 workbook.Worksheets.Add("Frequency list")
 
-            worksheet.Cell(1, 1).Value <- "Hello World"
+            // Create headers
+            worksheet.Cell(1, 1).Value <- "Count"
+
+            attributes
+            |> List.iteri (fun index attr -> worksheet.Cell(1, index + 2).Value <- attr.Name)
+
+            // Create a row for each row in the frequency list
+            freqList
+            |> Array.iteri (fun rowIndex row ->
+                let m = Regex.Match(row, "^(\d+)\s+(.+)")
+
+                // Put the count in the first column
+                worksheet.Cell(rowIndex + 2, 1).Value <- int (m.Groups.[1].Value)
+
+                // Create a colunn for each attribute value in the row
+                m.Groups.[2].Value.Split('\t')
+                |> Array.iteri (fun columnIndex attrValue ->
+                    worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- attrValue))
 
             workbook.SaveAs(outputFilename)
-        | Tsv -> File.WriteAllText(outputFilename, "tsv")
-        | Csv -> File.WriteAllText(outputFilename, "csv")
+        | Tsv ->
+            let headers =
+                attributes
+                |> List.map (fun attr -> attr.Name)
+                |> String.concat "\t"
+                |> fun s -> "Count\t" + s
+
+            let valueRows =
+                freqList
+                |> Array.map (fun row -> Regex.Replace(row, "^(\d+) ", "$1\t"))
+
+            File.WriteAllLines(outputFilename, Array.append [| headers |] valueRows)
+        | Csv ->
+            let headers =
+                attributes
+                |> List.map (fun attr -> $"\"{attr.Name}\"")
+                |> String.concat ","
+                |> fun s -> "Count," + s
+
+            let valueRows =
+                freqList
+                |> Array.map (fun row ->
+                    let m = Regex.Match(row, "^(\d+)\s+(.+)")
+
+                    let attrValues =
+                        m.Groups.[2].Value.Split('\t')
+                        |> Array.map (fun attrValue -> $"\"{attrValue}\"")
+                        |> String.concat ","
+
+                    $"{m.Groups.[1].Value},{attrValues}")
+
+            File.WriteAllLines(outputFilename, Array.append [| headers |] valueRows)
 
         return downloadFilename
     }

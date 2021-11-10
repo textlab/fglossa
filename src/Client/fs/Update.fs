@@ -446,9 +446,7 @@ module LoadedCorpus =
                                let m = Regex.Match(row, "(\d+)\s+(.+)")
                                let freq = System.UInt64.Parse(m.Groups.[1].Value)
 
-                               let attrValues =
-                                   m.Groups.[2].Value.Split('\t')
-                                   |> Array.map (replace "__UNDEF__" "")
+                               let attrValues = m.Groups.[2].Value.Split('\t')
 
                                { Frequency = freq
                                  AttributeValues = attrValues } |]

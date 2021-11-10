@@ -400,13 +400,27 @@ module ResultsView =
                                                                                           | Some _ -> prop.disabled true
                                                                                           | None -> ()
                                                                                           prop.text "Excel" ]
-                                                                    Bulma.button.button [ match model.DownloadingFormat
+                                                                    Bulma.button.button [ prop.onClick (fun _ ->
+                                                                                              dispatch (
+                                                                                                  ShowingResults.FrequencyLists.Msg.DownloadFrequencyList(
+                                                                                                      searchParams,
+                                                                                                      Tsv
+                                                                                                  )
+                                                                                              ))
+                                                                                          match model.DownloadingFormat
                                                                                               with
                                                                                           | Some Tsv -> button.isLoading
                                                                                           | Some _ -> prop.disabled true
                                                                                           | None -> ()
                                                                                           prop.text "Tab-separated" ]
-                                                                    Bulma.button.button [ match model.DownloadingFormat
+                                                                    Bulma.button.button [ prop.onClick (fun _ ->
+                                                                                              dispatch (
+                                                                                                  ShowingResults.FrequencyLists.Msg.DownloadFrequencyList(
+                                                                                                      searchParams,
+                                                                                                      Csv
+                                                                                                  )
+                                                                                              ))
+                                                                                          match model.DownloadingFormat
                                                                                               with
                                                                                           | Some Csv -> button.isLoading
                                                                                           | Some _ -> prop.disabled true
@@ -443,10 +457,12 @@ module ResultsView =
                 match model.Frequencies with
                 | Some frequencyRows ->
                     Bulma.tableContainer [ prop.style [ style.marginTop 20 ]
-                                           prop.children [ Bulma.table [ Html.thead [ Html.th "Count"
-                                                                                      yield!
-                                                                                          [ for attr in model.Attributes ->
-                                                                                                Html.th attr.Name ] ]
+                                           prop.children [ Bulma.table [ Html.thead [ Html.tr [ Html.th "Count"
+                                                                                                yield!
+                                                                                                    [ for attr in
+                                                                                                          model.Attributes ->
+                                                                                                          Html.th
+                                                                                                              attr.Name ] ] ]
                                                                          Html.tbody [ for row in frequencyRows ->
                                                                                           Html.tr [ Html.td [ prop.style [ style.textAlign.right ]
                                                                                                               prop.text (
