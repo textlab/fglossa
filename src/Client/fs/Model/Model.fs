@@ -139,11 +139,13 @@ type FrequencyListItem =
 type FrequencyListsModel =
     { Attributes: Cwb.PositionalAttribute list
       Frequencies: FrequencyListItem [] option
-      IsCaseSensitive: bool }
+      IsCaseSensitive: bool
+      DownloadingFormat: DownloadFormat option }
     static member Init(searchParams) =
         { Attributes = []
           Frequencies = None
-          IsCaseSensitive = false }
+          IsCaseSensitive = false
+          DownloadingFormat = None }
 
 type ResultTab =
     | Concordance of ConcordanceModel

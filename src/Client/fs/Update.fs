@@ -456,14 +456,14 @@ module LoadedCorpus =
                     loadedCorpusModel, { frequencyListsModel with Frequencies = Some listItems }, Cmd.none
                 | DownloadFrequencyList (searchParams, format) ->
                     loadedCorpusModel,
-                    frequencyListsModel,
+                    { frequencyListsModel with DownloadingFormat = Some format },
                     Cmd.OfAsync.perform
                         serverApi.DownloadFrequencyList
                         (searchParams, frequencyListsModel.Attributes, frequencyListsModel.IsCaseSensitive, format)
                         DownloadedFrequencyList
                 | DownloadedFrequencyList path ->
                     Browser.Dom.window.location.href <- path
-                    loadedCorpusModel, frequencyListsModel, Cmd.none
+                    loadedCorpusModel, { frequencyListsModel with DownloadingFormat = None }, Cmd.none
 
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults
