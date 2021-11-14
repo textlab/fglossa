@@ -141,16 +141,23 @@ type FrequencyListsModel =
       Frequencies: FrequencyListItem [] option
       IsCaseSensitive: bool
       DownloadingFormat: DownloadFormat option }
-    static member Init(searchParams) =
+    static member Default =
         { Attributes = []
           Frequencies = None
           IsCaseSensitive = false
           DownloadingFormat = None }
 
+type MetadataDistributionModel =
+    { SelectedAttribute: Cwb.PositionalAttribute
+      SelectedCategory: Metadata.Category option }
+    static member Init(corpus: Corpus) =
+        { SelectedAttribute = corpus.SharedInfo.GetDefaultAttribute()
+          SelectedCategory = corpus.MetadataTable |> List.tryHead }
+
 type ResultTab =
     | Concordance of ConcordanceModel
     | FrequencyLists of FrequencyListsModel
-    | MetadataDistribution
+    | MetadataDistribution of MetadataDistributionModel
 
 type ShowingResultsModel =
     { ActiveTab: ResultTab

@@ -153,6 +153,15 @@ type SharedCorpusInfo =
         | Monolingual None -> false
         | _ -> failwith "NOT IMPLEMENTED!"
 
+    member this.GetDefaultAttribute() : Cwb.PositionalAttribute =
+        let name =
+            if this.HasAttribute("orig") then
+                "Corrected form"
+            else
+                "Word form"
+
+        { Code = "word"; Name = name }
+
 type CorpusCode = string
 type CorpusName = string
 

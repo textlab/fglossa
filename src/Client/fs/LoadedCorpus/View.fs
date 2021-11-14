@@ -433,16 +433,8 @@ module ResultsView =
                 | Monolingual maybeAttrs ->
                     match maybeAttrs with
                     | Some attrs ->
-                        let (wordAttr: Cwb.PositionalAttribute) =
-                            { Code = "word"
-                              Name =
-                                if corpus.SharedInfo.HasAttribute("orig") then
-                                    "Corrected form"
-                                else
-                                    "Word form" }
-
                         let checkboxes =
-                            [ for attr in wordAttr :: attrs ->
+                            [ for attr in corpus.SharedInfo.GetDefaultAttribute() :: attrs ->
                                   Bulma.control.div [ checkbox (model.Attributes |> List.contains attr) attr ] ]
 
                         Html.span [ Bulma.field.div [ field.isGrouped
@@ -478,6 +470,30 @@ module ResultsView =
 
             Html.span [ controls; frequencyTable ]
 
+    module MetadataDistribution =
+        ////////////////////////////////////////////////////////////
+        /// View.LoadedCorpus.ResultsView.MetadataDistribution.view
+        ////////////////////////////////////////////////////////////
+        let view (corpus: Corpus) (model: MetadataDistributionModel) =
+            let attributes =
+                match corpus.SharedInfo.LanguageConfig with
+                | Monolingual (Some attrs) -> corpus.SharedInfo.GetDefaultAttribute() :: attrs
+                | _ -> failwith "NOT IMPLEMENTED"
+
+            let attrMenu =
+                Bulma.select [ for attr in attributes ->
+                                   Html.option [ prop.value attr.Code
+                                                 prop.text attr.Name ] ]
+
+            let categoryMenu =
+                Bulma.select [ for category in corpus.MetadataQuickView ->
+                                   Html.option [ prop.value category.Code
+                                                 prop.text category.Name ] ]
+
+            Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem attrMenu
+                                                        Bulma.levelItem categoryMenu ] ] ]
+
+
     let tabs
         (loadedCorpusModel: LoadedCorpusModel)
         (showingResultsModel: ShowingResultsModel)
@@ -487,7 +503,7 @@ module ResultsView =
             match showingResultsModel.ActiveTab with
             | Concordance _ -> "Concordance"
             | FrequencyLists _ -> "Frequency lists"
-            | MetadataDistribution -> "Metadata distribution"
+            | MetadataDistribution _ -> "Metadata distribution"
 
         Bulma.tabs [ prop.style [ style.marginTop 15 ]
                      tabs.isToggle
@@ -513,11 +529,7 @@ module ResultsView =
                                                          prop.onClick (fun _ ->
                                                              dispatch (
                                                                  ShowingResults.SelectResultTab(
-                                                                     FrequencyLists(
-                                                                         FrequencyListsModel.Init(
-                                                                             loadedCorpusModel.Search.Params
-                                                                         )
-                                                                     )
+                                                                     FrequencyLists(FrequencyListsModel.Default)
                                                                  )
                                                              ))
                                                          prop.children [ Html.a [ prop.text "Frequency lists" ] ] ]
@@ -525,7 +537,13 @@ module ResultsView =
                                                              tab.isActive
                                                          prop.onClick (fun _ ->
                                                              dispatch (
-                                                                 ShowingResults.SelectResultTab MetadataDistribution
+                                                                 ShowingResults.SelectResultTab(
+                                                                     MetadataDistribution(
+                                                                         MetadataDistributionModel.Init(
+                                                                             loadedCorpusModel.Corpus
+                                                                         )
+                                                                     )
+                                                                 )
                                                              ))
                                                          prop.children [ Html.a [ prop.text "Metadata distribution" ] ] ] ] ] ]
 
@@ -557,7 +575,8 @@ module ResultsView =
                       corpus
                       loadedCorpusModel.Search.Params
                       (ShowingResults.FrequencyListsMsg >> dispatch)
-              | MetadataDistribution -> failwith "NOT IMPLEMENTED" ]
+              | MetadataDistribution metadataDistributionModel ->
+                  MetadataDistribution.view corpus metadataDistributionModel ]
 
         let shouldShowResultsTableSpinner =
             match showingResultsModel.ActiveTab with
