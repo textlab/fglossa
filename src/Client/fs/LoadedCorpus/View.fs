@@ -515,7 +515,19 @@ module ResultsView =
                                        dispatch (ShowingResults.MetadataDistribution.SelectCategory s)) ]
 
             Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem attrMenu
-                                                        Bulma.levelItem categoryMenu ] ] ]
+                                                        Bulma.levelItem categoryMenu ] ]
+                        Bulma.tableContainer (
+                            Bulma.table [ Html.tbody [ for attrValueDistribution in model.MetadataDistribution ->
+                                                           let attrValueCell =
+                                                               Html.td attrValueDistribution.AttributeValue
+
+                                                           let frequencyCells =
+                                                               [ for valueFreq in
+                                                                     attrValueDistribution.MetadataValueFrequencies ->
+                                                                     Html.td (string valueFreq.Frequency) ]
+
+                                                           Html.tr (attrValueCell :: frequencyCells) ] ]
+                        ) ]
 
 
     let tabs
