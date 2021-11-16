@@ -10,6 +10,7 @@ open ClosedXML
 open ServerTypes
 open Shared
 open Database
+open Remoting.Metadata
 open Remoting.Search.Cwb.Common
 
 let getSearchResults
@@ -228,12 +229,17 @@ let downloadFrequencyList
         return downloadFilename
     }
 
-let getAttributeDistribution
+type MetadataCategoryTextIds =
+    { CategoryValue: string
+      TextIds: string }
+
+let getMetadataDistribution
     (logger: ILogger)
     (searchParams: SearchParams)
     (attributeCode: string)
-    : Async<Map<string, Map<string, uint64>>> =
-    async {
+    (categoryCode: string)
+    : Task<MetadataDistribution> =
+    task {
         let corpus =
             Corpora.Server.getCorpus searchParams.CorpusCode
 
@@ -255,15 +261,13 @@ let getAttributeDistribution
         let cmd =
             $"group {namedQuery} match {textIdAttr} by match {sanitizeString attributeCode}"
 
-        printfn $"{cmd}"
-
-        let! results =
+        let! attrResults =
             match corpus.Config.Modality with
             | Spoken -> Spoken.runQueries logger corpus searchParams (Some cmd)
             | Written -> Written.runQueries logger corpus searchParams (Some cmd)
 
-        return
-            results.Hits
+        let attrDistributionMap =
+            attrResults.Hits
             |> Array.fold
                 (fun (distrMap: Map<string, Map<string, uint64>>) hit ->
                     let parts = hit.Split("\t")
@@ -282,4 +286,59 @@ let getAttributeDistribution
                             | None -> [ (textId, freq) ] |> Map.ofList |> Some
                     ))
                 Map.empty
+
+
+        let connStr = getConnectionString corpus.Config.Code
+
+        use conn = new SQLiteConnection(connStr)
+
+        let metadataSelectionSql =
+            generateMetadataSelectionSql None searchParams.MetadataSelection
+
+        let catCode = Database.sanitizeString categoryCode
+
+        let categorySql =
+            $"SELECT {catCode} AS CategoryValue, GROUP_CONCAT(tid) AS TextIds FROM texts \
+             WHERE 1 = 1{metadataSelectionSql} GROUP BY {catCode}"
+
+        let parameters =
+            metadataSelectionToParamDict searchParams.MetadataSelection
+
+        let! categoryRes = query logger conn categorySql (Some parameters)
+
+        let categoryValuesToTextIds =
+            match categoryRes with
+            | Ok (catDist: MetadataCategoryTextIds seq) -> catDist
+            | Error ex -> raise ex
+
+        return
+            [| for pair in attrDistributionMap ->
+                   let attrValue = pair.Key
+                   let textIdsToFreqs = pair.Value
+
+                   let metadataValueFrequencies =
+                       [| for row in categoryValuesToTextIds do
+                              // For each text ID that is associated with the current metadata category value,
+                              // find the frequency associated with it in the map associated with the current attribute value.
+                              // Summing all those frequencies gives us the total number of occurrances of this
+                              // attribute value in texts associated with the current metadata value.
+                              let total =
+                                  row.TextIds.Split(",")
+                                  |> Array.fold
+                                      (fun sum textId ->
+                                          textIdsToFreqs.TryFind(textId)
+                                          |> function
+                                              | Some freq -> sum + freq
+                                              | None -> sum)
+                                      0UL
+
+                              { MetadataValue =
+                                  if isNull row.CategoryValue then
+                                      "Undefined"
+                                  else
+                                      row.CategoryValue
+                                Frequency = total } |]
+
+                   { AttributeValue = attrValue
+                     MetadataValueFrequencies = metadataValueFrequencies } |]
     }

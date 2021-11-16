@@ -468,9 +468,9 @@ module LoadedCorpus =
             // Update.LoadedCorpus.ShowingResults.MetadataDistribution
             ///////////////////////////////////////////////////////////
             type Msg =
-                | FetchAttributeDistribution of string
-                | FetchedAttributeDistribution of Map<string, Map<string, uint64>>
-                | FetchMetadataDistribution of string
+                | SelectAttribute of string
+                | SelectCategory of string
+                | FetchedMetadataDistribution of MetadataDistribution
 
             let update
                 (msg: Msg)
@@ -478,16 +478,36 @@ module LoadedCorpus =
                 (metadataDistributionModel: MetadataDistributionModel)
                 : LoadedCorpusModel * MetadataDistributionModel * Cmd<Msg> =
                 match msg with
-                | FetchAttributeDistribution attribute ->
+                | SelectAttribute attributeCode ->
+                    let cmd =
+                        match metadataDistributionModel.SelectedCategoryCode with
+                        | Some categoryCode ->
+                            Cmd.OfAsync.perform
+                                serverApi.GetMetadataDistribution
+                                (loadedCorpusModel.Search.Params, attributeCode, categoryCode)
+                                FetchedMetadataDistribution
+                        | None -> Cmd.none
+
                     loadedCorpusModel,
-                    metadataDistributionModel,
-                    Cmd.OfAsync.perform
-                        serverApi.GetAttributeDistribution
-                        (loadedCorpusModel.Search.Params, attribute)
-                        FetchedAttributeDistribution
-                | FetchedAttributeDistribution results ->
-                    loadedCorpusModel, { metadataDistributionModel with AttributeDistribution = results }, Cmd.none
-                | FetchMetadataDistribution category -> loadedCorpusModel, metadataDistributionModel, Cmd.none
+                    { metadataDistributionModel with SelectedAttributeCode = Some attributeCode },
+                    cmd
+                | SelectCategory categoryCode ->
+                    let cmd =
+                        match metadataDistributionModel.SelectedAttributeCode with
+                        | Some attributeCode ->
+                            Cmd.OfAsync.perform
+                                serverApi.GetMetadataDistribution
+                                (loadedCorpusModel.Search.Params, attributeCode, categoryCode)
+                                FetchedMetadataDistribution
+                        | None -> Cmd.none
+
+                    loadedCorpusModel, { metadataDistributionModel with SelectedCategoryCode = Some categoryCode }, cmd
+                | FetchedMetadataDistribution metadataDistribution ->
+                    loadedCorpusModel,
+                    { metadataDistributionModel with MetadataDistribution = metadataDistribution },
+                    Cmd.none
+
+
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults
         ///////////////////////////////////////////

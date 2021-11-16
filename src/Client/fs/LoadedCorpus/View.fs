@@ -497,7 +497,7 @@ module ResultsView =
                                )
                                prop.onChange (fun (s: string) ->
                                    if s <> "" then
-                                       dispatch (ShowingResults.MetadataDistribution.FetchAttributeDistribution s)) ]
+                                       dispatch (ShowingResults.MetadataDistribution.SelectAttribute s)) ]
 
             let categoryOptions =
                 [ for category in corpus.MetadataQuickView ->
@@ -505,11 +505,14 @@ module ResultsView =
                                     prop.text category.Name ] ]
 
             let categoryMenu =
-                Bulma.select (
-                    Html.option [ prop.value ""
-                                  prop.text "Select category" ]
-                    :: categoryOptions
-                )
+                Bulma.select [ prop.children (
+                                   Html.option [ prop.value ""
+                                                 prop.text "Select category" ]
+                                   :: categoryOptions
+                               )
+                               prop.onChange (fun (s: string) ->
+                                   if s <> "" then
+                                       dispatch (ShowingResults.MetadataDistribution.SelectCategory s)) ]
 
             Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem attrMenu
                                                         Bulma.levelItem categoryMenu ] ] ]

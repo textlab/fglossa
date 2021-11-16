@@ -294,6 +294,16 @@ type DownloadFormat =
     | Csv
     | Tsv
 
+type MetadataValueFrequency =
+    { MetadataValue: string
+      Frequency: uint64 }
+
+type AttributeValueDistribution =
+    { AttributeValue: string
+      MetadataValueFrequencies: MetadataValueFrequency [] }
+
+type MetadataDistribution = AttributeValueDistribution []
+
 type DatabaseColumn = string
 
 type PageNumber = int
@@ -321,4 +331,4 @@ type IServerApi =
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
       GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive -> Async<string []>
       DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * DownloadFormat -> Async<string>
-      GetAttributeDistribution: SearchParams * AttributeCode -> Async<Map<string, Map<string, uint64>>> }
+      GetMetadataDistribution: SearchParams * AttributeCode * Metadata.CategoryCode -> Async<MetadataDistribution> }
