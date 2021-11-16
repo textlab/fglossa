@@ -287,14 +287,15 @@ let getMetadataDistribution
                     ))
                 Map.empty
 
-        attrDistributionMap
-        |> Map.toArray
-        |> Array.iter (fun (attr, valueFreqs) ->
-            printfn $"{attr}"
+        //////// FOR DEBUGGING /////////
+        // attrDistributionMap
+        // |> Map.toArray
+        // |> Array.iter (fun (attr, valueFreqs) ->
+        //     printfn $"{attr}"
 
-            valueFreqs
-            |> Map.toArray
-            |> Array.iter (fun (metadataValue, freq) -> printfn $"{metadataValue}: {freq}"))
+        //     valueFreqs
+        //     |> Map.toArray
+        //     |> Array.iter (fun (metadataValue, freq) -> printfn $"{metadataValue}: {freq}"))
 
 
         let connStr = getConnectionString corpus.Config.Code
