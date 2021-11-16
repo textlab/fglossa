@@ -531,8 +531,15 @@ module ResultsView =
                             Bulma.tableContainer (
                                 Bulma.table [ Html.thead [ Html.tr (Html.td "" :: categoryValueCells) ]
                                               Html.tbody [ for attrValueDistribution in model.MetadataDistribution ->
+                                                               let attrValue = attrValueDistribution.AttributeValue
+
                                                                let attrValueCell =
-                                                                   Html.td attrValueDistribution.AttributeValue
+                                                                   Html.td (
+                                                                       if attrValue = "__UNDEF__" then
+                                                                           Html.i "Undefined"
+                                                                       else
+                                                                           Html.text attrValue
+                                                                   )
 
                                                                let frequencyCells =
                                                                    [ for valueFreq in
@@ -663,19 +670,23 @@ let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) 
                                                                                                        model
                                                                                                        (MetadataMsg
                                                                                                         >> dispatch) ] ]
-                                                                Bulma.column [ match model.Substate with
-                                                                               | CorpusStart ->
-                                                                                   CorpusStartView.view
-                                                                                       model.Corpus
-                                                                                       model.Search
-                                                                                       topRowButtonsElement
-                                                                                       dispatch
-                                                                               | ShowingResults showingResultsModel ->
-                                                                                   ResultsView.view
-                                                                                       model
-                                                                                       showingResultsModel
-                                                                                       model.Corpus
-                                                                                       model.Search
-                                                                                       topRowButtonsElement
-                                                                                       dispatch
-                                                                                       (ShowingResultsMsg >> dispatch) ] ] ] ] ]
+                                                                Bulma.column [ prop.style [ style.overflow.auto ]
+                                                                               prop.children (
+                                                                                   match model.Substate with
+                                                                                   | CorpusStart ->
+                                                                                       CorpusStartView.view
+                                                                                           model.Corpus
+                                                                                           model.Search
+                                                                                           topRowButtonsElement
+                                                                                           dispatch
+                                                                                   | ShowingResults showingResultsModel ->
+                                                                                       ResultsView.view
+                                                                                           model
+                                                                                           showingResultsModel
+                                                                                           model.Corpus
+                                                                                           model.Search
+                                                                                           topRowButtonsElement
+                                                                                           dispatch
+                                                                                           (ShowingResultsMsg
+                                                                                            >> dispatch)
+                                                                               ) ] ] ] ] ]
