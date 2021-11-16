@@ -16,6 +16,15 @@ open Remoting.Metadata
 
 type TextBounds = { Startpos: int64; Endpos: int64 }
 
+let sanitizeString s =
+    if
+        String.IsNullOrWhiteSpace(s)
+        || Regex.IsMatch(s, "\W")
+    then
+        failwith $"Invalid string in CQP expression: {s}"
+    else
+        s
+
 let cwbCorpusName (corpus: Corpus) (queries: Query seq) =
     let uppercaseCode = corpus.Config.Code.ToUpper()
 

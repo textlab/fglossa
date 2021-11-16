@@ -302,6 +302,8 @@ type TextId = string
 
 type IsCaseSensitive = bool
 
+type AttributeCode = string
+
 module Route =
     let builder typeName methodName =
         sprintf "/glossa3/api/%s/%s" typeName methodName
@@ -318,4 +320,5 @@ type IServerApi =
       SearchCorpus: SearchParams -> Async<SearchResultInfo>
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
       GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive -> Async<string []>
-      DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * DownloadFormat -> Async<string> }
+      DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * DownloadFormat -> Async<string>
+      GetAttributeDistribution: SearchParams * AttributeCode -> Async<Map<string, Map<string, uint64>>> }

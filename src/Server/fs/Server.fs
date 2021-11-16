@@ -60,9 +60,9 @@ let createServerApi ctx =
       DownloadFrequencyList =
         fun (searchParams, attributes, isCaseSensitive, format) ->
             Remoting.Search.Cwb.Core.downloadFrequencyList logger searchParams attributes isCaseSensitive format
-
-
-    }
+      GetAttributeDistribution =
+        fun (searchParams, attributeCode) ->
+            Remoting.Search.Cwb.Core.getAttributeDistribution logger searchParams attributeCode }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =
     // do some logging

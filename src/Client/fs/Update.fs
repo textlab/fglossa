@@ -399,9 +399,9 @@ module LoadedCorpus =
                 | RemoveMediaObject -> loadedCorpusModel, { concordanceModel with MediaPlayer = None }, Cmd.none
 
         module FrequencyLists =
-            //////////////////////////////////////////////////
-            // Update.LoadedCorpus.ShowingResults.Concordance
-            //////////////////////////////////////////////////
+            /////////////////////////////////////////////////////
+            // Update.LoadedCorpus.ShowingResults.FrequencyLists
+            /////////////////////////////////////////////////////
             type Msg =
                 | ToggleAttribute of Cwb.PositionalAttribute
                 | ToggleIsCaseSensitive
@@ -463,12 +463,38 @@ module LoadedCorpus =
                     Browser.Dom.window.location.href <- path
                     loadedCorpusModel, { frequencyListsModel with DownloadingFormat = None }, Cmd.none
 
+        module MetadataDistribution =
+            ///////////////////////////////////////////////////////////
+            // Update.LoadedCorpus.ShowingResults.MetadataDistribution
+            ///////////////////////////////////////////////////////////
+            type Msg =
+                | FetchAttributeDistribution of string
+                | FetchedAttributeDistribution of Map<string, Map<string, uint64>>
+                | FetchMetadataDistribution of string
+
+            let update
+                (msg: Msg)
+                (loadedCorpusModel: LoadedCorpusModel)
+                (metadataDistributionModel: MetadataDistributionModel)
+                : LoadedCorpusModel * MetadataDistributionModel * Cmd<Msg> =
+                match msg with
+                | FetchAttributeDistribution attribute ->
+                    loadedCorpusModel,
+                    metadataDistributionModel,
+                    Cmd.OfAsync.perform
+                        serverApi.GetAttributeDistribution
+                        (loadedCorpusModel.Search.Params, attribute)
+                        FetchedAttributeDistribution
+                | FetchedAttributeDistribution results ->
+                    loadedCorpusModel, { metadataDistributionModel with AttributeDistribution = results }, Cmd.none
+                | FetchMetadataDistribution category -> loadedCorpusModel, metadataDistributionModel, Cmd.none
         ///////////////////////////////////////////
         // Update.LoadedCorpus.ShowingResults
         ///////////////////////////////////////////
         type Msg =
             | ConcordanceMsg of Concordance.Msg
             | FrequencyListsMsg of FrequencyLists.Msg
+            | MetadataDistributionMsg of MetadataDistribution.Msg
 
             | SelectResultTab of ResultTab
 
@@ -492,6 +518,14 @@ module LoadedCorpus =
                 newLoadedCorpusModel,
                 { showingResultsModel with ActiveTab = FrequencyLists newFrequencyListsModel },
                 Cmd.map FrequencyListsMsg cmd
+
+            | MetadataDistributionMsg msg', MetadataDistribution m ->
+                let newLoadedCorpusModel, newMetadataDistributionModel, cmd =
+                    MetadataDistribution.update msg' loadedCorpusModel m
+
+                newLoadedCorpusModel,
+                { showingResultsModel with ActiveTab = MetadataDistribution newMetadataDistributionModel },
+                Cmd.map MetadataDistributionMsg cmd
 
             | SelectResultTab tab, _ -> loadedCorpusModel, { showingResultsModel with ActiveTab = tab }, Cmd.none
 

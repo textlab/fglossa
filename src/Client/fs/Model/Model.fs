@@ -149,10 +149,12 @@ type FrequencyListsModel =
 
 type MetadataDistributionModel =
     { SelectedAttribute: Cwb.PositionalAttribute
-      SelectedCategory: Metadata.Category option }
+      SelectedCategory: Metadata.Category option
+      AttributeDistribution: Map<string, Map<string, uint64>> }
     static member Init(corpus: Corpus) =
         { SelectedAttribute = corpus.SharedInfo.GetDefaultAttribute()
-          SelectedCategory = corpus.MetadataTable |> List.tryHead }
+          SelectedCategory = corpus.MetadataTable |> List.tryHead
+          AttributeDistribution = Map.empty }
 
 type ResultTab =
     | Concordance of ConcordanceModel

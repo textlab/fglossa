@@ -474,21 +474,42 @@ module ResultsView =
         ////////////////////////////////////////////////////////////
         /// View.LoadedCorpus.ResultsView.MetadataDistribution.view
         ////////////////////////////////////////////////////////////
-        let view (corpus: Corpus) (model: MetadataDistributionModel) =
+        let view
+            (corpus: Corpus)
+            (model: MetadataDistributionModel)
+            (dispatch: ShowingResults.MetadataDistribution.Msg -> unit)
+            =
             let attributes =
                 match corpus.SharedInfo.LanguageConfig with
                 | Monolingual (Some attrs) -> corpus.SharedInfo.GetDefaultAttribute() :: attrs
                 | _ -> failwith "NOT IMPLEMENTED"
 
+            let attrOptions =
+                [ for attr in attributes ->
+                      Html.option [ prop.value attr.Code
+                                    prop.text attr.Name ] ]
+
             let attrMenu =
-                Bulma.select [ for attr in attributes ->
-                                   Html.option [ prop.value attr.Code
-                                                 prop.text attr.Name ] ]
+                Bulma.select [ prop.children (
+                                   Html.option [ prop.value ""
+                                                 prop.text "Select attribute" ]
+                                   :: attrOptions
+                               )
+                               prop.onChange (fun (s: string) ->
+                                   if s <> "" then
+                                       dispatch (ShowingResults.MetadataDistribution.FetchAttributeDistribution s)) ]
+
+            let categoryOptions =
+                [ for category in corpus.MetadataQuickView ->
+                      Html.option [ prop.value category.Code
+                                    prop.text category.Name ] ]
 
             let categoryMenu =
-                Bulma.select [ for category in corpus.MetadataQuickView ->
-                                   Html.option [ prop.value category.Code
-                                                 prop.text category.Name ] ]
+                Bulma.select (
+                    Html.option [ prop.value ""
+                                  prop.text "Select category" ]
+                    :: categoryOptions
+                )
 
             Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem attrMenu
                                                         Bulma.levelItem categoryMenu ] ] ]
@@ -576,7 +597,10 @@ module ResultsView =
                       loadedCorpusModel.Search.Params
                       (ShowingResults.FrequencyListsMsg >> dispatch)
               | MetadataDistribution metadataDistributionModel ->
-                  MetadataDistribution.view corpus metadataDistributionModel ]
+                  MetadataDistribution.view
+                      corpus
+                      metadataDistributionModel
+                      (ShowingResults.MetadataDistributionMsg >> dispatch) ]
 
         let shouldShowResultsTableSpinner =
             match showingResultsModel.ActiveTab with

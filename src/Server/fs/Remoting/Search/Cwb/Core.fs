@@ -10,6 +10,7 @@ open ClosedXML
 open ServerTypes
 open Shared
 open Database
+open Remoting.Search.Cwb.Common
 
 let getSearchResults
     (logger: ILogger)
@@ -225,4 +226,60 @@ let downloadFrequencyList
             File.WriteAllLines(outputFilename, Array.append [| headers |] valueRows)
 
         return downloadFilename
+    }
+
+let getAttributeDistribution
+    (logger: ILogger)
+    (searchParams: SearchParams)
+    (attributeCode: string)
+    : Async<Map<string, Map<string, uint64>>> =
+    async {
+        let corpus =
+            Corpora.Server.getCorpus searchParams.CorpusCode
+
+        let textIdAttr =
+            match corpus.Config.Modality with
+            | Spoken -> "who_name"
+            | Written -> "tid"
+
+        let queryName =
+            cwbQueryName corpus searchParams.SearchId
+
+        let namedQuery =
+            match corpus.Config.Modality with
+            | Spoken -> queryName
+            | Written ->
+                // $"{queryName}_{searchParams.Step}_{cpu}"
+                failwith "NOT IMPLEMENTED"
+
+        let cmd =
+            $"group {namedQuery} match {textIdAttr} by match {sanitizeString attributeCode}"
+
+        printfn $"{cmd}"
+
+        let! results =
+            match corpus.Config.Modality with
+            | Spoken -> Spoken.runQueries logger corpus searchParams (Some cmd)
+            | Written -> Written.runQueries logger corpus searchParams (Some cmd)
+
+        return
+            results.Hits
+            |> Array.fold
+                (fun (distrMap: Map<string, Map<string, uint64>>) hit ->
+                    let parts = hit.Split("\t")
+                    let attrValue = parts.[0]
+                    let textId = parts.[1]
+                    let freq = uint64 parts.[2]
+
+                    // Add the mapping from textId to frequency to the map associated
+                    // with the current attribute value, creating a new map with only
+                    // that mapping if none existed.
+                    distrMap.Change(
+                        attrValue,
+                        fun maybeAttrValueMap ->
+                            match maybeAttrValueMap with
+                            | Some attrValueMap -> Some(attrValueMap.Add(textId, freq))
+                            | None -> [ (textId, freq) ] |> Map.ofList |> Some
+                    ))
+                Map.empty
     }
