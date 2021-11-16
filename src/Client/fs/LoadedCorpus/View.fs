@@ -516,18 +516,31 @@ module ResultsView =
 
             Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem attrMenu
                                                         Bulma.levelItem categoryMenu ] ]
-                        Bulma.tableContainer (
-                            Bulma.table [ Html.tbody [ for attrValueDistribution in model.MetadataDistribution ->
-                                                           let attrValueCell =
-                                                               Html.td attrValueDistribution.AttributeValue
+                        if model.MetadataDistribution.Length > 0 then
+                            let categoryValueCells =
+                                [ for valueFreq in
+                                      model.MetadataDistribution.[0]
+                                          .MetadataValueFrequencies ->
+                                      let value = valueFreq.MetadataValue
 
-                                                           let frequencyCells =
-                                                               [ for valueFreq in
-                                                                     attrValueDistribution.MetadataValueFrequencies ->
-                                                                     Html.td (string valueFreq.Frequency) ]
+                                      if value = "Undefined" then
+                                          Html.td [ Html.i value ]
+                                      else
+                                          Html.td value ]
 
-                                                           Html.tr (attrValueCell :: frequencyCells) ] ]
-                        ) ]
+                            Bulma.tableContainer (
+                                Bulma.table [ Html.thead [ Html.tr (Html.td "" :: categoryValueCells) ]
+                                              Html.tbody [ for attrValueDistribution in model.MetadataDistribution ->
+                                                               let attrValueCell =
+                                                                   Html.td attrValueDistribution.AttributeValue
+
+                                                               let frequencyCells =
+                                                                   [ for valueFreq in
+                                                                         attrValueDistribution.MetadataValueFrequencies ->
+                                                                         Html.td (string valueFreq.Frequency) ]
+
+                                                               Html.tr (attrValueCell :: frequencyCells) ] ]
+                            ) ]
 
 
     let tabs
