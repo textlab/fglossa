@@ -85,6 +85,10 @@ module Metadata =
 
     type Value = string * string
 
+    type CategoryType =
+        | StringCategoryType
+        | NumberCategoryType
+
     type SortDirection =
         | Asc
         | Desc
@@ -331,4 +335,4 @@ type IServerApi =
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
       GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive -> Async<string []>
       DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * DownloadFormat -> Async<string>
-      GetMetadataDistribution: SearchParams * AttributeCode * Metadata.CategoryCode -> Async<MetadataDistribution> }
+      GetMetadataDistribution: SearchParams * AttributeCode * Metadata.CategoryCode * Metadata.CategoryType -> Async<MetadataDistribution> }

@@ -61,8 +61,8 @@ let createServerApi ctx =
         fun (searchParams, attributes, isCaseSensitive, format) ->
             Remoting.Search.Cwb.Core.downloadFrequencyList logger searchParams attributes isCaseSensitive format
       GetMetadataDistribution =
-        fun (searchParams, attributeCode, categoryCode) ->
-            Remoting.Search.Cwb.Core.getMetadataDistribution logger searchParams attributeCode categoryCode
+        fun (searchParams, attributeCode, categoryCode, categoryType) ->
+            Remoting.Search.Cwb.Core.getMetadataDistribution logger searchParams attributeCode categoryCode categoryType
             |> Async.AwaitTask }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =

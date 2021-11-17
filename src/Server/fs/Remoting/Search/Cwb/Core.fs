@@ -229,15 +229,18 @@ let downloadFrequencyList
         return downloadFilename
     }
 
-type MetadataCategoryTextIds =
+type StringCategoryTextIds =
     { CategoryValue: string
       TextIds: string }
+
+type NumberCategoryTextIds = { CategoryValue: int; TextIds: string }
 
 let getMetadataDistribution
     (logger: ILogger)
     (searchParams: SearchParams)
     (attributeCode: string)
     (categoryCode: string)
+    (categoryType: Metadata.CategoryType)
     : Task<MetadataDistribution> =
     task {
         let corpus =
@@ -314,12 +317,33 @@ let getMetadataDistribution
         let parameters =
             metadataSelectionToParamDict searchParams.MetadataSelection
 
-        let! categoryRes = query logger conn categorySql (Some parameters)
-
+        // For string categories, we return the values we get from the database, but for numerical categories
+        // we need to convert them to strings. Because of type checking on the data we get from the database,
+        // we need to implement the query for each value type separately even though they look identical (the
+        // compiler will infer different types for the values in each case).
         let categoryValuesToTextIds =
-            match categoryRes with
-            | Ok (catDist: MetadataCategoryTextIds seq) -> catDist
-            | Error ex -> raise ex
+            match categoryType with
+            | Metadata.StringCategoryType ->
+                let categoryRes =
+                    (query logger conn categorySql (Some parameters))
+                        .Result
+
+                match categoryRes with
+                | Ok (catDist: StringCategoryTextIds seq) -> catDist
+                | Error ex -> raise ex
+            | Metadata.NumberCategoryType ->
+                let categoryRes =
+                    (query logger conn categorySql (Some parameters))
+                        .Result
+
+                match categoryRes with
+                | Ok (catDist: NumberCategoryTextIds seq) ->
+                    seq {
+                        for d in catDist ->
+                            { CategoryValue = string d.CategoryValue
+                              TextIds = d.TextIds }
+                    }
+                | Error ex -> raise ex
 
         return
             [| for pair in attrDistributionMap ->

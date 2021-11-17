@@ -500,8 +500,8 @@ module ResultsView =
                                        dispatch (ShowingResults.MetadataDistribution.SelectAttribute s)) ]
 
             let categoryOptions =
-                [ for category in corpus.MetadataQuickView ->
-                      Html.option [ prop.value category.Code
+                [ for index, category in corpus.MetadataQuickView |> List.indexed ->
+                      Html.option [ prop.value (string index)
                                     prop.text category.Name ] ]
 
             let categoryMenu =
@@ -512,7 +512,23 @@ module ResultsView =
                                )
                                prop.onChange (fun (s: string) ->
                                    if s <> "" then
-                                       dispatch (ShowingResults.MetadataDistribution.SelectCategory s)) ]
+                                       let category = corpus.MetadataQuickView.[int s]
+
+                                       // Since Newtonsoft.Json cannot deserialize abstract types such as Metadata.Category,
+                                       // we need to provide the category code and its type as concrete types
+                                       let categoryType =
+                                           match category with
+                                           | :? Metadata.StringCategory -> Metadata.StringCategoryType
+                                           | :? Metadata.LongTextCategory -> Metadata.StringCategoryType
+                                           | :? Metadata.NumberCategory -> Metadata.NumberCategoryType
+                                           | _ -> failwith $"Unknown metadata category type for {category}"
+
+                                       dispatch (
+                                           ShowingResults.MetadataDistribution.SelectCategory(
+                                               category.Code,
+                                               categoryType
+                                           )
+                                       )) ]
 
             Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem attrMenu
                                                         Bulma.levelItem categoryMenu ] ]

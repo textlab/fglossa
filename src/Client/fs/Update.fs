@@ -469,7 +469,7 @@ module LoadedCorpus =
             ///////////////////////////////////////////////////////////
             type Msg =
                 | SelectAttribute of string
-                | SelectCategory of string
+                | SelectCategory of string * Metadata.CategoryType
                 | FetchedMetadataDistribution of MetadataDistribution
 
             let update
@@ -484,20 +484,23 @@ module LoadedCorpus =
                         | Some categoryCode ->
                             Cmd.OfAsync.perform
                                 serverApi.GetMetadataDistribution
-                                (loadedCorpusModel.Search.Params, attributeCode, categoryCode)
+                                (loadedCorpusModel.Search.Params,
+                                 attributeCode,
+                                 categoryCode,
+                                 Metadata.StringCategoryType)
                                 FetchedMetadataDistribution
                         | None -> Cmd.none
 
                     loadedCorpusModel,
                     { metadataDistributionModel with SelectedAttributeCode = Some attributeCode },
                     cmd
-                | SelectCategory categoryCode ->
+                | SelectCategory (categoryCode, categoryType) ->
                     let cmd =
                         match metadataDistributionModel.SelectedAttributeCode with
                         | Some attributeCode ->
                             Cmd.OfAsync.perform
                                 serverApi.GetMetadataDistribution
-                                (loadedCorpusModel.Search.Params, attributeCode, categoryCode)
+                                (loadedCorpusModel.Search.Params, attributeCode, categoryCode, categoryType)
                                 FetchedMetadataDistribution
                         | None -> Cmd.none
 
