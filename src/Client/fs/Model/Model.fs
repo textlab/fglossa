@@ -149,14 +149,16 @@ type FrequencyListsModel =
 
 type MetadataDistributionModel =
     { SelectedAttributeCode: string option
-      SelectedCategoryCode: string option
-      MetadataDistribution: MetadataDistribution }
+      SelectedCategory: Metadata.Category option
+      MetadataDistribution: MetadataDistribution
+      KeepZeroValues: bool }
     static member Init(corpus: Corpus) =
         { SelectedAttributeCode = None
-          SelectedCategoryCode = None
+          SelectedCategory = None
           MetadataDistribution =
             { Distribution = [||]
-              CategoryValueTotals = [||] } }
+              CategoryValueTotals = [||] }
+          KeepZeroValues = true }
 
 type ResultTab =
     | Concordance of ConcordanceModel

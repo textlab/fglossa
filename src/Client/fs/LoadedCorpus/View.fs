@@ -514,24 +514,20 @@ module ResultsView =
                                    if s <> "" then
                                        let category = corpus.MetadataQuickView.[int s]
 
-                                       // Since Newtonsoft.Json cannot deserialize abstract types such as Metadata.Category,
-                                       // we need to provide the category code and its type as concrete types
-                                       let categoryType =
-                                           match category with
-                                           | :? Metadata.StringCategory -> Metadata.StringCategoryType
-                                           | :? Metadata.LongTextCategory -> Metadata.StringCategoryType
-                                           | :? Metadata.NumberCategory -> Metadata.NumberCategoryType
-                                           | _ -> failwith $"Unknown metadata category type for {category}"
+                                       dispatch (ShowingResults.MetadataDistribution.SelectCategory category)) ]
 
-                                       dispatch (
-                                           ShowingResults.MetadataDistribution.SelectCategory(
-                                               category.Code,
-                                               categoryType
-                                           )
-                                       )) ]
+            let keepZeroValueButton =
+                Html.label [ Bulma.input.checkbox [ prop.isChecked model.KeepZeroValues
+                                                    prop.onCheckedChange (
+                                                        dispatch
+                                                        << ShowingResults.MetadataDistribution.SetKeepZero
+                                                    ) ]
+                             Html.text " Include metadata values with zero total" ]
 
             Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem attrMenu
-                                                        Bulma.levelItem categoryMenu ] ]
+                                                        Bulma.levelItem categoryMenu
+                                                        Bulma.levelItem [ prop.style [ style.marginLeft 5 ]
+                                                                          prop.children [ keepZeroValueButton ] ] ] ]
                         if model.MetadataDistribution.Distribution.Length > 0 then
                             let categoryValueCells =
                                 [| for valueFreq in

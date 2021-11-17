@@ -469,7 +469,8 @@ module LoadedCorpus =
             ///////////////////////////////////////////////////////////
             type Msg =
                 | SelectAttribute of string
-                | SelectCategory of string * Metadata.CategoryType
+                | SelectCategory of Metadata.Category
+                | SetKeepZero of bool
                 | FetchedMetadataDistribution of MetadataDistribution
 
             let update
@@ -477,34 +478,49 @@ module LoadedCorpus =
                 (loadedCorpusModel: LoadedCorpusModel)
                 (metadataDistributionModel: MetadataDistributionModel)
                 : LoadedCorpusModel * MetadataDistributionModel * Cmd<Msg> =
+
+                let buildCmd
+                    { SelectedAttributeCode = maybeAttributeCode
+                      SelectedCategory = maybeCategory }
+                    =
+                    match maybeAttributeCode, maybeCategory with
+                    | Some attributeCode, Some category ->
+                        // Since Newtonsoft.Json cannot deserialize abstract types such as Metadata.Category,
+                        // we need to provide the category code and its type as concrete types
+                        let categoryType =
+                            match category with
+                            | :? Metadata.StringCategory -> Metadata.StringCategoryType
+                            | :? Metadata.LongTextCategory -> Metadata.StringCategoryType
+                            | :? Metadata.NumberCategory -> Metadata.NumberCategoryType
+                            | _ -> failwith $"Unknown metadata category type for {category}"
+
+                        Cmd.OfAsync.perform
+                            serverApi.GetMetadataDistribution
+                            (loadedCorpusModel.Search.Params, attributeCode, category.Code, categoryType)
+                            FetchedMetadataDistribution
+                    | _ -> Cmd.none
+
                 match msg with
                 | SelectAttribute attributeCode ->
-                    let cmd =
-                        match metadataDistributionModel.SelectedCategoryCode with
-                        | Some categoryCode ->
-                            Cmd.OfAsync.perform
-                                serverApi.GetMetadataDistribution
-                                (loadedCorpusModel.Search.Params,
-                                 attributeCode,
-                                 categoryCode,
-                                 Metadata.StringCategoryType)
-                                FetchedMetadataDistribution
-                        | None -> Cmd.none
+                    let newMetadataDistributionModel =
+                        { metadataDistributionModel with SelectedAttributeCode = Some attributeCode }
 
-                    loadedCorpusModel,
-                    { metadataDistributionModel with SelectedAttributeCode = Some attributeCode },
-                    cmd
-                | SelectCategory (categoryCode, categoryType) ->
-                    let cmd =
-                        match metadataDistributionModel.SelectedAttributeCode with
-                        | Some attributeCode ->
-                            Cmd.OfAsync.perform
-                                serverApi.GetMetadataDistribution
-                                (loadedCorpusModel.Search.Params, attributeCode, categoryCode, categoryType)
-                                FetchedMetadataDistribution
-                        | None -> Cmd.none
+                    let cmd = buildCmd newMetadataDistributionModel
 
-                    loadedCorpusModel, { metadataDistributionModel with SelectedCategoryCode = Some categoryCode }, cmd
+                    loadedCorpusModel, newMetadataDistributionModel, cmd
+                | SelectCategory category ->
+                    let newMetadataDistributionModel =
+                        { metadataDistributionModel with SelectedCategory = Some category }
+
+                    let cmd = buildCmd newMetadataDistributionModel
+
+                    loadedCorpusModel, newMetadataDistributionModel, cmd
+                | SetKeepZero shouldKeepZeroValues ->
+                    let newMetadataDistributionModel =
+                        { metadataDistributionModel with KeepZeroValues = shouldKeepZeroValues }
+
+                    let cmd = buildCmd newMetadataDistributionModel
+                    loadedCorpusModel, newMetadataDistributionModel, cmd
                 | FetchedMetadataDistribution metadataDistribution ->
                     loadedCorpusModel,
                     { metadataDistributionModel with MetadataDistribution = metadataDistribution },
