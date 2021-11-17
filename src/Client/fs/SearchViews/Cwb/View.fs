@@ -14,8 +14,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
     let cqpHeading = "CQP query"
 
     let link title (heading: string) ``interface`` =
-        Html.a [ prop.href "#"
-                 prop.title title
+        Html.a [ prop.title title
                  prop.onClick (fun _ -> dispatch (SetSearchInterface ``interface``))
                  prop.text heading ]
 
@@ -206,30 +205,26 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                              ] ]
           Bulma.levelItem (Bulma.text.span ")") ]
 
+    let searchButton =
+        Bulma.button.button [ color.isSuccess
+                              prop.text "Search"
+                              prop.onClick (fun _ -> dispatch Search) ]
+
+    let orButton =
+        Bulma.button.button [ prop.onClick (fun _ -> dispatch AddQueryRow)
+                              prop.text "Or..." ]
+
     Html.div [ prop.style [ style.width 500 ]
                prop.children [ Bulma.level [ prop.style [ style.paddingTop 20 ]
                                              prop.children [ Bulma.levelLeft [ Bulma.levelItem links ]
-                                                             Bulma.levelRight [ Bulma.button.button [ color.isSuccess
-                                                                                                      prop.text "Search"
-                                                                                                      prop.onClick
-
-                                                                                                          (fun _ ->
-                                                                                                              dispatch
-                                                                                                                  Search) ] ] ] ]
+                                                             Bulma.levelRight [ searchButton ] ] ]
                                yield! queryRows
                                Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ prop.style [ style.marginRight (
                                                                                                   length.rem 4.5
                                                                                               ) ]
                                                                                  prop.children [ Bulma.field.div (
-                                                                                                     Bulma.control.div (
-                                                                                                         Bulma.button.button [ prop.onClick
-
-                                                                                                                                   (fun _ ->
-                                                                                                                                       dispatch
-                                                                                                                                           AddQueryRow)
-                                                                                                                               prop.text
-                                                                                                                                   "Or..." ]
-                                                                                                     )
+                                                                                                     Bulma.control.div
+                                                                                                         orButton
                                                                                                  ) ] ]
                                                                if search.Interface <> Simple then
                                                                    yield! randomResultsControls ] ] ] ]

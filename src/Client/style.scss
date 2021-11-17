@@ -97,3 +97,7 @@ html {
     vertical-align: middle;
     width: 100%;
 }
+
+.metadata-distribution-table td:not(:first-child) {
+    text-align: right;
+}

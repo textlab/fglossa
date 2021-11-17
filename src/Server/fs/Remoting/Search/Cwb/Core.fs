@@ -344,8 +344,9 @@ let getMetadataDistribution
                               TextIds = d.TextIds }
                     }
                 | Error ex -> raise ex
+            |> Seq.toArray
 
-        return
+        let distribution =
             [| for pair in attrDistributionMap ->
                    let attrValue = pair.Key
                    let textIdsToFreqs = pair.Value
@@ -375,4 +376,16 @@ let getMetadataDistribution
 
                    { AttributeValue = attrValue
                      MetadataValueFrequencies = metadataValueFrequencies } |]
+
+        let totals =
+            distribution
+            |> Array.fold
+                (fun sums attributeValueDistribution ->
+                    Array.zip sums attributeValueDistribution.MetadataValueFrequencies
+                    |> Array.map (fun (sum, freq) -> sum + freq.Frequency))
+                (Array.create categoryValuesToTextIds.Length 0UL)
+
+        return
+            { Distribution = distribution
+              CategoryValueTotals = totals }
     }

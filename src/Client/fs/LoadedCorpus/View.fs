@@ -532,38 +532,51 @@ module ResultsView =
 
             Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem attrMenu
                                                         Bulma.levelItem categoryMenu ] ]
-                        if model.MetadataDistribution.Length > 0 then
+                        if model.MetadataDistribution.Distribution.Length > 0 then
                             let categoryValueCells =
-                                [ for valueFreq in
-                                      model.MetadataDistribution.[0]
-                                          .MetadataValueFrequencies ->
-                                      let value = valueFreq.MetadataValue
+                                [| for valueFreq in
+                                       model.MetadataDistribution.Distribution.[0]
+                                           .MetadataValueFrequencies ->
+                                       let value = valueFreq.MetadataValue
 
-                                      if value = "Undefined" then
-                                          Html.td [ Html.i value ]
-                                      else
-                                          Html.td value ]
+                                       if value = "Undefined" then
+                                           Html.td [ Html.i value ]
+                                       else
+                                           Html.td value |]
 
-                            Bulma.tableContainer (
-                                Bulma.table [ Html.thead [ Html.tr (Html.td "" :: categoryValueCells) ]
-                                              Html.tbody [ for attrValueDistribution in model.MetadataDistribution ->
-                                                               let attrValue = attrValueDistribution.AttributeValue
+                            let table =
+                                let frequencyRows =
+                                    [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
+                                           let attrValue = attrValueDistribution.AttributeValue
 
-                                                               let attrValueCell =
-                                                                   Html.td (
-                                                                       if attrValue = "__UNDEF__" then
-                                                                           Html.i "Undefined"
-                                                                       else
-                                                                           Html.text attrValue
-                                                                   )
+                                           let attrValueCell =
+                                               Html.td [ if attrValue = "__UNDEF__" then
+                                                             Html.i "Undefined"
+                                                         else
+                                                             Html.text attrValue ]
 
-                                                               let frequencyCells =
-                                                                   [ for valueFreq in
-                                                                         attrValueDistribution.MetadataValueFrequencies ->
-                                                                         Html.td (string valueFreq.Frequency) ]
+                                           let frequencyCells =
+                                               [| for valueFreq in attrValueDistribution.MetadataValueFrequencies ->
+                                                      Html.td (string valueFreq.Frequency) |]
 
-                                                               Html.tr (attrValueCell :: frequencyCells) ] ]
-                            ) ]
+                                           Html.tr (Array.append [| attrValueCell |] frequencyCells) |]
+
+                                let totalsRow =
+                                    let totalsCells =
+                                        [| for total in model.MetadataDistribution.CategoryValueTotals ->
+                                               Html.td [ Html.b (string total) ] |]
+
+                                    Html.tr (Array.append [| Html.td [ Html.b "Total" ] |] totalsCells)
+
+                                Bulma.table [ prop.className "metadata-distribution-table"
+                                              prop.children [ Html.thead [ Html.tr (
+                                                                               Array.append
+                                                                                   [| Html.td "" |]
+                                                                                   categoryValueCells
+                                                                           ) ]
+                                                              Html.tbody (Array.append frequencyRows [| totalsRow |]) ] ]
+
+                            Bulma.tableContainer [ table ] ]
 
 
     let tabs

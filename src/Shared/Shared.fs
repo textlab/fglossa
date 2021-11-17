@@ -306,7 +306,9 @@ type AttributeValueDistribution =
     { AttributeValue: string
       MetadataValueFrequencies: MetadataValueFrequency [] }
 
-type MetadataDistribution = AttributeValueDistribution []
+type MetadataDistribution =
+    { Distribution: AttributeValueDistribution []
+      CategoryValueTotals: uint64 [] }
 
 type DatabaseColumn = string
 

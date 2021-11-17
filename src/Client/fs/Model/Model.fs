@@ -154,7 +154,9 @@ type MetadataDistributionModel =
     static member Init(corpus: Corpus) =
         { SelectedAttributeCode = None
           SelectedCategoryCode = None
-          MetadataDistribution = [||] }
+          MetadataDistribution =
+            { Distribution = [||]
+              CategoryValueTotals = [||] } }
 
 type ResultTab =
     | Concordance of ConcordanceModel
