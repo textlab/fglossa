@@ -11,13 +11,13 @@ var CopyWebpackPlugin = require('copy-webpack-plugin');
 var MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 var CONFIG = {
-    cssEntry: './src/Client/style.scss',
+    cssEntry: './style.scss',
     // The tags to include the generated JS and CSS will be automatically injected in the HTML template
     // See https://github.com/jantimon/html-webpack-plugin
-    indexHtmlTemplate: './src/Client/index.html',
-    fsharpEntry: './src/Client/build/fs/App.js',
-    outputDir: './deploy/public',
-    assetsDir: './src/Client/public',
+    indexHtmlTemplate: './index.html',
+    fsharpEntry: './build/fs/App.js',
+    outputDir: '../../deploy/public',
+    assetsDir: './public',
     devServerPort: 8080,
     // When using webpack-dev-server, you may need to redirect some calls
     // to a external API server. See https://webpack.js.org/configuration/dev-server/#devserver-proxy
@@ -84,11 +84,8 @@ module.exports = {
     plugins: isProduction ?
         commonPlugins.concat([
             new MiniCssExtractPlugin({ filename: 'style.[name].[hash].css' }),
-            new CopyWebpackPlugin({ patterns: [{ from: resolve(CONFIG.assetsDir) }] }),
-        ])
-        : commonPlugins.concat([
-            new webpack.HotModuleReplacementPlugin(),
-        ]),
+            new CopyWebpackPlugin({ patterns: [{ from: resolve(CONFIG.assetsDir) }] })
+        ]) : commonPlugins,
     resolve: {
         // See https://github.com/fable-compiler/Fable/issues/1490
         symlinks: false,
@@ -98,13 +95,16 @@ module.exports = {
     },
     // Configuration for webpack-dev-server
     devServer: {
-        publicPath: '/',
-        contentBase: resolve(CONFIG.assetsDir),
         host: '0.0.0.0',
         port: CONFIG.devServerPort,
         proxy: CONFIG.devServerProxy,
         hot: true,
-        inline: true
+        devMiddleware: {
+            publicPath: '/'
+        },
+        static: {
+            directory: resolve(CONFIG.assetsDir)
+        }
     },
     // - sass-loaders: transforms SASS/SCSS into JS
     // - file-loader: Moves files referenced in the code (fonts, images) into output folder

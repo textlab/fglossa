@@ -1,7 +1,7 @@
 module Remoting.Metadata
 
 open System.Collections.Generic
-open System.Data.SQLite
+open Microsoft.Data.Sqlite
 open System.Threading.Tasks
 open FSharp.Control.Tasks
 open System.Text.RegularExpressions
@@ -69,7 +69,7 @@ let getMetadataForCategory
     task {
         let connStr = getConnectionString corpusCode
 
-        use conn = new SQLiteConnection(connStr)
+        use conn = new SqliteConnection(connStr)
 
         let catCode = sanitizeString categoryCode
 
@@ -98,7 +98,7 @@ let getMinAndMaxForCategory
     task {
         let connStr = getConnectionString corpusCode
 
-        use conn = new SQLiteConnection(connStr)
+        use conn = new SqliteConnection(connStr)
 
         let catCode = sanitizeString categoryCode
 
@@ -133,7 +133,7 @@ let getMetadataForTexts
     task {
         let connStr = getConnectionString corpusCode
 
-        use conn = new SQLiteConnection(connStr)
+        use conn = new SqliteConnection(connStr)
 
         let limit = 50
         let offset = (pageNumber - 1) * limit
@@ -187,7 +187,7 @@ let getMetadataForSingleText
     task {
         let connStr = getConnectionString corpusCode
 
-        use conn = new SQLiteConnection(connStr)
+        use conn = new SqliteConnection(connStr)
 
         let sql =
             $"SELECT * FROM texts WHERE tid = @tid LIMIT 1"

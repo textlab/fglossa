@@ -4,7 +4,7 @@ open System
 open System.IO
 open System.Threading.Tasks
 open FSharp.Control.Tasks
-open System.Data.SQLite
+open Microsoft.Data.Sqlite
 open System.Text.RegularExpressions
 open Dapper
 open Serilog
@@ -124,7 +124,7 @@ let printPositionsMatchingMetadata
         if searchParams.MetadataSelection.Count > 0 then
             let connStr = getConnectionString corpus.Config.Code
 
-            use conn = new SQLiteConnection(connStr)
+            use conn = new SqliteConnection(connStr)
 
             let positionFields =
                 match corpus.Config.Modality with
@@ -171,7 +171,7 @@ let printPositionsMatchingMetadata
                 // not be searchable, so when no metadata is selected, we search within the bounds for all
                 // speakers (which does not include the interviewers if they should be excluded from search).
                 let connStr = getConnectionString corpus.Config.Code
-                use conn = new SQLiteConnection(connStr)
+                use conn = new SqliteConnection(connStr)
 
                 let sql =
                     "SELECT REPLACE(REPLACE(`bounds`, '-', '\t'), ':', '\n') FROM texts"

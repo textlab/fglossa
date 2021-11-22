@@ -12,7 +12,7 @@
 # from the fglossa_docker directory:
 #
 # $ rm -rf deploy/* node_modules paket-files src/Client/bin/* src/Client/obj/* src/Server/bin/* src/Server/obj/*
-# $ docker run -it -d --mount type=bind,src=${PWD},dst=/app -w /app --name fglossa_dev dotnet5_node15 bash
+# $ docker run -it -d --mount type=bind,src=${PWD},dst=/app -w /app --name fglossa_dev dotnet6_node16 bash
 # $ docker exec -it fglossa_dev dotnet tool restore && dotnet paket install && dotnet restore src/Server && dotnet restore src/Client
 #
 # After this script has been run, the compiled project will be found in the directory ../fglossa_docker/deploy,

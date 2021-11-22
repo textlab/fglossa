@@ -1,5 +1,4 @@
 Expecto
-System.Data.SQLite
 Dapper
 Giraffe.SerilogExtensions
 Serilog.Sinks.Console

@@ -4,7 +4,7 @@ open System.IO
 open System.Threading.Tasks
 open FSharp.Control.Tasks
 open System.Text.RegularExpressions
-open System.Data.SQLite
+open Microsoft.Data.Sqlite
 open Serilog
 open ClosedXML
 open ServerTypes
@@ -63,7 +63,7 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                 if searchParams.SearchId = 0 then
                     // a SearchId of 0 means a new, unsaved search, so save it
                     // and set the database ID of the search to be the SearchId
-                    use connection = new SQLiteConnection(connStr)
+                    use connection = new SqliteConnection(connStr)
 
                     let res =
                         (insert logger connection "Search" searchData)
@@ -304,7 +304,7 @@ let getMetadataDistribution
 
         let connStr = getConnectionString corpus.Config.Code
 
-        use conn = new SQLiteConnection(connStr)
+        use conn = new SqliteConnection(connStr)
 
         let metadataSelectionSql =
             generateMetadataSelectionSql None searchParams.MetadataSelection

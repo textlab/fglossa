@@ -1,7 +1,7 @@
 module Remoting.Corpus
 
 open System
-open System.Data.SQLite
+open Microsoft.Data.Sqlite
 open System.Threading.Tasks
 open FSharp.Control.Tasks
 open System.Text.RegularExpressions
@@ -16,7 +16,7 @@ module Spoken =
         task {
             let connStr = getConnectionString corpus.Config.Code
 
-            use conn = new SQLiteConnection(connStr)
+            use conn = new SqliteConnection(connStr)
 
             let metadataSelectionSql =
                 generateMetadataSelectionSql None selection
@@ -64,7 +64,7 @@ module Written =
         task {
             let connStr = getConnectionString corpus.Config.Code
 
-            use conn = new SQLiteConnection(connStr)
+            use conn = new SqliteConnection(connStr)
 
             let metadataSelectionSql =
                 generateMetadataSelectionSql None selection
