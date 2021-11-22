@@ -481,7 +481,8 @@ module LoadedCorpus =
 
                 let buildCmd
                     { SelectedAttributeCode = maybeAttributeCode
-                      SelectedCategory = maybeCategory }
+                      SelectedCategory = maybeCategory
+                      KeepZeroValues = keepZeroValues }
                     =
                     match maybeAttributeCode, maybeCategory with
                     | Some attributeCode, Some category ->
@@ -496,7 +497,7 @@ module LoadedCorpus =
 
                         Cmd.OfAsync.perform
                             serverApi.GetMetadataDistribution
-                            (loadedCorpusModel.Search.Params, attributeCode, category.Code, categoryType)
+                            (loadedCorpusModel.Search.Params, attributeCode, category.Code, categoryType, keepZeroValues)
                             FetchedMetadataDistribution
                     | _ -> Cmd.none
 

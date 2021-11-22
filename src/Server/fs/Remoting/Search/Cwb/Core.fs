@@ -241,6 +241,7 @@ let getMetadataDistribution
     (attributeCode: string)
     (categoryCode: string)
     (categoryType: Metadata.CategoryType)
+    (keepZeroValues: bool)
     : Task<MetadataDistribution> =
     task {
         let corpus =
