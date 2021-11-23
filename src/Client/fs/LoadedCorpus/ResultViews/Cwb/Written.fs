@@ -79,8 +79,7 @@ let concordanceTable
 
     let nonFirstMultilingualRow maybeOrigCorrIndex maybeLemmaIndex (index: int) line =
         // Extract the IDs of all s-units (typically sentences) and put them in front of their respective s-units.
-        let matches =
-            Regex.Matches(line, "<(\w+_id)\s*(.+?)>(.*?)</\1>")
+        let matches = Regex.Matches(line, "<(\w+_id)\s*(.+?)>(.*?)</\1>")
 
         let components =
             if matches.Count > 0 then

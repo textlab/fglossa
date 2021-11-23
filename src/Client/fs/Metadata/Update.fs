@@ -38,8 +38,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                     OpenMetadataCategoryCode = Some category.Code
                     FetchedMetadataValues = [||] }
 
-            let cmd =
-                Cmd.ofMsg (FetchMetadataValuesForCategory category)
+            let cmd = Cmd.ofMsg (FetchMetadataValuesForCategory category)
 
             newModel, cmd
         else
@@ -267,8 +266,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
 
     | FetchMetadataForTexts ->
-        let columns =
-            [ for category in model.Corpus.MetadataTable -> category.Code ]
+        let columns = [ for category in model.Corpus.MetadataTable -> category.Code ]
 
         let cmd =
             Cmd.OfAsync.perform

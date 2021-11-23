@@ -90,8 +90,7 @@ module LoadedCorpus =
                 (concordanceModel: ConcordanceModel)
                 : LoadedCorpusModel * ConcordanceModel * Cmd<Msg> =
                 let registerResultPages results =
-                    let fetchedPages =
-                        results |> Array.map (fun page -> page.PageNumber)
+                    let fetchedPages = results |> Array.map (fun page -> page.PageNumber)
 
                     // Remove the fetched pages from the set of pages currently being fetched...
                     let pagesBeingFetched =
@@ -118,8 +117,7 @@ module LoadedCorpus =
                     loadedCorpusModel, concordanceModel, cmd
 
                 | SearchResultsReceived results ->
-                    let shouldRunMoreSteps =
-                        concordanceModel.NumSteps > results.SearchStep
+                    let shouldRunMoreSteps = concordanceModel.NumSteps > results.SearchStep
 
                     let newSearchParams =
                         loadedCorpusModel.Search.Params
@@ -211,9 +209,9 @@ module LoadedCorpus =
                         if sortKey <> loadedCorpusModel.Search.Params.SortKey then
                             // If we are changing the sort order, we need to fetch all specified pages
                             // regardless of whether those page numbers have already been fetched
-                            [| startPage .. endPage |]
+                            [| startPage..endPage |]
                         else
-                            [| startPage .. endPage |]
+                            [| startPage..endPage |]
                             // Ignore pages currently being fetched by another request
                             |> Array.filter (fun page ->
                                 concordanceModel.PagesBeingFetched
@@ -648,16 +646,14 @@ module LoadedCorpus =
     let update (msg: Msg) (loadedCorpusModel: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
         match msg with
         | MetadataMsg msg' ->
-            let newLoadedCorpusModel, cmd =
-                Update.Metadata.update msg' loadedCorpusModel
+            let newLoadedCorpusModel, cmd = Update.Metadata.update msg' loadedCorpusModel
 
             newLoadedCorpusModel, Cmd.map MetadataMsg cmd
 
         // The SetContextSize message is dispatched from the concordance view, but needs to be handled here
         // where the search params are available in the model and the Search message is also available
         | ShowingResultsMsg (ShowingResults.ConcordanceMsg (ShowingResults.Concordance.SetContextSize size)) ->
-            let newSearchParams =
-                { loadedCorpusModel.Search.Params with ContextSize = size }
+            let newSearchParams = { loadedCorpusModel.Search.Params with ContextSize = size }
 
             let newLoadedCorpusModel =
                 { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = newSearchParams } }
@@ -691,8 +687,7 @@ module LoadedCorpus =
                     else
                         query)
 
-            let newSearchParams =
-                { loadedCorpusModel.Search.Params with Queries = newQueries }
+            let newSearchParams = { loadedCorpusModel.Search.Params with Queries = newQueries }
 
             let newLoadedCorpusModel =
                 { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = newSearchParams } }
@@ -730,8 +725,7 @@ module LoadedCorpus =
             newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedSetMainString (query, queryIndex, term, termIndex, maybeValue) ->
-            let newTerm =
-                { term with MainStringValue = maybeValue }
+            let newTerm = { term with MainStringValue = maybeValue }
 
             let newLoadedCorpusModel =
                 updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
@@ -876,8 +870,7 @@ module LoadedCorpus =
                     else
                         section)
 
-            let newTerm =
-                { term with CategorySections = newCategorySections }
+            let newTerm = { term with CategorySections = newCategorySections }
 
             let newLoadedCorpusModel =
                 updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
@@ -925,8 +918,7 @@ module LoadedCorpus =
                     else
                         sectionMainCategories)
 
-            let newTerm =
-                { term with CategorySections = newCategorySections }
+            let newTerm = { term with CategorySections = newCategorySections }
 
             let newLoadedCorpusModel =
                 updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
@@ -958,8 +950,7 @@ module LoadedCorpus =
                     else
                         Some newI
 
-            let newTerm =
-                { term with PrecedingInterval = maybeNewInterval }
+            let newTerm = { term with PrecedingInterval = maybeNewInterval }
 
             let newLoadedCorpusModel =
                 updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
@@ -967,8 +958,7 @@ module LoadedCorpus =
             newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedAddTerm (query, queryIndex) ->
-            let newQueryTerms =
-                Array.append query.Terms [| QueryTerm.Default |]
+            let newQueryTerms = Array.append query.Terms [| QueryTerm.Default |]
 
             let newLoadedCorpusModel =
                 updateQuery loadedCorpusModel query queryIndex newQueryTerms
@@ -1046,8 +1036,7 @@ module LoadedCorpus =
                                 query.QueryString
                                 |> replace "\"__QUOTE__\"" "'\"'" })
 
-                let searchParams =
-                    { loadedCorpusModel.Search.Params with Queries = queries }
+                let searchParams = { loadedCorpusModel.Search.Params with Queries = queries }
 
                 let newLoadedCorpusModel =
                     { loadedCorpusModel with
@@ -1090,8 +1079,7 @@ type Msg =
 let init () : Model * Cmd<Msg> =
     let model = LoadingCorpus
 
-    let corpusCode =
-        Browser.Dom.window.location.hash.Split('/').[1]
+    let corpusCode = Browser.Dom.window.location.hash.Split('/').[1]
 
     let cmd =
         Cmd.OfAsync.perform serverApi.GetCorpusConfig corpusCode LoadingCorpus.FetchedCorpusConfig

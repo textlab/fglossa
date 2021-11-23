@@ -127,8 +127,7 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
                                    footer ] ]
 
 
-    let root =
-        Browser.Dom.document.getElementById ("media-player-popup-root")
+    let root = Browser.Dom.document.getElementById ("media-player-popup-root")
 
     ReactDOM.createPortal (popup, root)
 
@@ -144,8 +143,7 @@ let concordanceTable
         | None -> Html.none
 
     let extractFields result =
-        let m =
-            Regex.Match(result, "^<who_name\s+(\S*?)>:\s+(.*)\{\{(.+?)\}\}(.*?)$")
+        let m = Regex.Match(result, "^<who_name\s+(\S*?)>:\s+(.*)\{\{(.+?)\}\}(.*?)$")
 
         let groupValues =
             m.Groups
@@ -391,8 +389,7 @@ let concordanceTable
 
         let sId, pre, searchWord, post = extractFields line
 
-        let ortPre =
-            processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes pre
+        let ortPre = processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes pre
 
         let ortMatch =
             processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes searchWord

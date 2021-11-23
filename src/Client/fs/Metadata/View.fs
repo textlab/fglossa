@@ -563,8 +563,7 @@ module MetadataMenu =
                     else
                         menuList
 
-                let isMenuOpen =
-                    (Some category.Code = model.OpenMetadataCategoryCode)
+                let isMenuOpen = (Some category.Code = model.OpenMetadataCategoryCode)
 
                 Html.th [ prop.onClick (fun e ->
                               if e.altKey then
@@ -670,8 +669,7 @@ module MetadataMenu =
                                dispatch CloseSelectionTable)
                        prop.children [ header; table; footer ] ]
 
-        let root =
-            Browser.Dom.document.getElementById ("metadata-selection-popup-root")
+        let root = Browser.Dom.document.getElementById ("metadata-selection-popup-root")
 
         ReactDOM.createPortal (popup, root)
 
@@ -697,8 +695,7 @@ module MetadataMenu =
                           model.FetchedMinAndMax
                           dispatch
                   | CategoryMenu category ->
-                      let isOpen =
-                          (Some category.Code = model.OpenMetadataCategoryCode)
+                      let isOpen = (Some category.Code = model.OpenMetadataCategoryCode)
 
                       match category with
                       | :? StringCategory as cat ->

@@ -54,8 +54,7 @@ type MainCategory =
       Value: string
       Subcategories: Set<Subcategory> option }
     member this.ToCqp() =
-        let mainExpr =
-            $"{this.Attr}{this.Operator.ToOperatorString()}\"{this.Value}\""
+        let mainExpr = $"{this.Attr}{this.Operator.ToOperatorString()}\"{this.Value}\""
 
         let expressions =
             match this.Subcategories with
@@ -265,7 +264,7 @@ let handleQuotedOrEmptyTerm (termStr: string) interval (maybeCwbAttributeMenu: C
 
     if termStr.Length > 2 then
         // quoted term
-        let form = termStr.[1..(termStr.Length - 2)]
+        let form = termStr.[1 .. (termStr.Length - 2)]
         let isStart = Regex.IsMatch(form, ".+\.\*$")
         let isEnd = Regex.IsMatch(form, "^\.\*.+")
         let isMiddle = isStart && isEnd
@@ -315,8 +314,7 @@ let handleAttributeValue
             IsMiddle = isMiddle }
 
     let processOtherForms (term: QueryTerm) (name, operator, value) =
-        let newExtraForms =
-            addOrRemoveExtraForms term name operator value
+        let newExtraForms = addOrRemoveExtraForms term name operator value
 
         { term with ExtraForms = newExtraForms }
 
@@ -379,13 +377,11 @@ let handleAttributeValue
                 let m = Regex.Match(inputStr, "\((.+)\)")
 
                 if m.Success then
-                    let categorySections =
-                        Regex.Matches(m.Groups.[1].Value, "\(\((.+?)\)\)")
+                    let categorySections = Regex.Matches(m.Groups.[1].Value, "\(\((.+?)\)\)")
 
                     let sectionsByAttributeMenuIndex =
                         [ for categorySection in categorySections ->
-                              let categoryStrings =
-                                  Regex.Split(categorySection.Groups.[0].Value, "\)[\|\&]\(")
+                              let categoryStrings = Regex.Split(categorySection.Groups.[0].Value, "\)[\|\&]\(")
 
                               let categories =
                                   [ for category in categoryStrings ->
@@ -474,8 +470,7 @@ type Query =
         // A quoted string or a single unspecified token
         let quotedOrEmptyTermRx = "\".*?\"|\[\]"
 
-        let termsRegex =
-            $"{intervalRx}|{quotedOrEmptyTermRx}|{attributeValueRx}"
+        let termsRegex = $"{intervalRx}|{quotedOrEmptyTermRx}|{attributeValueRx}"
 
         cqpQuery
         // remove all whitespace so we don't have to allow for that everywhere in our later regexes
@@ -511,8 +506,7 @@ type Query =
                     terms <- Array.append terms [| term |]
                     latestInterval <- None
                 elif Regex.IsMatch(termStr, quotedOrEmptyTermRx) then
-                    let term =
-                        handleQuotedOrEmptyTerm termStr latestInterval corpus.CwbAttributeMenu
+                    let term = handleQuotedOrEmptyTerm termStr latestInterval corpus.CwbAttributeMenu
 
                     terms <- Array.append terms [| term |]
                     latestInterval <- None)

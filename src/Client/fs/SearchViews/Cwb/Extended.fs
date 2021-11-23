@@ -443,8 +443,7 @@ let view
                               && selectedCat.Value = mainAttrValue)
                           |> function
                               | Some selectedMainCat ->
-                                  let subcatStr =
-                                      checkForSubcatValues selectedMainCat subcategories
+                                  let subcatStr = checkForSubcatValues selectedMainCat subcategories
 
                                   Bulma.tag [ if selectedMainCat.Operator = NotEquals then
                                                   color.isDanger
