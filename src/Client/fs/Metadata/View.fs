@@ -75,8 +75,8 @@ module MetadataMenu =
             /// to define the argument as a props object and not as separate arguments, since this
             /// function will be called directly by React code and not transformed by Feliz.
             let listItem (props: {| index: int; style: obj |}) =
-                // let selectOption = fetchedMetadataValues.[props.index]
-                let metadataValue = fetchedMetadataValues.[props.index]
+                // let selectOption = fetchedMetadataValues[props.index]
+                let metadataValue = fetchedMetadataValues[props.index]
 
                 let selectOption =
                     { Name = metadataValue
@@ -245,7 +245,7 @@ module MetadataMenu =
         React.useEffect ((fun () -> setIntervalState (fun _ -> intervalStateFromProps)), [| box isOpen |])
 
         let submitChanges label onChangeMsg =
-            match intervalState.[label] with
+            match intervalState[label] with
             | Some v ->
                 dispatch (onChangeMsg (category, v))
                 dispatch FetchTextAndTokenCounts
@@ -253,9 +253,9 @@ module MetadataMenu =
 
         let hasChanged label =
             if label = "From:" then
-                intervalState.["From:"] <> maybeFrom
+                intervalState["From:"] <> maybeFrom
             else
-                intervalState.["To:"] <> maybeTo
+                intervalState["To:"] <> maybeTo
 
         let interval =
             let boundaryInput
@@ -317,12 +317,8 @@ module MetadataMenu =
                                                     style.marginBottom 5
                                                     style.marginLeft 10 ]
                                        prop.children (
-                                           Html.tbody [ boundaryInput
-                                                            "From:"
-                                                            intervalState.["From:"]
-                                                            fst
-                                                            SetIntervalFrom
-                                                        boundaryInput "To:" intervalState.["To:"] snd SetIntervalTo ]
+                                           Html.tbody [ boundaryInput "From:" intervalState["From:"] fst SetIntervalFrom
+                                                        boundaryInput "To:" intervalState["To:"] snd SetIntervalTo ]
                                        ) ]
                       else
                           let fromText = maybeFrom |> Option.defaultValue ""

@@ -168,7 +168,7 @@ let getMetadataForTexts
                     // IDictionary<string, obj>, we cast to that in order to access the data dynamically
                     [| for (row: IDictionary<string, obj>) in rows |> Seq.cast ->
                            [| for column in columns ->
-                                  let text = row.[column] |> string
+                                  let text = row[column] |> string
                                   if text <> "\N" then text else "" |] |]
                 | None -> [||]
             | Error ex -> raise ex
@@ -206,7 +206,7 @@ let getMetadataForSingleText
                     let row: IDictionary<string, obj> = rows |> Seq.cast |> Seq.head
 
                     [ for category in categories ->
-                          let text = row.[category.Code] |> string
+                          let text = row[category.Code] |> string
                           let value = if text <> "\N" then text else ""
 
                           { Name = category.Name; Value = value } ]

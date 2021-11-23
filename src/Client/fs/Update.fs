@@ -237,7 +237,7 @@ module LoadedCorpus =
                     else
                         // Calculate the first and last result index (zero-based) to request from the server
                         let firstResult =
-                            (pageNumbers.[0] - 1)
+                            (pageNumbers[0] - 1)
                             * loadedCorpusModel.Search.Params.PageSize
                             |> uint64
 
@@ -442,9 +442,9 @@ module LoadedCorpus =
                     let listItems =
                         [| for row in rows ->
                                let m = Regex.Match(row, "(\d+)\s+(.+)")
-                               let freq = System.UInt64.Parse(m.Groups.[1].Value)
+                               let freq = System.UInt64.Parse(m.Groups[1].Value)
 
-                               let attrValues = m.Groups.[2].Value.Split('\t')
+                               let attrValues = m.Groups[ 2 ].Value.Split('\t')
 
                                { Frequency = freq
                                  AttributeValues = attrValues } |]
@@ -1079,7 +1079,7 @@ type Msg =
 let init () : Model * Cmd<Msg> =
     let model = LoadingCorpus
 
-    let corpusCode = Browser.Dom.window.location.hash.Split('/').[1]
+    let corpusCode = Browser.Dom.window.location.hash.Split('/')[1]
 
     let cmd =
         Cmd.OfAsync.perform serverApi.GetCorpusConfig corpusCode LoadingCorpus.FetchedCorpusConfig

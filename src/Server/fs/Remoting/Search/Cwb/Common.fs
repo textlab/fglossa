@@ -380,7 +380,7 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
 
             if
                 results.Length > 1
-                && Regex.IsMatch(results.[0], "PARSE ERROR|CQP Error")
+                && Regex.IsMatch(results[0], "PARSE ERROR|CQP Error")
             then
                 return failwith $"CQP error: {results}"
             else

@@ -150,17 +150,17 @@ let concordanceTable
             |> Seq.map (fun group -> group.Value)
             |> Seq.toList
 
-        let sId = groupValues.[1]
+        let sId = groupValues[1]
 
         let pre =
-            groupValues.[2]
+            groupValues[2]
             // If the result begins with a who_name tag with the same ID as the one for the
             // actual match, it feels redundant (since that speaker ID is listed just
             // to the left of it), so just remove it.
             |> replace $"^<who_name\s+{sId}>" ""
 
         let searchWord =
-            groupValues.[3]
+            groupValues[3]
             |> fun m ->
                 // Do the same with the match if there is no left context
                 if String.IsNullOrWhiteSpace(pre) then
@@ -168,7 +168,7 @@ let concordanceTable
                 else
                     m
 
-        let post = groupValues.[4]
+        let post = groupValues[4]
 
         (sId, pre, searchWord, post)
 
@@ -301,7 +301,7 @@ let concordanceTable
             let maybeUrls =
                 match maybeUrlsIndex with
                 | Some urlsIndex ->
-                    attrs.[urlsIndex]
+                    attrs[urlsIndex]
                     |> replace "!!" "/"
                     |> fun s -> s.Split('$')
                     |> Array.filter (not << String.IsNullOrWhiteSpace)
@@ -309,7 +309,7 @@ let concordanceTable
                 | None -> None
 
             let dt =
-                attrs.[displayedFieldIndex]
+                attrs[displayedFieldIndex]
                 |> replace "__UNDEF__" ""
 
             let displayedText =
@@ -359,7 +359,7 @@ let concordanceTable
 
             if m.Success then
                 // Extract the speaker ID and put it in front of its segment
-                let speakerId = m.Groups.[1].Value
+                let speakerId = m.Groups[1].Value
 
                 Some(
                     (Html.span [ prop.key index

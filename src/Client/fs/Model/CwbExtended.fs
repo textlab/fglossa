@@ -234,7 +234,7 @@ let handleInterval intervalStr =
         let m = Regex.Match(intervalStr, "(\d+),")
 
         if m.Success then
-            m.Groups.[1].Value |> int |> Some
+            m.Groups[1].Value |> int |> Some
         else
             None
 
@@ -242,7 +242,7 @@ let handleInterval intervalStr =
         let m = Regex.Match(intervalStr, ",(\d+)")
 
         if m.Success then
-            m.Groups.[1].Value |> int |> Some
+            m.Groups[1].Value |> int |> Some
         else
             None
 
@@ -264,7 +264,7 @@ let handleQuotedOrEmptyTerm (termStr: string) interval (maybeCwbAttributeMenu: C
 
     if termStr.Length > 2 then
         // quoted term
-        let form = termStr.[1 .. (termStr.Length - 2)]
+        let form = termStr[1 .. (termStr.Length - 2)]
         let isStart = Regex.IsMatch(form, ".+\.\*$")
         let isEnd = Regex.IsMatch(form, "^\.\*.+")
         let isMiddle = isStart && isEnd
@@ -334,7 +334,7 @@ let handleAttributeValue
 
                     if m.Success then
                         // The term contains something besides categories
-                        Some m.Groups.[1].Value
+                        Some m.Groups[1].Value
                     else
                         // The term does NOT contain anything besides categories
                         None
@@ -350,7 +350,7 @@ let handleAttributeValue
                         replace "%c" ""
                         >> fun s ->
                             let m = Regex.Match(s, "(.+?)(!?=)\"(.+)\"")
-                            (m.Groups.[1].Value, AttrOperator.OfString(m.Groups.[2].Value), m.Groups.[3].Value)
+                            (m.Groups[1].Value, AttrOperator.OfString(m.Groups[2].Value), m.Groups[3].Value)
                     )
 
                 let h = Array.head attrValuePairs
@@ -377,19 +377,19 @@ let handleAttributeValue
                 let m = Regex.Match(inputStr, "\((.+)\)")
 
                 if m.Success then
-                    let categorySections = Regex.Matches(m.Groups.[1].Value, "\(\((.+?)\)\)")
+                    let categorySections = Regex.Matches(m.Groups[1].Value, "\(\((.+?)\)\)")
 
                     let sectionsByAttributeMenuIndex =
                         [ for categorySection in categorySections ->
-                              let categoryStrings = Regex.Split(categorySection.Groups.[0].Value, "\)[\|\&]\(")
+                              let categoryStrings = Regex.Split(categorySection.Groups[0].Value, "\)[\|\&]\(")
 
                               let categories =
                                   [ for category in categoryStrings ->
                                         let attributeValuePairs =
                                             [ for pair in Regex.Matches(category, "(\w+)(!?=)\"(.+?)\"") ->
-                                                  { Attr = pair.Groups.[1].Value
-                                                    Operator = pair.Groups.[2].Value |> AttrOperator.OfString
-                                                    Values = pair.Groups.[3].Value.Split('|') |> Set.ofArray } ]
+                                                  { Attr = pair.Groups[1].Value
+                                                    Operator = pair.Groups[2].Value |> AttrOperator.OfString
+                                                    Values = pair.Groups[ 3 ].Value.Split('|') |> Set.ofArray } ]
 
                                         let firstPair = List.head attributeValuePairs
 
@@ -430,7 +430,7 @@ let handleAttributeValue
                     // shown in the attribute popup in the CWB extended search view.
                     [ for i in 0 .. cwbAttributeMenu.Length - 1 ->
                           if sectionsByAttributeMenuIndex.ContainsKey(i) then
-                              sectionsByAttributeMenuIndex.[i]
+                              sectionsByAttributeMenuIndex[i]
                           else
                               Set.empty ]
                 else
@@ -490,7 +490,7 @@ type Query =
             termStrings
             |> List.iter (fun (termStr, groups) ->
                 if Regex.IsMatch(termStr, intervalRx) then
-                    latestInterval <- handleInterval groups.[1]
+                    latestInterval <- handleInterval groups[1]
                 elif Regex.IsMatch(termStr, attributeValueRx) then
                     let isSegmentInitial = Regex.IsMatch(termStr, $"<{sTag}>")
                     let isSegmentFinal = Regex.IsMatch(termStr, $"</{sTag}>")

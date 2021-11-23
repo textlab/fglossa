@@ -47,8 +47,8 @@ module Spoken =
                     |> Seq.collect (fun b -> b.Split(':'))
                     |> Seq.sumBy (fun b ->
                         let parts = b.Split('-')
-                        let startBound = Int64.Parse(parts.[0])
-                        let endBound = Int64.Parse(parts.[1])
+                        let startBound = Int64.Parse(parts[0])
+                        let endBound = Int64.Parse(parts[1])
                         endBound - startBound + 1L)
                 | Error ex -> raise ex
 

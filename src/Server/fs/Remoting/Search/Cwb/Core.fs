@@ -180,10 +180,10 @@ let downloadFrequencyList
                 let m = Regex.Match(row, "^(\d+)\s+(.+)")
 
                 // Put the count in the first column
-                worksheet.Cell(rowIndex + 2, 1).Value <- int (m.Groups.[1].Value)
+                worksheet.Cell(rowIndex + 2, 1).Value <- int (m.Groups[1].Value)
 
                 // Create a colunn for each attribute value in the row
-                m.Groups.[2].Value.Split('\t')
+                m.Groups[ 2 ].Value.Split('\t')
                 |> Array.iteri (fun columnIndex attrValue ->
                     worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- attrValue))
 
@@ -213,11 +213,11 @@ let downloadFrequencyList
                     let m = Regex.Match(row, "^(\d+)\s+(.+)")
 
                     let attrValues =
-                        m.Groups.[2].Value.Split('\t')
+                        m.Groups[ 2 ].Value.Split('\t')
                         |> Array.map (fun attrValue -> $"\"{attrValue}\"")
                         |> String.concat ","
 
-                    $"{m.Groups.[1].Value},{attrValues}")
+                    $"{m.Groups[1].Value},{attrValues}")
 
             File.WriteAllLines(outputFilename, Array.append [| headers |] valueRows)
 
@@ -268,9 +268,9 @@ let getMetadataDistribution
             |> Array.fold
                 (fun (distrMap: Map<string, Map<string, uint64>>) hit ->
                     let parts = hit.Split("\t")
-                    let attrValue = parts.[0]
-                    let textId = parts.[1]
-                    let freq = uint64 parts.[2]
+                    let attrValue = parts[0]
+                    let textId = parts[1]
+                    let freq = uint64 parts[2]
 
                     // Add the mapping from textId to frequency to the map associated
                     // with the current attribute value, creating a new map with only

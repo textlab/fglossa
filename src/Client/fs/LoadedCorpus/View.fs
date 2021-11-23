@@ -511,7 +511,7 @@ module ResultsView =
                                )
                                prop.onChange (fun (s: string) ->
                                    if s <> "" then
-                                       let category = corpus.MetadataQuickView.[int s]
+                                       let category = corpus.MetadataQuickView[int s]
 
                                        dispatch (ShowingResults.MetadataDistribution.SelectCategory category)) ]
 

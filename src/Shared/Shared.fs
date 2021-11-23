@@ -9,7 +9,7 @@ module StringUtils =
 
     let truncate (maxLength: int) (s: string) =
         if s.Length > maxLength - 3 then
-            s.[0 .. maxLength - 3] + "..."
+            s[0 .. maxLength - 3] + "..."
         else
             s
 
