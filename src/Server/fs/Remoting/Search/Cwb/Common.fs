@@ -134,16 +134,14 @@ let printPositionsMatchingMetadata
             let metadataSelectionSql =
                 generateMetadataSelectionSql None searchParams.MetadataSelection
 
-            let langSql =
-                generateLanguageSql corpus searchParams.Queries
+            let langSql = generateLanguageSql corpus searchParams.Queries
 
             let limitsSql = generateLimitsSql corpus startpos endpos
 
             let sql =
                 $"SELECT {positionFields} FROM texts WHERE 1 = 1{metadataSelectionSql}{langSql}{limitsSql}"
 
-            let parameters =
-                metadataSelectionToParamDict searchParams.MetadataSelection
+            let parameters = metadataSelectionToParamDict searchParams.MetadataSelection
 
             match corpus.Config.Modality with
             | Spoken ->
@@ -173,8 +171,7 @@ let printPositionsMatchingMetadata
                 let connStr = getConnectionString corpus.Config.Code
                 use conn = new SqliteConnection(connStr)
 
-                let sql =
-                    "SELECT REPLACE(REPLACE(`bounds`, '-', '\t'), ':', '\n') FROM texts"
+                let sql = "SELECT REPLACE(REPLACE(`bounds`, '-', '\t'), ':', '\n') FROM texts"
 
                 let! res = query logger conn sql None
 

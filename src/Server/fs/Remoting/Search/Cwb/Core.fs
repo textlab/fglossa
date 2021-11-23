@@ -36,8 +36,7 @@ let maxCqpProcesses = 8
 
 let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams) (corpus: Corpus) =
     async {
-        let cqpProcs =
-            Process.runCmdWithOutput "pgrep" "-f cqp"
+        let cqpProcs = Process.runCmdWithOutput "pgrep" "-f cqp"
 
         let nCqpProcs = cqpProcs.Split('\n').Length
 
@@ -75,8 +74,7 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                 else
                     searchParams.SearchId
 
-            let searchParamsWithSearchId =
-                { searchParams with SearchId = searchId }
+            let searchParamsWithSearchId = { searchParams with SearchId = searchId }
 
             let! searchResults =
                 match corpus.Config.Modality with
@@ -120,8 +118,7 @@ let getFrequencyList
     (isCaseSensitive: bool)
     : Async<string []> =
     async {
-        let corpus =
-            Corpora.Server.getCorpus searchParams.CorpusCode
+        let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
 
         let! results =
             let caseStr = if isCaseSensitive then " %c" else ""
@@ -161,8 +158,7 @@ let downloadFrequencyList
             | Tsv -> ".tsv"
             | Csv -> ".csv"
 
-        let downloadFilename =
-            $"tmp/{searchParams.SearchId}_freq{extension}"
+        let downloadFilename = $"tmp/{searchParams.SearchId}_freq{extension}"
 
         let outputFilename = $"../Client/public/{downloadFilename}"
 
@@ -170,8 +166,7 @@ let downloadFrequencyList
         | Excel ->
             use workbook = new Excel.XLWorkbook()
 
-            let worksheet =
-                workbook.Worksheets.Add("Frequency list")
+            let worksheet = workbook.Worksheets.Add("Frequency list")
 
             // Create headers
             worksheet.Cell(1, 1).Value <- "Count"
@@ -244,16 +239,14 @@ let getMetadataDistribution
     (keepZeroValues: bool)
     : Task<MetadataDistribution> =
     task {
-        let corpus =
-            Corpora.Server.getCorpus searchParams.CorpusCode
+        let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
 
         let textIdAttr =
             match corpus.Config.Modality with
             | Spoken -> "who_name"
             | Written -> "tid"
 
-        let queryName =
-            cwbQueryName corpus searchParams.SearchId
+        let queryName = cwbQueryName corpus searchParams.SearchId
 
         let namedQuery =
             match corpus.Config.Modality with
@@ -315,8 +308,7 @@ let getMetadataDistribution
             $"SELECT {catCode} AS CategoryValue, GROUP_CONCAT(DISTINCT tid) AS TextIds FROM texts \
              WHERE 1 = 1{metadataSelectionSql} GROUP BY {catCode}"
 
-        let parameters =
-            metadataSelectionToParamDict searchParams.MetadataSelection
+        let parameters = metadataSelectionToParamDict searchParams.MetadataSelection
 
         // For string categories, we return the values we get from the database, but for numerical categories
         // we need to convert them to strings. Because of type checking on the data we get from the database,

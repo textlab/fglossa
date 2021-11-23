@@ -105,8 +105,7 @@ let browserPipeline =
         set_header "Expires" "0"
     }
 
-let htmlRouter =
-    router { get "/" (htmlView Index.layout) }
+let htmlRouter = router { get "/" (htmlView Index.layout) }
 
 let browserRouter =
     router {
@@ -138,8 +137,7 @@ let outputTemplate =
 
 // Giraffe.SerilogExtensions has native destructuring mechanism.
 // This helps Serilog deserialize the fsharp types like unions/records
-let typeConf =
-    LoggerConfiguration().Destructure.FSharpTypes()
+let typeConf = LoggerConfiguration().Destructure.FSharpTypes()
 
 Log.Logger <-
     typeConf

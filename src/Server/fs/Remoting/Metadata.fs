@@ -73,8 +73,7 @@ let getMetadataForCategory
 
         let catCode = sanitizeString categoryCode
 
-        let metadataSelectionSql =
-            generateMetadataSelectionSql (Some catCode) selection
+        let metadataSelectionSql = generateMetadataSelectionSql (Some catCode) selection
 
         let sql =
             $"SELECT distinct({catCode}) FROM texts WHERE {catCode} <> '' AND {catCode} IS NOT NULL{metadataSelectionSql} ORDER BY {catCode}"
@@ -102,8 +101,7 @@ let getMinAndMaxForCategory
 
         let catCode = sanitizeString categoryCode
 
-        let metadataSelectionSql =
-            generateMetadataSelectionSql (Some catCode) selection
+        let metadataSelectionSql = generateMetadataSelectionSql (Some catCode) selection
 
         let sql =
             $"SELECT min({catCode}) as Min, max({catCode}) as Max FROM texts WHERE 1 = 1{metadataSelectionSql}"
@@ -143,8 +141,7 @@ let getMetadataForTexts
             |> List.map sanitizeString
             |> String.concat ", "
 
-        let metadataSelectionSql =
-            generateMetadataSelectionSql None selection
+        let metadataSelectionSql = generateMetadataSelectionSql None selection
 
         let orderBy =
             match maybeSortInfo with
@@ -189,8 +186,7 @@ let getMetadataForSingleText
 
         use conn = new SqliteConnection(connStr)
 
-        let sql =
-            $"SELECT * FROM texts WHERE tid = @tid LIMIT 1"
+        let sql = $"SELECT * FROM texts WHERE tid = @tid LIMIT 1"
 
         let parameters = [ "tid" => textId ] |> dict
 

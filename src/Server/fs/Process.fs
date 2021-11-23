@@ -1,35 +1,30 @@
 module Process
 
 let runCmd (cmd: string) (args: string) =
-    use proc =
-        System.Diagnostics.Process.Start(cmd, args)
+    use proc = System.Diagnostics.Process.Start(cmd, args)
 
     proc.WaitForExit()
 
 let runCmdWithOutput (cmd: string) (args: string) =
-    let startInfo =
-        System.Diagnostics.ProcessStartInfo(cmd, args)
+    let startInfo = System.Diagnostics.ProcessStartInfo(cmd, args)
 
     startInfo.UseShellExecute <- false
     startInfo.RedirectStandardOutput <- true
 
-    use proc =
-        System.Diagnostics.Process.Start(startInfo)
+    use proc = System.Diagnostics.Process.Start(startInfo)
 
     let output = proc.StandardOutput.ReadToEnd()
     proc.WaitForExit()
     output
 
 let runCmdWithInputAndOutput (cmd: string) (args: string) (input: string) =
-    let startInfo =
-        System.Diagnostics.ProcessStartInfo(cmd, args)
+    let startInfo = System.Diagnostics.ProcessStartInfo(cmd, args)
 
     startInfo.UseShellExecute <- false
     startInfo.RedirectStandardOutput <- true
     startInfo.RedirectStandardInput <- true
 
-    use proc =
-        System.Diagnostics.Process.Start(startInfo)
+    use proc = System.Diagnostics.Process.Start(startInfo)
 
     use writer = proc.StandardInput
     writer.Write(input)
@@ -40,16 +35,14 @@ let runCmdWithInputAndOutput (cmd: string) (args: string) (input: string) =
     output
 
 let runCmdWithInputOutputAndError (cmd: string) (args: string) (input: string) =
-    let startInfo =
-        System.Diagnostics.ProcessStartInfo(cmd, args)
+    let startInfo = System.Diagnostics.ProcessStartInfo(cmd, args)
 
     startInfo.UseShellExecute <- false
     startInfo.RedirectStandardInput <- true
     startInfo.RedirectStandardOutput <- true
     startInfo.RedirectStandardError <- true
 
-    use proc =
-        System.Diagnostics.Process.Start(startInfo)
+    use proc = System.Diagnostics.Process.Start(startInfo)
 
     use writer = proc.StandardInput
     writer.Write(input)
@@ -66,8 +59,7 @@ let runCmdWithInputOutputErrorAndEncoding
     (encoding: System.Text.Encoding)
     (input: string)
     =
-    let startInfo =
-        System.Diagnostics.ProcessStartInfo(cmd, args)
+    let startInfo = System.Diagnostics.ProcessStartInfo(cmd, args)
 
     startInfo.UseShellExecute <- false
     startInfo.RedirectStandardInput <- true
@@ -76,8 +68,7 @@ let runCmdWithInputOutputErrorAndEncoding
     startInfo.StandardOutputEncoding <- encoding
     startInfo.StandardInputEncoding <- encoding
 
-    use proc =
-        System.Diagnostics.Process.Start(startInfo)
+    use proc = System.Diagnostics.Process.Start(startInfo)
 
     use writer = proc.StandardInput
     writer.Write(input)

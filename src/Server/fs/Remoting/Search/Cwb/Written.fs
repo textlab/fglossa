@@ -60,8 +60,7 @@ let randomReduceCommand
     // Find the proportion of the total number of tokens that we are searching with this cpu in this search
     // step, and reduce the number of hits retrieved to the corresponding proportion of the number of random
     // hits we have asked for.
-    let proportion =
-        (float (endpos - startpos + 1UL) / float corpusSize)
+    let proportion = (float (endpos - startpos + 1UL) / float corpusSize)
 
     let nRandom =
         (float numRandomHits * proportion)
@@ -114,8 +113,7 @@ let cqpInit
 
 let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (maybeCommand: string option) =
     async {
-        let numToReturn =
-            searchParams.End - searchParams.Start + 1UL // number of results to return initially
+        let numToReturn = searchParams.End - searchParams.Start + 1UL // number of results to return initially
 
         let cwbCorpus =
             (cwbCorpusName corpus searchParams.Queries)
@@ -128,14 +126,21 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
             let! results =
                 getParts corpus searchParams.Step corpusSize maybeCommand
                 |> Array.mapi (fun cpu (startpos, endpos) ->
-                    let queryName =
-                        cwbQueryName corpus searchParams.SearchId
+                    let queryName = cwbQueryName corpus searchParams.SearchId
 
                     let namedQuery = $"{queryName}_{searchParams.Step}_{cpu}"
 
                     let cqpInitCommands =
                         [ yield!
-                            constructQueryCommands logger corpus searchParams namedQuery startpos endpos None (Some cpu)
+                              constructQueryCommands
+                                  logger
+                                  corpus
+                                  searchParams
+                                  namedQuery
+                                  startpos
+                                  endpos
+                                  None
+                                  (Some cpu)
                           match searchParams.NumRandomHits with
                           | Some numRandomHits ->
                               yield!
@@ -357,18 +362,14 @@ let runCqpScripts logger corpus scripts =
 
 
 let getSortedPositions (corpus: Corpus) (searchParams: SearchParams) =
-    let namedQuery =
-        cwbQueryName corpus searchParams.SearchId
+    let namedQuery = cwbQueryName corpus searchParams.SearchId
 
-    let resultPositionsFilename =
-        $"/tmp/glossa/result_positions_{namedQuery}"
+    let resultPositionsFilename = $"/tmp/glossa/result_positions_{namedQuery}"
 
     if not (File.Exists(resultPositionsFilename)) then
-        let nonzeroFiles =
-            getNonzeroFiles corpus searchParams namedQuery 0 None
+        let nonzeroFiles = getNonzeroFiles corpus searchParams namedQuery 0 None
 
-        let firstCommands =
-            cqpInit corpus searchParams None None namedQuery []
+        let firstCommands = cqpInit corpus searchParams None None namedQuery []
 
         let moreCommands =
             nonzeroFiles
@@ -417,16 +418,14 @@ let getSearchResults
     (pageNumbers: ResultPageNumbers)
     =
     async {
-        let queryName =
-            cwbQueryName corpus searchParams.SearchId
+        let queryName = cwbQueryName corpus searchParams.SearchId
 
         let! rawResults =
             if corpus.Config.MultiCpuBounds.IsSome then
                 // The corpus uses multiple CPUs
                 match searchParams.SortKey with
                 | Position ->
-                    let namedQuery =
-                        cwbQueryName corpus searchParams.SearchId
+                    let namedQuery = cwbQueryName corpus searchParams.SearchId
 
                     let maybeNumResultsMinusOne =
                         if searchParams.End > 0UL then
@@ -441,7 +440,7 @@ let getSearchResults
                         (nonzeroFiles, indexes)
                         ||> Seq.map2 (fun resultFile (start, ``end``) ->
                             [ yield!
-                                cqpInit corpus searchParams (Some searchParams.SortKey) maybeAttributes namedQuery []
+                                  cqpInit corpus searchParams (Some searchParams.SortKey) maybeAttributes namedQuery []
                               $"cat {resultFile} {start} {``end``}" ])
 
                     async {
@@ -461,8 +460,7 @@ let getSearchResults
                     }
 
                 | _ ->
-                    let namedQuery =
-                        $"{queryName}_sort_by_{searchParams.SortKey}"
+                    let namedQuery = $"{queryName}_sort_by_{searchParams.SortKey}"
 
                     let undumpSaveCommands =
                         if File.Exists($"tmp/{cwbCorpusName corpus searchParams.Queries}:{namedQuery}") then
@@ -476,7 +474,7 @@ let getSearchResults
 
                     let commands =
                         [ yield!
-                            cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery undumpSaveCommands
+                              cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery undumpSaveCommands
                           $"cat {namedQuery} {searchParams.Start} {searchParams.End}" ]
 
                     async {
@@ -500,8 +498,7 @@ let getSearchResults
             rawResults
             |> transformResults searchParams.Queries
 
-        let hitPages =
-            hits |> Array.chunkBySize searchParams.PageSize
+        let hitPages = hits |> Array.chunkBySize searchParams.PageSize
 
         return
             (hitPages, pageNumbers)

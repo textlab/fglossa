@@ -18,8 +18,7 @@ module Spoken =
 
             use conn = new SqliteConnection(connStr)
 
-            let metadataSelectionSql =
-                generateMetadataSelectionSql None selection
+            let metadataSelectionSql = generateMetadataSelectionSql None selection
 
             let parameters = metadataSelectionToParamDict selection
 
@@ -36,8 +35,7 @@ module Spoken =
                     | None -> 0L
                 | Error ex -> raise ex
 
-            let tokenSql =
-                $"SELECT bounds FROM texts WHERE 1 = 1{metadataSelectionSql}"
+            let tokenSql = $"SELECT bounds FROM texts WHERE 1 = 1{metadataSelectionSql}"
 
             let! tokenRes = query logger conn tokenSql (Some parameters)
 
@@ -66,8 +64,7 @@ module Written =
 
             use conn = new SqliteConnection(connStr)
 
-            let metadataSelectionSql =
-                generateMetadataSelectionSql None selection
+            let metadataSelectionSql = generateMetadataSelectionSql None selection
 
             let sql =
                 $"SELECT count(*) as NumTexts, sum(endpos - startpos + 1) as NumTokens FROM texts WHERE 1 = 1{metadataSelectionSql}"

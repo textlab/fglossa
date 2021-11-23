@@ -10,19 +10,16 @@ open Remoting.Search.Cwb.Common
 
 let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (maybeCommand: string option) =
     async {
-        let namedQuery =
-            cwbQueryName corpus searchParams.SearchId
+        let namedQuery = cwbQueryName corpus searchParams.SearchId
 
         let startpos = 0UL
 
-        let cwbCorpus =
-            cwbCorpusName corpus searchParams.Queries
+        let cwbCorpus = cwbCorpusName corpus searchParams.Queries
 
         let corpusSizes = corpus.CorpusSizes()
         let endpos = corpusSizes.[cwbCorpus.ToLower()]
 
-        let displayedAttrsCmd =
-            displayedAttrsCommand corpus searchParams.Queries None
+        let displayedAttrsCmd = displayedAttrsCommand corpus searchParams.Queries None
 
         let commands =
             [ "set DataDirectory \"tmp/glossa\""
@@ -130,8 +127,7 @@ let transformResults (corpus: Corpus) (queries: Query []) (hits: string []) =
              Text = ls } |]
 
 let sortContextWithinWho namedQuery sortKey =
-    let tmpfile =
-        $"\"tmp/{namedQuery}_sort_by_{sortKey}\""
+    let tmpfile = $"\"tmp/{namedQuery}_sort_by_{sortKey}\""
 
     let (bound, ``match``) =
         match sortKey with
@@ -165,11 +161,9 @@ let getSearchResults
     (pageNumbers: ResultPageNumbers)
     =
     async {
-        let namedQuery =
-            cwbQueryName corpus searchParams.SearchId
+        let namedQuery = cwbQueryName corpus searchParams.SearchId
 
-        let sortCmds =
-            sortWithinWho namedQuery searchParams.SortKey
+        let sortCmds = sortWithinWho namedQuery searchParams.SortKey
 
         let commands =
             [ "set DataDirectory \"tmp/glossa\""
@@ -190,8 +184,7 @@ let getSearchResults
             rawResults
             |> transformResults corpus searchParams.Queries
 
-        let hitPages =
-            hits |> Array.chunkBySize searchParams.PageSize
+        let hitPages = hits |> Array.chunkBySize searchParams.PageSize
 
         return
             (hitPages, pageNumbers)
@@ -233,13 +226,11 @@ let extractMediaInfo (corpus: Corpus) result =
     // we extract the line key from the segment containing the actual match (marked
     // by double braces).
     let movieLoc =
-        let m =
-            Regex.Match(result', "<who_avfile\s+([^>]+)>[^<]*\{\{")
+        let m = Regex.Match(result', "<who_avfile\s+([^>]+)>[^<]*\{\{")
 
         m.Groups.[1].Value
 
-    let result'' =
-        result' |> replace "</?who_avfile ?.*?>" ""
+    let result'' = result' |> replace "</?who_avfile ?.*?>" ""
 
     let mediaObjLines =
         [ for m in Regex.Matches(result'', "<who_stop.+?>(.*?)</who_stop>") -> m.Groups.[1].Value ]
@@ -274,8 +265,7 @@ let extractMediaInfo (corpus: Corpus) result =
                             |> List.truncate attrValues.Length
                             |> List.toArray
 
-                        let attrs =
-                            Array.zip attrNames attrValues |> Map.ofArray
+                        let attrs = Array.zip attrNames attrValues |> Map.ofArray
 
                         (index, attrs))
                   From = starttimes.[index]
@@ -309,11 +299,9 @@ let extractMediaInfo (corpus: Corpus) result =
 
 let getMediaObject logger (searchParams: SearchParams) mediaPlayerType pageNumber rowIndex contextSize contextUnit =
     async {
-        let corpus =
-            Corpora.Server.getCorpus searchParams.CorpusCode
+        let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
 
-        let namedQuery =
-            cwbQueryName corpus searchParams.SearchId
+        let namedQuery = cwbQueryName corpus searchParams.SearchId
 
         let unitStr =
             if contextUnit = "episode" then
