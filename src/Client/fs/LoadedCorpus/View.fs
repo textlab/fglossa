@@ -320,8 +320,7 @@ module ResultsView =
                   Bulma.levelItem [ prop.style [ style.marginRight 50 ]
                                     prop.text "words" ] ]
 
-            let resultPage =
-                concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
+            let resultPage = concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
 
             [ MetadataQuickView concordanceModel dispatch
               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ sortMenu
@@ -531,7 +530,7 @@ module ResultsView =
                         if model.MetadataDistribution.Distribution.Length > 0 then
                             let categoryValueCells =
                                 [| for valueFreq in
-                                       model.MetadataDistribution.Distribution.[0]
+                                       model.MetadataDistribution.Distribution[0]
                                            .MetadataValueFrequencies ->
                                        let value = valueFreq.MetadataValue
 

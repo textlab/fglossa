@@ -2,7 +2,6 @@ module Client.Tests
 
 open Fable.Mocha
 
-open Index
 open Shared
 
 let client =

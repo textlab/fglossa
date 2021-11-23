@@ -2,8 +2,7 @@
     "private": true,
     "scripts": {
         "start": "webpack-dev-server",
-        "build": "webpack -p",
-        "test:live": "webpack-dev-server --config webpack.tests.config.js"
+        "build": "webpack -p"
     },
     "devDependencies": {
         "@testing-library/jest-dom": "^5.14.1",

@@ -11,8 +11,8 @@ let sharedPath = Path.getFullName "src/Shared"
 let serverPath = Path.getFullName "src/Server"
 let clientPath = Path.getFullName "src/Client"
 let deployDir = Path.getFullName "deploy"
-let sharedTestsPath = Path.getFullName "tests/Shared"
-let serverTestsPath = Path.getFullName "tests/Server"
+// let sharedTestsPath = Path.getFullName "tests/Shared"
+// let serverTestsPath = Path.getFullName "tests/Server"
 
 let npm args workingDir =
     let npmPath =
@@ -70,14 +70,14 @@ Target.create "Run" (fun _ ->
     |> ignore
 )
 
-Target.create "RunTests" (fun _ ->
-    dotnet "build" sharedTestsPath
-    [ async { dotnet "watch run" serverTestsPath }
-      async { dotnet "fable watch --run webpack-dev-server --config ../../webpack.tests.config.js" "tests/Client" } ]
-    |> Async.Parallel
-    |> Async.RunSynchronously
-    |> ignore
-)
+// Target.create "RunTests" (fun _ ->
+//     dotnet "build" sharedTestsPath
+//     [ async { dotnet "watch run" serverTestsPath }
+//       async { dotnet "fable watch --run webpack-dev-server --config ../../webpack.tests.config.js" "tests/Client" } ]
+//     |> Async.Parallel
+//     |> Async.RunSynchronously
+//     |> ignore
+// )
 
 open Fake.Core.TargetOperators
 
@@ -91,9 +91,9 @@ let dependencies = [
         ==> "InstallClient"
         ==> "Run"
 
-    "Clean"
-        ==> "InstallClient"
-        ==> "RunTests"
+    //"Clean"
+    //    ==> "InstallClient"
+    //    ==> "RunTests"
 ]
 
 [<EntryPoint>]
