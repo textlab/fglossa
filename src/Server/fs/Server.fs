@@ -69,6 +69,17 @@ let createServerApi ctx =
                 categoryCode
                 categoryType
                 keepZeroValues
+            |> Async.AwaitTask
+      DownloadMetadataDistribution =
+        fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues, format) ->
+            Remoting.Search.Cwb.Core.downloadMetadataDistribution
+                logger
+                searchParams
+                attributeCode
+                categoryCode
+                categoryType
+                keepZeroValues
+                format
             |> Async.AwaitTask }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =

@@ -394,3 +394,96 @@ let getMetadataDistribution
             { Distribution = distribution'
               CategoryValueTotals = totals }
     }
+
+let downloadMetadataDistribution
+    (logger: ILogger)
+    (searchParams: SearchParams)
+    (attributeCode: string)
+    (categoryCode: string)
+    (categoryType: Metadata.CategoryType)
+    (keepZeroValues: bool)
+    (format: DownloadFormat)
+    : Task<string> =
+    task {
+        let! distribution =
+            getMetadataDistribution logger searchParams attributeCode categoryCode categoryType keepZeroValues
+
+        let extension =
+            match format with
+            | Excel -> ".xlsx"
+            | Tsv -> ".tsv"
+            | Csv -> ".csv"
+
+        let downloadFilename = $"tmp/{searchParams.SearchId}_distr{extension}"
+
+        let outputFilename = $"../Client/public/{downloadFilename}"
+
+        match format with
+        | Excel ->
+            use workbook = new Excel.XLWorkbook()
+
+            let worksheet = workbook.Worksheets.Add("Metadata distribution")
+
+            // Create headers
+            worksheet.Cell(1, 1).Value <- "Attribute value"
+
+            // Get the headers as the metadata values found in the first result row
+            let firstRow = distribution.Distribution |> Array.head
+
+            firstRow.MetadataValueFrequencies
+            |> Array.iteri (fun index metadataValueFreq ->
+                worksheet.Cell(1, index + 2).Value <- metadataValueFreq.MetadataValue)
+
+            // Create a row for each attribute value
+            distribution.Distribution
+            |> Array.iteri (fun rowIndex attributeValueDistribution ->
+                // Put the attribute value in the first column
+                worksheet.Cell(rowIndex + 2, 1).Value <- attributeValueDistribution.AttributeValue
+
+                // Create a colunn for each metadata value frequency
+                attributeValueDistribution.MetadataValueFrequencies
+                |> Array.iteri (fun columnIndex metadataValueFreq ->
+                    worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- metadataValueFreq.Frequency))
+
+            workbook.SaveAs(outputFilename)
+        | Tsv ->
+            // Get the headers as the metadata values found in the first result row
+            let headers =
+                let firstRow = distribution.Distribution |> Array.head
+
+                firstRow.MetadataValueFrequencies
+                |> Array.map (fun metadataValueFreq -> metadataValueFreq.MetadataValue)
+                |> String.concat "\t"
+                |> fun s -> "Attribute value\t" + s
+
+            let valueRows =
+                distribution.Distribution
+                |> Array.map (fun attributeValueDistribution ->
+                    attributeValueDistribution.MetadataValueFrequencies
+                    |> Array.map (fun metadataValueFreq -> string metadataValueFreq.Frequency)
+                    |> String.concat "\t"
+                    |> fun s -> $"{attributeValueDistribution.AttributeValue}\t{s}")
+
+            File.WriteAllLines(outputFilename, Array.append [| headers |] valueRows)
+        | Csv ->
+            // Get the headers as the metadata values found in the first result row
+            let headers =
+                let firstRow = distribution.Distribution |> Array.head
+
+                firstRow.MetadataValueFrequencies
+                |> Array.map (fun metadataValueFreq -> $"\"{metadataValueFreq.MetadataValue}\"")
+                |> String.concat ","
+                |> fun s -> "\"Attribute value\"," + s
+
+            let valueRows =
+                distribution.Distribution
+                |> Array.map (fun attributeValueDistribution ->
+                    attributeValueDistribution.MetadataValueFrequencies
+                    |> Array.map (fun metadataValueFreq -> string metadataValueFreq.Frequency)
+                    |> String.concat ","
+                    |> fun s -> $"\"{attributeValueDistribution.AttributeValue}\",{s}")
+
+            File.WriteAllLines(outputFilename, Array.append [| headers |] valueRows)
+
+        return downloadFilename
+    }

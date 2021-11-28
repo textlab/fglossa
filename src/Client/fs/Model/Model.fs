@@ -151,14 +151,16 @@ type MetadataDistributionModel =
     { SelectedAttributeCode: string option
       SelectedCategory: Metadata.Category option
       MetadataDistribution: MetadataDistribution
-      KeepZeroValues: bool }
+      KeepZeroValues: bool
+      DownloadingFormat: DownloadFormat option }
     static member Init(corpus: Corpus) =
         { SelectedAttributeCode = None
           SelectedCategory = None
           MetadataDistribution =
             { Distribution = [||]
               CategoryValueTotals = [||] }
-          KeepZeroValues = true }
+          KeepZeroValues = true
+          DownloadingFormat = None }
 
 type ResultTab =
     | Concordance of ConcordanceModel

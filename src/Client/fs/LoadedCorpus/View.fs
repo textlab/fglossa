@@ -523,10 +523,56 @@ module ResultsView =
                                                     ) ]
                              Html.text " Include metadata values with zero total" ]
 
+            let downloadButtons =
+                Bulma.levelItem (
+                    Bulma.buttons [ Bulma.button.button [ prop.onClick (fun _ ->
+                                                              dispatch (
+                                                                  ShowingResults.MetadataDistribution.Msg.DownloadMetadataDistribution
+                                                                      Excel
+                                                              ))
+                                                          match model.DownloadingFormat with
+                                                          | Some Excel -> button.isLoading
+                                                          | Some _ -> prop.disabled true
+                                                          | None ->
+                                                              if model.SelectedAttributeCode.IsNone
+                                                                 || model.SelectedCategory.IsNone then
+                                                                  prop.disabled true
+                                                          prop.text "Excel" ]
+                                    Bulma.button.button [ prop.onClick (fun _ ->
+                                                              dispatch (
+                                                                  ShowingResults.MetadataDistribution.Msg.DownloadMetadataDistribution
+                                                                      Tsv
+                                                              ))
+                                                          match model.DownloadingFormat with
+                                                          | Some Tsv -> button.isLoading
+                                                          | Some _ -> prop.disabled true
+                                                          | None ->
+                                                              if model.SelectedAttributeCode.IsNone
+                                                                 || model.SelectedCategory.IsNone then
+                                                                  prop.disabled true
+                                                          prop.text "Tab-separated" ]
+                                    Bulma.button.button [ prop.onClick (fun _ ->
+                                                              dispatch (
+                                                                  ShowingResults.MetadataDistribution.Msg.DownloadMetadataDistribution
+                                                                      Csv
+                                                              ))
+                                                          match model.DownloadingFormat with
+                                                          | Some Csv -> button.isLoading
+                                                          | Some _ -> prop.disabled true
+                                                          | None ->
+                                                              if model.SelectedAttributeCode.IsNone
+                                                                 || model.SelectedCategory.IsNone then
+                                                                  prop.disabled true
+                                                          prop.text "Commma-separated" ] ]
+                )
+
             Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem attrMenu
                                                         Bulma.levelItem categoryMenu
                                                         Bulma.levelItem [ prop.style [ style.marginLeft 5 ]
-                                                                          prop.children [ keepZeroValueButton ] ] ] ]
+                                                                          prop.children [ keepZeroValueButton ] ]
+                                                        Bulma.levelItem [ prop.style [ style.marginLeft 20 ]
+                                                                          prop.text "Download:" ]
+                                                        downloadButtons ] ]
                         if model.MetadataDistribution.Distribution.Length > 0 then
                             let categoryValueCells =
                                 [| for valueFreq in

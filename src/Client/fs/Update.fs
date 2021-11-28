@@ -470,6 +470,8 @@ module LoadedCorpus =
                 | SelectCategory of Metadata.Category
                 | SetKeepZero of bool
                 | FetchedMetadataDistribution of MetadataDistribution
+                | DownloadMetadataDistribution of DownloadFormat
+                | DownloadedMetadataDistribution of string
 
             let update
                 (msg: Msg)
@@ -480,7 +482,8 @@ module LoadedCorpus =
                 let buildCmd
                     { SelectedAttributeCode = maybeAttributeCode
                       SelectedCategory = maybeCategory
-                      KeepZeroValues = keepZeroValues }
+                      KeepZeroValues = keepZeroValues
+                      DownloadingFormat = maybeDownloadingFormat }
                     =
                     match maybeAttributeCode, maybeCategory with
                     | Some attributeCode, Some category ->
@@ -493,10 +496,26 @@ module LoadedCorpus =
                             | :? Metadata.NumberCategory -> Metadata.NumberCategoryType
                             | _ -> failwith $"Unknown metadata category type for {category}"
 
-                        Cmd.OfAsync.perform
-                            serverApi.GetMetadataDistribution
-                            (loadedCorpusModel.Search.Params, attributeCode, category.Code, categoryType, keepZeroValues)
-                            FetchedMetadataDistribution
+                        match maybeDownloadingFormat with
+                        | Some downloadingFormat ->
+                            Cmd.OfAsync.perform
+                                serverApi.DownloadMetadataDistribution
+                                (loadedCorpusModel.Search.Params,
+                                 attributeCode,
+                                 category.Code,
+                                 categoryType,
+                                 keepZeroValues,
+                                 downloadingFormat)
+                                DownloadedMetadataDistribution
+                        | None ->
+                            Cmd.OfAsync.perform
+                                serverApi.GetMetadataDistribution
+                                (loadedCorpusModel.Search.Params,
+                                 attributeCode,
+                                 category.Code,
+                                 categoryType,
+                                 keepZeroValues)
+                                FetchedMetadataDistribution
                     | _ -> Cmd.none
 
                 match msg with
@@ -524,6 +543,15 @@ module LoadedCorpus =
                     loadedCorpusModel,
                     { metadataDistributionModel with MetadataDistribution = metadataDistribution },
                     Cmd.none
+                | DownloadMetadataDistribution format ->
+                    let newMetadataDistributionModel =
+                        { metadataDistributionModel with DownloadingFormat = Some format }
+
+                    let cmd = buildCmd newMetadataDistributionModel
+                    loadedCorpusModel, newMetadataDistributionModel, cmd
+                | DownloadedMetadataDistribution path ->
+                    Browser.Dom.window.location.href <- path
+                    loadedCorpusModel, { metadataDistributionModel with DownloadingFormat = None }, Cmd.none
 
 
         ///////////////////////////////////////////
