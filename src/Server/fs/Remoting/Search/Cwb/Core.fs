@@ -378,7 +378,19 @@ let getMetadataDistribution
                     |> Array.map (fun (sum, freq) -> sum + freq.Frequency))
                 (Array.create categoryValuesToTextIds.Length 0UL)
 
+        let distribution' =
+            if keepZeroValues then
+                distribution
+            else
+                distribution
+                |> Array.map (fun attributeValueDistribution ->
+                    let newMetadataValueFreqs =
+                        Array.zip attributeValueDistribution.MetadataValueFrequencies totals
+                        |> Array.choose (fun (freq, total) -> if total > 0UL then Some freq else None)
+
+                    { attributeValueDistribution with MetadataValueFrequencies = newMetadataValueFreqs })
+
         return
-            { Distribution = distribution
+            { Distribution = distribution'
               CategoryValueTotals = totals }
     }

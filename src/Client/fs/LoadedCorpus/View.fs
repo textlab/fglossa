@@ -558,8 +558,9 @@ module ResultsView =
 
                                 let totalsRow =
                                     let totalsCells =
-                                        [| for total in model.MetadataDistribution.CategoryValueTotals ->
-                                               Html.td [ Html.b (string total) ] |]
+                                        [| for total in model.MetadataDistribution.CategoryValueTotals do
+                                               if model.KeepZeroValues || total > 0UL then
+                                                   Html.td [ Html.b (string total) ] |]
 
                                     Html.tr (Array.append [| Html.td [ Html.b "Total" ] |] totalsCells)
 
