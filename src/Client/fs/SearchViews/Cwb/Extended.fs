@@ -536,7 +536,8 @@ let view
                                                                    $"{segmentType} initial"
                                                                    term.IsInitial
                                                                    IsInitial
-                                                           elif termIndex = query.Terms.Length - 1 then
+
+                                                           if termIndex = query.Terms.Length - 1 then
                                                                // TODO: Add optional sentence final punctuation to query
                                                                // to make this work in written text as well
                                                                match corpus.SharedInfo.Modality with
