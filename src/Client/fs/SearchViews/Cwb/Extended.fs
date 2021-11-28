@@ -327,7 +327,7 @@ let view
 
     let segmentType =
         match corpus.SharedInfo.Modality with
-        | Spoken -> "Utterance"
+        | Spoken -> "Segment"
         | Written -> "Sentence"
 
 
@@ -513,19 +513,23 @@ let view
                                            // TODO: Use TryGetAttribute to get display names also for lemma, orig etc.?
                                            prop.children [ if corpus.SharedInfo.HasAttribute("lemma") then
                                                                checkbox "Lemma" "Lemma" term.IsLemma IsLemma
+
                                                            checkbox "Start" "Start of word" term.IsStart IsStart
                                                            checkbox "End" "End of word" term.IsEnd IsEnd
                                                            checkbox "Middle" "Middle of word" term.IsMiddle IsMiddle
+
                                                            match corpus.SharedInfo.TryGetAttribute("phon") with
                                                            | Some attr ->
                                                                checkbox attr.Name attr.Name term.IsPhonetic IsPhonetic
-                                                           | None -> ignore None
+                                                           | None -> ignore ()
+
                                                            if corpus.SharedInfo.HasAttribute("orig") then
                                                                checkbox
                                                                    "Original"
                                                                    "Original form"
                                                                    term.IsOriginal
                                                                    IsOriginal
+
                                                            if termIndex = 0 then
                                                                checkbox
                                                                    $"{segmentType} initial"
