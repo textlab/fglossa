@@ -85,13 +85,10 @@ module CorpusStartView =
 module ResultsView =
 
     module Concordance =
+        open ShowingResults.Concordance
+
         [<ReactComponent>]
-        let PaginationTextInput
-            (
-                textValue: string,
-                isDisabled: bool,
-                dispatch: ShowingResults.Concordance.Msg -> unit
-            ) : ReactElement =
+        let PaginationTextInput (textValue: string, isDisabled: bool, dispatch: Msg -> unit) : ReactElement =
             let inputRef = React.useInputRef ()
 
             let selectTextInput () =
@@ -105,14 +102,8 @@ module ResultsView =
                                             style.textAlign.right ]
                                prop.value textValue
                                prop.onClick (fun _ -> selectTextInput ())
-                               prop.onChange (
-                                   ShowingResults.Concordance.Msg.SetPaginatorTextValue
-                                   >> dispatch
-                               )
-                               prop.onKeyUp (
-                                   key.enter,
-                                   (fun _ -> dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage(None, None)))
-                               ) ]
+                               prop.onChange (SetPaginatorTextValue >> dispatch)
+                               prop.onKeyUp (key.enter, (fun _ -> dispatch (SetPaginatorPage(None, None)))) ]
 
         let pagination
             (loadedCorpusModel: LoadedCorpusModel)
@@ -130,7 +121,7 @@ module ResultsView =
                 if not isSearchingOrFetching
                    && pageNo >= 1
                    && pageNo <= numPages then
-                    dispatch (ShowingResults.Concordance.Msg.SetPaginatorPage(Some pageNo, None))
+                    dispatch (SetPaginatorPage(Some pageNo, None))
 
             match concordanceModel.NumResults with
             | Some results when results > uint64 loadedCorpusModel.Search.Params.PageSize ->
@@ -162,12 +153,7 @@ module ResultsView =
             | _ -> []
 
         [<ReactComponent>]
-        let ContextSizeTextInput
-            (
-                textValue: string,
-                isDisabled: bool,
-                dispatch: ShowingResults.Concordance.Msg -> unit
-            ) : ReactElement =
+        let ContextSizeTextInput (textValue: string, isDisabled: bool, dispatch: Msg -> unit) : ReactElement =
             let inputRef = React.useInputRef ()
 
             let selectTextInput () =
@@ -181,15 +167,12 @@ module ResultsView =
                                             style.textAlign.right ]
                                prop.value textValue
                                prop.onClick (fun _ -> selectTextInput ())
-                               prop.onChange (
-                                   ShowingResults.Concordance.Msg.SetContextSizeTextValue
-                                   >> dispatch
-                               )
+                               prop.onChange (SetContextSizeTextValue >> dispatch)
                                prop.onKeyUp (
                                    key.enter,
                                    (fun _ ->
                                        match Int32.TryParse(textValue) with
-                                       | (true, size) -> dispatch (ShowingResults.Concordance.Msg.SetContextSize size)
+                                       | (true, size) -> dispatch (SetContextSize size)
                                        | (false, _) -> ignore None)
                                ) ]
 
@@ -214,13 +197,12 @@ module ResultsView =
                                   prop.tabIndex 0
                                   prop.onKeyUp (fun e ->
                                       if e.key = "Escape" then
-                                          dispatch ShowingResults.Concordance.CloseQuickView)
+                                          dispatch CloseQuickView)
                                   prop.children [ QuickView.header [ Html.div [ prop.style [ style.fontSize 16
                                                                                              style.fontWeight.bold ]
                                                                                 prop.text "Metadata" ]
                                                                      Bulma.delete [ prop.onClick (fun _ ->
-                                                                                        dispatch
-                                                                                            ShowingResults.Concordance.CloseQuickView) ] ]
+                                                                                        dispatch CloseQuickView) ] ]
                                                   QuickView.body [ QuickView.block [ Bulma.table [ prop.style [ style.margin
                                                                                                                     5 ]
                                                                                                    prop.children [ Html.tbody [ for category in
@@ -241,7 +223,7 @@ module ResultsView =
             (loadedCorpusModel: LoadedCorpusModel)
             (concordanceModel: ConcordanceModel)
             (corpus: Corpus)
-            (dispatch: ShowingResults.Concordance.Msg -> unit)
+            (dispatch: Msg -> unit)
             =
             let numPages =
                 concordanceModel.NumResultPages(loadedCorpusModel.Search.Params.PageSize)
@@ -255,7 +237,7 @@ module ResultsView =
                                prop.onChange (fun (s: string) ->
                                    let sortKey = SortKey.OfString(s)
 
-                                   dispatch (ShowingResults.Concordance.SetPaginatorPage(Some 1, Some sortKey)))
+                                   dispatch (SetPaginatorPage(Some 1, Some sortKey)))
                                prop.children [ Html.option [ prop.value "Position"
                                                              prop.text "Sort by position" ]
                                                Html.option [ prop.value "Match"
@@ -343,24 +325,18 @@ module ResultsView =
 
 
     module FrequencyLists =
+        open ShowingResults.FrequencyLists
+
         ////////////////////////////////////////////////////
         /// View.LoadedCorpus.ResultsView.FrequencyLists.view
         ////////////////////////////////////////////////////
-        let view
-            (model: FrequencyListsModel)
-            (corpus: Corpus)
-            (searchParams: SearchParams)
-            (dispatch: ShowingResults.FrequencyLists.Msg -> unit)
-            =
+        let view (model: FrequencyListsModel) (corpus: Corpus) (searchParams: SearchParams) (dispatch: Msg -> unit) =
 
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
                              prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
                                                                     prop.onCheckedChange (fun isChecked ->
-                                                                        dispatch (
-                                                                            ShowingResults.FrequencyLists.ToggleAttribute
-                                                                                attribute
-                                                                        )) ]
+                                                                        dispatch (ToggleAttribute attribute)) ]
                                              Bulma.text.span $" {attribute.Name}" ] ]
 
             let caseSensitiveCheckbox =
@@ -368,9 +344,7 @@ module ResultsView =
                     Html.label [ prop.style [ style.marginRight 15 ]
                                  prop.children [ Bulma.input.checkbox [ prop.isChecked model.IsCaseSensitive
                                                                         prop.onCheckedChange (fun _ ->
-                                                                            dispatch (
-                                                                                ShowingResults.FrequencyLists.ToggleIsCaseSensitive
-                                                                            )) ]
+                                                                            dispatch ToggleIsCaseSensitive) ]
                                                  Bulma.text.span " Case sensitive" ] ]
                 )
 
@@ -378,7 +352,7 @@ module ResultsView =
                 Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.button.button [ color.isSuccess
                                                                                         prop.onClick (fun _ ->
                                                                                             dispatch (
-                                                                                                ShowingResults.FrequencyLists.Msg.FetchFrequencyList
+                                                                                                FetchFrequencyList
                                                                                                     searchParams
                                                                                             ))
                                                                                         prop.text "Update stats" ] ]
@@ -387,7 +361,7 @@ module ResultsView =
                                                 Bulma.levelItem (
                                                     Bulma.buttons [ Bulma.button.button [ prop.onClick (fun _ ->
                                                                                               dispatch (
-                                                                                                  ShowingResults.FrequencyLists.Msg.DownloadFrequencyList(
+                                                                                                  DownloadFrequencyList(
                                                                                                       searchParams,
                                                                                                       Excel
                                                                                                   )
@@ -401,7 +375,7 @@ module ResultsView =
                                                                                           prop.text "Excel" ]
                                                                     Bulma.button.button [ prop.onClick (fun _ ->
                                                                                               dispatch (
-                                                                                                  ShowingResults.FrequencyLists.Msg.DownloadFrequencyList(
+                                                                                                  DownloadFrequencyList(
                                                                                                       searchParams,
                                                                                                       Tsv
                                                                                                   )
@@ -414,7 +388,7 @@ module ResultsView =
                                                                                           prop.text "Tab-separated" ]
                                                                     Bulma.button.button [ prop.onClick (fun _ ->
                                                                                               dispatch (
-                                                                                                  ShowingResults.FrequencyLists.Msg.DownloadFrequencyList(
+                                                                                                  DownloadFrequencyList(
                                                                                                       searchParams,
                                                                                                       Csv
                                                                                                   )
@@ -470,14 +444,12 @@ module ResultsView =
             Html.span [ controls; frequencyTable ]
 
     module MetadataDistribution =
+        open ShowingResults.MetadataDistribution
+
         ////////////////////////////////////////////////////////////
         /// View.LoadedCorpus.ResultsView.MetadataDistribution.view
         ////////////////////////////////////////////////////////////
-        let view
-            (corpus: Corpus)
-            (model: MetadataDistributionModel)
-            (dispatch: ShowingResults.MetadataDistribution.Msg -> unit)
-            =
+        let view (corpus: Corpus) (model: MetadataDistributionModel) (dispatch: Msg -> unit) =
             let attributes =
                 match corpus.SharedInfo.LanguageConfig with
                 | Monolingual (Some attrs) -> corpus.SharedInfo.GetDefaultAttribute() :: attrs
@@ -496,7 +468,7 @@ module ResultsView =
                                )
                                prop.onChange (fun (s: string) ->
                                    if s <> "" then
-                                       dispatch (ShowingResults.MetadataDistribution.SelectAttribute s)) ]
+                                       dispatch (SelectAttribute s)) ]
 
             let categoryOptions =
                 [ for index, category in corpus.MetadataQuickView |> List.indexed ->
@@ -513,23 +485,17 @@ module ResultsView =
                                    if s <> "" then
                                        let category = corpus.MetadataQuickView[int s]
 
-                                       dispatch (ShowingResults.MetadataDistribution.SelectCategory category)) ]
+                                       dispatch (SelectCategory category)) ]
 
             let keepZeroValueButton =
                 Html.label [ Bulma.input.checkbox [ prop.isChecked model.KeepZeroValues
-                                                    prop.onCheckedChange (
-                                                        dispatch
-                                                        << ShowingResults.MetadataDistribution.SetKeepZero
-                                                    ) ]
+                                                    prop.onCheckedChange (dispatch << SetKeepZero) ]
                              Html.text " Include metadata values with zero total" ]
 
             let downloadButtons =
                 Bulma.levelItem (
                     Bulma.buttons [ Bulma.button.button [ prop.onClick (fun _ ->
-                                                              dispatch (
-                                                                  ShowingResults.MetadataDistribution.Msg.DownloadMetadataDistribution
-                                                                      Excel
-                                                              ))
+                                                              dispatch (DownloadMetadataDistribution Excel))
                                                           match model.DownloadingFormat with
                                                           | Some Excel -> button.isLoading
                                                           | Some _ -> prop.disabled true
@@ -539,10 +505,7 @@ module ResultsView =
                                                                   prop.disabled true
                                                           prop.text "Excel" ]
                                     Bulma.button.button [ prop.onClick (fun _ ->
-                                                              dispatch (
-                                                                  ShowingResults.MetadataDistribution.Msg.DownloadMetadataDistribution
-                                                                      Tsv
-                                                              ))
+                                                              dispatch (DownloadMetadataDistribution Tsv))
                                                           match model.DownloadingFormat with
                                                           | Some Tsv -> button.isLoading
                                                           | Some _ -> prop.disabled true
@@ -552,10 +515,7 @@ module ResultsView =
                                                                   prop.disabled true
                                                           prop.text "Tab-separated" ]
                                     Bulma.button.button [ prop.onClick (fun _ ->
-                                                              dispatch (
-                                                                  ShowingResults.MetadataDistribution.Msg.DownloadMetadataDistribution
-                                                                      Csv
-                                                              ))
+                                                              dispatch (DownloadMetadataDistribution Csv))
                                                           match model.DownloadingFormat with
                                                           | Some Csv -> button.isLoading
                                                           | Some _ -> prop.disabled true
