@@ -465,7 +465,7 @@ type Query =
 
         // An attribute/value expression such as [lemma="car" %c] or [(lemma="car" & pos="n")].
         // Treat quoted strings separately; they may contain right brackets
-        let attributeValueRx = $"(?:<{sTag}>)?\[(.+?)\](?:</{sTag}>)?"
+        let attributeValueRx = $"(?:<{sTag}>)?\\\[(.+?)\\\](?:</{sTag}>)?"
 
         // A quoted string or a single unspecified token
         let quotedOrEmptyTermRx = "\".*?\"|\[\]"
