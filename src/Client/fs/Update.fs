@@ -1073,7 +1073,15 @@ module LoadedCorpus =
                                 query.QueryString
                                 |> replace "\"__QUOTE__\"" "'\"'" })
 
-                let searchParams = { loadedCorpusModel.Search.Params with Queries = queries }
+                let searchParams =
+                    { loadedCorpusModel.Search.Params with
+                        CpuCounts = None
+                        End = 99UL
+                        LastCount = None
+                        Queries = queries
+                        SearchId = 0
+                        Start = 0UL
+                        Step = 1 }
 
                 let newLoadedCorpusModel =
                     { loadedCorpusModel with
