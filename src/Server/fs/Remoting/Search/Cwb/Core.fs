@@ -121,7 +121,7 @@ let getFrequencyList
         let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
 
         let! results =
-            let caseStr = if isCaseSensitive then " %c" else ""
+            let caseStr = if isCaseSensitive then "" else " %c"
 
             let attrs =
                 [ for attr in attributes -> $"match .. matchend {attr.Code}{caseStr}" ]
