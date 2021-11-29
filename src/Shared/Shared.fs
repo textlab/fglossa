@@ -291,7 +291,7 @@ type SearchResultInfo =
 
 type TextAndTokenCounts = { NumTexts: int64; NumTokens: int64 }
 
-type ResultPageNumbers = int []
+type ResultPageNumbers = int seq
 
 type DownloadFormat =
     | Excel
@@ -334,8 +334,9 @@ type IServerApi =
       GetMetadataForTexts: CorpusCode * Metadata.Selection * DatabaseColumn list * PageNumber * Metadata.SortInfo option -> Async<string [] []>
       GetMetadataForSingleText: CorpusCode * Metadata.CategoryNameAndCode list * TextId -> Async<Metadata.CategoryNameAndValue list>
       GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts>
-      GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       SearchCorpus: SearchParams -> Async<SearchResultInfo>
+      GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
+      DownloadSearchResults: SearchParams * DownloadFormat -> Async<string>
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
       GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive -> Async<string []>
       DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * DownloadFormat -> Async<string>

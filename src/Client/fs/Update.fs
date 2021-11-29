@@ -83,6 +83,9 @@ module LoadedCorpus =
                 | FetchMediaObject of MediaPlayerType * rowIndex: int
                 | FetchedMediaObject of MediaPlayerType * rowIndex: int * MediaObject
                 | RemoveMediaObject
+                | OpenDownloadWindow
+                | CloseDownloadWindow
+                | DownloadResults of DownloadFormat
 
             let update
                 (msg: Msg)
@@ -395,6 +398,12 @@ module LoadedCorpus =
                     Cmd.none
 
                 | RemoveMediaObject -> loadedCorpusModel, { concordanceModel with MediaPlayer = None }, Cmd.none
+                | OpenDownloadWindow ->
+                    loadedCorpusModel, { concordanceModel with ShouldShowDownloadWindow = true }, Cmd.none
+                | CloseDownloadWindow ->
+                    loadedCorpusModel, { concordanceModel with ShouldShowDownloadWindow = false }, Cmd.none
+                | DownloadResults format ->
+                    loadedCorpusModel, { concordanceModel with DownloadingFormat = Some format }, Cmd.none
 
         module FrequencyLists =
             /////////////////////////////////////////////////////

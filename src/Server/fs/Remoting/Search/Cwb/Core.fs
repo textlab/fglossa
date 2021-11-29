@@ -13,23 +13,6 @@ open Database
 open Remoting.Metadata
 open Remoting.Search.Cwb.Common
 
-let getSearchResults
-    (logger: ILogger)
-    (searchParams: SearchParams)
-    (corpus: Corpus)
-    (maybeAttributes: Cwb.PositionalAttribute list option)
-    (pageNumbers: ResultPageNumbers)
-    =
-    async {
-        return!
-            match corpus.Config.Modality with
-            | Spoken -> Spoken.getSearchResults logger corpus searchParams maybeAttributes pageNumbers
-            | Written ->
-                match corpus.Config.SearchEngine with
-                | Cwb -> Written.getSearchResults logger corpus searchParams maybeAttributes pageNumbers
-                | Fcs -> failwith "NOT IMPLMENTED"
-    }
-
 // If the number of running CQP processes exceeds this number, we do not allow a new
 // search in a corpus that does parallel search using all cpus to be started.
 let maxCqpProcesses = 8
@@ -109,6 +92,23 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                                       Text = resultLines }) }) }
         else
             return failwith $"TOO MANY CQP PROCESSES: {nCqpProcs}; aborting search at {System.DateTime.Now}"
+    }
+
+let getSearchResults
+    (logger: ILogger)
+    (searchParams: SearchParams)
+    (corpus: Corpus)
+    (maybeAttributes: Cwb.PositionalAttribute list option)
+    (pageNumbers: ResultPageNumbers)
+    =
+    async {
+        return!
+            match corpus.Config.Modality with
+            | Spoken -> Spoken.getSearchResults logger corpus searchParams maybeAttributes pageNumbers
+            | Written ->
+                match corpus.Config.SearchEngine with
+                | Cwb -> Written.getSearchResults logger corpus searchParams maybeAttributes pageNumbers
+                | Fcs -> failwith "NOT IMPLMENTED"
     }
 
 let getFrequencyList

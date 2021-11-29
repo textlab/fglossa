@@ -214,6 +214,45 @@ module ResultsView =
                                                                                                                                               Html.td
                                                                                                                                                   category.Value ] ] ] ] ] ] ] ]
 
+        [<ReactComponent>]
+        let DownloadWindow (model: ConcordanceModel) dispatch =
+            let elementRef = React.useElementRef ()
+
+            let focusDownloadWindow () =
+                elementRef.current
+                |> Option.iter (fun downloadWindowElement ->
+                    if model.ShouldShowDownloadWindow then
+                        downloadWindowElement.focus ())
+
+            // Focus the QuickView when mounted to enable it to receive keyboard events
+            React.useEffect (focusDownloadWindow, [| box model |])
+
+            Bulma.modal [ if model.ShouldShowDownloadWindow then
+                              modal.isActive
+                          // Set elementRef in order to apply the focusDownloadWindow() function to this element
+                          prop.ref elementRef
+                          // Set tabIndex so that the lement receives keyboard events
+                          prop.tabIndex 0
+                          prop.onKeyUp (fun e ->
+                              if e.key = "Escape" then
+                                  dispatch CloseDownloadWindow)
+                          prop.children [ Bulma.modalBackground [ prop.onClick (fun _ -> dispatch CloseDownloadWindow) ]
+                                          Bulma.modalCard [ Bulma.modalCardHead [ Bulma.modalCardTitle "Download"
+                                                                                  Bulma.delete [ prop.onClick
+                                                                                                     (fun _ ->
+                                                                                                         dispatch
+                                                                                                             CloseDownloadWindow) ] ]
+                                                            Bulma.modalCardBody []
+                                                            Bulma.modalCardFoot [ Bulma.button.button [ color.isSuccess
+                                                                                                        prop.text
+                                                                                                            "Excel" ]
+                                                                                  Bulma.button.button [ color.isSuccess
+                                                                                                        prop.text
+                                                                                                            "Tab-separated" ]
+                                                                                  Bulma.button.button [ color.isSuccess
+                                                                                                        prop.text
+                                                                                                            "Comma-separated" ] ] ] ] ]
+
 
 
         ////////////////////////////////////////////////////
@@ -250,6 +289,7 @@ module ResultsView =
             let downloadButton =
                 Bulma.button.button [ prop.disabled isSearchingOrFetching
                                       prop.style [ style.marginLeft 5 ]
+                                      prop.onClick (fun _ -> dispatch OpenDownloadWindow)
                                       prop.text "Download" ]
 
             let resultsInfo =
@@ -304,7 +344,8 @@ module ResultsView =
 
             let resultPage = concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
 
-            [ MetadataQuickView concordanceModel dispatch
+            [ DownloadWindow concordanceModel dispatch
+              MetadataQuickView concordanceModel dispatch
               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ sortMenu
                                                                 downloadButton ]
                                               Bulma.levelItem resultsInfo ]

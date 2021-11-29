@@ -501,12 +501,13 @@ let getSearchResults
         let hitPages = hits |> Array.chunkBySize searchParams.PageSize
 
         return
-            (hitPages, pageNumbers)
-            ||> Array.map2 (fun pageHits pageNumber ->
+            (hitPages |> Array.toSeq, pageNumbers)
+            ||> Seq.map2 (fun pageHits pageNumber ->
                 { PageNumber = pageNumber
                   Results =
                     [| for hitLines in pageHits ->
                            { AudioType = None
                              HasVideo = false
                              Text = hitLines } |] })
+            |> Seq.toArray
     }

@@ -93,6 +93,8 @@ type ConcordanceModel =
       IsSearching: bool
       QuickViewMetadata: Metadata.CategoryNameAndValue list
       ShouldShowQuickView: bool
+      ShouldShowDownloadWindow: bool
+      DownloadingFormat: DownloadFormat option
       // The page numbers of the result pages currently being fetched from the server
       NumResults: uint64 option
       NumSteps: int
@@ -115,6 +117,8 @@ type ConcordanceModel =
           IsSearching = true
           QuickViewMetadata = quickViewMetadata
           ShouldShowQuickView = false
+          ShouldShowDownloadWindow = false
+          DownloadingFormat = None
           NumResults = None
           NumSteps = numSteps
           PagesBeingFetched = [||]

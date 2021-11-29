@@ -41,9 +41,11 @@ let createServerApi ctx =
         fun (corpusCode, selection) ->
             Remoting.Corpus.getTextAndTokenCount logger corpusCode selection
             |> Async.AwaitTask
+      SearchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams
       GetSearchResults =
         fun (searchParams, pageNumbers) -> Remoting.Search.Core.getSearchResults logger searchParams None pageNumbers
-      SearchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams
+      DownloadSearchResults =
+        fun (searchParams, format) -> Remoting.Search.Core.downloadSearchResults logger searchParams format
       GetMediaObject =
         fun (searchParams, mediaPlayerType, pageNumber, resultIndex, contextSize, contextUnit) ->
             Remoting.Search.Cwb.Spoken.getMediaObject
