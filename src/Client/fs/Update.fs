@@ -85,6 +85,7 @@ module LoadedCorpus =
                 | RemoveMediaObject
                 | OpenDownloadWindow
                 | CloseDownloadWindow
+                | ToggleDownloadAttribute of Cwb.PositionalAttribute
                 | DownloadResults of DownloadFormat
 
             let update
@@ -412,6 +413,20 @@ module LoadedCorpus =
                     loadedCorpusModel, { concordanceModel with ShouldShowDownloadWindow = true }, Cmd.none
                 | CloseDownloadWindow ->
                     loadedCorpusModel, { concordanceModel with ShouldShowDownloadWindow = false }, Cmd.none
+                | ToggleDownloadAttribute attribute ->
+                    let alreadyExists =
+                        concordanceModel.DownloadAttributes
+                        |> List.contains attribute
+
+                    let newAttributes =
+                        if alreadyExists then
+                            concordanceModel.DownloadAttributes
+                            |> List.filter (fun attr -> attr <> attribute)
+                        else
+                            concordanceModel.DownloadAttributes
+                            @ [ attribute ]
+
+                    loadedCorpusModel, { concordanceModel with DownloadAttributes = newAttributes }, Cmd.none
                 | DownloadResults format ->
                     loadedCorpusModel, { concordanceModel with DownloadingFormat = Some format }, Cmd.none
 

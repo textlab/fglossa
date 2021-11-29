@@ -95,6 +95,8 @@ type ConcordanceModel =
       ShouldShowQuickView: bool
       ShouldShowDownloadWindow: bool
       DownloadingFormat: DownloadFormat option
+      HeadersInDownload: bool
+      DownloadAttributes: Cwb.PositionalAttribute list
       // The page numbers of the result pages currently being fetched from the server
       NumResults: uint64 option
       NumSteps: int
@@ -119,6 +121,8 @@ type ConcordanceModel =
           ShouldShowQuickView = false
           ShouldShowDownloadWindow = false
           DownloadingFormat = None
+          HeadersInDownload = true
+          DownloadAttributes = []
           NumResults = None
           NumSteps = numSteps
           PagesBeingFetched = [||]

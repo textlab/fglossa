@@ -215,7 +215,7 @@ module ResultsView =
                                                                                                                                                   category.Value ] ] ] ] ] ] ] ]
 
         [<ReactComponent>]
-        let DownloadWindow (model: ConcordanceModel) dispatch =
+        let DownloadWindow (model: ConcordanceModel) (corpus: Corpus) dispatch =
             let elementRef = React.useElementRef ()
 
             let focusDownloadWindow () =
@@ -227,6 +227,48 @@ module ResultsView =
             // Focus the QuickView when mounted to enable it to receive keyboard events
             React.useEffect (focusDownloadWindow, [| box model |])
 
+            let modalFooter =
+                [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem (
+                                                      Html.label [ Bulma.input.checkbox [ prop.isChecked
+                                                                                              model.HeadersInDownload ]
+                                                                   Bulma.text.span " Create headers" ]
+                                                  )
+                                                  Bulma.levelItem (
+                                                      Bulma.button.button [ color.isSuccess
+                                                                            prop.style [ style.marginLeft 5 ]
+                                                                            prop.text "Excel" ]
+                                                  )
+                                                  Bulma.levelItem (
+                                                      Bulma.button.button [ color.isSuccess
+                                                                            prop.text "Tab-separated" ]
+                                                  )
+                                                  Bulma.levelItem (
+                                                      Bulma.button.button [ color.isSuccess
+                                                                            prop.text "Comma-separated" ]
+                                                  ) ] ] ]
+
+            let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
+                Html.label [ prop.style [ style.marginRight 15 ]
+                             prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
+                                                                    prop.onCheckedChange (fun isChecked ->
+                                                                        dispatch (ToggleDownloadAttribute attribute)) ]
+                                             Bulma.text.span $" {attribute.Name}" ] ]
+
+            let attributeCheckboxes =
+                match corpus.SharedInfo.LanguageConfig with
+                | Monolingual maybeAttrs ->
+                    match maybeAttrs with
+                    | Some attrs ->
+                        let checkboxes =
+                            [ for attr in corpus.SharedInfo.GetDefaultAttribute() :: attrs ->
+                                  Bulma.control.div [ checkbox (model.DownloadAttributes |> List.contains attr) attr ] ]
+
+                        Bulma.field.div [ field.isGrouped
+                                          field.isGroupedMultiline
+                                          prop.children checkboxes ]
+                    | None -> Html.none
+                | Multilingual languages -> failwith "NOT IMPLEMENTED"
+
             Bulma.modal [ if model.ShouldShowDownloadWindow then
                               modal.isActive
                           // Set elementRef in order to apply the focusDownloadWindow() function to this element
@@ -237,21 +279,22 @@ module ResultsView =
                               if e.key = "Escape" then
                                   dispatch CloseDownloadWindow)
                           prop.children [ Bulma.modalBackground [ prop.onClick (fun _ -> dispatch CloseDownloadWindow) ]
-                                          Bulma.modalCard [ Bulma.modalCardHead [ Bulma.modalCardTitle "Download"
+                                          Bulma.modalCard [ Bulma.modalCardHead [ Bulma.modalCardTitle
+                                                                                      "Download results"
                                                                                   Bulma.delete [ prop.onClick
                                                                                                      (fun _ ->
                                                                                                          dispatch
                                                                                                              CloseDownloadWindow) ] ]
-                                                            Bulma.modalCardBody []
-                                                            Bulma.modalCardFoot [ Bulma.button.button [ color.isSuccess
-                                                                                                        prop.text
-                                                                                                            "Excel" ]
-                                                                                  Bulma.button.button [ color.isSuccess
-                                                                                                        prop.text
-                                                                                                            "Tab-separated" ]
-                                                                                  Bulma.button.button [ color.isSuccess
-                                                                                                        prop.text
-                                                                                                            "Comma-separated" ] ] ] ] ]
+                                                            Bulma.modalCardBody (
+                                                                Bulma.message [ color.isInfo
+                                                                                prop.children [ Bulma.messageHeader [ Html.p
+                                                                                                                          "Attributes" ]
+                                                                                                Bulma.messageBody [ Bulma.field.div [ field.isGrouped
+                                                                                                                                      field.isGroupedMultiline
+                                                                                                                                      prop.children
+                                                                                                                                          attributeCheckboxes ] ] ] ]
+                                                            )
+                                                            Bulma.modalCardFoot modalFooter ] ] ]
 
 
 
@@ -344,7 +387,7 @@ module ResultsView =
 
             let resultPage = concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
 
-            [ DownloadWindow concordanceModel dispatch
+            [ DownloadWindow concordanceModel corpus dispatch
               MetadataQuickView concordanceModel dispatch
               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ sortMenu
                                                                 downloadButton ]
