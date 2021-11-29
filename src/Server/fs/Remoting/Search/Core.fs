@@ -34,5 +34,15 @@ let downloadSearchResults (logger: ILogger) (searchParams: SearchParams) (format
             | Cwb -> Cwb.Core.getSearchResults logger searchParams corpus None pageNumbers
             | Fcs -> failwith "Not implemented"
 
-        return "hei"
+        let extension =
+            match format with
+            | Excel -> ".xlsx"
+            | Tsv -> ".tsv"
+            | Csv -> ".csv"
+
+        let downloadFilename = $"tmp/{searchParams.SearchId}_res{extension}"
+
+        let outputFilename = $"../Client/public/{downloadFilename}"
+
+        return outputFilename
     }

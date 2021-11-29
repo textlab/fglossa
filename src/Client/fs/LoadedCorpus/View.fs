@@ -227,26 +227,6 @@ module ResultsView =
             // Focus the QuickView when mounted to enable it to receive keyboard events
             React.useEffect (focusDownloadWindow, [| box model |])
 
-            let modalFooter =
-                [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem (
-                                                      Html.label [ Bulma.input.checkbox [ prop.isChecked
-                                                                                              model.HeadersInDownload ]
-                                                                   Bulma.text.span " Create headers" ]
-                                                  )
-                                                  Bulma.levelItem (
-                                                      Bulma.button.button [ color.isSuccess
-                                                                            prop.style [ style.marginLeft 5 ]
-                                                                            prop.text "Excel" ]
-                                                  )
-                                                  Bulma.levelItem (
-                                                      Bulma.button.button [ color.isSuccess
-                                                                            prop.text "Tab-separated" ]
-                                                  )
-                                                  Bulma.levelItem (
-                                                      Bulma.button.button [ color.isSuccess
-                                                                            prop.text "Comma-separated" ]
-                                                  ) ] ] ]
-
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
                              prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
@@ -268,6 +248,41 @@ module ResultsView =
                                           prop.children checkboxes ]
                     | None -> Html.none
                 | Multilingual languages -> failwith "NOT IMPLEMENTED"
+
+            let modalFooter =
+                let disableDownload = model.DownloadAttributes.IsEmpty
+
+                [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem (
+                                                      Html.label [ Bulma.input.checkbox [ prop.isChecked
+                                                                                              model.HeadersInDownload
+                                                                                          prop.onCheckedChange
+                                                                                              (fun _ ->
+                                                                                                  dispatch
+                                                                                                      ToggleHeadersInDownload) ]
+                                                                   Bulma.text.span " Create headers" ]
+                                                  )
+                                                  Bulma.levelItem (
+                                                      Bulma.button.button [ color.isSuccess
+                                                                            prop.disabled disableDownload
+                                                                            prop.onClick (fun _ ->
+                                                                                dispatch (DownloadSearchResults Excel))
+                                                                            prop.style [ style.marginLeft 5 ]
+                                                                            prop.text "Excel" ]
+                                                  )
+                                                  Bulma.levelItem (
+                                                      Bulma.button.button [ color.isSuccess
+                                                                            prop.disabled disableDownload
+                                                                            prop.onClick (fun _ ->
+                                                                                dispatch (DownloadSearchResults Tsv))
+                                                                            prop.text "Tab-separated" ]
+                                                  )
+                                                  Bulma.levelItem (
+                                                      Bulma.button.button [ color.isSuccess
+                                                                            prop.disabled disableDownload
+                                                                            prop.onClick (fun _ ->
+                                                                                dispatch (DownloadSearchResults Csv))
+                                                                            prop.text "Comma-separated" ]
+                                                  ) ] ] ]
 
             Bulma.modal [ if model.ShouldShowDownloadWindow then
                               modal.isActive
@@ -433,48 +448,33 @@ module ResultsView =
                 )
 
             let buttonRow =
+                let buttons =
+                    [ Bulma.button.button [ prop.onClick (fun _ -> dispatch (DownloadFrequencyList Excel))
+                                            match model.DownloadingFormat with
+                                            | Some Excel -> button.isLoading
+                                            | Some _ -> prop.disabled true
+                                            | None -> ()
+                                            prop.text "Excel" ]
+                      Bulma.button.button [ prop.onClick (fun _ -> dispatch (DownloadFrequencyList Tsv))
+                                            match model.DownloadingFormat with
+                                            | Some Tsv -> button.isLoading
+                                            | Some _ -> prop.disabled true
+                                            | None -> ()
+                                            prop.text "Tab-separated" ]
+                      Bulma.button.button [ prop.onClick (fun _ -> dispatch (DownloadFrequencyList Csv))
+                                            match model.DownloadingFormat with
+                                            | Some Csv -> button.isLoading
+                                            | Some _ -> prop.disabled true
+                                            | None -> ()
+                                            prop.text "Commma-separated" ] ]
+
                 Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.button.button [ color.isSuccess
                                                                                         prop.onClick (fun _ ->
                                                                                             dispatch FetchFrequencyList)
                                                                                         prop.text "Update stats" ] ]
                                                 Bulma.levelItem [ prop.style [ style.marginLeft 20 ]
                                                                   prop.text "Download:" ]
-                                                Bulma.levelItem (
-                                                    Bulma.buttons [ Bulma.button.button [ prop.onClick (fun _ ->
-                                                                                              dispatch (
-                                                                                                  DownloadFrequencyList
-                                                                                                      Excel
-                                                                                              ))
-                                                                                          match model.DownloadingFormat
-                                                                                              with
-                                                                                          | Some Excel ->
-                                                                                              button.isLoading
-                                                                                          | Some _ -> prop.disabled true
-                                                                                          | None -> ()
-                                                                                          prop.text "Excel" ]
-                                                                    Bulma.button.button [ prop.onClick (fun _ ->
-                                                                                              dispatch (
-                                                                                                  DownloadFrequencyList
-                                                                                                      Tsv
-                                                                                              ))
-                                                                                          match model.DownloadingFormat
-                                                                                              with
-                                                                                          | Some Tsv -> button.isLoading
-                                                                                          | Some _ -> prop.disabled true
-                                                                                          | None -> ()
-                                                                                          prop.text "Tab-separated" ]
-                                                                    Bulma.button.button [ prop.onClick (fun _ ->
-                                                                                              dispatch (
-                                                                                                  DownloadFrequencyList
-                                                                                                      Csv
-                                                                                              ))
-                                                                                          match model.DownloadingFormat
-                                                                                              with
-                                                                                          | Some Csv -> button.isLoading
-                                                                                          | Some _ -> prop.disabled true
-                                                                                          | None -> ()
-                                                                                          prop.text "Commma-separated" ] ]
-                                                ) ] ]
+                                                Bulma.levelItem [ Bulma.buttons buttons ] ] ]
 
             let controls =
                 match corpus.SharedInfo.LanguageConfig with

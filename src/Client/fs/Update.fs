@@ -86,7 +86,9 @@ module LoadedCorpus =
                 | OpenDownloadWindow
                 | CloseDownloadWindow
                 | ToggleDownloadAttribute of Cwb.PositionalAttribute
-                | DownloadResults of DownloadFormat
+                | ToggleHeadersInDownload
+                | DownloadSearchResults of DownloadFormat
+                | DownloadedSearchResults of string
 
             let update
                 (msg: Msg)
@@ -427,8 +429,22 @@ module LoadedCorpus =
                             @ [ attribute ]
 
                     loadedCorpusModel, { concordanceModel with DownloadAttributes = newAttributes }, Cmd.none
-                | DownloadResults format ->
-                    loadedCorpusModel, { concordanceModel with DownloadingFormat = Some format }, Cmd.none
+                | ToggleHeadersInDownload ->
+                    loadedCorpusModel,
+                    { concordanceModel with HeadersInDownload = not concordanceModel.HeadersInDownload },
+                    Cmd.none
+                | DownloadSearchResults format ->
+                    let cmd =
+                        Cmd.OfAsync.perform
+                            serverApi.DownloadSearchResults
+                            (loadedCorpusModel.Search.Params, format)
+                            DownloadedSearchResults
+
+                    loadedCorpusModel, { concordanceModel with DownloadingFormat = Some format }, cmd
+                | DownloadedSearchResults path ->
+                    Browser.Dom.window.location.href <- path
+                    loadedCorpusModel, { concordanceModel with DownloadingFormat = None }, Cmd.none
+
 
         module FrequencyLists =
             /////////////////////////////////////////////////////
