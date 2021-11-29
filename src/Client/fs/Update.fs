@@ -335,7 +335,17 @@ module LoadedCorpus =
                 | SetContextSizeTextValue v ->
                     loadedCorpusModel, { concordanceModel with ContextSizeTextValue = v }, Cmd.none
 
-                | SetContextSize _ -> failwith "The SetContextSize message should be handled by a parent!"
+                | SetContextSize size ->
+                    let newSearchParams = { loadedCorpusModel.Search.Params with ContextSize = size }
+
+                    let newLoadedCorpusModel =
+                        { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = newSearchParams } }
+
+                    let newConcordanceModel = { concordanceModel with ResultPages = Map.empty }
+
+                    newLoadedCorpusModel,
+                    newConcordanceModel,
+                    Cmd.ofMsg (FetchResultWindow(concordanceModel.ResultPageNo, None))
 
                 | FetchMetadataForText (corpus, textId) ->
                     let (categories: Metadata.CategoryNameAndCode list) =
@@ -686,16 +696,6 @@ module LoadedCorpus =
             let newLoadedCorpusModel, cmd = Update.Metadata.update msg' loadedCorpusModel
 
             newLoadedCorpusModel, Cmd.map MetadataMsg cmd
-
-        // The SetContextSize message is dispatched from the concordance view, but needs to be handled here
-        // where the search params are available in the model and the Search message is also available
-        | ShowingResultsMsg (ShowingResults.ConcordanceMsg (ShowingResults.Concordance.SetContextSize size)) ->
-            let newSearchParams = { loadedCorpusModel.Search.Params with ContextSize = size }
-
-            let newLoadedCorpusModel =
-                { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = newSearchParams } }
-
-            newLoadedCorpusModel, Cmd.ofMsg Search
 
         | ShowingResultsMsg msg' ->
             match loadedCorpusModel.Substate with
@@ -1084,7 +1084,8 @@ module LoadedCorpus =
                                     string loadedCorpusModel.Search.Params.ContextSize,
                                     []
                                 )
-                            ) }
+                            )
+                        Search = { loadedCorpusModel.Search with Params = searchParams } }
 
                 let cmds =
                     [ Cmd.ofMsg (CwbExtendedToggleAttrModal None)
