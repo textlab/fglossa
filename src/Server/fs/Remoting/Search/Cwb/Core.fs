@@ -132,9 +132,16 @@ let getFrequencyList
 
             let cmd = $"tabulate QUERY {attrs} >\" {awk}\""
 
+            let searchParamsForFrequencyList =
+                { searchParams with
+                    LastCount = None
+                    Step = 1
+                    Start = 0UL
+                    End = 1000000UL }
+
             match corpus.Config.Modality with
-            | Spoken -> Spoken.runQueries logger corpus searchParams (Some cmd)
-            | Written -> Written.runQueries logger corpus searchParams (Some cmd)
+            | Spoken -> Spoken.runQueries logger corpus searchParamsForFrequencyList (Some cmd)
+            | Written -> Written.runQueries logger corpus searchParamsForFrequencyList (Some cmd)
 
         return
             results.Hits
