@@ -471,10 +471,19 @@ let downloadMetadataDistribution
                 |> Array.iteri (fun columnIndex metadataValueFreq ->
                     worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- metadataValueFreq.Frequency))
 
+            let totalsRowIndex = distribution.Distribution.Length + 2
+
+            worksheet.Cell(totalsRowIndex, 1).Value <- "Total"
+
+            distribution.CategoryValueTotals
+            |> Array.iteri (fun columnIndex categoryValueTotal ->
+                // Create a colunn for each metadata value total
+                worksheet.Cell(totalsRowIndex, columnIndex + 2).Value <- categoryValueTotal)
+
             workbook.SaveAs(outputFilename)
         | Tsv ->
             // Get the headers as the metadata values found in the first result row
-            let headers =
+            let headerRow =
                 let firstRow = distribution.Distribution |> Array.head
 
                 firstRow.MetadataValueFrequencies
@@ -490,10 +499,21 @@ let downloadMetadataDistribution
                     |> String.concat "\t"
                     |> fun s -> $"{attributeValueDistribution.AttributeValue}\t{s}")
 
-            File.WriteAllLines(outputFilename, Array.append [| headers |] valueRows)
+            let totalsRow =
+                distribution.CategoryValueTotals
+                |> Array.map string
+                |> String.concat "\t"
+                |> fun s -> "Total\t" + s
+
+            File.WriteAllLines(
+                outputFilename,
+                Array.concat [ [| headerRow |]
+                               valueRows
+                               [| totalsRow |] ]
+            )
         | Csv ->
             // Get the headers as the metadata values found in the first result row
-            let headers =
+            let headerRow =
                 let firstRow = distribution.Distribution |> Array.head
 
                 firstRow.MetadataValueFrequencies
@@ -509,7 +529,18 @@ let downloadMetadataDistribution
                     |> String.concat ","
                     |> fun s -> $"\"{attributeValueDistribution.AttributeValue}\",{s}")
 
-            File.WriteAllLines(outputFilename, Array.append [| headers |] valueRows)
+            let totalsRow =
+                distribution.CategoryValueTotals
+                |> Array.map string
+                |> String.concat ","
+                |> fun s -> "Total," + s
+
+            File.WriteAllLines(
+                outputFilename,
+                Array.concat [ [| headerRow |]
+                               valueRows
+                               [| totalsRow |] ]
+            )
 
         return downloadFilename
     }
