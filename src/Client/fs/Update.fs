@@ -422,9 +422,9 @@ module LoadedCorpus =
             type Msg =
                 | ToggleAttribute of Cwb.PositionalAttribute
                 | ToggleIsCaseSensitive
-                | FetchFrequencyList of SearchParams
+                | FetchFrequencyList
                 | FetchedFrequencyList of string []
-                | DownloadFrequencyList of SearchParams * DownloadFormat
+                | DownloadFrequencyList of DownloadFormat
                 | DownloadedFrequencyList of string
 
             let update
@@ -450,12 +450,14 @@ module LoadedCorpus =
                     loadedCorpusModel,
                     { frequencyListsModel with IsCaseSensitive = not frequencyListsModel.IsCaseSensitive },
                     Cmd.none
-                | FetchFrequencyList searchParams ->
+                | FetchFrequencyList ->
                     loadedCorpusModel,
                     frequencyListsModel,
                     Cmd.OfAsync.perform
                         serverApi.GetFrequencyList
-                        (searchParams, frequencyListsModel.Attributes, frequencyListsModel.IsCaseSensitive)
+                        (loadedCorpusModel.Search.Params,
+                         frequencyListsModel.Attributes,
+                         frequencyListsModel.IsCaseSensitive)
                         FetchedFrequencyList
                 | FetchedFrequencyList rows ->
                     let listItems =
@@ -469,12 +471,15 @@ module LoadedCorpus =
                                  AttributeValues = attrValues } |]
 
                     loadedCorpusModel, { frequencyListsModel with Frequencies = Some listItems }, Cmd.none
-                | DownloadFrequencyList (searchParams, format) ->
+                | DownloadFrequencyList format ->
                     loadedCorpusModel,
                     { frequencyListsModel with DownloadingFormat = Some format },
                     Cmd.OfAsync.perform
                         serverApi.DownloadFrequencyList
-                        (searchParams, frequencyListsModel.Attributes, frequencyListsModel.IsCaseSensitive, format)
+                        (loadedCorpusModel.Search.Params,
+                         frequencyListsModel.Attributes,
+                         frequencyListsModel.IsCaseSensitive,
+                         format)
                         DownloadedFrequencyList
                 | DownloadedFrequencyList path ->
                     Browser.Dom.window.location.href <- path

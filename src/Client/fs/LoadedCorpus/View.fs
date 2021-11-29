@@ -371,7 +371,7 @@ module ResultsView =
         ////////////////////////////////////////////////////
         /// View.LoadedCorpus.ResultsView.FrequencyLists.view
         ////////////////////////////////////////////////////
-        let view (model: FrequencyListsModel) (corpus: Corpus) (searchParams: SearchParams) (dispatch: Msg -> unit) =
+        let view (model: FrequencyListsModel) (corpus: Corpus) (dispatch: Msg -> unit) =
 
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
@@ -392,20 +392,15 @@ module ResultsView =
             let buttonRow =
                 Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.button.button [ color.isSuccess
                                                                                         prop.onClick (fun _ ->
-                                                                                            dispatch (
-                                                                                                FetchFrequencyList
-                                                                                                    searchParams
-                                                                                            ))
+                                                                                            dispatch FetchFrequencyList)
                                                                                         prop.text "Update stats" ] ]
                                                 Bulma.levelItem [ prop.style [ style.marginLeft 20 ]
                                                                   prop.text "Download:" ]
                                                 Bulma.levelItem (
                                                     Bulma.buttons [ Bulma.button.button [ prop.onClick (fun _ ->
                                                                                               dispatch (
-                                                                                                  DownloadFrequencyList(
-                                                                                                      searchParams,
+                                                                                                  DownloadFrequencyList
                                                                                                       Excel
-                                                                                                  )
                                                                                               ))
                                                                                           match model.DownloadingFormat
                                                                                               with
@@ -416,10 +411,8 @@ module ResultsView =
                                                                                           prop.text "Excel" ]
                                                                     Bulma.button.button [ prop.onClick (fun _ ->
                                                                                               dispatch (
-                                                                                                  DownloadFrequencyList(
-                                                                                                      searchParams,
+                                                                                                  DownloadFrequencyList
                                                                                                       Tsv
-                                                                                                  )
                                                                                               ))
                                                                                           match model.DownloadingFormat
                                                                                               with
@@ -429,10 +422,8 @@ module ResultsView =
                                                                                           prop.text "Tab-separated" ]
                                                                     Bulma.button.button [ prop.onClick (fun _ ->
                                                                                               dispatch (
-                                                                                                  DownloadFrequencyList(
-                                                                                                      searchParams,
+                                                                                                  DownloadFrequencyList
                                                                                                       Csv
-                                                                                                  )
                                                                                               ))
                                                                                           match model.DownloadingFormat
                                                                                               with
@@ -698,11 +689,7 @@ module ResultsView =
                           corpus
                           (ShowingResults.ConcordanceMsg >> dispatch)
               | FrequencyLists frequencyListsModel ->
-                  FrequencyLists.view
-                      frequencyListsModel
-                      corpus
-                      loadedCorpusModel.Search.Params
-                      (ShowingResults.FrequencyListsMsg >> dispatch)
+                  FrequencyLists.view frequencyListsModel corpus (ShowingResults.FrequencyListsMsg >> dispatch)
               | MetadataDistribution metadataDistributionModel ->
                   MetadataDistribution.view
                       corpus
