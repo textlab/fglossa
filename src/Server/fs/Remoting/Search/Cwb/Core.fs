@@ -235,7 +235,9 @@ type StringCategoryTextIds =
     { CategoryValue: string
       TextIds: string }
 
-type NumberCategoryTextIds = { CategoryValue: int; TextIds: string }
+type NumberCategoryTextIds =
+    { CategoryValue: int64
+      TextIds: string }
 
 let getMetadataDistribution
     (logger: ILogger)
@@ -251,24 +253,29 @@ let getMetadataDistribution
         let textIdAttr =
             match corpus.Config.Modality with
             | Spoken -> "who_name"
-            | Written -> "tid"
+            | Written -> "text_id"
 
         let queryName = cwbQueryName corpus searchParams.SearchId
 
         let namedQuery =
             match corpus.Config.Modality with
             | Spoken -> queryName
-            | Written ->
-                // $"{queryName}_{searchParams.Step}_{cpu}"
-                failwith "NOT IMPLEMENTED"
+            | Written -> "QUERY"
 
         let cmd =
             $"group {namedQuery} match {textIdAttr} by match {sanitizeString attributeCode}"
 
+        let searchParamsForMetadataDistribution =
+            { searchParams with
+                LastCount = None
+                Step = 1
+                Start = 0UL
+                End = 1000000UL }
+
         let! attrResults =
             match corpus.Config.Modality with
-            | Spoken -> Spoken.runQueries logger corpus searchParams (Some cmd)
-            | Written -> Written.runQueries logger corpus searchParams (Some cmd)
+            | Spoken -> Spoken.runQueries logger corpus searchParamsForMetadataDistribution (Some cmd)
+            | Written -> Written.runQueries logger corpus searchParamsForMetadataDistribution (Some cmd)
 
         let attrDistributionMap =
             attrResults.Hits
@@ -286,7 +293,19 @@ let getMetadataDistribution
                         attrValue,
                         fun maybeAttrValueMap ->
                             match maybeAttrValueMap with
-                            | Some attrValueMap -> Some(attrValueMap.Add(textId, freq))
+                            | Some attrValueMap ->
+                                attrValueMap.Change(
+                                    textId,
+                                    fun maybeFreq ->
+                                        // If a text is split into several parts that are covered by
+                                        // different CPUs in multi-CPU corpora, we may already have
+                                        // registered a frequency for this metadata value and text ID.
+                                        // If so, add to the existing one; otherwise just register the new one.
+                                        match maybeFreq with
+                                        | Some existingFreq -> Some(existingFreq + freq)
+                                        | None -> Some freq
+                                )
+                                |> Some
                             | None -> [ (textId, freq) ] |> Map.ofList |> Some
                     ))
                 Map.empty
