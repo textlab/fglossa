@@ -310,6 +310,11 @@ type MetadataDistribution =
     { Distribution: AttributeValueDistribution []
       CategoryValueTotals: uint64 [] }
 
+// Define type aliases that help clarify the parameters of the IServerApi functions.
+// If we could have used an actual interface instead, we could have used methods
+// with named attributes, but unfortunatly Fable.Remote requires us to use a record
+// with functions.
+
 type DatabaseColumn = string
 
 type PageNumber = int
@@ -317,6 +322,8 @@ type PageNumber = int
 type TextId = string
 
 type IsCaseSensitive = bool
+
+type ShouldCreateHeader = bool
 
 type AttributeCode = string
 
@@ -336,7 +343,7 @@ type IServerApi =
       GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts>
       SearchCorpus: SearchParams -> Async<SearchResultInfo>
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
-      DownloadSearchResults: SearchParams * DownloadFormat -> Async<string>
+      DownloadSearchResults: SearchParams * Cwb.PositionalAttribute list * DownloadFormat * ShouldCreateHeader -> Async<string>
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
       GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive -> Async<string []>
       DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * DownloadFormat -> Async<string>

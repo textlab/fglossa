@@ -437,7 +437,10 @@ module LoadedCorpus =
                     let cmd =
                         Cmd.OfAsync.perform
                             serverApi.DownloadSearchResults
-                            (loadedCorpusModel.Search.Params, format)
+                            (loadedCorpusModel.Search.Params,
+                             concordanceModel.DownloadAttributes,
+                             format,
+                             concordanceModel.HeadersInDownload)
                             DownloadedSearchResults
 
                     loadedCorpusModel, { concordanceModel with DownloadingFormat = Some format }, cmd
