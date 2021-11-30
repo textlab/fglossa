@@ -1,5 +1,6 @@
 module Remoting.Search.Core
 
+open System.Text.RegularExpressions
 open Serilog
 open ClosedXML
 open Shared
@@ -51,6 +52,45 @@ let downloadSearchResults
                 | Cwb -> Cwb.Core.getSearchResults logger searchParamsForDownload corpus (Some attributes) pageNumbers
                 | Fcs -> failwith "Not implemented"
 
+            let results =
+                resultPages
+                // Concatenate the search results from each result page (we don't care about
+                // result pages when creating export files)
+                |> Array.collect (fun resultPage ->
+                    resultPage.Results
+                    |> Array.map (fun result -> result.Text))
+                // We need to take num-random-hits results because the saved search results may
+                // contain slightly more due to rounding (when multi-cpu, multi-step search has been used)
+                |> fun r ->
+                    match searchParams.NumRandomHits with
+                    | Some numRandomHits -> r |> Array.truncate (int numRandomHits)
+                    | None -> r
+                // Concatenate all lines (for multilingual corpora there may be more than one line
+                // per search result, while for other corpora there is only one.)
+                |> Array.collect (fun hitLines -> hitLines |> List.toArray)
+                |> Array.map (fun line ->
+                    if Regex.IsMatch(line, "^\s*-->\w+:") then
+                        // Non-first line of a multilingual result: Return as is
+                        ("", "", line, "", "")
+
+                    // In all other cases, extract corpus position, sentence/utterance ID,
+                    // left context, match and right context from the result line
+                    elif Regex.IsMatch(line, "<who_avfile ") then
+                        // For speech corpora, the who_avfile attribute is included in the
+                        // PrintStructures, so make sure we ignore that
+                        let m =
+                            Regex.Match(
+                                line,
+                                "^\s*(\d+):\s*<who_name\s(.+?)><who_avfile.+?>:\s*(.*?)\s*\{\{(.+?)\}\}\s*(.*)"
+                            )
+
+                        (m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value, m.Groups[4].Value, m.Groups[5].Value)
+                    else
+                        let m =
+                            Regex.Match(line, "^\s*(\d+):\s*<.+?\s(.+?)>:\s*(.*?)\s*\{\{(.+?)\}\}\s*(.*)")
+
+                        (m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value, m.Groups[4].Value, m.Groups[5].Value))
+
             let extension =
                 match format with
                 | Excel -> ".xlsx"
@@ -80,17 +120,13 @@ let downloadSearchResults
 
                 let rowDisplacement = if shouldCreateHeader then 2 else 1
 
-                let results =
-                    [| for resultPage in resultPages do
-                           yield!
-                               [| for result in resultPage.Results ->
-                                      // Since we know this is a monolingual corpus, there should be
-                                      // only one line for each search result, so take the list head
-                                      result.Text |> List.head |] |]
-
                 results
-                |> Array.iteri (fun resultIndex result ->
-                    worksheet.Cell(resultIndex + rowDisplacement, 1).Value <- result)
+                |> Array.iteri (fun resultIndex (corpusPosition, segmentId, leftContext, theMatch, rightContext) ->
+                    worksheet.Cell(resultIndex + rowDisplacement, 1).Value <- corpusPosition
+                    worksheet.Cell(resultIndex + rowDisplacement, 2).Value <- segmentId
+                    worksheet.Cell(resultIndex + rowDisplacement, 3).Value <- leftContext
+                    worksheet.Cell(resultIndex + rowDisplacement, 4).Value <- theMatch
+                    worksheet.Cell(resultIndex + rowDisplacement, 5).Value <- rightContext)
 
                 workbook.SaveAs(outputFilename)
 
