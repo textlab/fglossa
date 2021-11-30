@@ -263,7 +263,12 @@ module ResultsView =
                                                   )
                                                   Bulma.levelItem (
                                                       Bulma.button.button [ color.isSuccess
-                                                                            prop.disabled disableDownload
+
+                                                                            match model.DownloadingFormat with
+                                                                            | Some Excel -> button.isLoading
+                                                                            | Some _ -> prop.disabled true
+                                                                            | None -> prop.disabled disableDownload
+
                                                                             prop.onClick (fun _ ->
                                                                                 dispatch (DownloadSearchResults Excel))
                                                                             prop.style [ style.marginLeft 5 ]
@@ -271,14 +276,24 @@ module ResultsView =
                                                   )
                                                   Bulma.levelItem (
                                                       Bulma.button.button [ color.isSuccess
-                                                                            prop.disabled disableDownload
+
+                                                                            match model.DownloadingFormat with
+                                                                            | Some Tsv -> button.isLoading
+                                                                            | Some _ -> prop.disabled true
+                                                                            | None -> prop.disabled disableDownload
+
                                                                             prop.onClick (fun _ ->
                                                                                 dispatch (DownloadSearchResults Tsv))
                                                                             prop.text "Tab-separated" ]
                                                   )
                                                   Bulma.levelItem (
                                                       Bulma.button.button [ color.isSuccess
-                                                                            prop.disabled disableDownload
+
+                                                                            match model.DownloadingFormat with
+                                                                            | Some Csv -> button.isLoading
+                                                                            | Some _ -> prop.disabled true
+                                                                            | None -> prop.disabled disableDownload
+
                                                                             prop.onClick (fun _ ->
                                                                                 dispatch (DownloadSearchResults Csv))
                                                                             prop.text "Comma-separated" ]
