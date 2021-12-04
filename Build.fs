@@ -45,7 +45,7 @@ Target.create "InstallClient" (fun _ -> npm "install" ".")
 
 Target.create "Bundle" (fun _ ->
     dotnet (sprintf "publish -c Release -o \"%s\"" deployDir) serverPath
-    dotnet "fable --outDir build --run webpack -p" clientPath)
+    dotnet "fable --outDir build --run webpack build" clientPath)
 
 Target.create "Azure" (fun _ ->
     let web =
