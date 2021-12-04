@@ -4,7 +4,7 @@ open Fake.IO
 open Farmer
 open Farmer.Builders
 
-let execContext = Context.FakeExecutionContext.Create false "build.fsx" [ ]
+let execContext = Context.FakeExecutionContext.Create false "build.fsx" []
 Context.setExecutionContext (Context.RuntimeContext.Fake execContext)
 
 let sharedPath = Path.getFullName "src/Shared"
@@ -19,13 +19,13 @@ let npm args workingDir =
         match ProcessUtils.tryFindFileOnPath "npm" with
         | Some path -> path
         | None ->
-            "npm was not found in path. Please install it and make sure it's available from your path. " +
-            "See https://safe-stack.github.io/docs/quickstart/#install-pre-requisites for more info"
+            "npm was not found in path. Please install it and make sure it's available from your path. "
+            + "See https://safe-stack.github.io/docs/quickstart/#install-pre-requisites for more info"
             |> failwith
 
     let arguments = args |> String.split ' ' |> Arguments.OfArgs
 
-    Command.RawCommand (npmPath, arguments)
+    Command.RawCommand(npmPath, arguments)
     |> CreateProcess.fromCommand
     |> CreateProcess.withWorkingDirectory workingDir
     |> CreateProcess.ensureExitCode
@@ -34,7 +34,9 @@ let npm args workingDir =
 
 let dotnet cmd workingDir =
     let result = DotNet.exec (DotNet.Options.withWorkingDirectory workingDir) cmd ""
-    if result.ExitCode <> 0 then failwithf "'dotnet %s' failed in %s" cmd workingDir
+
+    if result.ExitCode <> 0 then
+        failwithf "'dotnet %s' failed in %s" cmd workingDir
 
 
 Target.create "Clean" (fun _ -> Shell.cleanDir deployDir)
@@ -43,32 +45,33 @@ Target.create "InstallClient" (fun _ -> npm "install" ".")
 
 Target.create "Bundle" (fun _ ->
     dotnet (sprintf "publish -c Release -o \"%s\"" deployDir) serverPath
-    dotnet "fable --outDir build --run webpack -p" clientPath
-)
+    dotnet "fable --outDir build --run webpack -p" clientPath)
 
 Target.create "Azure" (fun _ ->
-    let web = webApp {
-        name "fglossa"
-        zip_deploy "deploy"
-    }
-    let deployment = arm {
-        location Location.WestEurope
-        add_resource web
-    }
+    let web =
+        webApp {
+            name "fglossa"
+            zip_deploy "deploy"
+        }
+
+    let deployment =
+        arm {
+            location Location.WestEurope
+            add_resource web
+        }
 
     deployment
     |> Deploy.execute "fglossa" Deploy.NoParameters
-    |> ignore
-)
+    |> ignore)
 
 Target.create "Run" (fun _ ->
     dotnet "build" sharedPath
+
     [ async { dotnet "watch run" serverPath }
       async { dotnet "fable watch --outDir build -s --run webpack-dev-server" clientPath } ]
     |> Async.Parallel
     |> Async.RunSynchronously
-    |> ignore
-)
+    |> ignore)
 
 // Target.create "RunTests" (fun _ ->
 //     dotnet "build" sharedTestsPath
@@ -81,20 +84,18 @@ Target.create "Run" (fun _ ->
 
 open Fake.Core.TargetOperators
 
-let dependencies = [
-    "Clean"
-        ==> "InstallClient"
-        ==> "Bundle"
-        ==> "Azure"
+let dependencies =
+    [ "Clean"
+      ==> "InstallClient"
+      ==> "Bundle"
+      ==> "Azure"
 
-    "Clean"
-        ==> "InstallClient"
-        ==> "Run"
+      "Clean" ==> "InstallClient" ==> "Run"
 
-    //"Clean"
-    //    ==> "InstallClient"
-    //    ==> "RunTests"
-]
+      //"Clean"
+      //    ==> "InstallClient"
+      //    ==> "RunTests"
+      ]
 
 [<EntryPoint>]
 let main args =
@@ -102,7 +103,9 @@ let main args =
         match args with
         | [| target |] -> Target.runOrDefault target
         | _ -> Target.runOrDefault "Run"
+
         0
-    with e ->
+    with
+    | e ->
         printfn "%A" e
         1
