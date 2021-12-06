@@ -1164,7 +1164,9 @@ type Msg =
 let init () : Model * Cmd<Msg> =
     let model = LoadingCorpus
 
-    let corpusCode = Browser.Dom.window.location.hash.Split('/')[1]
+    let corpusCode =
+        Browser.Dom.window.location.href.Split('/')
+        |> Array.last
 
     let cmd =
         Cmd.OfAsync.perform serverApi.GetCorpusConfig corpusCode LoadingCorpus.FetchedCorpusConfig

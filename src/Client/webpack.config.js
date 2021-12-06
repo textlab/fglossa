@@ -114,6 +114,7 @@ module.exports = {
         devMiddleware: {
             publicPath: '/'
         },
+        historyApiFallback: true,
         static: {
             directory: resolve(CONFIG.assetsDir)
         }
