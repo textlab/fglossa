@@ -6,15 +6,23 @@ open Shared
 open Shared.StringUtils
 open Database
 
+let corpusRoot =
+    let envVar = System.Environment.GetEnvironmentVariable("GLOSSA_CORPUS_ROOT")
+
+    if isNull envVar then
+        "../Corpora/corpora"
+    else
+        envVar
+
 let getConnectionString corpusCode =
     let code = sanitizeString corpusCode
 
-    $"DataSource=../Corpora/corpora/{code}/{code}.sqlite"
+    $"DataSource={corpusRoot}/{code}/{code}.sqlite"
 
 type Corpus(config: SharedCorpusInfo) =
     let corpusInfo =
         try
-            Some(File.ReadAllText($"../Corpora/corpora/{config.Code}/{config.Code}.html"))
+            Some(File.ReadAllText($"{corpusRoot}/{config.Code}/{config.Code}.html"))
         with
         | :? FileNotFoundException -> None
 
@@ -63,7 +71,7 @@ type Corpus(config: SharedCorpusInfo) =
     /// '.mp3' extension removed
     member _.AudioFiles() =
         try
-            Directory.GetFiles($"../Corpora/corpora/{config.Code}/audio")
+            Directory.GetFiles($"{corpusRoot}/{config.Code}/audio")
             |> Array.filter (fun filename -> filename.EndsWith(".mp3"))
             |> Array.map (replace ".+/" "" >> replace "\.mp3$" "")
             |> Set.ofArray
@@ -74,7 +82,7 @@ type Corpus(config: SharedCorpusInfo) =
     /// '.mp4' extension removed
     member _.VideoFiles() =
         try
-            Directory.GetFiles($"../Corpora/corpora/{config.Code}/video")
+            Directory.GetFiles($"{corpusRoot}/{config.Code}/video")
             |> Array.filter (fun filename -> filename.EndsWith(".mp4"))
             |> Array.map (replace ".+/" "" >> replace "\.mp4$" "")
             |> Set.ofArray

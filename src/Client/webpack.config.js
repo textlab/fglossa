@@ -23,13 +23,13 @@ var CONFIG = {
     // to a external API server. See https://webpack.js.org/configuration/dev-server/#devserver-proxy
     devServerProxy: {
         // redirect requests that start with /api/ to the server on port 8085
-        '/glossa3/api/**': {
-            target: 'http://localhost:' + (process.env.SERVER_PROXY_PORT || "8085"),
+        '/api/**': {
+            target: 'http://0.0.0.0:' + (process.env.SERVER_PROXY_PORT || "8085"),
             changeOrigin: true
         },
         // redirect websocket requests that start with /socket/ to the server on the port 8085
-        '/glossa3/socket/**': {
-            target: 'http://localhost:' + (process.env.SERVER_PROXY_PORT || "8085"),
+        '/socket/**': {
+            target: 'http://0.0.0.0:' + (process.env.SERVER_PROXY_PORT || "8085"),
             ws: true
         }
     }
@@ -65,7 +65,8 @@ module.exports = {
     // to prevent browser caching if code changes
     output: {
         path: resolve(CONFIG.outputDir),
-        filename: isProduction ? '[name].[hash].js' : '[name].js'
+        filename: isProduction ? '[name].[contenthash].js' : '[name].js',
+        publicPath: '/'
     },
     mode: isProduction ? 'production' : 'development',
     devtool: isProduction ? 'source-map' : 'eval-source-map',
@@ -84,8 +85,18 @@ module.exports = {
     //      - HotModuleReplacementPlugin: Enables hot reloading when code changes without refreshing
     plugins: isProduction ?
         commonPlugins.concat([
-            new MiniCssExtractPlugin({ filename: 'style.[name].[hash].css' }),
-            new CopyWebpackPlugin({ patterns: [{ from: resolve(CONFIG.assetsDir) }] })
+            new MiniCssExtractPlugin({ filename: 'style.[name].[contenthash].css' }),
+            new CopyWebpackPlugin({
+                patterns: [{
+                    from: resolve(CONFIG.assetsDir),
+                    globOptions: {
+                        ignore: [
+                            resolve(CONFIG.assetsDir + '/tmp'),
+                            resolve(CONFIG.assetsDir + '/corpora')
+                        ]
+                    }
+                }]
+            })
         ]) : commonPlugins,
     resolve: {
         // See https://github.com/fable-compiler/Fable/issues/1490

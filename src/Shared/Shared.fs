@@ -331,7 +331,7 @@ type KeepZeroValues = bool
 
 module Route =
     let builder typeName methodName =
-        sprintf "/glossa3/api/%s/%s" typeName methodName
+        sprintf "/api/%s/%s" typeName methodName
 
 type IServerApi =
     { GetCorpusConfig: CorpusCode -> Async<SharedCorpusInfo>

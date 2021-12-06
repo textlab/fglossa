@@ -43,6 +43,8 @@ Target.create "Clean" (fun _ -> Shell.cleanDir deployDir)
 
 Target.create "InstallClient" (fun _ -> npm "install" ".")
 
+Target.create "BuildClient" (fun _ -> dotnet "fable --outDir build --run webpack build" clientPath)
+
 Target.create "Bundle" (fun _ ->
     dotnet (sprintf "publish -c Release -o \"%s\"" deployDir) serverPath
     dotnet "fable --outDir build --run webpack build" clientPath)
@@ -89,6 +91,8 @@ let dependencies =
       ==> "InstallClient"
       ==> "Bundle"
       ==> "Azure"
+
+      "Clean" ==> "InstallClient" ==> "BuildClient"
 
       "Clean" ==> "InstallClient" ==> "Run"
 

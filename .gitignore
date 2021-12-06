@@ -20,3 +20,4 @@ build/
 src/Corpora
 /src/Server/db/fglossa.sqlite
 /src/Client/public/tmp
+/self-contained

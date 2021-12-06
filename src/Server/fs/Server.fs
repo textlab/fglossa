@@ -1,6 +1,10 @@
 module Server
 
 open System
+// open Microsoft.AspNetCore.Builder
+// open Microsoft.AspNetCore.Hosting
+// open Microsoft.Extensions.DependencyInjection
+// open Microsoft.Extensions.Hosting
 open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
 open Giraffe.SerilogExtensions
@@ -10,6 +14,7 @@ open Saturn
 
 open Config
 open Shared
+open ServerTypes
 
 let createServerApi ctx =
     let cnf = Controller.getConfig ctx
@@ -119,7 +124,12 @@ let browserPipeline =
         set_header "Expires" "0"
     }
 
-let htmlRouter = router { get "/" (htmlView Index.layout) }
+let htmlRouter =
+    router {
+        // Ignore the last part of the path, which is the corpus code, since it
+        // it will be handled by the client code instead.b
+        getf "/%s" (fun _ _ ctx -> (Controller.file ctx "public/index.html"))
+    }
 
 let browserRouter =
     router {
@@ -132,10 +142,12 @@ let browserRouter =
     }
 
 // The `forward` operation in the `router` computation expression does not
-// currently work with .NET 5, so user Giraffe's routing functions instead
+// currently work with .NET 5, so use Giraffe's routing functions instead
 let webApp =
-    choose [ routeStartsWith "/glossa3/api" >=> remotingRouter
-             route "" >=> browserRouter ]
+    choose [ routeStartsWith "/api" >=> remotingRouter
+             // Ignore the corpus code that is provided as path and just return
+             // index.html. The corpus code will be handled by the client code.
+             routef "/%s" (fun _ -> browserRouter) ]
 // router {
 //     // Remoting requests.
 //     forward "/api/IServerApi" remotingRouter
@@ -159,14 +171,41 @@ Log.Logger <-
         .Console(outputTemplate = outputTemplate)
         .CreateLogger()
 
+// Since the Saturn application builder does not allow us to set a path base, configure
+// Giraffe directly instead.
+
+// let configureApp (app: IApplicationBuilder) =
+//     // Add Giraffe to the ASP.NET Core pipeline
+//     app.UseGiraffe webAppWithLogging
+//     app.UsePathBase("/glossa3") |> ignore
+
+// let configureServices (services: IServiceCollection) =
+//     // Add Giraffe dependencies
+//     services.AddGiraffe() |> ignore
+
+// [<EntryPoint>]
+// let main _ =
+//     Host
+//         .CreateDefaultBuilder()
+//         .ConfigureWebHostDefaults(fun webHostBuilder ->
+//             webHostBuilder
+//                 .Configure(configureApp)
+//                 .ConfigureServices(configureServices)
+//                 .UseUrls("http://localhost:8085/")
+//             |> ignore)
+//         .Build()
+//         .Run()
+
+//     0
+
 let app =
     application {
         url "http://0.0.0.0:8085"
-        use_router webApp
+        use_router webAppWithLogging
         memory_cache
         use_static "public"
         use_gzip
-        use_config (fun _ -> { connectionString = "DataSource=db/fglossa.sqlite" })
+        use_config (fun _ -> { connectionString = $"DataSource={corpusRoot}/fglossa.sqlite" })
     }
 
 run app
