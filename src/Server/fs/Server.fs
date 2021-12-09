@@ -144,7 +144,7 @@ let browserRouter =
 // The `forward` operation in the `router` computation expression does not
 // currently work with .NET 5, so use Giraffe's routing functions instead
 let webApp =
-    choose [ routeStartsWith "/api" >=> remotingRouter
+    choose [ routeStartsWith "/glossa3/api" >=> remotingRouter
              // Ignore the corpus code that is provided as path and just return
              // index.html. The corpus code will be handled by the client code.
              routef "/%s" (fun _ -> browserRouter) ]
