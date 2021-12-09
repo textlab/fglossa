@@ -334,14 +334,20 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
                     // Providing Text.Encoding.UTF8 explicitly as encoding causes a BOM mark to be written to
                     // the start of the input stream. We don't want that (since CQP does not understand it) so if the
                     // corpus has UTF-8 encoding, we use the default writer, which writes UTF-8 without a BOM mark.
-                    Process.runCmdWithInputOutputAndError "docker" "exec -i cwb cqp -c" commandStr
+                    if System.Environment.GetEnvironmentVariable("CWB_IN_DOCKER") = "1" then
+                        Process.runCmdWithInputOutputAndError "docker" "exec -i cwb cqp -c" commandStr
+                    else
+                        Process.runCmdWithInputOutputAndError "cqp" "-c" commandStr
                 else
-                    // If the corpus encoding is different from UTF-8, we provide the encoding explicitly
+                // If the corpus encoding is different from UTF-8, we provide the encoding explicitly
+                if System.Environment.GetEnvironmentVariable("CWB_IN_DOCKER") = "1" then
                     Process.runCmdWithInputOutputErrorAndEncoding
                         "docker"
                         "exec -i cwb cqp -c"
                         corpus.Encoding
                         commandStr
+                else
+                    Process.runCmdWithInputOutputErrorAndEncoding "cqp" "-c" corpus.Encoding commandStr
 
             let isUndumpError =
                 Regex.IsMatch(error, "(?i)CQP Error:\s+Format error in undump file")

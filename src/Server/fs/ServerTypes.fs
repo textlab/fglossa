@@ -46,7 +46,10 @@ type Corpus(config: SharedCorpusInfo) =
             |> Array.fold
                 (fun (sizeMap: Map<string, uint64>) cwbCorpus ->
                     let corpusDescription =
-                        Process.runCmdWithOutput "docker" $"exec -i cwb cwb-describe-corpus {cwbCorpus}"
+                        if System.Environment.GetEnvironmentVariable("CWB_IN_DOCKER") = "1" then
+                            Process.runCmdWithOutput "docker" $"exec -i cwb cwb-describe-corpus {cwbCorpus}"
+                        else
+                            Process.runCmdWithOutput "cwb-describe-corpus" cwbCorpus
 
                     let sizeLine =
                         corpusDescription.Split('\n')

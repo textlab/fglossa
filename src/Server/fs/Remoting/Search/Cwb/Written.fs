@@ -386,7 +386,10 @@ let getSortedPositions (corpus: Corpus) (searchParams: SearchParams) =
             |> Seq.map (fun s -> s + ";")
             |> String.concat "\n"
 
-        Process.runCmdWithInputAndOutput "docker" "exec -i cwb cqp -c" commandStr
+        if System.Environment.GetEnvironmentVariable("CWB_IN_DOCKER") = "1" then
+            Process.runCmdWithInputAndOutput "docker" "exec -i cwb cqp -c" commandStr
+        else
+            Process.runCmdWithInputAndOutput "cqp" "-c" commandStr
         |> ignore
 
     let sortOpt =
