@@ -725,15 +725,16 @@ module MetadataMenu =
                                                                   prop.onClick (fun _ -> dispatch FetchMetadataForTexts)
                                                                   prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-binoculars" ] ] ]
                                                                                   Html.span "Show" ] ]
-                                            if model.Corpus.SharedInfo.GeoCoordinates.IsSome then
-                                                Bulma.button.button [ button.isSmall
-                                                                      button.isOutlined
-                                                                      color.isInfo
-                                                                      prop.title "Show map"
-                                                                      prop.onClick (fun _ ->
-                                                                          dispatch FetchMetadataForTexts)
-                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-globe" ] ] ]
-                                                                                      Html.span "Map" ] ] ] ]
+                                            // if model.Corpus.SharedInfo.GeoCoordinates.IsSome then
+                                            //     Bulma.button.button [ button.isSmall
+                                            //                           button.isOutlined
+                                            //                           color.isInfo
+                                            //                           prop.title "Show map"
+                                            //                           prop.onClick (fun _ ->
+                                            //                               dispatch FetchMetadataForTexts)
+                                            //                           prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-globe" ] ] ]
+                                            //                                           Html.span "Map" ] ]
+                                             ] ]
 
         Html.span [ Html.div [ prop.style [ style.width 200
                                             style.paddingLeft (length.em 0.75)
