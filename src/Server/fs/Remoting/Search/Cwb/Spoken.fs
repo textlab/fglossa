@@ -22,7 +22,7 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
         let displayedAttrsCmd = displayedAttrsCommand corpus searchParams.Queries None
 
         let commands =
-            [ "set DataDirectory \"tmp/glossa\""
+            [ "set DataDirectory \"/tmp/glossa\""
               cwbCorpus
 
               yield!
@@ -166,7 +166,7 @@ let getSearchResults
         let sortCmds = sortWithinWho namedQuery searchParams.SortKey
 
         let commands =
-            [ "set DataDirectory \"tmp/glossa\""
+            [ "set DataDirectory \"/tmp/glossa\""
               cwbCorpusName corpus searchParams.Queries
               "set Context 1 who_start"
               "set PrintStructures \"who_name, who_avfile\""
@@ -315,7 +315,7 @@ let getMediaObject logger (searchParams: SearchParams) mediaPlayerType pageNumbe
             + rowIndex
 
         let commands =
-            [ $"set DataDirectory \"tmp/glossa\""
+            [ $"set DataDirectory \"/tmp/glossa\""
               corpus.Config.Code.ToUpper()
               $"set Context {contextSize} {unitStr}"
               "set LD \"{{\""
