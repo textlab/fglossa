@@ -92,7 +92,6 @@ type ConcordanceModel =
     { ContextSizeTextValue: string
       IsSearching: bool
       QuickViewMetadata: Metadata.CategoryNameAndValue list
-      ShouldShowQuickView: bool
       ShouldShowDownloadWindow: bool
       DownloadingFormat: DownloadFormat option
       HeadersInDownload: bool
@@ -118,7 +117,6 @@ type ConcordanceModel =
         { ContextSizeTextValue = contextSizeTextValue
           IsSearching = true
           QuickViewMetadata = quickViewMetadata
-          ShouldShowQuickView = false
           ShouldShowDownloadWindow = false
           DownloadingFormat = None
           HeadersInDownload = true
@@ -209,6 +207,7 @@ type LoadedCorpusModel =
       OpenMetadataCategoryCode: string option
       Search: Search
       ShouldShowMetadataMenu: bool option
+      ShouldShowQuickView: bool
       SelectionTablePageNumber: int
       SelectionTableSort: Metadata.SortInfo option
       Substate: LoadedCorpusSubstate }

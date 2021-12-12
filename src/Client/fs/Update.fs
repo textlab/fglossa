@@ -53,6 +53,7 @@ module LoadingCorpus =
                   OpenMetadataCategoryCode = None
                   Search = Search.Init(corpus.SharedInfo)
                   ShouldShowMetadataMenu = None
+                  ShouldShowQuickView = false
                   SelectionTablePageNumber = 1
                   SelectionTableSort = None
                   Substate = CorpusStart }
@@ -356,34 +357,30 @@ module LoadedCorpus =
                               { Name = category.Name
                                 Code = category.Code } ]
 
-                    let newConcordanceModel, cmd =
-                        match concordanceModel.TextIdInQuickView with
-                        | Some textIdInQuickView when textIdInQuickView = textId ->
-                            // We were already showing metadata for this text, so close the quickview instead
-                            { concordanceModel with TextIdInQuickView = None }, Cmd.ofMsg CloseQuickView
-                        | _ ->
-                            // We were NOT already showing metadata for this text, so mark it as being shown and fetch its metadata
-                            { concordanceModel with TextIdInQuickView = Some textId },
-                            Cmd.OfAsync.perform
-                                serverApi.GetMetadataForSingleText
-                                (corpus.SharedInfo.Code, categories, textId)
-                                FetchedMetadataForText
+                    let getNew () =
+                        loadedCorpusModel,
+                        { concordanceModel with TextIdInQuickView = Some textId },
+                        Cmd.OfAsync.perform
+                            serverApi.GetMetadataForSingleText
+                            (corpus.SharedInfo.Code, categories, textId)
+                            FetchedMetadataForText
 
-                    loadedCorpusModel, newConcordanceModel, cmd
+                    match concordanceModel.TextIdInQuickView with
+                    | Some textIdInQuickView when textIdInQuickView = textId ->
+                        // We have already loaded this text into the quick view, so just make
+                        // sure we show it
+                        { loadedCorpusModel with ShouldShowQuickView = true }, concordanceModel, Cmd.none
+                    | Some _
+                    | None -> getNew ()
 
                 | FetchedMetadataForText metadata ->
-                    let newConcordanceModel =
-                        { concordanceModel with
-                            QuickViewMetadata = metadata
-                            ShouldShowQuickView = true }
-
-                    loadedCorpusModel, newConcordanceModel, Cmd.none
+                    { loadedCorpusModel with ShouldShowQuickView = true },
+                    { concordanceModel with QuickViewMetadata = metadata },
+                    Cmd.none
 
                 | CloseQuickView ->
-                    loadedCorpusModel,
-                    { concordanceModel with
-                        ShouldShowQuickView = false
-                        TextIdInQuickView = None },
+                    { loadedCorpusModel with ShouldShowQuickView = false },
+                    { concordanceModel with TextIdInQuickView = None },
                     Cmd.none
 
                 | FetchMediaObject (mediaPlayerType, rowIndex) ->
@@ -728,6 +725,7 @@ module LoadedCorpus =
         | SetRandomHitsSeed of int option
         | Search
         | ResetForm
+        | ClosePopups
 
     let update (msg: Msg) (loadedCorpusModel: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
         match msg with
@@ -1153,6 +1151,11 @@ module LoadedCorpus =
                 Substate = CorpusStart
                 OpenMetadataCategoryCode = None },
             Cmd.ofMsg (MetadataMsg Update.Metadata.FetchTextAndTokenCounts)
+        | ClosePopups ->
+            { loadedCorpusModel with
+                OpenMetadataCategoryCode = None
+                ShouldShowQuickView = false },
+            Cmd.none
 
 ////////////////////////////////
 // Update

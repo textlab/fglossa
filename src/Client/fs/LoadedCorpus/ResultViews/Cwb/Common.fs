@@ -29,6 +29,7 @@ let idColumn (corpus: Corpus) sId (pageNumber: int) rowIndex (dispatch: Msg -> u
     Html.div [ Html.a [ prop.href ""
                         prop.onClick (fun e ->
                             e.preventDefault ()
+                            e.stopPropagation ()
                             dispatch (FetchMetadataForText(corpus, textId)))
                         prop.children [ Html.span textId ] ]
                corpus.ResultLinks(pageNumber, rowIndex) ]

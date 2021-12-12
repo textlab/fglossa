@@ -177,19 +177,19 @@ module ResultsView =
                                ) ]
 
         [<ReactComponent>]
-        let MetadataQuickView (model: ConcordanceModel) dispatch =
+        let MetadataQuickView (model: ConcordanceModel) (shouldShowQuickView: bool) dispatch =
             let elementRef = React.useElementRef ()
 
             let focusQuickView () =
                 elementRef.current
                 |> Option.iter (fun quickViewElement ->
-                    if model.ShouldShowQuickView then
+                    if shouldShowQuickView then
                         quickViewElement.focus ())
 
             // Focus the QuickView when mounted to enable it to receive keyboard events
             React.useEffect (focusQuickView, [| box model |])
 
-            QuickView.quickview [ if model.ShouldShowQuickView then
+            QuickView.quickview [ if shouldShowQuickView then
                                       quickview.isActive
                                   // Set elementRef in order to apply the focusQuickView() function to this element
                                   prop.ref elementRef
@@ -418,7 +418,7 @@ module ResultsView =
             let resultPage = concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
 
             [ DownloadWindow concordanceModel corpus dispatch
-              MetadataQuickView concordanceModel dispatch
+              MetadataQuickView concordanceModel loadedCorpusModel.ShouldShowQuickView dispatch
               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ sortMenu
                                                                 downloadButton ]
                                               Bulma.levelItem resultsInfo ]
@@ -776,7 +776,7 @@ let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) 
 
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
                                 prop.tabIndex 0
-                                prop.onClick (fun _ -> dispatch (MetadataMsg Update.Metadata.Msg.CloseMetadataMenu))
+                                prop.onClick (fun _ -> dispatch ClosePopups)
                                 prop.onKeyUp (fun e ->
                                     if e.key = "Escape" then
                                         dispatch (MetadataMsg Update.Metadata.Msg.CloseMetadataMenu))
