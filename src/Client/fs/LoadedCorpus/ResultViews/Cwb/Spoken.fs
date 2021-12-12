@@ -122,6 +122,8 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
                    prop.onKeyUp (fun e ->
                        if e.key = "Escape" then
                            dispatch RemoveMediaObject)
+                   // Stop propagation to prevent trouble caused by re-rendering
+                   prop.onClick (fun e -> e.stopPropagation ())
                    prop.children [ header
                                    mediaDisplay
                                    footer ] ]
