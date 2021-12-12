@@ -41,5 +41,6 @@ let spinnerOverlay (spin: bool) maybeStyles children =
         else
             children
 
-    Html.div [ prop.style [ style.position.relative ]
+    Html.div [ prop.style [ style.position.relative
+                            style.minHeight 400 ]
                prop.children spinnerChildren ]
