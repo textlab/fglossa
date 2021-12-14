@@ -12,12 +12,37 @@ open Shared
 
 type MinAndMax = { Min: int64; Max: int64 }
 
+let createJoin table =
+    $"INNER JOIN {table}_texts ON {table}_texts.tid = texts.tid INNER JOIN {table} ON {table}.id = {table}_texts.{table}_id"
+
 let metadataSelectionToParamDict (selection: Metadata.Selection) =
     selection
-    |> Map.map (fun key sel ->
-        sel.Choices
-        |> Array.map (fun choice -> choice.Value))
+    |> Map.toList
+    |> List.map (fun (key, sel) ->
+        let newKey =
+            if key.Contains('.') then
+                // Remove table name, since the fully qualified name is invalid as a paramter name in SQL
+                key.Split('.')[1]
+            else
+                key
+
+        let newValue =
+            sel.Choices
+            |> Array.map (fun choice -> choice.Value)
+
+        newKey, newValue)
+    |> Map.ofList
     |> mapToParamDict
+
+let generateMetadataSelectionJoins (selection: Metadata.Selection) =
+    let categoryTables =
+        [ for (code, _) in selection |> Map.toList do
+              if code.Contains('.') then
+                  code.Split('.')[0] ]
+
+    [ for t in categoryTables -> createJoin t ]
+    |> String.concat " "
+    |> fun s -> if s.Length > 0 then " " + s else ""
 
 let generateMetadataSelectionSql (maybeRequestedCategoryCode: string option) (selection: Metadata.Selection) =
     [ for category in selection do
@@ -54,10 +79,18 @@ let generateMetadataSelectionSql (maybeRequestedCategoryCode: string option) (se
                   | Some fromValue, None -> $" AND {column} >= {int fromValue.Value}"
                   | None, Some toValue -> $" AND {column} <= {int toValue.Value}"
                   | None, None ->
+                      let paramName =
+                          // if the key contains a table name in front of the column name, remove the table name,
+                          // since a fully qualified name is not a valid parameter name
+                          if column.Contains('.') then
+                              column.Split('.')[1]
+                          else
+                              column
+
                       if category.Value.ShouldExclude then
-                          $" AND {column} NOT IN @{column}"
+                          $" AND {column} NOT IN @{paramName}"
                       else
-                          $" AND {column} IN @{column}" ]
+                          $" AND {column} IN @{paramName}" ]
     |> String.concat ""
 
 let getMetadataForCategory
@@ -73,10 +106,19 @@ let getMetadataForCategory
 
         let catCode = sanitizeString categoryCode
 
+        let catJoin =
+            if catCode.Contains('.') then
+                let catTable = catCode.Split('.')[0]
+                " " + createJoin catTable
+            else
+                ""
+
         let metadataSelectionSql = generateMetadataSelectionSql (Some catCode) selection
 
+        let joins = generateMetadataSelectionJoins selection
+
         let sql =
-            $"SELECT distinct({catCode}) FROM texts WHERE {catCode} <> '' AND {catCode} IS NOT NULL{metadataSelectionSql} ORDER BY {catCode}"
+            $"SELECT distinct({catCode}) FROM texts{catJoin}{joins} WHERE {catCode} <> '' AND {catCode} IS NOT NULL{metadataSelectionSql} ORDER BY {catCode}"
 
         let parameters = metadataSelectionToParamDict selection
 
@@ -138,18 +180,24 @@ let getMetadataForTexts
 
         let columnSql =
             columns
-            |> List.map sanitizeString
+            |> List.map (
+                sanitizeString
+                >> fun s -> if s = "tid" then "texts.tid" else s
+            )
             |> String.concat ", "
 
         let metadataSelectionSql = generateMetadataSelectionSql None selection
+
+        let joins = generateMetadataSelectionJoins selection
 
         let orderBy =
             match maybeSortInfo with
             | Some sortInfo -> $"{sortInfo.CategoryCode} {sortInfo.Direction}"
             | None -> "tid"
+            |> fun s -> if s = "tid" then "texts.tid" else s
 
         let sql =
-            $"SELECT {columnSql} FROM texts WHERE 1 = 1{metadataSelectionSql} ORDER BY {orderBy} LIMIT {limit} OFFSET {offset}"
+            $"SELECT {columnSql} FROM texts{joins} WHERE 1 = 1{metadataSelectionSql} ORDER BY {orderBy} LIMIT {limit} OFFSET {offset}"
 
         let parameters = metadataSelectionToParamDict selection
 

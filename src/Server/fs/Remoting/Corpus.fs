@@ -20,10 +20,12 @@ module Spoken =
 
             let metadataSelectionSql = generateMetadataSelectionSql None selection
 
+            let joins = generateMetadataSelectionJoins selection
+
             let parameters = metadataSelectionToParamDict selection
 
             let textSql =
-                $"SELECT COUNT(DISTINCT tid) as NumTexts FROM texts WHERE 1 = 1{metadataSelectionSql}"
+                $"SELECT COUNT(DISTINCT tid) as NumTexts FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}"
 
             let! textRes = querySingle logger conn textSql (Some parameters)
 
@@ -66,8 +68,10 @@ module Written =
 
             let metadataSelectionSql = generateMetadataSelectionSql None selection
 
+            let joins = generateMetadataSelectionJoins selection
+
             let sql =
-                $"SELECT count(*) as NumTexts, sum(endpos - startpos + 1) as NumTokens FROM texts WHERE 1 = 1{metadataSelectionSql}"
+                $"SELECT count(*) as NumTexts, sum(endpos - startpos + 1) as NumTokens FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}"
 
             let parameters = metadataSelectionToParamDict selection
 

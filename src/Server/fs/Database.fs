@@ -34,7 +34,7 @@ let inline (=>) k v = k, box v
 let sanitizeString s =
     if
         String.IsNullOrWhiteSpace(s)
-        || Regex.IsMatch(s, "\W")
+        || Regex.IsMatch(s, "[^\w\.]")
     then
         failwith $"Invalid string in SQL: {s}"
     else

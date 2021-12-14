@@ -134,12 +134,14 @@ let printPositionsMatchingMetadata
             let metadataSelectionSql =
                 generateMetadataSelectionSql None searchParams.MetadataSelection
 
+            let joins = generateMetadataSelectionJoins searchParams.MetadataSelection
+
             let langSql = generateLanguageSql corpus searchParams.Queries
 
             let limitsSql = generateLimitsSql corpus startpos endpos
 
             let sql =
-                $"SELECT {positionFields} FROM texts WHERE 1 = 1{metadataSelectionSql}{langSql}{limitsSql}"
+                $"SELECT {positionFields} FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{langSql}{limitsSql}"
 
             let parameters = metadataSelectionToParamDict searchParams.MetadataSelection
 

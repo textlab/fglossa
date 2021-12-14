@@ -112,14 +112,19 @@ module MetadataMenu =
                                                  "width" ==> 200 ],
                                      listItem)
 
+        let tableAndColumn =
+            match category.TableName with
+            | Some tableName -> $"{tableName}.{category.Code}"
+            | None -> category.Code
+
         let categorySelection =
-            metadataSelection.TryFind(category.Code)
+            metadataSelection.TryFind(tableAndColumn)
             |> Option.defaultValue CategorySelection.Default
 
         React.useEffect ((fun () -> if isOpen then focusFilterInput ()), [| box isOpen |])
 
         Html.li [ if isInSidebar then
-                      Html.a [ prop.key category.Code
+                      Html.a [ prop.key tableAndColumn
                                if isOpen then
                                    prop.style [ style.lineHeight (length.em 1.7) ]
                                prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category))
