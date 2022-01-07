@@ -12,6 +12,15 @@ open Shared
 
 type MinAndMax = { Min: int64; Max: int64 }
 
+let getQualifiedColumnName categoryCode =
+    categoryCode
+    |> sanitizeString
+    |> fun s ->
+        if s.Contains('.') then
+            s
+        else
+            "texts." + s
+
 let createJoin table =
     $"INNER JOIN {table}_texts ON {table}_texts.tid = texts.tid INNER JOIN {table} ON {table}.id = {table}_texts.{table}_id"
 
@@ -55,7 +64,7 @@ let generateMetadataSelectionSql (maybeRequestedCategoryCode: string option) (se
               | _ -> false
 
           if shouldInclude then
-              let column = sanitizeString category.Key
+              let column = getQualifiedColumnName category.Key
 
               let choices =
                   // Remove empty values
@@ -87,10 +96,38 @@ let generateMetadataSelectionSql (maybeRequestedCategoryCode: string option) (se
                           else
                               column
 
-                      if category.Value.ShouldExclude then
-                          $" AND {column} NOT IN @{paramName}"
+                      // If we want to exclude values from a many-to-many category, whose values are located
+                      // in its own table as indicated by the presence of a dot in the category code, we cannot
+                      // use a 'NOT IN'-restriction. Instead, we need to generate an 'IN'-restriction that
+                      // will be part of a subquery that searches for a positive matches, the results of
+                      // which will be excluded from the final results, so treat those the same as simple
+                      // positive matches from other categories.
+                      if
+                          category.Value.ShouldExclude
+                          && not (category.Key.Contains('.'))
+                      then
+                          // Somewhat counterintuitively, the results returned by 'NOT IN' does not include NULL values
+                          // (even though they are clearly not included in the set), so we need to check for that as well.
+                          $" AND ({column} IS NULL OR {column} NOT IN @{paramName})"
                       else
                           $" AND {column} IN @{paramName}" ]
+    |> String.concat ""
+
+let generateManyToManyExclusions (selection: Metadata.Selection) =
+    [ for category in selection do
+          if
+              category.Key.Contains('.')
+              && category.Value.ShouldExclude
+          then
+              let parts = category.Key.Split('.')
+              let table = parts[0]
+              let column = parts[1]
+              let join = createJoin table
+
+              let subquery =
+                  $"SELECT distinct(texts.tid) FROM texts {join} WHERE {table}.{column} IN @{column}"
+
+              $" AND texts.tid NOT IN ({subquery})" ]
     |> String.concat ""
 
 let getMetadataForCategory
@@ -113,12 +150,22 @@ let getMetadataForCategory
             else
                 ""
 
-        let metadataSelectionSql = generateMetadataSelectionSql (Some catCode) selection
+        let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
-        let joins = generateMetadataSelectionJoins selection
+        let nonExcludedManyToManyCategories =
+            selection
+            |> Map.filter (fun key value -> not (key.Contains('.') && value.ShouldExclude))
+
+        let metadataSelectionSql =
+            generateMetadataSelectionSql (Some catCode) nonExcludedManyToManyCategories
+
+        let joins = generateMetadataSelectionJoins nonExcludedManyToManyCategories
+
+        let column = getQualifiedColumnName catCode
 
         let sql =
-            $"SELECT distinct({catCode}) FROM texts{catJoin}{joins} WHERE {catCode} <> '' AND {catCode} IS NOT NULL{metadataSelectionSql} ORDER BY {catCode}"
+            $"SELECT distinct({column}) FROM texts{catJoin}{joins} WHERE {column} <> '' AND {column} IS NOT NULL\
+             {metadataSelectionSql}{excludedManyToManyCategoriesSql} ORDER BY {column}"
 
         let parameters = metadataSelectionToParamDict selection
 
@@ -143,10 +190,19 @@ let getMinAndMaxForCategory
 
         let catCode = sanitizeString categoryCode
 
-        let metadataSelectionSql = generateMetadataSelectionSql (Some catCode) selection
+        let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
+
+        let nonExcludedManyToManyCategories =
+            selection
+            |> Map.filter (fun key value -> not (key.Contains('.') && value.ShouldExclude))
+
+        let metadataSelectionSql =
+            generateMetadataSelectionSql (Some catCode) nonExcludedManyToManyCategories
+
+        let joins = generateMetadataSelectionJoins nonExcludedManyToManyCategories
 
         let sql =
-            $"SELECT min({catCode}) as Min, max({catCode}) as Max FROM texts WHERE 1 = 1{metadataSelectionSql}"
+            $"SELECT min({catCode}) as Min, max({catCode}) as Max FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
 
         let parameters = metadataSelectionToParamDict selection
 
@@ -186,9 +242,16 @@ let getMetadataForTexts
             )
             |> String.concat ", "
 
-        let metadataSelectionSql = generateMetadataSelectionSql None selection
+        let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
-        let joins = generateMetadataSelectionJoins selection
+        let nonExcludedManyToManyCategories =
+            selection
+            |> Map.filter (fun key value -> not (key.Contains('.') && value.ShouldExclude))
+
+        let metadataSelectionSql =
+            generateMetadataSelectionSql None nonExcludedManyToManyCategories
+
+        let joins = generateMetadataSelectionJoins nonExcludedManyToManyCategories
 
         let orderBy =
             match maybeSortInfo with
@@ -197,7 +260,8 @@ let getMetadataForTexts
             |> fun s -> if s = "tid" then "texts.tid" else s
 
         let sql =
-            $"SELECT {columnSql} FROM texts{joins} WHERE 1 = 1{metadataSelectionSql} ORDER BY {orderBy} LIMIT {limit} OFFSET {offset}"
+            $"SELECT {columnSql} FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql} \
+              ORDER BY {orderBy} LIMIT {limit} OFFSET {offset}"
 
         let parameters = metadataSelectionToParamDict selection
 

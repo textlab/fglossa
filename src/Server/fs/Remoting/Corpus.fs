@@ -18,14 +18,21 @@ module Spoken =
 
             use conn = new SqliteConnection(connStr)
 
-            let metadataSelectionSql = generateMetadataSelectionSql None selection
+            let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
-            let joins = generateMetadataSelectionJoins selection
+            let nonExcludedManyToManyCategories =
+                selection
+                |> Map.filter (fun key value -> not (key.Contains('.') && value.ShouldExclude))
+
+            let metadataSelectionSql =
+                generateMetadataSelectionSql None nonExcludedManyToManyCategories
+
+            let joins = generateMetadataSelectionJoins nonExcludedManyToManyCategories
 
             let parameters = metadataSelectionToParamDict selection
 
             let textSql =
-                $"SELECT COUNT(DISTINCT tid) as NumTexts FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}"
+                $"SELECT COUNT(DISTINCT tid) as NumTexts FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
 
             let! textRes = querySingle logger conn textSql (Some parameters)
 
@@ -37,7 +44,8 @@ module Spoken =
                     | None -> 0L
                 | Error ex -> raise ex
 
-            let tokenSql = $"SELECT bounds FROM texts WHERE 1 = 1{metadataSelectionSql}"
+            let tokenSql =
+                $"SELECT bounds FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
 
             let! tokenRes = query logger conn tokenSql (Some parameters)
 
@@ -66,12 +74,20 @@ module Written =
 
             use conn = new SqliteConnection(connStr)
 
-            let metadataSelectionSql = generateMetadataSelectionSql None selection
+            let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
-            let joins = generateMetadataSelectionJoins selection
+            let nonExcludedManyToManyCategories =
+                selection
+                |> Map.filter (fun key value -> not (key.Contains('.') && value.ShouldExclude))
+
+            let metadataSelectionSql =
+                generateMetadataSelectionSql None nonExcludedManyToManyCategories
+
+            let joins = generateMetadataSelectionJoins nonExcludedManyToManyCategories
 
             let sql =
-                $"SELECT count(*) as NumTexts, sum(endpos - startpos + 1) as NumTokens FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}"
+                $"SELECT count(texts.tid) as NumTexts, sum(endpos - startpos + 1) as NumTokens FROM texts{joins} \
+                  WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
 
             let parameters = metadataSelectionToParamDict selection
 
