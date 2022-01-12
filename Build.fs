@@ -1,8 +1,6 @@
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
-open Farmer
-open Farmer.Builders
 
 let execContext = Context.FakeExecutionContext.Create false "build.fsx" []
 Context.setExecutionContext (Context.RuntimeContext.Fake execContext)
@@ -49,23 +47,6 @@ Target.create "Bundle" (fun _ ->
     dotnet (sprintf "publish -c Release -o \"%s\"" deployDir) serverPath
     dotnet "fable --outDir build --run webpack build" clientPath)
 
-Target.create "Azure" (fun _ ->
-    let web =
-        webApp {
-            name "fglossa"
-            zip_deploy "deploy"
-        }
-
-    let deployment =
-        arm {
-            location Location.WestEurope
-            add_resource web
-        }
-
-    deployment
-    |> Deploy.execute "fglossa" Deploy.NoParameters
-    |> ignore)
-
 Target.create "Run" (fun _ ->
     dotnet "build" sharedPath
 
@@ -87,12 +68,7 @@ Target.create "Run" (fun _ ->
 open Fake.Core.TargetOperators
 
 let dependencies =
-    [ "Clean"
-      ==> "InstallClient"
-      ==> "Bundle"
-      ==> "Azure"
-
-      "Clean" ==> "InstallClient" ==> "BuildClient"
+    [ "Clean" ==> "InstallClient" ==> "BuildClient"
 
       "Clean" ==> "InstallClient" ==> "Run"
 
