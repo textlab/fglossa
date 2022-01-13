@@ -5,7 +5,7 @@
 # make the web app pick up the new version.
 
 docker run -it -d \
-    --mount type=bind,src=${PWD}/deploy,dst=/app/deploy \
+    --mount type=bind,src="${PWD}"/deploy,dst=/app/deploy \
     -w /app/deploy \
     -p 8088:8085 \
     --name fglossa \

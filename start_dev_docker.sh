@@ -3,8 +3,8 @@
 set -e
 
 docker run -it -d \
-	--mount type=bind,src=${PWD},dst=/app \
-	--mount type=bind,src=${PWD%/fglossa_docker}/fglossa/src/Corpora,dst=/app/src/Corpora \
+	--mount type=bind,src="${PWD}",dst=/app \
+	--mount type=bind,src="${PWD%/fglossa_docker}"/fglossa/src/Corpora,dst=/app/src/Corpora \
 	-w /app --name fglossa_dev dotnet6_node16 bash
 
 echo "Run docker exec -it fglossa_dev bash and then:"

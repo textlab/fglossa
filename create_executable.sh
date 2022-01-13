@@ -6,12 +6,11 @@
 # See https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
 
 RID=${1:-linux-x64}
-CORPUS_ROOT=${GLOSSA_CORPUS_ROOT:-src/Corpora/corpora}
 
-rm -rf self-contained/${RID}
-dotnet publish -c Release -o self-contained/${RID} -r ${RID} --self-contained true src/Server
+rm -rf self-contained/"${RID}"
+dotnet publish -c Release -o self-contained/"${RID}" -r "${RID}" --self-contained true src/Server
 dotnet run BuildClient
-cp -R deploy/public self-contained/${RID}
+cp -R deploy/public self-contained/"${RID}"
 
 echo "#############################################################################################
 |                                                                                           |
