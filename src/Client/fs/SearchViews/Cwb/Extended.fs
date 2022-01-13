@@ -4,7 +4,6 @@ open System
 open Feliz
 open Feliz.Bulma
 open Shared
-open Shared.StringUtils
 open Model
 open CwbExtended
 open Update.LoadedCorpus
@@ -55,7 +54,7 @@ let AttributeModal
         (menuSectionCategories: CwbAttributeMenu.MainCategoryValue list)
         (termSectionSelection: Set<MainCategory>)
         =
-        Bulma.buttons [ for (attr, attrValue, humanReadableName, _) in menuSectionCategories ->
+        Bulma.buttons [ for attr, attrValue, humanReadableName, _ in menuSectionCategories ->
                             let isSelected, isExcluded =
                                 termSectionSelection
                                 |> Set.toList
@@ -99,7 +98,7 @@ let AttributeModal
         (subcategories: CwbAttributeMenu.Subcategory list)
         =
         let buttonList (subcatValues: CwbAttributeMenu.SubcategoryValue list) =
-            [ for ((attr: Cwb.PositionalAttribute), attrValue, humanReadableName) in subcatValues ->
+            [ for attr: Cwb.PositionalAttribute, attrValue, humanReadableName in subcatValues ->
                   let subCategory =
                       let attrWithoutValues =
                           { Attr = attr.Code
@@ -140,7 +139,7 @@ let AttributeModal
                                         prop.text humanReadableName ] ]
 
         Bulma.columns (
-            Bulma.column [ for (heading, subcatValues) in subcategories ->
+            Bulma.column [ for heading, subcatValues in subcategories ->
                                Bulma.level [ Bulma.levelLeft [ Bulma.levelItem (
                                                                    Bulma.title [ title.is6
                                                                                  prop.text (heading + ":") ]
@@ -186,7 +185,7 @@ let AttributeModal
             List.zip menuSections term.CategorySections
             |> List.mapi (fun sectionIndex (menuSection, termSectionSelection) ->
                 let subcategoryPanels =
-                    [ for (attr, attrValue, humanReadableName, subcategories) in menuSection.Values do
+                    [ for attr, attrValue, humanReadableName, subcategories in menuSection.Values do
                           if subcategories.IsEmpty then
                               Html.none
                           else
@@ -292,12 +291,12 @@ let AttributeModal
         |> Option.iter (fun modalElement -> modalElement.focus ())
 
     // Focus the modal when mounted to enable it to receive keyboard events
-    React.useEffectOnce (focusModal)
+    React.useEffectOnce focusModal
 
     Bulma.modal [ modal.isActive
                   // Set elementRef in order to apply the focusModal() function to this element
                   prop.ref elementRef
-                  // Set tabIndex so that the lement receives keyboard events
+                  // Set tabIndex so that the element receives keyboard events
                   prop.tabIndex 0
                   prop.onKeyUp (fun e ->
                       if e.key = "Escape" then
@@ -364,7 +363,7 @@ let view
                                            )
 
                                        match Int32.TryParse(s) with
-                                       | (true, v) ->
+                                       | true, v ->
                                            dispatch (
                                                CwbExtendedSetIntervalValue(
                                                    query,
@@ -375,7 +374,7 @@ let view
                                                    Some v
                                                )
                                            )
-                                       | (false, _) -> ignore None) ]
+                                       | false, _ -> ignore None) ]
             )
 
         let mainStringInput =
@@ -414,8 +413,8 @@ let view
             // check whether it is included in the set of selected subcategories for the given selected main category,
             // and if so, get its human-readable title to be shown in the tag.
             let checkForSubcatValues selectedMainCat (subcategories: CwbAttributeMenu.Subcategory list) =
-                [ for (_, subcatValues) in subcategories ->
-                      [ for (menuSubcatAttr, menuSubcatAttrValue, subcatHumanReadable) in subcatValues do
+                [ for _, subcatValues in subcategories ->
+                      [ for menuSubcatAttr, menuSubcatAttrValue, subcatHumanReadable in subcatValues do
                             match selectedMainCat.Subcategories with
                             | Some selectedSubcats ->
                                 if selectedSubcats
@@ -435,7 +434,7 @@ let view
                 List.zip attributeMenu term.CategorySections
                 |> List.indexed
                 |> List.collect (fun (sectionIndex, (menuSection, termSectionSelection)) ->
-                    [ for (mainAttr, mainAttrValue, mainHumanReadable, subcategories) in menuSection.Values do
+                    [ for mainAttr, mainAttrValue, mainHumanReadable, subcategories in menuSection.Values do
                           termSectionSelection
                           |> Set.toList
                           |> List.tryFind (fun selectedCat ->
@@ -474,7 +473,7 @@ let view
               let minMaxField (minMax: MinMax) =
                   Bulma.field.div [ field.isGrouped
                                     prop.className "is-align-items-center"
-                                    prop.children [ minMaxInput (minMax)
+                                    prop.children [ minMaxInput minMax
                                                     Bulma.control.div (
                                                         Bulma.text.div (
                                                             match minMax with
@@ -505,9 +504,9 @@ let view
                                                            //        Bulma.button.button [ Bulma.icon [ Html.i [ prop.className
                                                            //                                                        "fas fa-chevron-down" ] ] ]
                                                            //    )
-                                                           Bulma.control.div (mainStringInput)
+                                                           Bulma.control.div mainStringInput
                                                            if query.Terms.Length > 1 then
-                                                               Bulma.control.div (removeTermButton) ] ]
+                                                               Bulma.control.div removeTermButton ] ]
                          Bulma.field.div [ field.isGrouped
                                            field.isGroupedMultiline
                                            // TODO: Use TryGetAttribute to get display names also for lemma, orig etc.?
@@ -521,7 +520,7 @@ let view
                                                            match corpus.SharedInfo.TryGetAttribute("phon") with
                                                            | Some attr ->
                                                                checkbox attr.Name attr.Name term.IsPhonetic IsPhonetic
-                                                           | None -> ignore ()
+                                                           | None -> ()
 
                                                            if corpus.SharedInfo.HasAttribute("orig") then
                                                                checkbox
@@ -560,7 +559,7 @@ let view
 
     Bulma.columns [ prop.style [ style.marginBottom 15 ]
                     prop.children [ yield!
-                                        [ for (index, term) in query.Terms |> Array.indexed do
+                                        [ for index, term in query.Terms |> Array.indexed do
                                               yield! termView index term ]
                                     Bulma.column (
                                         Bulma.buttons [ Bulma.button.button [ color.isInfo

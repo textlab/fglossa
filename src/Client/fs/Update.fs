@@ -164,8 +164,8 @@ module LoadedCorpus =
                         |> Array.except fetchedPages
 
                     // ...and put them into the map of fetched pages. Since we may already have
-                    // recived a half-filled page from a previous search step, we need to gather
-                    // all previsous and current results together and chunk them into page-sized
+                    // received a half-filled page from a previous search step, we need to gather
+                    // all previous and current results together and chunk them into page-sized
                     // chunks to make sure we get the correct page sizes.
                     let existingResults =
                         concordanceModel.ResultPages
@@ -299,8 +299,8 @@ module LoadedCorpus =
                         // as an int. If successful, use the result of that, otherwise keep the current page number
                         | None ->
                             match Int32.TryParse(concordanceModel.PaginatorTextValue) with
-                            | (true, v) -> v
-                            | (false, _) -> concordanceModel.PaginatorPageNo
+                            | true, v -> v
+                            | false, _ -> concordanceModel.PaginatorPageNo
 
                     let newConcordanceModel =
                         { concordanceModel with
@@ -494,7 +494,7 @@ module LoadedCorpus =
                     let listItems =
                         [| for row in rows ->
                                let m = Regex.Match(row, "(\d+)\s+(.+)")
-                               let freq = System.UInt64.Parse(m.Groups[1].Value)
+                               let freq = UInt64.Parse(m.Groups[1].Value)
 
                                let attrValues = m.Groups[ 2 ].Value.Split('\t')
 
@@ -984,7 +984,7 @@ module LoadedCorpus =
                                                 else
                                                     scs.Add(subcategory)
                                             | None -> subcats.Add(subcategory)
-                                    | None -> Set.singleton (subcategory)
+                                    | None -> Set.singleton subcategory
 
                                 { cat with Subcategories = Some subcategories }
                             else

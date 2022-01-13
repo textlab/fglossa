@@ -296,7 +296,7 @@ let handleAttributeValue
             >> replace "^(?:\.\*)?(.+?)" "$1"
             >> replace "(.+?)(?:\.\*)$" "$1")
 
-    let processFirstForm (name, operator, value) =
+    let processFirstForm (name, _operator, value) =
         let isLemma = name = "lemma"
         let isPhon = name = "phon"
         let isOrig = name = "orig"
@@ -327,7 +327,7 @@ let handleAttributeValue
         // while the latter should be parenthesised, e.g.
         // [lemma="han" & phon="hann" & (((pos="pron" & case="nom|acc") | (pos="noun")) & ((desc="laughing")))]
         let termWithNonCategories =
-            let mabyeNonCatStr =
+            let maybeNonCatStr =
                 if inputStr.Contains('(') then
                     // The term contains categories, so grab everything before that
                     let m = Regex.Match(inputStr, "^([^\(]+)&")
@@ -342,7 +342,7 @@ let handleAttributeValue
                     // The term does not contain any categories, so use the whole string
                     Some inputStr
 
-            match mabyeNonCatStr with
+            match maybeNonCatStr with
             | Some nonCatStr ->
                 let attrValuePairs =
                     nonCatStr.Split('&')
@@ -354,7 +354,7 @@ let handleAttributeValue
                     )
 
                 let h = Array.head attrValuePairs
-                let (_, firstOperator, _) = h
+                let _, firstOperator, _ = h
 
                 let term =
                     match firstOperator with
@@ -519,7 +519,7 @@ type Query =
         |> String.concat " "
 
 ///////////////////////////////////////
-// Helpers for Elimish update function
+// Helpers for Elmish update function
 ///////////////////////////////////////
 
 let updateQuery model query queryIndex newQueryTerms =

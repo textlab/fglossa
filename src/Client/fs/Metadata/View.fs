@@ -7,7 +7,6 @@ open Shared.Metadata
 open Shared.StringUtils
 open Model
 open Update.Metadata
-open Common
 
 let textAndTokenCountText (model: LoadedCorpusModel) =
     match (model.NumSelectedTexts, model.NumSelectedTokens) with
@@ -27,14 +26,14 @@ module MetadataMenu =
     let MetadataSelect
         (category: Category)
         isOpen
-        (metadataSelection: Shared.Metadata.Selection)
+        (metadataSelection: Selection)
         fetchedMetadataValues
         isInSidebar
         dispatch
         =
 
-        let (filterInputText, setFilterInputText) = React.useState ("")
-        let (filterInputNumChars, setFilterInputNumChars) = React.useState (1.0)
+        let filterInputText, setFilterInputText = React.useState ""
+        let filterInputNumChars, setFilterInputNumChars = React.useState 1.0
 
         let filterInputRef = React.useInputRef ()
 
@@ -71,7 +70,7 @@ module MetadataMenu =
             : ReactElement =
 
             /// A single item in a metadata category dropdown list. Note that, unlike when we define
-            /// components using the ReactComponent attribute, in this case we actully need
+            /// components using the ReactComponent attribute, in this case we actually need
             /// to define the argument as a props object and not as separate arguments, since this
             /// function will be called directly by React code and not transformed by Feliz.
             let listItem (props: {| index: int; style: obj |}) =
@@ -244,7 +243,7 @@ module MetadataMenu =
             |> Map.ofList
 
         let intervalState, setIntervalState =
-            React.useStateWithUpdater (intervalStateFromProps)
+            React.useStateWithUpdater intervalStateFromProps
 
         // Reset the text fields to the values in the model when the category is opened or closed
         React.useEffect ((fun () -> setIntervalState (fun _ -> intervalStateFromProps)), [| box isOpen |])
@@ -266,7 +265,7 @@ module MetadataMenu =
             let boundaryInput
                 (label: string)
                 (maybeValue: string option)
-                (mixOrMaxSelectionFunction: (int64 * int64) -> int64)
+                (mixOrMaxSelectionFunction: int64 * int64 -> int64)
                 onChangeMsg
                 =
                 let textInput =
@@ -311,7 +310,7 @@ module MetadataMenu =
                                                                              color.isDanger
                                                                              prop.style [ style.marginLeft 15 ]
                                                                              prop.title "Remove selection"
-                                                                             prop.onClick (fun e ->
+                                                                             prop.onClick (fun _ ->
                                                                                  dispatch (DeselectAllItems category))
                                                                              prop.children [ Bulma.icon [ Html.i [ prop.className
                                                                                                                        "fa fa-times" ] ] ] ] ] ]
@@ -385,12 +384,12 @@ module MetadataMenu =
         (items: MenuItem list)
         (openCategoryCode: string option)
         (intervalCategoryModes: Map<CategoryCode, ListOrIntervalMode>)
-        (metadataSelection: Shared.Metadata.Selection)
+        (metadataSelection: Selection)
         (fetchedMetadataValues: string [])
         (fetchedMinAndMax: (int64 * int64) option)
-        (dispatch: (Msg -> unit))
+        (dispatch: Msg -> unit)
         =
-        let (isExpanded, setIsExpanded) = React.useState (startExpanded)
+        let isExpanded, setIsExpanded = React.useState startExpanded
 
         let children =
             items
@@ -500,7 +499,7 @@ module MetadataMenu =
                                                                          ) ] ]
                                               )
                                           )
-                                          Bulma.levelRight [ Bulma.levelItem (pagination)
+                                          Bulma.levelRight [ Bulma.levelItem pagination
                                                              Bulma.levelItem (
                                                                  Bulma.button.button [ color.isInfo
                                                                                        prop.title "Close"
@@ -667,14 +666,14 @@ module MetadataMenu =
                                     style.transitionTimingFunction.easeOut ]
                        // Set elementRef in order to apply the focusPopup() function to this element
                        prop.ref elementRef
-                       // Set tabIndex so that the lement receives keyboard events
+                       // Set tabIndex so that the element receives keyboard events
                        prop.tabIndex 0
                        prop.onKeyUp (fun e ->
                            if e.key = "Escape" then
                                dispatch CloseSelectionTable)
                        prop.children [ header; table; footer ] ]
 
-        let root = Browser.Dom.document.getElementById ("metadata-selection-popup-root")
+        let root = Browser.Dom.document.getElementById "metadata-selection-popup-root"
 
         ReactDOM.createPortal (popup, root)
 

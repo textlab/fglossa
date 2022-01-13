@@ -22,7 +22,7 @@ let idColumn (corpus: Corpus) sId (pageNumber: int) rowIndex (dispatch: Msg -> u
     // defined, we print it in the first column (if we have a non-first language result, we
     // will include it in the next column instead).
 
-    // Remove any "suffixes" from the s-id, since they typcially denote individual sentences,
+    // Remove any "suffixes" from the s-id, since they typically denote individual sentences,
     // which are irrelevant when fetching metadata.
     let textId = Regex.Replace(sId, "\..+", "")
 

@@ -1,17 +1,13 @@
 module View.Index
 
-open Elmish
-open Shared
 open Model
 open Update
 
-open Fable.React
-open Fable.React.Props
 open Feliz
 open Feliz.Bulma
 open Feliz.Recoil
 
-let navbar model dispatch =
+let navbar _model _dispatch =
     Bulma.navbar [ navbar.isFixedTop
                    navbar.hasShadow
                    prop.children [ Bulma.navbarBrand.div [ Bulma.navbarItem.a [ prop.href

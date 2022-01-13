@@ -3,7 +3,6 @@ module Model
 open Fable.Remoting.Client
 open Feliz
 open Shared
-open Shared.StringUtils
 
 let serverApi =
     Remoting.createApi ()
@@ -159,7 +158,7 @@ type MetadataDistributionModel =
       MetadataDistribution: MetadataDistribution
       KeepZeroValues: bool
       DownloadingFormat: DownloadFormat option }
-    static member Init(corpus: Corpus) =
+    static member Init() =
         { SelectedAttributeCode = None
           SelectedCategory = None
           MetadataDistribution =

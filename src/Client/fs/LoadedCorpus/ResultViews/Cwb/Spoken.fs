@@ -113,11 +113,11 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
                                 style.overflowX.hidden
                                 style.border (1, borderStyle.solid, "black")
                                 style.transitionProperty transitionProperty.height
-                                style.transitionDuration (System.TimeSpan(3500000L))
+                                style.transitionDuration (TimeSpan(3500000L))
                                 style.transitionTimingFunction.easeOut ]
                    // Set elementRef in order to apply the focusPopup() function to this element
                    prop.ref elementRef
-                   // Set tabIndex so that the lement receives keyboard events
+                   // Set tabIndex so that the element receives keyboard events
                    prop.tabIndex 0
                    prop.onKeyUp (fun e ->
                        if e.key = "Escape" then
@@ -129,7 +129,7 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
                                    footer ] ]
 
 
-    let root = Browser.Dom.document.getElementById ("media-player-popup-root")
+    let root = Browser.Dom.document.getElementById "media-player-popup-root"
 
     ReactDOM.createPortal (popup, root)
 
@@ -238,7 +238,7 @@ let concordanceTable
                                                                            ) ] ] ]
                                   yield! textColumns resultLineFields ] ]
 
-    let phoneticRow corpus (resultInfo: SearchResultInfo) rowIndex =
+    let phoneticRow _corpus (resultInfo: SearchResultInfo) rowIndex =
         let (resultLineFields: ResultLineFields) =
             { SId = resultInfo.SId
               PreMatch = resultInfo.PreMatch
@@ -465,7 +465,7 @@ let concordanceTable
         match corpus.SharedInfo.LanguageConfig with
         | Monolingual (Some attrs) -> attrs
         | Monolingual None -> []
-        | Multilingual languages -> failwith "NOT IMPLEMENTED!"
+        | Multilingual _languages -> failwith "NOT IMPLEMENTED!"
 
     let ortIndex = 0
 

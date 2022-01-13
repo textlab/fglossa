@@ -172,8 +172,8 @@ module ResultsView =
                                    key.enter,
                                    (fun _ ->
                                        match Int32.TryParse(textValue) with
-                                       | (true, size) -> dispatch (SetContextSize size)
-                                       | (false, _) -> ignore None)
+                                       | true, size -> dispatch (SetContextSize size)
+                                       | false, _ -> ignore None)
                                ) ]
 
         [<ReactComponent>]
@@ -193,7 +193,7 @@ module ResultsView =
                                       quickview.isActive
                                   // Set elementRef in order to apply the focusQuickView() function to this element
                                   prop.ref elementRef
-                                  // Set tabIndex so that the lement receives keyboard events
+                                  // Set tabIndex so that the element receives keyboard events
                                   prop.tabIndex 0
                                   prop.onKeyUp (fun e ->
                                       if e.key = "Escape" then
@@ -230,7 +230,7 @@ module ResultsView =
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
                              prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
-                                                                    prop.onCheckedChange (fun isChecked ->
+                                                                    prop.onCheckedChange (fun _ ->
                                                                         dispatch (ToggleDownloadAttribute attribute)) ]
                                              Bulma.text.span $" {attribute.Name}" ] ]
 
@@ -247,7 +247,7 @@ module ResultsView =
                                           field.isGroupedMultiline
                                           prop.children checkboxes ]
                     | None -> Html.none
-                | Multilingual languages -> failwith "NOT IMPLEMENTED"
+                | Multilingual _languages -> failwith "NOT IMPLEMENTED"
 
             let modalFooter =
                 let disableDownload = model.DownloadAttributes.IsEmpty
@@ -303,7 +303,7 @@ module ResultsView =
                               modal.isActive
                           // Set elementRef in order to apply the focusDownloadWindow() function to this element
                           prop.ref elementRef
-                          // Set tabIndex so that the lement receives keyboard events
+                          // Set tabIndex so that the element receives keyboard events
                           prop.tabIndex 0
                           prop.onKeyUp (fun e ->
                               if e.key = "Escape" then
@@ -390,7 +390,7 @@ module ResultsView =
                 // Only show the spinner when we are searching AND have already found some results so as to
                 // avoid showing spinners both here and over the result table at the same time (since we show
                 // a spinner over the result table until we have found some results)
-                let shouldShowSpnner =
+                let shouldShowSpinner =
                     concordanceModel.IsSearching
                     && concordanceModel.ResultPages.Count > 0
 
@@ -402,7 +402,7 @@ module ResultsView =
                                                     style.top 10
                                                     style.left 350 ]
                                        prop.children (
-                                           spinnerOverlay shouldShowSpnner (Some [ style.width 40; style.height 40 ]) []
+                                           spinnerOverlay shouldShowSpinner (Some [ style.width 40; style.height 40 ]) []
                                        ) ] ]
 
             let contextSelector =
@@ -449,7 +449,7 @@ module ResultsView =
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
                              prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
-                                                                    prop.onCheckedChange (fun isChecked ->
+                                                                    prop.onCheckedChange (fun _ ->
                                                                         dispatch (ToggleAttribute attribute)) ]
                                              Bulma.text.span $" {attribute.Name}" ] ]
 
@@ -481,7 +481,7 @@ module ResultsView =
                                             | Some Csv -> button.isLoading
                                             | Some _ -> prop.disabled true
                                             | None -> ()
-                                            prop.text "Commma-separated" ] ]
+                                            prop.text "Comma-separated" ] ]
 
                 Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.button.button [ color.isSuccess
                                                                                         prop.onClick (fun _ ->
@@ -506,7 +506,7 @@ module ResultsView =
                                     caseSensitiveCheckbox
                                     buttonRow ]
                     | None -> Html.span caseSensitiveCheckbox
-                | Multilingual languages -> failwith "NOT IMPLEMENTED"
+                | Multilingual _languages -> failwith "NOT IMPLEMENTED"
 
             let frequencyTable =
                 match model.Frequencies with
@@ -613,7 +613,7 @@ module ResultsView =
                                                               if model.SelectedAttributeCode.IsNone
                                                                  || model.SelectedCategory.IsNone then
                                                                   prop.disabled true
-                                                          prop.text "Commma-separated" ] ]
+                                                          prop.text "Comma-separated" ] ]
                 )
 
             Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem attrMenu
@@ -716,9 +716,7 @@ module ResultsView =
                                                              dispatch (
                                                                  ShowingResults.SelectResultTab(
                                                                      MetadataDistribution(
-                                                                         MetadataDistributionModel.Init(
-                                                                             loadedCorpusModel.Corpus
-                                                                         )
+                                                                         MetadataDistributionModel.Init()
                                                                      )
                                                                  )
                                                              ))

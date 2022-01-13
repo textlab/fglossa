@@ -79,7 +79,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                 else
                     text
 
-    let textInputToQuery (inputValue: string) : (string * bool) =
+    let textInputToQuery (inputValue: string) : string * bool =
         match search.Interface with
         | Simple ->
             let query =
@@ -174,8 +174,8 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                        prop.onChange (fun (s: string) ->
                                                                            let value =
                                                                                match System.UInt64.TryParse(s) with
-                                                                               | (true, v) -> Some v
-                                                                               | (false, _) -> None
+                                                                               | true, v -> Some v
+                                                                               | false, _ -> None
 
                                                                            dispatch (SetNumRandomHits value))
                                                                        prop.onKeyUp (
@@ -196,8 +196,8 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                prop.onChange (fun (s: string) ->
                                                                    let value =
                                                                        match System.Int32.TryParse(s) with
-                                                                       | (true, v) -> Some v
-                                                                       | (false, _) -> None
+                                                                       | true, v -> Some v
+                                                                       | false, _ -> None
 
                                                                    dispatch (SetRandomHitsSeed value))
                                                                prop.onKeyUp (key.enter, (fun _ -> dispatch Search)) ]
