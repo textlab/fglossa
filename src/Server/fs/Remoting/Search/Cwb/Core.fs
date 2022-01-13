@@ -108,7 +108,7 @@ let getSearchResults
             | Written ->
                 match corpus.Config.SearchEngine with
                 | Cwb -> Written.getSearchResults logger corpus searchParams maybeAttributes pageNumbers
-                | Fcs -> failwith "NOT IMPLMENTED"
+                | Fcs -> failwith "NOT IMPLEMENTED"
     }
 
 let getFrequencyList
@@ -189,7 +189,7 @@ let downloadFrequencyList
                 // Put the count in the first column
                 worksheet.Cell(rowIndex + 2, 1).Value <- int (m.Groups[1].Value)
 
-                // Create a colunn for each attribute value in the row
+                // Create a column for each attribute value in the row
                 m.Groups[ 2 ].Value.Split('\t')
                 |> Array.iteri (fun columnIndex attrValue ->
                     worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- attrValue))
@@ -374,7 +374,7 @@ let getMetadataDistribution
                        [| for row in categoryValuesToTextIds do
                               // For each text ID that is associated with the current metadata category value,
                               // find the frequency associated with it in the map associated with the current attribute value.
-                              // Summing all those frequencies gives us the total number of occurrances of this
+                              // Summing all those frequencies gives us the total number of occurrences of this
                               // attribute value in texts associated with the current metadata value.
                               let total =
                                   row.TextIds.Split(",")

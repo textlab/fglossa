@@ -2,9 +2,7 @@ module Remoting.Corpus
 
 open System
 open Microsoft.Data.Sqlite
-open System.Threading.Tasks
 open FSharp.Control.Tasks
-open System.Text.RegularExpressions
 open Serilog
 open ServerTypes
 open Database
@@ -12,7 +10,7 @@ open Shared
 open Metadata
 
 module Spoken =
-    let getTextAndTokenCount (logger: ILogger) (corpus: Corpus) (selection: Metadata.Selection) =
+    let getTextAndTokenCount (logger: ILogger) (corpus: Corpus) (selection: Selection) =
         task {
             let connStr = getConnectionString corpus.Config.Code
 
@@ -68,7 +66,7 @@ module Spoken =
         }
 
 module Written =
-    let getTextAndTokenCount (logger: ILogger) (corpus: Corpus) (selection: Metadata.Selection) =
+    let getTextAndTokenCount (logger: ILogger) (corpus: Corpus) (selection: Selection) =
         task {
             let connStr = getConnectionString corpus.Config.Code
 
@@ -120,7 +118,7 @@ let getCorpusConfig (logger: ILogger) (corpusCode: string) =
                 TotalTokens = numTextsAndTokens.NumTokens }
     }
 
-let getTextAndTokenCount (logger: ILogger) (corpusCode: string) (selection: Metadata.Selection) =
+let getTextAndTokenCount (logger: ILogger) (corpusCode: string) (selection: Selection) =
     task {
         let corpus = Corpora.Server.getCorpus corpusCode
 

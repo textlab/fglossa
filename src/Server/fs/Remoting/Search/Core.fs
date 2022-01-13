@@ -5,7 +5,6 @@ open System.Text.RegularExpressions
 open Serilog
 open ClosedXML
 open Shared
-open ServerTypes
 
 let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams) =
     let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
@@ -141,7 +140,7 @@ let downloadSearchResults
             let headerRow = headers |> String.concat "\t"
 
             let resultRows =
-                [| for (corpusPosition, segmentId, leftContext, theMatch, rightContext) in results ->
+                [| for corpusPosition, segmentId, leftContext, theMatch, rightContext in results ->
                        [ corpusPosition
                          segmentId
                          leftContext
@@ -158,7 +157,7 @@ let downloadSearchResults
                 |> String.concat ","
 
             let resultRows =
-                [| for (corpusPosition, segmentId, leftContext, theMatch, rightContext) in results ->
+                [| for corpusPosition, segmentId, leftContext, theMatch, rightContext in results ->
                        $"\"{corpusPosition}\",\"{segmentId}\",\"{leftContext}\",\"{theMatch}\",\"{rightContext}\"" |]
 
             File.WriteAllLines(outputFilename, Array.append [| headerRow |] resultRows)

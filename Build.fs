@@ -34,7 +34,7 @@ let dotnet cmd workingDir =
     let result = DotNet.exec (DotNet.Options.withWorkingDirectory workingDir) cmd ""
 
     if result.ExitCode <> 0 then
-        failwithf "'dotnet %s' failed in %s" cmd workingDir
+        failwith $"'dotnet %s{cmd}' failed in %s{workingDir}"
 
 
 Target.create "Clean" (fun _ -> Shell.cleanDir deployDir)
@@ -44,7 +44,7 @@ Target.create "InstallClient" (fun _ -> npm "install" ".")
 Target.create "BuildClient" (fun _ -> dotnet "fable --outDir build --run webpack build" clientPath)
 
 Target.create "Bundle" (fun _ ->
-    dotnet (sprintf "publish -c Release -o \"%s\"" deployDir) serverPath
+    dotnet $"publish -c Release -o \"%s{deployDir}\"" serverPath
     dotnet "fable --outDir build --run webpack build" clientPath)
 
 Target.create "Run" (fun _ ->
@@ -87,5 +87,5 @@ let main args =
         0
     with
     | e ->
-        printfn "%A" e
+        printfn $"%A{e}"
         1

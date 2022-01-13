@@ -312,7 +312,7 @@ type MetadataDistribution =
 
 // Define type aliases that help clarify the parameters of the IServerApi functions.
 // If we could have used an actual interface instead, we could have used methods
-// with named attributes, but unfortunatly Fable.Remote requires us to use a record
+// with named attributes, but unfortunately Fable.Remote requires us to use a record
 // with functions.
 
 type DatabaseColumn = string
@@ -331,7 +331,7 @@ type KeepZeroValues = bool
 
 module Route =
     let builder typeName methodName =
-        sprintf "/glossa3/api/%s/%s" typeName methodName
+        $"/glossa3/api/%s{typeName}/%s{methodName}"
 
 type IServerApi =
     { GetCorpusConfig: CorpusCode -> Async<SharedCorpusInfo>

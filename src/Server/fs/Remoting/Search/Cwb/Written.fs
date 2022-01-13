@@ -2,8 +2,6 @@ module Remoting.Search.Cwb.Written
 
 open System
 open System.IO
-open System.Threading.Tasks
-open FSharp.Control.Tasks
 open System.Text.RegularExpressions
 open Serilog
 open ServerTypes
@@ -64,7 +62,7 @@ let randomReduceCommand
 
     let nRandom =
         (float numRandomHits * proportion)
-        |> System.Math.Ceiling
+        |> Math.Ceiling
         |> int
 
     let seedStr =
@@ -306,7 +304,7 @@ let getNonzeroFiles
     (maybeLastFile: int option)
     =
     match (corpus.Config.MultiCpuBounds, searchParams.CpuCounts) with
-    | (Some multiCpuBounds, Some cpuCounts) ->
+    | Some multiCpuBounds, Some cpuCounts ->
         let files =
             multiCpuBounds
             |> Array.indexed
@@ -321,7 +319,7 @@ let getNonzeroFiles
 
         // Select the range of files that contains the range of results we are asking for
         // and remove files that don't actually contain any results
-        [ for (file, count) in filesAndCounts[firstFile..lastFile] do
+        [ for file, count in filesAndCounts[firstFile..lastFile] do
               if count > 0UL then file ]
     | _ -> []
 
@@ -386,7 +384,7 @@ let getSortedPositions (corpus: Corpus) (searchParams: SearchParams) =
             |> Seq.map (fun s -> s + ";")
             |> String.concat "\n"
 
-        if System.Environment.GetEnvironmentVariable("CWB_IN_DOCKER") = "1" then
+        if Environment.GetEnvironmentVariable("CWB_IN_DOCKER") = "1" then
             Process.runCmdWithInputAndOutput "docker" "exec -i cwb cqp -c" commandStr
         else
             Process.runCmdWithInputAndOutput "cqp" "-c" commandStr

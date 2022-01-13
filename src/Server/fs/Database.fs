@@ -12,7 +12,7 @@ open Serilog
 type OptionHandler<'T>() =
     inherit SqlMapper.TypeHandler<option<'T>>()
 
-    override __.SetValue(param, value) =
+    override _.SetValue(param, value) =
         let valueOrNull =
             match value with
             | Some x -> box x
@@ -20,7 +20,7 @@ type OptionHandler<'T>() =
 
         param.Value <- valueOrNull
 
-    override __.Parse value =
+    override _.Parse value =
         if isNull value || value = box DBNull.Value then
             None
         else
@@ -197,7 +197,7 @@ let insert (logger: ILogger) (connection: #DbConnection) (table: string) (data: 
                 connection.Open()
 
             // In order to make last_insert_rowid() work, we need to run the insert and the
-            // call to last_insert_rowid() inside a single transaction (according to the documentaion, simply
+            // call to last_insert_rowid() inside a single transaction (according to the documentation, simply
             // using the same db connection should be sufficient, but it doesn't work here for some reason).
             use transaction = connection.BeginTransaction()
 

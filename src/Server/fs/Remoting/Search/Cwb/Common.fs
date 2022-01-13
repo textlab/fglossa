@@ -2,16 +2,13 @@ module Remoting.Search.Cwb.Common
 
 open System
 open System.IO
-open System.Threading.Tasks
 open FSharp.Control.Tasks
 open Microsoft.Data.Sqlite
 open System.Text.RegularExpressions
-open Dapper
 open Serilog
 open Database
 open Shared
 open ServerTypes
-open Remoting.Search.Common
 open Remoting.Metadata
 
 type TextBounds = { Startpos: int64; Endpos: int64 }
@@ -331,18 +328,18 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
                 |> Seq.map (fun s -> $"{s};")
                 |> String.concat "\n"
 
-            let (output, error) =
+            let output, error =
                 if corpus.Encoding = Text.Encoding.UTF8 then
                     // Providing Text.Encoding.UTF8 explicitly as encoding causes a BOM mark to be written to
                     // the start of the input stream. We don't want that (since CQP does not understand it) so if the
                     // corpus has UTF-8 encoding, we use the default writer, which writes UTF-8 without a BOM mark.
-                    if System.Environment.GetEnvironmentVariable("CWB_IN_DOCKER") = "1" then
+                    if Environment.GetEnvironmentVariable("CWB_IN_DOCKER") = "1" then
                         Process.runCmdWithInputOutputAndError "docker" "exec -i cwb cqp -c" commandStr
                     else
                         Process.runCmdWithInputOutputAndError "cqp" "-c" commandStr
                 else
                 // If the corpus encoding is different from UTF-8, we provide the encoding explicitly
-                if System.Environment.GetEnvironmentVariable("CWB_IN_DOCKER") = "1" then
+                if Environment.GetEnvironmentVariable("CWB_IN_DOCKER") = "1" then
                     Process.runCmdWithInputOutputErrorAndEncoding
                         "docker"
                         "exec -i cwb cqp -c"

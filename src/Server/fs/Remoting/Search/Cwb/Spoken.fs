@@ -129,7 +129,7 @@ let transformResults (corpus: Corpus) (queries: Query []) (hits: string []) =
 let sortContextWithinWho namedQuery sortKey =
     let tmpfile = $"\"tmp/{namedQuery}_sort_by_{sortKey}\""
 
-    let (bound, ``match``) =
+    let bound, ``match`` =
         match sortKey with
         | Left -> "lbound", "on match[-1]"
         | Right -> "rbound", "on matchend[1]"

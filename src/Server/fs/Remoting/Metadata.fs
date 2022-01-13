@@ -4,7 +4,6 @@ open System.Collections.Generic
 open Microsoft.Data.Sqlite
 open System.Threading.Tasks
 open FSharp.Control.Tasks
-open System.Text.RegularExpressions
 open Serilog
 open ServerTypes
 open Database
@@ -30,7 +29,7 @@ let metadataSelectionToParamDict (selection: Metadata.Selection) =
     |> List.map (fun (key, sel) ->
         let newKey =
             if key.Contains('.') then
-                // Remove table name, since the fully qualified name is invalid as a paramter name in SQL
+                // Remove table name, since the fully qualified name is invalid as a parameter name in SQL
                 key.Split('.')[1]
             else
                 key
@@ -45,7 +44,7 @@ let metadataSelectionToParamDict (selection: Metadata.Selection) =
 
 let generateMetadataSelectionJoins (selection: Metadata.Selection) =
     let categoryTables =
-        [ for (code, _) in selection |> Map.toList do
+        [ for code, _ in selection |> Map.toList do
               if code.Contains('.') then
                   code.Split('.')[0] ]
 
@@ -278,7 +277,7 @@ let getMetadataForTexts
                 | Some rows ->
                     // Since the results of queryDynamic are DapperRow objects, which implement
                     // IDictionary<string, obj>, we cast to that in order to access the data dynamically
-                    [| for (row: IDictionary<string, obj>) in rows |> Seq.cast ->
+                    [| for row: IDictionary<string, obj> in rows |> Seq.cast ->
                            [| for column in columns ->
                                   let text = row[column] |> string
                                   if text <> "\N" then text else "" |] |]
