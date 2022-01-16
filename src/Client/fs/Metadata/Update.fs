@@ -291,7 +291,9 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
 
     | FetchMetadataForTexts ->
-        let columns = [ for category in model.Corpus.MetadataTable -> category.Code ]
+        let columns = [ for category in model.Corpus.MetadataTable ->
+                            let table = category.TableName |> Option.defaultValue "texts"
+                            $"{table}.{category.Code}"  ]
 
         let cmd =
             Cmd.OfAsync.perform

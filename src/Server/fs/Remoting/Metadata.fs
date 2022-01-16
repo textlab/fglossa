@@ -245,12 +245,7 @@ let getMetadataForTexts
         let offset = (pageNumber - 1) * limit
 
         let columnSql =
-            columns
-            |> List.map (
-                sanitizeString
-                >> fun s -> if s = "tid" then "texts.tid" else s
-            )
-            |> String.concat ", "
+            columns |> List.map sanitizeString |> String.concat ", "
 
         let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
@@ -261,12 +256,20 @@ let getMetadataForTexts
         let metadataSelectionSql =
             generateMetadataSelectionSql None nonExcludedManyToManyCategories
 
-        let joins = generateMetadataSelectionJoins None nonExcludedManyToManyCategories
+        let joins =
+            [ for column in columns do
+                  if column.Contains('.') then
+                      let table = column.Split('.')[0]
+                      if table <> "texts" then table ]
+            |> List.distinct
+            |> List.map createJoin
+            |> String.concat " "
+            |> fun s -> if s.Length > 0 then " " + s else ""
 
         let orderBy =
             match maybeSortInfo with
             | Some sortInfo -> $"{sortInfo.CategoryCode} {sortInfo.Direction}"
-            | None -> "tid"
+            | None -> "texts.tid"
             |> fun s -> if s = "tid" then "texts.tid" else s
 
         let sql =
@@ -290,7 +293,7 @@ let getMetadataForTexts
                     // IDictionary<string, obj>, we cast to that in order to access the data dynamically
                     [| for row: IDictionary<string, obj> in rows |> Seq.cast ->
                            [| for column in columns ->
-                                  let text = row[column] |> string
+                                  let text = row[column.Split('.')[1]] |> string
                                   if text <> "\N" then text else "" |] |]
                 | None -> [||]
             | Error ex -> raise ex

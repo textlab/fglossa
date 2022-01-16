@@ -582,7 +582,8 @@ module MetadataMenu =
                                   let direction =
                                       match model.SelectionTableSort with
                                       | Some sortInfo ->
-                                          if sortInfo.CategoryCode = category.Code then
+                                          let table = category.TableName |> Option.defaultValue "texts"
+                                          if sortInfo.CategoryCode = $"{table}.{category.Code}" then
                                               // We were already sorting on this category, so just
                                               // change direction
                                               if sortInfo.Direction = Asc then
@@ -594,8 +595,9 @@ module MetadataMenu =
                                       | None -> Asc
 
                                   dispatch (
+                                      let table = category.TableName |> Option.defaultValue "texts"
                                       SetSelectionTableSort
-                                          { CategoryCode = category.Code
+                                          { CategoryCode = $"{table}.{category.Code}"
                                             Direction = direction }
                                   ))
                           // Note that if the menu is open, we render it in its open form before the heading, so that it will
