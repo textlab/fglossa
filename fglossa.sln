@@ -14,6 +14,50 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F84DCF8A-FC1A-4677-AF4D-616AD7DB3470}"
+	ProjectSection(SolutionItems) = preProject
+		src\Corpora\corpora\nowac_1_1\Server\ZCore.fs = src\Corpora\corpora\nowac_1_1\Server\ZCore.fs
+		src\Corpora\corpora\nowac_1_1\Shared\MetadataCategories.fs = src\Corpora\corpora\nowac_1_1\Shared\MetadataCategories.fs
+		src\Corpora\corpora\nowac_1_1\Client\ZCore.fs = src\Corpora\corpora\nowac_1_1\Client\ZCore.fs
+		src\Corpora\corpora\norint_tekst\Server\ZCore.fs = src\Corpora\corpora\norint_tekst\Server\ZCore.fs
+		src\Corpora\corpora\norint_tekst\Shared\MetadataCategories.fs = src\Corpora\corpora\norint_tekst\Shared\MetadataCategories.fs
+		src\Corpora\corpora\norint_tekst\Client\ZCore.fs = src\Corpora\corpora\norint_tekst\Client\ZCore.fs
+		src\Corpora\corpora\ndc2\video\aal_01um-02uk.mp4 = src\Corpora\corpora\ndc2\video\aal_01um-02uk.mp4
+		src\Corpora\corpora\ndc2\video\aal_01um-02uk_800.mp4 = src\Corpora\corpora\ndc2\video\aal_01um-02uk_800.mp4
+		src\Corpora\corpora\ndc2\ndc2_coords.txt = src\Corpora\corpora\ndc2\ndc2_coords.txt
+		src\Corpora\corpora\ndc2\Server\ZCore.fs = src\Corpora\corpora\ndc2\Server\ZCore.fs
+		src\Corpora\corpora\ndc2\Shared\MetadataCategories.fs = src\Corpora\corpora\ndc2\Shared\MetadataCategories.fs
+		src\Corpora\corpora\ndc2\Shared\Cwb.fs = src\Corpora\corpora\ndc2\Shared\Cwb.fs
+		src\Corpora\corpora\ndc2\ndc2_texts.tsv = src\Corpora\corpora\ndc2\ndc2_texts.tsv
+		src\Corpora\corpora\ndc2\audio\aal_01um-02uk.mp3 = src\Corpora\corpora\ndc2\audio\aal_01um-02uk.mp3
+		src\Corpora\corpora\ndc2\ndc.png = src\Corpora\corpora\ndc2\ndc.png
+		src\Corpora\corpora\ndc2\create_db.sql = src\Corpora\corpora\ndc2\create_db.sql
+		src\Corpora\corpora\ndc2\ndc2.sqlite = src\Corpora\corpora\ndc2\ndc2.sqlite
+		src\Corpora\corpora\ndc2\Client\ZCore.fs = src\Corpora\corpora\ndc2\Client\ZCore.fs
+		src\Corpora\corpora\ndc2\Client\Metadata.fs = src\Corpora\corpora\ndc2\Client\Metadata.fs
+		src\Corpora\corpora\bokmal\uio-app-uio-sickle-medium.png = src\Corpora\corpora\bokmal\uio-app-uio-sickle-medium.png
+		src\Corpora\corpora\bokmal\bokmal.sqlite = src\Corpora\corpora\bokmal\bokmal.sqlite
+		src\Corpora\corpora\bokmal\bokmal_translators.tsv = src\Corpora\corpora\bokmal\bokmal_translators.tsv
+		src\Corpora\corpora\bokmal\bokmal_translators_texts.tsv = src\Corpora\corpora\bokmal\bokmal_translators_texts.tsv
+		src\Corpora\corpora\bokmal\bokmal_authors_texts.tsv = src\Corpora\corpora\bokmal\bokmal_authors_texts.tsv
+		src\Corpora\corpora\bokmal\Server\ZCore.fs = src\Corpora\corpora\bokmal\Server\ZCore.fs
+		src\Corpora\corpora\bokmal\bokmal_authors.tsv = src\Corpora\corpora\bokmal\bokmal_authors.tsv
+		src\Corpora\corpora\bokmal\Shared\MetadataCategories.fs = src\Corpora\corpora\bokmal\Shared\MetadataCategories.fs
+		src\Corpora\corpora\bokmal\Shared\Cwb.fs = src\Corpora\corpora\bokmal\Shared\Cwb.fs
+		src\Corpora\corpora\bokmal\bokmal.html = src\Corpora\corpora\bokmal\bokmal.html
+		src\Corpora\corpora\bokmal\bokmal_texts.tsv = src\Corpora\corpora\bokmal\bokmal_texts.tsv
+		src\Corpora\corpora\bokmal\bokmal_translator_orig.tsv = src\Corpora\corpora\bokmal\bokmal_translator_orig.tsv
+		src\Corpora\corpora\bokmal\mycorpus.sqlite = src\Corpora\corpora\bokmal\mycorpus.sqlite
+		src\Corpora\corpora\bokmal\create_db.sql = src\Corpora\corpora\bokmal\create_db.sql
+		src\Corpora\corpora\bokmal\README.TXT = src\Corpora\corpora\bokmal\README.TXT
+		src\Corpora\corpora\bokmal\bokmal_author_orig.tsv = src\Corpora\corpora\bokmal\bokmal_author_orig.tsv
+		src\Corpora\corpora\bokmal\Client\ZCore.fs = src\Corpora\corpora\bokmal\Client\ZCore.fs
+		src\Corpora\corpora\bokmal\Client\Cwb.fs = src\Corpora\corpora\bokmal\Client\Cwb.fs
+		src\Corpora\corpora\bokmal\Client\Metadata.fs = src\Corpora\corpora\bokmal\Client\Metadata.fs
+		src\Corpora\corpora\fglossa.sqlite = src\Corpora\corpora\fglossa.sqlite
+		src\Corpora\corpora\run\Server\ZCore.fs = src\Corpora\corpora\run\Server\ZCore.fs
+		src\Corpora\corpora\run\Shared\MetadataCategories.fs = src\Corpora\corpora\run\Shared\MetadataCategories.fs
+		src\Corpora\corpora\run\Client\ZCore.fs = src\Corpora\corpora\run\Client\ZCore.fs
+	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Shared", "src\Shared\Shared.fsproj", "{B743B9A7-78C6-4FEB-ADDD-19B27F542340}"
 EndProject
