@@ -131,7 +131,7 @@ let printPositionsMatchingMetadata
             let metadataSelectionSql =
                 generateMetadataSelectionSql None searchParams.MetadataSelection
 
-            let joins = generateMetadataSelectionJoins searchParams.MetadataSelection
+            let joins = generateMetadataSelectionJoins None searchParams.MetadataSelection
 
             let langSql = generateLanguageSql corpus searchParams.Queries
 

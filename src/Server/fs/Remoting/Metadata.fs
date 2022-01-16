@@ -42,13 +42,24 @@ let metadataSelectionToParamDict (selection: Metadata.Selection) =
     |> Map.ofList
     |> mapToParamDict
 
-let generateMetadataSelectionJoins (selection: Metadata.Selection) =
+let generateMetadataSelectionJoins (maybeRequestedCategoryCode: string option) (selection: Metadata.Selection) =
     let categoryTables =
         [ for code, _ in selection |> Map.toList do
-              if code.Contains('.') then
-                  code.Split('.')[0] ]
+              // Don't include the category we are fetching values for, since that will already be joined in
+              // (if it is a many-to-many category)
+              let shouldInclude =
+                  if code.Contains('.') then
+                      match maybeRequestedCategoryCode with
+                      | Some requestedCategoryCode when not (requestedCategoryCode.Contains('.')) -> true
+                      | Some requestedCategoryCode when code.Split('.')[0] <> requestedCategoryCode.Split('.')[0] -> true
+                      | None -> true
+                      | _ -> false
+                  else
+                      false
 
-    [ for t in categoryTables -> createJoin t ]
+              if shouldInclude then code.Split('.')[0] ]
+
+    [ for t in categoryTables |> List.distinct -> createJoin t ]
     |> String.concat " "
     |> fun s -> if s.Length > 0 then " " + s else ""
 
@@ -158,7 +169,7 @@ let getMetadataForCategory
         let metadataSelectionSql =
             generateMetadataSelectionSql (Some catCode) nonExcludedManyToManyCategories
 
-        let joins = generateMetadataSelectionJoins nonExcludedManyToManyCategories
+        let joins = generateMetadataSelectionJoins (Some catCode) nonExcludedManyToManyCategories
 
         let column = getQualifiedColumnName catCode
 
@@ -198,7 +209,7 @@ let getMinAndMaxForCategory
         let metadataSelectionSql =
             generateMetadataSelectionSql (Some catCode) nonExcludedManyToManyCategories
 
-        let joins = generateMetadataSelectionJoins nonExcludedManyToManyCategories
+        let joins = generateMetadataSelectionJoins (Some catCode) nonExcludedManyToManyCategories
 
         let sql =
             $"SELECT min({catCode}) as Min, max({catCode}) as Max FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
@@ -250,7 +261,7 @@ let getMetadataForTexts
         let metadataSelectionSql =
             generateMetadataSelectionSql None nonExcludedManyToManyCategories
 
-        let joins = generateMetadataSelectionJoins nonExcludedManyToManyCategories
+        let joins = generateMetadataSelectionJoins None nonExcludedManyToManyCategories
 
         let orderBy =
             match maybeSortInfo with

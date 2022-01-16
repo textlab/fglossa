@@ -25,7 +25,7 @@ module Spoken =
             let metadataSelectionSql =
                 generateMetadataSelectionSql None nonExcludedManyToManyCategories
 
-            let joins = generateMetadataSelectionJoins nonExcludedManyToManyCategories
+            let joins = generateMetadataSelectionJoins None nonExcludedManyToManyCategories
 
             let parameters = metadataSelectionToParamDict selection
 
@@ -81,7 +81,7 @@ module Written =
             let metadataSelectionSql =
                 generateMetadataSelectionSql None nonExcludedManyToManyCategories
 
-            let joins = generateMetadataSelectionJoins nonExcludedManyToManyCategories
+            let joins = generateMetadataSelectionJoins None nonExcludedManyToManyCategories
 
             let sql =
                 $"SELECT count(texts.tid) as NumTexts, sum(endpos - startpos + 1) as NumTokens FROM texts{joins} \
