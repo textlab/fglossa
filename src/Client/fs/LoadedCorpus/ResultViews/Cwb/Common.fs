@@ -31,7 +31,7 @@ let idColumn (corpus: Corpus) sId (pageNumber: int) rowIndex (dispatch: Msg -> u
                             e.preventDefault ()
                             e.stopPropagation ()
                             dispatch (FetchMetadataForText(corpus, textId)))
-                        prop.children [ Html.span textId ] ]
+                        prop.children [ Html.span sId ] ]
                corpus.ResultLinks(pageNumber, rowIndex) ]
 
 
