@@ -291,7 +291,28 @@ let getMetadataForTexts
         let metadataSelectionSql =
             generateMetadataSelectionSql None nonExcludedManyToManyCategories
 
-        let joins = generateMetadataSelectionJoins None nonExcludedManyToManyCategories
+        let joins =
+            generateMetadataSelectionJoins None nonExcludedManyToManyCategories
+            |> fun s ->
+                match maybeSortInfo with
+                // If we sort on a column in the texts table, we don't need any additional joins
+                | Some sortInfo when sortInfo.CategoryCode.Contains("texts.") -> s
+                // If we sort on a many-to-many category, we need to make sure it is joined in
+                | Some sortInfo ->
+                    let table = sortInfo.CategoryCode.Split('.')[0]
+                    let metadataSelectionTables =
+                        [ for key in selection.Keys -> key.Split('.')[0] ] |> List.distinct
+                    if metadataSelectionTables |> List.contains table then
+                        // The table that contains the column we are sorting on is already included in the
+                        // metadata selection, so no need to join it once more
+                        s
+                    else
+                        // The table that contains the column we are sorting on is not included in the
+                        // metadata selection, so we need to join it in
+                        let joinTable = $"{table}_texts"
+                        $"{s} INNER JOIN {joinTable} ON {joinTable}.tid = texts.tid \
+                          INNER JOIN {table} ON {table}.id = {joinTable}.{table}_id"
+                | None -> s
 
         let orderBy =
             match maybeSortInfo with
