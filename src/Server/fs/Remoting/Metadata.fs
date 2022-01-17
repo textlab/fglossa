@@ -244,8 +244,24 @@ let getMetadataForTexts
         let limit = 50
         let offset = (pageNumber - 1) * limit
 
-        let columnSql =
+        // Since not all texts may have a value in a many-to-many category (e.g. not all texts have an author),
+        // we need to take the union of those texts that do have a value (i.e. where we get results when we take the
+        // inner join with the join table and then further with the category table) with those that don't
+        // (i.e., where we do a LEFT join with the join table and take all those that have a NULL for the tid
+        // column in the join table).
+
+        // In the first case, we include all columns
+        let columnSqlJoined =
             columns |> List.map sanitizeString |> String.concat ", "
+
+        // In the second case, we just hard-code empty strings for the many-to-many values
+        let columnSqlNonJoined =
+            columns
+            |> List.map (fun column ->
+                column
+                |> sanitizeString
+                |> fun s -> if s.Contains("texts.") then s else "''")
+            |> String.concat ", "
 
         let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
@@ -256,13 +272,32 @@ let getMetadataForTexts
         let metadataSelectionSql =
             generateMetadataSelectionSql None nonExcludedManyToManyCategories
 
+        // Here we find texts that have many-to-many values
         let joins =
+            let selectedCategories =
+                [ for key in selection |> Map.keys do
+                    if key.Contains('.') then key ]
+            [ for column in List.append columns selectedCategories do
+                  if column.Contains('.') then
+                      let table = column.Split('.')[0]
+                      if table <> "texts" then table ]
+            |> List.distinct
+            |> List.map (fun table ->
+                $"INNER JOIN {table}_texts ON {table}_texts.tid = texts.tid \
+                  INNER JOIN {table} ON {table}.id = {table}_texts.{table}_id")
+            |> String.concat " "
+            |> fun s -> if s.Length > 0 then " " + s else ""
+
+        // Here we find texts that don't have many-to-many values
+        let nonJoins =
             [ for column in columns do
                   if column.Contains('.') then
                       let table = column.Split('.')[0]
                       if table <> "texts" then table ]
             |> List.distinct
-            |> List.map createJoin
+            |> List.map (fun table ->
+                $"LEFT JOIN {table}_texts ON {table}_texts.tid = texts.tid \
+                  WHERE {table}_texts.tid IS NULL")
             |> String.concat " "
             |> fun s -> if s.Length > 0 then " " + s else ""
 
@@ -273,8 +308,18 @@ let getMetadataForTexts
             |> fun s -> if s = "tid" then "texts.tid" else s
 
         let sql =
-            $"SELECT {columnSql} FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql} \
-              ORDER BY {orderBy} LIMIT {limit} OFFSET {offset}"
+            let hasManyToManySelection =
+                selection
+                |> Map.exists (fun key _ -> key.Contains('.'))
+            [ $"SELECT {columnSqlJoined} FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
+              // We only need the second part of the union (i.e., those texts that don't have a value for the
+              // many-to-many category) when we don't actually include that category in the metadata selection
+              // (since then obviously all texts will have a value for that category)
+              if not hasManyToManySelection then
+                  $"UNION \
+                    SELECT {columnSqlNonJoined} FROM texts{nonJoins}{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
+              $"ORDER BY {orderBy} LIMIT {limit} OFFSET {offset}" ]
+            |> String.concat " "
 
         let parameters = metadataSelectionToParamDict selection
 
