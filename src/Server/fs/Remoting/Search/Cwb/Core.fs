@@ -325,14 +325,30 @@ let getMetadataDistribution
 
         use conn = new SqliteConnection(connStr)
 
-        let metadataSelectionSql =
-            generateMetadataSelectionSql None searchParams.MetadataSelection
-
         let catCode = Database.sanitizeString categoryCode
 
+        let catJoin =
+            if catCode.Contains('.') then
+                let catTable = catCode.Split('.')[0]
+                if catTable <> "texts" then " " + createJoin catTable else ""
+            else
+                ""
+        let excludedManyToManyCategoriesSql = generateManyToManyExclusions searchParams.MetadataSelection
+
+        let nonExcludedManyToManyCategories =
+            searchParams.MetadataSelection
+            |> Map.filter (fun key value -> not (key.Contains('.') && value.ShouldExclude))
+
+        let metadataSelectionSql =
+            generateMetadataSelectionSql None nonExcludedManyToManyCategories
+
+        let joins = generateMetadataSelectionJoins (Some catCode) nonExcludedManyToManyCategories
+
+        let column = getQualifiedColumnName catCode
+
         let categorySql =
-            $"SELECT {catCode} AS CategoryValue, GROUP_CONCAT(DISTINCT tid) AS TextIds FROM texts \
-             WHERE 1 = 1{metadataSelectionSql} GROUP BY {catCode}"
+            $"SELECT {column} AS CategoryValue, GROUP_CONCAT(DISTINCT texts.tid) AS TextIds FROM texts{catJoin}{joins} \
+             WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql} GROUP BY {column}"
 
         let parameters = metadataSelectionToParamDict searchParams.MetadataSelection
 

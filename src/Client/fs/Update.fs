@@ -551,13 +551,16 @@ module LoadedCorpus =
                             | :? Metadata.NumberCategory -> Metadata.NumberCategoryType
                             | _ -> failwith $"Unknown metadata category type for {category}"
 
+                        let table = category.TableName |> Option.defaultValue "texts"
+                        let catCode = $"{table}.{category.Code}"
+
                         match maybeDownloadingFormat with
                         | Some downloadingFormat ->
                             Cmd.OfAsync.perform
                                 serverApi.DownloadMetadataDistribution
                                 (loadedCorpusModel.Search.Params,
                                  attributeCode,
-                                 category.Code,
+                                 catCode,
                                  categoryType,
                                  keepZeroValues,
                                  downloadingFormat)
@@ -567,7 +570,7 @@ module LoadedCorpus =
                                 serverApi.GetMetadataDistribution
                                 (loadedCorpusModel.Search.Params,
                                  attributeCode,
-                                 category.Code,
+                                 catCode,
                                  categoryType,
                                  keepZeroValues)
                                 FetchedMetadataDistribution
