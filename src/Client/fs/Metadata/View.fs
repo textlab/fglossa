@@ -221,7 +221,10 @@ module MetadataMenu =
         (isInSidebar: bool)
         dispatch
         =
-        let maybeCategorySelection = metadataSelection.TryFind(category.Code)
+        let table = category.TableName |> Option.defaultValue "texts"
+        let catCode = $"{table}.{category.Code}"
+
+        let maybeCategorySelection = metadataSelection.TryFind(catCode)
 
         let pickValue choiceName =
             // If a from or to value already exists, find it
@@ -300,7 +303,7 @@ module MetadataMenu =
                                                                       Bulma.control.div [ checkButton ] ] ] ] ]
 
             Html.li [ if isInSidebar then
-                          Html.a [ prop.key category.Code
+                          Html.a [ prop.key catCode
                                    if isOpen then
                                        prop.style [ style.lineHeight (length.em 1.7) ]
                                    prop.onClick (fun _ -> dispatch (ToggleIntervalOpen category))
@@ -370,8 +373,11 @@ module MetadataMenu =
                                      prop.children [ Html.ul [ listButton; intervalButton ] ] ] ]
 
     let freeTextSearch (category: LongTextCategory) dispatch =
+        let table = category.TableName |> Option.defaultValue "texts"
+        let catCode = $"{table}.{category.Code}"
+
         Html.li (
-            Html.a [ prop.key category.Code
+            Html.a [ prop.key catCode
                      prop.text category.Name
                      prop.onClick (fun _ -> dispatch (ToggleMetadataMenuOpen category)) ]
         )

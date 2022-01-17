@@ -84,10 +84,13 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             FetchedMinAndMax = None },
         cmd
     | FetchMinAndMaxForCategory category ->
+        let table = category.TableName |> Option.defaultValue "texts"
+        let catCode = $"{table}.{category.Code}"
+
         model,
         Cmd.OfAsync.perform
             serverApi.GetMinAndMaxForCategory
-            (model.Corpus.SharedInfo.Code, category.Code, model.Search.Params.MetadataSelection)
+            (model.Corpus.SharedInfo.Code, catCode, model.Search.Params.MetadataSelection)
             FetchedMinAndMaxForCategory
     | FetchedMinAndMaxForCategory (min, max) -> { model with FetchedMinAndMax = Some(min, max) }, Cmd.none
     | FetchTextAndTokenCounts ->
@@ -224,13 +227,16 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         newModel, cmd
 
     | SetIntervalFrom (category, number) ->
+        let table = category.TableName |> Option.defaultValue "texts"
+        let catCode = $"{table}.{category.Code}"
+
         let (newCategoryValues: Metadata.CategorySelection) =
             let fromValue: Metadata.CategoryMenuOption =
                 { Name = "glossa_interval_from"
                   Value = number }
 
             // Find the already selected values for this category, if any, and append the new one
-            match model.Search.Params.MetadataSelection.TryFind category.Code with
+            match model.Search.Params.MetadataSelection.TryFind catCode with
             | Some categoryValues ->
                 let maybeToValue =
                     categoryValues.Choices
@@ -248,7 +254,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         let newSelection =
             model.Search.Params.MetadataSelection
-            |> Map.add category.Code newCategoryValues
+            |> Map.add catCode newCategoryValues
 
         let newModel =
             { model with
@@ -257,13 +263,16 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         newModel, Cmd.none
 
     | SetIntervalTo (category, number) ->
+        let table = category.TableName |> Option.defaultValue "texts"
+        let catCode = $"{table}.{category.Code}"
+
         let (newCategoryValues: Metadata.CategorySelection) =
             let toValue: Metadata.CategoryMenuOption =
                 { Name = "glossa_interval_to"
                   Value = number }
 
             // Find the already selected values for this category, if any, and append the new one
-            match model.Search.Params.MetadataSelection.TryFind category.Code with
+            match model.Search.Params.MetadataSelection.TryFind catCode with
             | Some categoryValues ->
                 let maybeFromValue =
                     categoryValues.Choices
@@ -281,7 +290,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         let newSelection =
             model.Search.Params.MetadataSelection
-            |> Map.add category.Code newCategoryValues
+            |> Map.add catCode newCategoryValues
 
         let newModel =
             { model with

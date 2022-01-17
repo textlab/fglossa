@@ -156,7 +156,7 @@ let getMetadataForCategory
         let catJoin =
             if catCode.Contains('.') then
                 let catTable = catCode.Split('.')[0]
-                " " + createJoin catTable
+                if catTable <> "texts" then " " + createJoin catTable else ""
             else
                 ""
 
@@ -200,6 +200,13 @@ let getMinAndMaxForCategory
 
         let catCode = sanitizeString categoryCode
 
+        let catJoin =
+            if catCode.Contains('.') then
+                let catTable = catCode.Split('.')[0]
+                if catTable <> "texts" then " " + createJoin catTable else ""
+            else
+                ""
+
         let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
         let nonExcludedManyToManyCategories =
@@ -211,8 +218,11 @@ let getMinAndMaxForCategory
 
         let joins = generateMetadataSelectionJoins (Some catCode) nonExcludedManyToManyCategories
 
+        let column = getQualifiedColumnName catCode
+
         let sql =
-            $"SELECT min({catCode}) as Min, max({catCode}) as Max FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
+            $"SELECT min({column}) as Min, max({column}) as Max FROM texts{catJoin}{joins} \
+              WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
 
         let parameters = metadataSelectionToParamDict selection
 
