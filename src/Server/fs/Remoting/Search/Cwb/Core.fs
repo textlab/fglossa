@@ -482,7 +482,7 @@ let downloadMetadataDistribution
                 // Put the attribute value in the first column
                 worksheet.Cell(rowIndex + 2, 1).Value <- attributeValueDistribution.AttributeValue
 
-                // Create a colunn for each metadata value frequency
+                // Create a column for each metadata value frequency
                 attributeValueDistribution.MetadataValueFrequencies
                 |> Array.iteri (fun columnIndex metadataValueFreq ->
                     worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- metadataValueFreq.Frequency))
@@ -491,10 +491,14 @@ let downloadMetadataDistribution
 
             worksheet.Cell(totalsRowIndex, 1).Value <- "Total"
 
+            let mutable colIndex = 2
             distribution.CategoryValueTotals
-            |> Array.iteri (fun columnIndex categoryValueTotal ->
-                // Create a colunn for each metadata value total
-                worksheet.Cell(totalsRowIndex, columnIndex + 2).Value <- categoryValueTotal)
+            |> Array.iter (fun categoryValueTotal ->
+                // Create a column for each metadata value total
+                if keepZeroValues || categoryValueTotal > 0UL then
+                    worksheet.Cell(totalsRowIndex, colIndex).Value <- categoryValueTotal
+                    colIndex <- colIndex + 1
+                )
 
             workbook.SaveAs(outputFilename)
         | Tsv ->
@@ -516,7 +520,14 @@ let downloadMetadataDistribution
                     |> fun s -> $"{attributeValueDistribution.AttributeValue}\t{s}")
 
             let totalsRow =
-                distribution.CategoryValueTotals
+                let totals =
+                    if keepZeroValues then
+                        distribution.CategoryValueTotals
+                    else
+                        distribution.CategoryValueTotals
+                        |> Array.filter(fun total -> total > 0UL)
+
+                totals
                 |> Array.map string
                 |> String.concat "\t"
                 |> fun s -> "Total\t" + s
@@ -546,7 +557,14 @@ let downloadMetadataDistribution
                     |> fun s -> $"\"{attributeValueDistribution.AttributeValue}\",{s}")
 
             let totalsRow =
-                distribution.CategoryValueTotals
+                let totals =
+                    if keepZeroValues then
+                        distribution.CategoryValueTotals
+                    else
+                        distribution.CategoryValueTotals
+                        |> Array.filter(fun total -> total > 0UL)
+
+                totals
                 |> Array.map string
                 |> String.concat ","
                 |> fun s -> "Total," + s
