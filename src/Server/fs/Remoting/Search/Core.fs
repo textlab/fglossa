@@ -5,6 +5,7 @@ open System.Text.RegularExpressions
 open Serilog
 open ClosedXML
 open Shared
+open ServerTypes
 
 let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams) =
     let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
@@ -94,9 +95,9 @@ let downloadSearchResults
             | Tsv -> ".tsv"
             | Csv -> ".csv"
 
-        let downloadFilename = $"tmp/{searchParams.SearchId}_res{extension}"
+        let downloadFilename = $"/glossa3_doc/{searchParams.SearchId}_res{extension}"
 
-        let outputFilename = $"../Client/public/{downloadFilename}"
+        let outputFilename = $"{downloadRoot}{downloadFilename}"
 
         let idHeader =
             match corpus.Config.Modality with

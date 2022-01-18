@@ -165,9 +165,9 @@ let downloadFrequencyList
             | Tsv -> ".tsv"
             | Csv -> ".csv"
 
-        let downloadFilename = $"tmp/{searchParams.SearchId}_freq{extension}"
+        let downloadFilename = $"/glossa3_doc/{searchParams.SearchId}_freq{extension}"
 
-        let outputFilename = $"../Client/public/{downloadFilename}"
+        let outputFilename = $"../Client/public{downloadFilename}"
 
         match format with
         | Excel ->
@@ -456,9 +456,9 @@ let downloadMetadataDistribution
             | Tsv -> ".tsv"
             | Csv -> ".csv"
 
-        let downloadFilename = $"tmp/{searchParams.SearchId}_distr{extension}"
+        let downloadFilename = $"/glossa3_doc/{searchParams.SearchId}_distr{extension}"
 
-        let outputFilename = $"../Client/public/{downloadFilename}"
+        let outputFilename = $"{downloadRoot}{downloadFilename}"
 
         match format with
         | Excel ->
