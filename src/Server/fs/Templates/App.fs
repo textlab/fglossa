@@ -3,7 +3,8 @@ module App
 open Giraffe.ViewEngine
 
 let layout (content: XmlNode list) =
-    let urlBaseValue = System.Environment.GetEnvironmentVariable("URL_BASE")
+    let urlBaseValue =
+        System.Environment.GetEnvironmentVariable("URL_BASE")
 
     let headContent =
         [ if not (isNull urlBaseValue) then

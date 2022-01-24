@@ -23,72 +23,72 @@ let createServerApi ctx =
 
     { GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
       GetCorpusConfig =
-        fun code ->
-            Remoting.Corpus.getCorpusConfig logger code
-            |> Async.AwaitTask
+          fun code ->
+              Remoting.Corpus.getCorpusConfig logger code
+              |> Async.AwaitTask
       GetMetadataForCategory =
-        fun (corpusCode, categoryCode, selection) ->
-            Remoting.Metadata.getMetadataForCategory logger corpusCode categoryCode selection
-            |> Async.AwaitTask
+          fun (corpusCode, categoryCode, selection) ->
+              Remoting.Metadata.getMetadataForCategory logger corpusCode categoryCode selection
+              |> Async.AwaitTask
       GetMinAndMaxForCategory =
-        fun (corpusCode, categoryCode, selection) ->
-            Remoting.Metadata.getMinAndMaxForCategory logger corpusCode categoryCode selection
-            |> Async.AwaitTask
+          fun (corpusCode, categoryCode, selection) ->
+              Remoting.Metadata.getMinAndMaxForCategory logger corpusCode categoryCode selection
+              |> Async.AwaitTask
       GetMetadataForTexts =
-        fun (corpusCode, selection, columns, pageNumber, maybeSortInfo) ->
-            Remoting.Metadata.getMetadataForTexts logger corpusCode selection columns pageNumber maybeSortInfo
-            |> Async.AwaitTask
+          fun (corpusCode, selection, columns, pageNumber, maybeSortInfo) ->
+              Remoting.Metadata.getMetadataForTexts logger corpusCode selection columns pageNumber maybeSortInfo
+              |> Async.AwaitTask
       GetMetadataForSingleText =
-        fun (corpusCode, categories, textId) ->
-            Remoting.Metadata.getMetadataForSingleText logger corpusCode categories textId
-            |> Async.AwaitTask
+          fun (corpusCode, categories, textId) ->
+              Remoting.Metadata.getMetadataForSingleText logger corpusCode categories textId
+              |> Async.AwaitTask
       GetTextAndTokenCount =
-        fun (corpusCode, selection) ->
-            Remoting.Corpus.getTextAndTokenCount logger corpusCode selection
-            |> Async.AwaitTask
+          fun (corpusCode, selection) ->
+              Remoting.Corpus.getTextAndTokenCount logger corpusCode selection
+              |> Async.AwaitTask
       SearchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams
       GetSearchResults =
-        fun (searchParams, pageNumbers) -> Remoting.Search.Core.getSearchResults logger searchParams None pageNumbers
+          fun (searchParams, pageNumbers) -> Remoting.Search.Core.getSearchResults logger searchParams None pageNumbers
       DownloadSearchResults =
-        fun (searchParams, attributes, format, shouldCreateHeader) ->
-            Remoting.Search.Core.downloadSearchResults logger searchParams attributes format shouldCreateHeader
+          fun (searchParams, attributes, format, shouldCreateHeader) ->
+              Remoting.Search.Core.downloadSearchResults logger searchParams attributes format shouldCreateHeader
       GetMediaObject =
-        fun (searchParams, mediaPlayerType, pageNumber, resultIndex, contextSize, contextUnit) ->
-            Remoting.Search.Cwb.Spoken.getMediaObject
-                logger
-                searchParams
-                mediaPlayerType
-                pageNumber
-                resultIndex
-                contextSize
-                contextUnit
+          fun (searchParams, mediaPlayerType, pageNumber, resultIndex, contextSize, contextUnit) ->
+              Remoting.Search.Cwb.Spoken.getMediaObject
+                  logger
+                  searchParams
+                  mediaPlayerType
+                  pageNumber
+                  resultIndex
+                  contextSize
+                  contextUnit
       GetFrequencyList =
-        fun (searchParams, attributes, isCaseSensitive) ->
-            Remoting.Search.Cwb.Core.getFrequencyList logger searchParams attributes isCaseSensitive
+          fun (searchParams, attributes, isCaseSensitive) ->
+              Remoting.Search.Cwb.Core.getFrequencyList logger searchParams attributes isCaseSensitive
       DownloadFrequencyList =
-        fun (searchParams, attributes, isCaseSensitive, format) ->
-            Remoting.Search.Cwb.Core.downloadFrequencyList logger searchParams attributes isCaseSensitive format
+          fun (searchParams, attributes, isCaseSensitive, format) ->
+              Remoting.Search.Cwb.Core.downloadFrequencyList logger searchParams attributes isCaseSensitive format
       GetMetadataDistribution =
-        fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues) ->
-            Remoting.Search.Cwb.Core.getMetadataDistribution
-                logger
-                searchParams
-                attributeCode
-                categoryCode
-                categoryType
-                keepZeroValues
-            |> Async.AwaitTask
+          fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues) ->
+              Remoting.Search.Cwb.Core.getMetadataDistribution
+                  logger
+                  searchParams
+                  attributeCode
+                  categoryCode
+                  categoryType
+                  keepZeroValues
+              |> Async.AwaitTask
       DownloadMetadataDistribution =
-        fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues, format) ->
-            Remoting.Search.Cwb.Core.downloadMetadataDistribution
-                logger
-                searchParams
-                attributeCode
-                categoryCode
-                categoryType
-                keepZeroValues
-                format
-            |> Async.AwaitTask }
+          fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues, format) ->
+              Remoting.Search.Cwb.Core.downloadMetadataDistribution
+                  logger
+                  searchParams
+                  attributeCode
+                  categoryCode
+                  categoryType
+                  keepZeroValues
+                  format
+              |> Async.AwaitTask }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =
     // do some logging
@@ -163,7 +163,8 @@ let outputTemplate =
 
 // Giraffe.SerilogExtensions has native destructuring mechanism.
 // This helps Serilog deserialize the fsharp types like unions/records
-let typeConf = LoggerConfiguration().Destructure.FSharpTypes()
+let typeConf =
+    LoggerConfiguration().Destructure.FSharpTypes()
 
 Log.Logger <-
     typeConf

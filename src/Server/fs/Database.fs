@@ -178,7 +178,8 @@ let queryDynamic
 
 let insert (logger: ILogger) (connection: #DbConnection) (table: string) (data: (string * obj) seq) =
     task {
-        let columns = data |> Seq.map fst |> String.concat ", "
+        let columns =
+            data |> Seq.map fst |> String.concat ", "
 
         let placeholders =
             data
@@ -187,7 +188,8 @@ let insert (logger: ILogger) (connection: #DbConnection) (table: string) (data: 
 
         let parameters = dict data
 
-        let sql = $"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+        let sql =
+            $"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
 
         toDisplayedSql sql (Some parameters)
         |> logger.Information

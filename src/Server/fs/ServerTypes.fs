@@ -7,7 +7,8 @@ open Shared.StringUtils
 open Database
 
 let corpusRoot =
-    let envVar = System.Environment.GetEnvironmentVariable("GLOSSA_CORPUS_ROOT")
+    let envVar =
+        System.Environment.GetEnvironmentVariable("GLOSSA_CORPUS_ROOT")
 
     if isNull envVar then
         "../Corpora/corpora"
@@ -15,10 +16,11 @@ let corpusRoot =
         envVar
 
 let downloadRoot =
-    let envVar = System.Environment.GetEnvironmentVariable("GLOSSA_DOWNLOAD_ROOT")
+    let envVar =
+        System.Environment.GetEnvironmentVariable("GLOSSA_DOWNLOAD_ROOT")
 
     if isNull envVar then
-       "../Client/public"
+        "../Client/public"
     else
         envVar
 
