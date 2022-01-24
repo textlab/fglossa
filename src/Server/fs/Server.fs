@@ -69,7 +69,7 @@ let createServerApi ctx =
           fun (searchParams, attributes, isCaseSensitive, format) ->
               Remoting.Search.Cwb.Core.downloadFrequencyList logger searchParams attributes isCaseSensitive format
       GetMetadataDistribution =
-          fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues) ->
+          fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues, accExcludedAttrValues) ->
               Remoting.Search.Cwb.Core.getMetadataDistribution
                   logger
                   searchParams
@@ -77,9 +77,10 @@ let createServerApi ctx =
                   categoryCode
                   categoryType
                   keepZeroValues
+                  accExcludedAttrValues
               |> Async.AwaitTask
       DownloadMetadataDistribution =
-          fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues, format) ->
+          fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues, accExcludedAttrValues, format) ->
               Remoting.Search.Cwb.Core.downloadMetadataDistribution
                   logger
                   searchParams
@@ -87,6 +88,7 @@ let createServerApi ctx =
                   categoryCode
                   categoryType
                   keepZeroValues
+                  accExcludedAttrValues
                   format
               |> Async.AwaitTask }
 

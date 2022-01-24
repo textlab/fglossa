@@ -98,6 +98,11 @@ html {
     width: 100%;
 }
 
-.metadata-distribution-table td:not(:first-child) {
-    text-align: right;
+.metadata-distribution-table {
+    td:first-child {
+        text-align: center;
+    }
+    td:nth-child(n+3) {
+        text-align: right;
+    }
 }

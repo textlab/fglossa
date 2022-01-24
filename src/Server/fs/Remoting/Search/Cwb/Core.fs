@@ -246,6 +246,7 @@ let getMetadataDistribution
     (categoryCode: string)
     (categoryType: Metadata.CategoryType)
     (keepZeroValues: bool)
+    (accExcludedAttrValues: Set<string>)
     : Task<MetadataDistribution> =
     task {
         let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
@@ -309,6 +310,7 @@ let getMetadataDistribution
                             | None -> [ (textId, freq) ] |> Map.ofList |> Some
                     ))
                 Map.empty
+            |> Map.filter (fun attrValue _ -> not (Set.contains attrValue accExcludedAttrValues))
 
         //////// FOR DEBUGGING /////////
         // attrDistributionMap
@@ -444,11 +446,13 @@ let downloadMetadataDistribution
     (categoryCode: string)
     (categoryType: Metadata.CategoryType)
     (keepZeroValues: bool)
+    (accExcludedAttrValues: Set<string>)
     (format: DownloadFormat)
     : Task<string> =
     task {
         let! distribution =
-            getMetadataDistribution logger searchParams attributeCode categoryCode categoryType keepZeroValues
+            getMetadataDistribution
+                logger searchParams attributeCode categoryCode categoryType keepZeroValues accExcludedAttrValues
 
         let extension =
             match format with

@@ -644,13 +644,15 @@ module ResultsView =
                                                                           prop.text "Download:" ]
                                                         downloadButtons ] ]
                         if model.MetadataDistribution.Distribution.Length > 0 then
-                            Bulma.level [ Bulma.levelLeft [ Bulma.levelItem (
-                                                                Bulma.button.button [ color.isDanger
-                                                                                      prop.disabled (
-                                                                                          model.ExcludedAttributeValues.New.IsEmpty
-                                                                                      )
-                                                                                      prop.text "Remove selected" ]
-                                                            ) ] ]
+                            let removeSelectedRowsButton =
+                                Bulma.button.button [ button.isSmall
+                                                      color.isDanger
+                                                      prop.title "Remove selected rows"
+                                                      prop.disabled model.ExcludedAttributeValues.New.IsEmpty
+                                                      prop.onClick (fun _ -> dispatch RemoveSelectedAttributeValues)
+                                                      prop.children [ Bulma.icon [ Html.i [ prop.className
+                                                                                                "fas fa-trash" ] ] ] ]
+
 
                             let categoryValueCells =
                                 [| for valueFreq in
@@ -669,7 +671,7 @@ module ResultsView =
                                            let attrValue = attrValueDistribution.AttributeValue
 
                                            let checkboxCell =
-                                               Html.td [ Bulma.input.checkbox [ prop.value (
+                                               Html.td [ Bulma.input.checkbox [ prop.isChecked (
                                                                                     model.ExcludedAttributeValues.New.Contains(
                                                                                         attrValue
                                                                                     )
@@ -711,7 +713,8 @@ module ResultsView =
                                 Bulma.table [ prop.className "metadata-distribution-table"
                                               prop.children [ Html.thead [ Html.tr (
                                                                                Array.append
-                                                                                   [| Html.td ""; Html.td "" |]
+                                                                                   [| Html.td removeSelectedRowsButton
+                                                                                      Html.td "" |]
                                                                                    categoryValueCells
                                                                            ) ]
                                                               Html.tbody (Array.append frequencyRows [| totalsRow |]) ] ]

@@ -591,6 +591,7 @@ module LoadedCorpus =
                 | SelectCategory of Metadata.Category
                 | SetKeepZero of bool
                 | AddOrRemoveExcludedAttributeValue of string * bool
+                | RemoveSelectedAttributeValues
                 | FetchedMetadataDistribution of MetadataDistribution
                 | DownloadMetadataDistribution of DownloadFormat
                 | DownloadedMetadataDistribution of string
@@ -605,6 +606,7 @@ module LoadedCorpus =
                     { SelectedAttributeCode = maybeAttributeCode
                       SelectedCategory = maybeCategory
                       KeepZeroValues = keepZeroValues
+                      ExcludedAttributeValues = excludedAttributeValues
                       DownloadingFormat = maybeDownloadingFormat }
                     =
                     match maybeAttributeCode, maybeCategory with
@@ -632,12 +634,18 @@ module LoadedCorpus =
                                  catCode,
                                  categoryType,
                                  keepZeroValues,
+                                 excludedAttributeValues.Accumulated,
                                  downloadingFormat)
                                 DownloadedMetadataDistribution
                         | None ->
                             Cmd.OfAsync.perform
                                 serverApi.GetMetadataDistribution
-                                (loadedCorpusModel.Search.Params, attributeCode, catCode, categoryType, keepZeroValues)
+                                (loadedCorpusModel.Search.Params,
+                                 attributeCode,
+                                 catCode,
+                                 categoryType,
+                                 keepZeroValues,
+                                 excludedAttributeValues.Accumulated)
                                 FetchedMetadataDistribution
                     | _ -> Cmd.none
 
@@ -684,6 +692,25 @@ module LoadedCorpus =
                               ExcludedAttributeValues = newExcludedAttr }
 
                     loadedCorpusModel, newMetadataDistributionModel, Cmd.none
+
+                | RemoveSelectedAttributeValues ->
+                    // Add the set of newly selected attribute values to the ones we have accumulated
+                    // so far, and clear the set of new ones. We then build a command that will fetch
+                    // a new metadata distribution table from the server, where the accumulated values
+                    // will be removed from the results.
+                    let newExclusions =
+                        { Accumulated =
+                              Set.union
+                                  metadataDistributionModel.ExcludedAttributeValues.Accumulated
+                                  metadataDistributionModel.ExcludedAttributeValues.New
+                          New = Set.empty }
+
+                    let newMetadataDistributionModel =
+                        { metadataDistributionModel with
+                              ExcludedAttributeValues = newExclusions }
+
+                    let cmd = buildCmd newMetadataDistributionModel
+                    loadedCorpusModel, newMetadataDistributionModel, cmd
 
                 | FetchedMetadataDistribution metadataDistribution ->
                     loadedCorpusModel,

@@ -329,6 +329,8 @@ type AttributeCode = string
 
 type KeepZeroValues = bool
 
+type AccExcludedAttrValues = Set<string>
+
 module Route =
     let builder typeName methodName =
         $"/glossa3/api/%s{typeName}/%s{methodName}"
@@ -347,5 +349,5 @@ type IServerApi =
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
       GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive -> Async<string []>
       DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * DownloadFormat -> Async<string>
-      GetMetadataDistribution: SearchParams * AttributeCode * Metadata.CategoryCode * Metadata.CategoryType * KeepZeroValues -> Async<MetadataDistribution>
-      DownloadMetadataDistribution: SearchParams * AttributeCode * Metadata.CategoryCode * Metadata.CategoryType * KeepZeroValues * DownloadFormat -> Async<string> }
+      GetMetadataDistribution: SearchParams * AttributeCode * Metadata.CategoryCode * Metadata.CategoryType * KeepZeroValues * AccExcludedAttrValues -> Async<MetadataDistribution>
+      DownloadMetadataDistribution: SearchParams * AttributeCode * Metadata.CategoryCode * Metadata.CategoryType * KeepZeroValues * AccExcludedAttrValues * DownloadFormat -> Async<string> }
