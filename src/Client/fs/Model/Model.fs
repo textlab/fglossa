@@ -105,7 +105,7 @@ type ConcordanceModel =
       // The text in the paginator input box, which may differ from the paginator page number
       // while the user is editing the text
       PaginatorTextValue: string
-      // The nmber of the result page actually being shown at the moment
+      // The number of the result page actually being shown at the moment
       ResultPageNo: int
       ResultPages: Map<int, SearchResult []>
       TextIdInQuickView: string option
@@ -152,11 +152,20 @@ type FrequencyListsModel =
           IsCaseSensitive = false
           DownloadingFormat = None }
 
+/// Attribute values that are excluded from the metadata distribution table.
+/// Each time we check a box in front of a row, it is added to the New set,
+/// and when we click the 'Remove selected' button, that set is added to the
+/// Accumulated set (and the New set is emptied).
+type ExcludedAttributeValues =
+    { Accumulated: Set<string>
+      New: Set<string> }
+
 type MetadataDistributionModel =
     { SelectedAttributeCode: string option
       SelectedCategory: Metadata.Category option
       MetadataDistribution: MetadataDistribution
       KeepZeroValues: bool
+      ExcludedAttributeValues: ExcludedAttributeValues
       DownloadingFormat: DownloadFormat option }
     static member Init() =
         { SelectedAttributeCode = None
@@ -165,6 +174,9 @@ type MetadataDistributionModel =
               { Distribution = [||]
                 CategoryValueTotals = [||] }
           KeepZeroValues = true
+          ExcludedAttributeValues =
+              { Accumulated = Set.empty
+                New = Set.empty }
           DownloadingFormat = None }
 
 type ResultTab =

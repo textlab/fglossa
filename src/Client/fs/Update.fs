@@ -590,6 +590,7 @@ module LoadedCorpus =
                 | SelectAttribute of string
                 | SelectCategory of Metadata.Category
                 | SetKeepZero of bool
+                | AddOrRemoveExcludedAttributeValue of string * bool
                 | FetchedMetadataDistribution of MetadataDistribution
                 | DownloadMetadataDistribution of DownloadFormat
                 | DownloadedMetadataDistribution of string
@@ -649,6 +650,7 @@ module LoadedCorpus =
                     let cmd = buildCmd newMetadataDistributionModel
 
                     loadedCorpusModel, newMetadataDistributionModel, cmd
+
                 | SelectCategory category ->
                     let newMetadataDistributionModel =
                         { metadataDistributionModel with
@@ -657,6 +659,7 @@ module LoadedCorpus =
                     let cmd = buildCmd newMetadataDistributionModel
 
                     loadedCorpusModel, newMetadataDistributionModel, cmd
+
                 | SetKeepZero shouldKeepZeroValues ->
                     let newMetadataDistributionModel =
                         { metadataDistributionModel with
@@ -664,11 +667,30 @@ module LoadedCorpus =
 
                     let cmd = buildCmd newMetadataDistributionModel
                     loadedCorpusModel, newMetadataDistributionModel, cmd
+
+                | AddOrRemoveExcludedAttributeValue (value, shouldAdd) ->
+                    let newExclusions =
+                        if shouldAdd then
+                            metadataDistributionModel.ExcludedAttributeValues.New.Add(value)
+                        else
+                            metadataDistributionModel.ExcludedAttributeValues.New.Remove(value)
+
+                    let newExcludedAttr =
+                        { metadataDistributionModel.ExcludedAttributeValues with
+                              New = newExclusions }
+
+                    let newMetadataDistributionModel =
+                        { metadataDistributionModel with
+                              ExcludedAttributeValues = newExcludedAttr }
+
+                    loadedCorpusModel, newMetadataDistributionModel, Cmd.none
+
                 | FetchedMetadataDistribution metadataDistribution ->
                     loadedCorpusModel,
                     { metadataDistributionModel with
                           MetadataDistribution = metadataDistribution },
                     Cmd.none
+
                 | DownloadMetadataDistribution format ->
                     let newMetadataDistributionModel =
                         { metadataDistributionModel with
@@ -676,6 +698,7 @@ module LoadedCorpus =
 
                     let cmd = buildCmd newMetadataDistributionModel
                     loadedCorpusModel, newMetadataDistributionModel, cmd
+
                 | DownloadedMetadataDistribution path ->
                     Browser.Dom.window.location.href <- path
 
