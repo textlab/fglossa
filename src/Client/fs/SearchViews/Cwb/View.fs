@@ -121,16 +121,18 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
     let simpleView (query: Query) queryIndex =
         Bulma.input.search [ prop.value (queryText query)
                              prop.onKeyUp (key.enter, (fun _ -> dispatch Search))
-                             prop.onChange (fun (s: string) ->
-                                 let query, hasFinalSpace = textInputToQuery s
-                                 dispatch (SetQueryText(query, queryIndex, hasFinalSpace))) ]
+                             prop.onChange
+                                 (fun (s: string) ->
+                                     let query, hasFinalSpace = textInputToQuery s
+                                     dispatch (SetQueryText(query, queryIndex, hasFinalSpace))) ]
 
     let cqpView (query: Query) queryIndex =
         Bulma.input.search [ prop.value (queryText query)
                              prop.onKeyUp (key.enter, (fun _ -> dispatch Search))
-                             prop.onChange (fun (s: string) ->
-                                 let query, hasFinalSpace = textInputToQuery s
-                                 dispatch (SetQueryText(query, queryIndex, hasFinalSpace))) ]
+                             prop.onChange
+                                 (fun (s: string) ->
+                                     let query, hasFinalSpace = textInputToQuery s
+                                     dispatch (SetQueryText(query, queryIndex, hasFinalSpace))) ]
 
     let searchInterface (query: Query) queryIndex =
         match search.Interface with
@@ -146,20 +148,24 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
             | Extended _ -> false
 
         search.Params.Queries
-        |> Array.mapi (fun queryIndex query ->
-            Bulma.field.div [ if shouldShowDeleteRowButton then
-                                  field.hasAddons
-                                  field.hasAddonsRight
-                              prop.children [ Bulma.control.div [ control.isExpanded
-                                                                  prop.children [ searchInterface query queryIndex ] ]
-                                              if shouldShowDeleteRowButton then
-                                                  Bulma.control.div (
-                                                      Bulma.button.button [ color.isDanger
-                                                                            prop.title "Delete row"
-                                                                            prop.onClick (fun _ ->
-                                                                                dispatch (RemoveQueryRow queryIndex))
-                                                                            prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-times" ] ] ] ] ]
-                                                  ) ] ])
+        |> Array.mapi
+            (fun queryIndex query ->
+                Bulma.field.div [ if shouldShowDeleteRowButton then
+                                      field.hasAddons
+                                      field.hasAddonsRight
+                                  prop.children [ Bulma.control.div [ control.isExpanded
+                                                                      prop.children [ searchInterface query queryIndex ] ]
+                                                  if shouldShowDeleteRowButton then
+                                                      Bulma.control.div (
+                                                          Bulma.button.button [ color.isDanger
+                                                                                prop.title "Delete row"
+                                                                                prop.onClick
+                                                                                    (fun _ ->
+                                                                                        dispatch (
+                                                                                            RemoveQueryRow queryIndex
+                                                                                        ))
+                                                                                prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-times" ] ] ] ] ]
+                                                      ) ] ])
 
     let randomResultsControls =
         [ Bulma.levelItem [ prop.style [ style.marginRight (length.rem 0.5) ]
@@ -171,13 +177,14 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                            |> Option.map string
                                                                            |> Option.defaultValue ""
                                                                        )
-                                                                       prop.onChange (fun (s: string) ->
-                                                                           let value =
-                                                                               match System.UInt64.TryParse(s) with
-                                                                               | true, v -> Some v
-                                                                               | false, _ -> None
+                                                                       prop.onChange
+                                                                           (fun (s: string) ->
+                                                                               let value =
+                                                                                   match System.UInt64.TryParse(s) with
+                                                                                   | true, v -> Some v
+                                                                                   | false, _ -> None
 
-                                                                           dispatch (SetNumRandomHits value))
+                                                                               dispatch (SetNumRandomHits value))
                                                                        prop.onKeyUp (
                                                                            key.enter,
                                                                            (fun _ -> dispatch Search)
@@ -193,13 +200,14 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                    |> Option.map string
                                                                    |> Option.defaultValue ""
                                                                )
-                                                               prop.onChange (fun (s: string) ->
-                                                                   let value =
-                                                                       match System.Int32.TryParse(s) with
-                                                                       | true, v -> Some v
-                                                                       | false, _ -> None
+                                                               prop.onChange
+                                                                   (fun (s: string) ->
+                                                                       let value =
+                                                                           match System.Int32.TryParse(s) with
+                                                                           | true, v -> Some v
+                                                                           | false, _ -> None
 
-                                                                   dispatch (SetRandomHitsSeed value))
+                                                                       dispatch (SetRandomHitsSeed value))
                                                                prop.onKeyUp (key.enter, (fun _ -> dispatch Search)) ]
 
                                              ] ]

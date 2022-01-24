@@ -79,7 +79,7 @@ type Corpus
     member val MetadataTable = defaultArg metadataTable []
     member val MetadataQuickView = defaultArg metadataQuickView []
 
-    abstract member ResultLinks: pageNumber: int * rowIndex: int -> ReactElement
+    abstract member ResultLinks : pageNumber: int * rowIndex: int -> ReactElement
     default _.ResultLinks(_, _) = Html.none
 
 type MediaPlayerInfo =
@@ -162,8 +162,8 @@ type MetadataDistributionModel =
         { SelectedAttributeCode = None
           SelectedCategory = None
           MetadataDistribution =
-            { Distribution = [||]
-              CategoryValueTotals = [||] }
+              { Distribution = [||]
+                CategoryValueTotals = [||] }
           KeepZeroValues = true
           DownloadingFormat = None }
 

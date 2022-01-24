@@ -97,7 +97,8 @@ module LoadedCorpus =
                 (concordanceModel: ConcordanceModel)
                 : LoadedCorpusModel * ConcordanceModel * Cmd<Msg> =
                 let registerResultPages results =
-                    let fetchedPages = results |> Array.map (fun page -> page.PageNumber)
+                    let fetchedPages =
+                        results |> Array.map (fun page -> page.PageNumber)
 
                     // Remove the fetched pages from the set of pages currently being fetched...
                     let pagesBeingFetched =
@@ -113,8 +114,8 @@ module LoadedCorpus =
                             concordanceModel.ResultPages
 
                     { concordanceModel with
-                        PagesBeingFetched = pagesBeingFetched
-                        ResultPages = resultPages }
+                          PagesBeingFetched = pagesBeingFetched
+                          ResultPages = resultPages }
 
                 match msg with
                 | PerformSearchStep ->
@@ -124,7 +125,8 @@ module LoadedCorpus =
                     loadedCorpusModel, concordanceModel, cmd
 
                 | SearchResultsReceived results ->
-                    let shouldRunMoreSteps = concordanceModel.NumSteps > results.SearchStep
+                    let shouldRunMoreSteps =
+                        concordanceModel.NumSteps > results.SearchStep
 
                     let newSearchParams =
                         loadedCorpusModel.Search.Params
@@ -138,15 +140,15 @@ module LoadedCorpus =
                                     p.Step
 
                             { p with
-                                CpuCounts =
-                                    match p.CpuCounts with
-                                    | Some existingCounts ->
-                                        Array.append existingCounts results.CpuCounts
-                                        |> Some
-                                    | None -> Some results.CpuCounts
-                                LastCount = Some lastCount
-                                SearchId = results.SearchId
-                                Step = step }
+                                  CpuCounts =
+                                      match p.CpuCounts with
+                                      | Some existingCounts ->
+                                          Array.append existingCounts results.CpuCounts
+                                          |> Some
+                                      | None -> Some results.CpuCounts
+                                  LastCount = Some lastCount
+                                  SearchId = results.SearchId
+                                  Step = step }
 
                     let cmd =
                         if shouldRunMoreSteps then
@@ -185,13 +187,16 @@ module LoadedCorpus =
 
                     let newConcordanceModel =
                         { concordanceModel with
-                            PagesBeingFetched = pagesBeingFetched
-                            ResultPages = resultPages
-                            IsSearching = shouldRunMoreSteps
-                            NumResults = Some results.Count }
+                              PagesBeingFetched = pagesBeingFetched
+                              ResultPages = resultPages
+                              IsSearching = shouldRunMoreSteps
+                              NumResults = Some results.Count }
 
                     let newLoadedCorpusModel =
-                        { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = newSearchParams } }
+                        { loadedCorpusModel with
+                              Search =
+                                  { loadedCorpusModel.Search with
+                                        Params = newSearchParams } }
 
                     newLoadedCorpusModel, newConcordanceModel, cmd
 
@@ -216,19 +221,21 @@ module LoadedCorpus =
                         if sortKey <> loadedCorpusModel.Search.Params.SortKey then
                             // If we are changing the sort order, we need to fetch all specified pages
                             // regardless of whether those page numbers have already been fetched
-                            [| startPage..endPage |]
+                            [| startPage .. endPage |]
                         else
-                            [| startPage..endPage |]
+                            [| startPage .. endPage |]
                             // Ignore pages currently being fetched by another request
-                            |> Array.filter (fun page ->
-                                concordanceModel.PagesBeingFetched
-                                |> Array.contains page
-                                |> not)
+                            |> Array.filter
+                                (fun page ->
+                                    concordanceModel.PagesBeingFetched
+                                    |> Array.contains page
+                                    |> not)
                             // Ignore pages that have already been fetched
-                            |> Array.filter (fun page ->
-                                concordanceModel.ResultPages
-                                |> Map.containsKey page
-                                |> not)
+                            |> Array.filter
+                                (fun page ->
+                                    concordanceModel.ResultPages
+                                    |> Map.containsKey page
+                                    |> not)
                             // Create a new sequence to make sure we didn't create any "holes" in
                             // it (although that should not really happen in practice since we
                             // always fetch whole windows of pages)
@@ -244,7 +251,7 @@ module LoadedCorpus =
                     else
                         // Calculate the first and last result index (zero-based) to request from the server
                         let firstResult =
-                            (pageNumbers[0] - 1)
+                            (pageNumbers.[0] - 1)
                             * loadedCorpusModel.Search.Params.PageSize
                             |> uint64
 
@@ -256,17 +263,20 @@ module LoadedCorpus =
 
                         let searchParams =
                             { loadedCorpusModel.Search.Params with
-                                Start = firstResult
-                                End = lastResult
-                                SortKey = sortKey }
+                                  Start = firstResult
+                                  End = lastResult
+                                  SortKey = sortKey }
 
                         let newConcordanceModel =
                             { concordanceModel with
-                                // Register the pages as being fetched
-                                PagesBeingFetched = Array.append concordanceModel.PagesBeingFetched pageNumbers }
+                                  // Register the pages as being fetched
+                                  PagesBeingFetched = Array.append concordanceModel.PagesBeingFetched pageNumbers }
 
                         let newLoadedCorpusModel =
-                            { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = searchParams } }
+                            { loadedCorpusModel with
+                                  Search =
+                                      { loadedCorpusModel.Search with
+                                            Params = searchParams } }
 
                         let cmd =
                             Cmd.OfAsync.perform
@@ -283,12 +293,17 @@ module LoadedCorpus =
                         |> registerResultPages
                         // Now that result pages have been fetched, make sure we actually show the page that was
                         // selected in the paginator
-                        |> fun m -> { m with ResultPageNo = m.PaginatorPageNo }
+                        |> fun m ->
+                            { m with
+                                  ResultPageNo = m.PaginatorPageNo }
 
                     loadedCorpusModel, newConcordanceModel, Cmd.none
 
                 | SetPaginatorTextValue s ->
-                    loadedCorpusModel, { concordanceModel with PaginatorTextValue = s }, Cmd.none
+                    loadedCorpusModel,
+                    { concordanceModel with
+                          PaginatorTextValue = s },
+                    Cmd.none
 
                 | SetPaginatorPage (maybePageNo, maybeSortKey) ->
                     let pageNo =
@@ -304,28 +319,28 @@ module LoadedCorpus =
 
                     let newConcordanceModel =
                         { concordanceModel with
-                            // Set the value of the page number shown in the paginator; it may
-                            // differ from the page shown in the result table until we have
-                            // actually fetched the data from the server
-                            PaginatorPageNo = pageNo
-                            PaginatorTextValue = string pageNo
-                            ResultPageNo =
-                                if concordanceModel.ResultPages.ContainsKey(pageNo) then
-                                    // If the newly selected result page has already been fetched from the
-                                    // server, it can be shown in the result table immediately
-                                    pageNo
-                                else
-                                    // Otherwise, we need to wait until the results from the server
-                                    // arrive before changing the page to be shown in the result
-                                    // table
-                                    concordanceModel.PaginatorPageNo
-                            ResultPages =
-                                match maybeSortKey with
-                                | Some sortKey when sortKey <> loadedCorpusModel.Search.Params.SortKey ->
-                                    // If we have received a sort key that is different from the one currently
-                                    // set in the model, invalidate all previously fetched search result pages
-                                    Map.empty
-                                | _ -> concordanceModel.ResultPages }
+                              // Set the value of the page number shown in the paginator; it may
+                              // differ from the page shown in the result table until we have
+                              // actually fetched the data from the server
+                              PaginatorPageNo = pageNo
+                              PaginatorTextValue = string pageNo
+                              ResultPageNo =
+                                  if concordanceModel.ResultPages.ContainsKey(pageNo) then
+                                      // If the newly selected result page has already been fetched from the
+                                      // server, it can be shown in the result table immediately
+                                      pageNo
+                                  else
+                                      // Otherwise, we need to wait until the results from the server
+                                      // arrive before changing the page to be shown in the result
+                                      // table
+                                      concordanceModel.PaginatorPageNo
+                              ResultPages =
+                                  match maybeSortKey with
+                                  | Some sortKey when sortKey <> loadedCorpusModel.Search.Params.SortKey ->
+                                      // If we have received a sort key that is different from the one currently
+                                      // set in the model, invalidate all previously fetched search result pages
+                                      Map.empty
+                                  | _ -> concordanceModel.ResultPages }
 
 
                     let cmd =
@@ -337,15 +352,25 @@ module LoadedCorpus =
                     loadedCorpusModel, newConcordanceModel, cmd
 
                 | SetContextSizeTextValue v ->
-                    loadedCorpusModel, { concordanceModel with ContextSizeTextValue = v }, Cmd.none
+                    loadedCorpusModel,
+                    { concordanceModel with
+                          ContextSizeTextValue = v },
+                    Cmd.none
 
                 | SetContextSize size ->
-                    let newSearchParams = { loadedCorpusModel.Search.Params with ContextSize = size }
+                    let newSearchParams =
+                        { loadedCorpusModel.Search.Params with
+                              ContextSize = size }
 
                     let newLoadedCorpusModel =
-                        { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = newSearchParams } }
+                        { loadedCorpusModel with
+                              Search =
+                                  { loadedCorpusModel.Search with
+                                        Params = newSearchParams } }
 
-                    let newConcordanceModel = { concordanceModel with ResultPages = Map.empty }
+                    let newConcordanceModel =
+                        { concordanceModel with
+                              ResultPages = Map.empty }
 
                     newLoadedCorpusModel,
                     newConcordanceModel,
@@ -359,7 +384,8 @@ module LoadedCorpus =
 
                     let getNew () =
                         loadedCorpusModel,
-                        { concordanceModel with TextIdInQuickView = Some textId },
+                        { concordanceModel with
+                              TextIdInQuickView = Some textId },
                         Cmd.OfAsync.perform
                             serverApi.GetMetadataForSingleText
                             (corpus.SharedInfo.Code, categories, textId)
@@ -369,18 +395,25 @@ module LoadedCorpus =
                     | Some textIdInQuickView when textIdInQuickView = textId ->
                         // We have already loaded this text into the quick view, so just make
                         // sure we show it
-                        { loadedCorpusModel with ShouldShowQuickView = true }, concordanceModel, Cmd.none
+                        { loadedCorpusModel with
+                              ShouldShowQuickView = true },
+                        concordanceModel,
+                        Cmd.none
                     | Some _
                     | None -> getNew ()
 
                 | FetchedMetadataForText metadata ->
-                    { loadedCorpusModel with ShouldShowQuickView = true },
-                    { concordanceModel with QuickViewMetadata = metadata },
+                    { loadedCorpusModel with
+                          ShouldShowQuickView = true },
+                    { concordanceModel with
+                          QuickViewMetadata = metadata },
                     Cmd.none
 
                 | CloseQuickView ->
-                    { loadedCorpusModel with ShouldShowQuickView = false },
-                    { concordanceModel with TextIdInQuickView = None },
+                    { loadedCorpusModel with
+                          ShouldShowQuickView = false },
+                    { concordanceModel with
+                          TextIdInQuickView = None },
                     Cmd.none
 
                 | FetchMediaObject (mediaPlayerType, rowIndex) ->
@@ -400,18 +433,28 @@ module LoadedCorpus =
                 | FetchedMediaObject (mediaPlayerType, rowIndex, mediaObject) ->
                     loadedCorpusModel,
                     { concordanceModel with
-                        MediaPlayer =
-                            Some
-                                { Type = mediaPlayerType
-                                  RowIndex = rowIndex
-                                  MediaObject = mediaObject } },
+                          MediaPlayer =
+                              Some
+                                  { Type = mediaPlayerType
+                                    RowIndex = rowIndex
+                                    MediaObject = mediaObject } },
                     Cmd.none
 
-                | RemoveMediaObject -> loadedCorpusModel, { concordanceModel with MediaPlayer = None }, Cmd.none
+                | RemoveMediaObject ->
+                    loadedCorpusModel,
+                    { concordanceModel with
+                          MediaPlayer = None },
+                    Cmd.none
                 | OpenDownloadWindow ->
-                    loadedCorpusModel, { concordanceModel with ShouldShowDownloadWindow = true }, Cmd.none
+                    loadedCorpusModel,
+                    { concordanceModel with
+                          ShouldShowDownloadWindow = true },
+                    Cmd.none
                 | CloseDownloadWindow ->
-                    loadedCorpusModel, { concordanceModel with ShouldShowDownloadWindow = false }, Cmd.none
+                    loadedCorpusModel,
+                    { concordanceModel with
+                          ShouldShowDownloadWindow = false },
+                    Cmd.none
                 | ToggleDownloadAttribute attribute ->
                     let alreadyExists =
                         concordanceModel.DownloadAttributes
@@ -425,10 +468,14 @@ module LoadedCorpus =
                             concordanceModel.DownloadAttributes
                             @ [ attribute ]
 
-                    loadedCorpusModel, { concordanceModel with DownloadAttributes = newAttributes }, Cmd.none
+                    loadedCorpusModel,
+                    { concordanceModel with
+                          DownloadAttributes = newAttributes },
+                    Cmd.none
                 | ToggleHeadersInDownload ->
                     loadedCorpusModel,
-                    { concordanceModel with HeadersInDownload = not concordanceModel.HeadersInDownload },
+                    { concordanceModel with
+                          HeadersInDownload = not concordanceModel.HeadersInDownload },
                     Cmd.none
                 | DownloadSearchResults format ->
                     let cmd =
@@ -440,10 +487,17 @@ module LoadedCorpus =
                              concordanceModel.HeadersInDownload)
                             DownloadedSearchResults
 
-                    loadedCorpusModel, { concordanceModel with DownloadingFormat = Some format }, cmd
+                    loadedCorpusModel,
+                    { concordanceModel with
+                          DownloadingFormat = Some format },
+                    cmd
                 | DownloadedSearchResults path ->
                     Browser.Dom.window.location.href <- path
-                    loadedCorpusModel, { concordanceModel with DownloadingFormat = None }, Cmd.none
+
+                    loadedCorpusModel,
+                    { concordanceModel with
+                          DownloadingFormat = None },
+                    Cmd.none
 
 
         module FrequencyLists =
@@ -476,10 +530,14 @@ module LoadedCorpus =
                         else
                             frequencyListsModel.Attributes @ [ attribute ]
 
-                    loadedCorpusModel, { frequencyListsModel with Attributes = newAttributes }, Cmd.none
+                    loadedCorpusModel,
+                    { frequencyListsModel with
+                          Attributes = newAttributes },
+                    Cmd.none
                 | ToggleIsCaseSensitive ->
                     loadedCorpusModel,
-                    { frequencyListsModel with IsCaseSensitive = not frequencyListsModel.IsCaseSensitive },
+                    { frequencyListsModel with
+                          IsCaseSensitive = not frequencyListsModel.IsCaseSensitive },
                     Cmd.none
                 | FetchFrequencyList ->
                     loadedCorpusModel,
@@ -494,17 +552,21 @@ module LoadedCorpus =
                     let listItems =
                         [| for row in rows ->
                                let m = Regex.Match(row, "(\d+)\s+(.+)")
-                               let freq = UInt64.Parse(m.Groups[1].Value)
+                               let freq = UInt64.Parse(m.Groups.[1].Value)
 
-                               let attrValues = m.Groups[ 2 ].Value.Split('\t')
+                               let attrValues = m.Groups.[2].Value.Split('\t')
 
                                { Frequency = freq
                                  AttributeValues = attrValues } |]
 
-                    loadedCorpusModel, { frequencyListsModel with Frequencies = Some listItems }, Cmd.none
+                    loadedCorpusModel,
+                    { frequencyListsModel with
+                          Frequencies = Some listItems },
+                    Cmd.none
                 | DownloadFrequencyList format ->
                     loadedCorpusModel,
-                    { frequencyListsModel with DownloadingFormat = Some format },
+                    { frequencyListsModel with
+                          DownloadingFormat = Some format },
                     Cmd.OfAsync.perform
                         serverApi.DownloadFrequencyList
                         (loadedCorpusModel.Search.Params,
@@ -514,7 +576,11 @@ module LoadedCorpus =
                         DownloadedFrequencyList
                 | DownloadedFrequencyList path ->
                     Browser.Dom.window.location.href <- path
-                    loadedCorpusModel, { frequencyListsModel with DownloadingFormat = None }, Cmd.none
+
+                    loadedCorpusModel,
+                    { frequencyListsModel with
+                          DownloadingFormat = None },
+                    Cmd.none
 
         module MetadataDistribution =
             ///////////////////////////////////////////////////////////
@@ -551,7 +617,9 @@ module LoadedCorpus =
                             | :? Metadata.NumberCategory -> Metadata.NumberCategoryType
                             | _ -> failwith $"Unknown metadata category type for {category}"
 
-                        let table = category.TableName |> Option.defaultValue "texts"
+                        let table =
+                            category.TableName |> Option.defaultValue "texts"
+
                         let catCode = $"{table}.{category.Code}"
 
                         match maybeDownloadingFormat with
@@ -568,48 +636,53 @@ module LoadedCorpus =
                         | None ->
                             Cmd.OfAsync.perform
                                 serverApi.GetMetadataDistribution
-                                (loadedCorpusModel.Search.Params,
-                                 attributeCode,
-                                 catCode,
-                                 categoryType,
-                                 keepZeroValues)
+                                (loadedCorpusModel.Search.Params, attributeCode, catCode, categoryType, keepZeroValues)
                                 FetchedMetadataDistribution
                     | _ -> Cmd.none
 
                 match msg with
                 | SelectAttribute attributeCode ->
                     let newMetadataDistributionModel =
-                        { metadataDistributionModel with SelectedAttributeCode = Some attributeCode }
+                        { metadataDistributionModel with
+                              SelectedAttributeCode = Some attributeCode }
 
                     let cmd = buildCmd newMetadataDistributionModel
 
                     loadedCorpusModel, newMetadataDistributionModel, cmd
                 | SelectCategory category ->
                     let newMetadataDistributionModel =
-                        { metadataDistributionModel with SelectedCategory = Some category }
+                        { metadataDistributionModel with
+                              SelectedCategory = Some category }
 
                     let cmd = buildCmd newMetadataDistributionModel
 
                     loadedCorpusModel, newMetadataDistributionModel, cmd
                 | SetKeepZero shouldKeepZeroValues ->
                     let newMetadataDistributionModel =
-                        { metadataDistributionModel with KeepZeroValues = shouldKeepZeroValues }
+                        { metadataDistributionModel with
+                              KeepZeroValues = shouldKeepZeroValues }
 
                     let cmd = buildCmd newMetadataDistributionModel
                     loadedCorpusModel, newMetadataDistributionModel, cmd
                 | FetchedMetadataDistribution metadataDistribution ->
                     loadedCorpusModel,
-                    { metadataDistributionModel with MetadataDistribution = metadataDistribution },
+                    { metadataDistributionModel with
+                          MetadataDistribution = metadataDistribution },
                     Cmd.none
                 | DownloadMetadataDistribution format ->
                     let newMetadataDistributionModel =
-                        { metadataDistributionModel with DownloadingFormat = Some format }
+                        { metadataDistributionModel with
+                              DownloadingFormat = Some format }
 
                     let cmd = buildCmd newMetadataDistributionModel
                     loadedCorpusModel, newMetadataDistributionModel, cmd
                 | DownloadedMetadataDistribution path ->
                     Browser.Dom.window.location.href <- path
-                    loadedCorpusModel, { metadataDistributionModel with DownloadingFormat = None }, Cmd.none
+
+                    loadedCorpusModel,
+                    { metadataDistributionModel with
+                          DownloadingFormat = None },
+                    Cmd.none
 
 
         ///////////////////////////////////////////
@@ -633,14 +706,16 @@ module LoadedCorpus =
                     Concordance.update msg' loadedCorpusModel m
 
                 newLoadedCorpusModel,
-                { showingResultsModel with ActiveTab = Concordance newConcordanceModel },
+                { showingResultsModel with
+                      ActiveTab = Concordance newConcordanceModel },
                 Cmd.map ConcordanceMsg cmd
             | FrequencyListsMsg msg', FrequencyLists m ->
                 let newLoadedCorpusModel, newFrequencyListsModel, cmd =
                     FrequencyLists.update msg' loadedCorpusModel m
 
                 newLoadedCorpusModel,
-                { showingResultsModel with ActiveTab = FrequencyLists newFrequencyListsModel },
+                { showingResultsModel with
+                      ActiveTab = FrequencyLists newFrequencyListsModel },
                 Cmd.map FrequencyListsMsg cmd
 
             | MetadataDistributionMsg msg', MetadataDistribution m ->
@@ -648,10 +723,15 @@ module LoadedCorpus =
                     MetadataDistribution.update msg' loadedCorpusModel m
 
                 newLoadedCorpusModel,
-                { showingResultsModel with ActiveTab = MetadataDistribution newMetadataDistributionModel },
+                { showingResultsModel with
+                      ActiveTab = MetadataDistribution newMetadataDistributionModel },
                 Cmd.map MetadataDistributionMsg cmd
 
-            | SelectResultTab tab, _ -> loadedCorpusModel, { showingResultsModel with ActiveTab = tab }, Cmd.none
+            | SelectResultTab tab, _ ->
+                loadedCorpusModel,
+                { showingResultsModel with
+                      ActiveTab = tab },
+                Cmd.none
 
             | _ -> failwithf $"Incompatible message and model: {msg}; {showingResultsModel}"
 
@@ -733,7 +813,8 @@ module LoadedCorpus =
     let update (msg: Msg) (loadedCorpusModel: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
         match msg with
         | MetadataMsg msg' ->
-            let newLoadedCorpusModel, cmd = Update.Metadata.update msg' loadedCorpusModel
+            let newLoadedCorpusModel, cmd =
+                Update.Metadata.update msg' loadedCorpusModel
 
             newLoadedCorpusModel, Cmd.map MetadataMsg cmd
 
@@ -743,31 +824,44 @@ module LoadedCorpus =
                 let newLoadedCorpusModel, newShowingResultsModel, cmd =
                     ShowingResults.update msg' loadedCorpusModel m
 
-                { newLoadedCorpusModel with Substate = ShowingResults newShowingResultsModel },
+                { newLoadedCorpusModel with
+                      Substate = ShowingResults newShowingResultsModel },
                 Cmd.map ShowingResultsMsg cmd
             | otherSubstate -> failwith $"Invalid substate for ShowingResultsMsg: {otherSubstate}"
 
         | SetShouldShowMetadataMenu shouldShow ->
-            { loadedCorpusModel with ShouldShowMetadataMenu = Some shouldShow }, Cmd.none
+            { loadedCorpusModel with
+                  ShouldShowMetadataMenu = Some shouldShow },
+            Cmd.none
 
         | SetSearchInterface ``interface`` ->
-            { loadedCorpusModel with Search = { loadedCorpusModel.Search with Interface = ``interface`` } }, Cmd.none
+            { loadedCorpusModel with
+                  Search =
+                      { loadedCorpusModel.Search with
+                            Interface = ``interface`` } },
+            Cmd.none
 
         | SetQueryText (text, queryIndex, hasFinalSpace) ->
             let newQueries =
                 loadedCorpusModel.Search.Params.Queries
-                |> Array.mapi (fun index query ->
-                    if index = queryIndex then
-                        { query with
-                            HasFinalSpace = hasFinalSpace
-                            QueryString = text }
-                    else
-                        query)
+                |> Array.mapi
+                    (fun index query ->
+                        if index = queryIndex then
+                            { query with
+                                  HasFinalSpace = hasFinalSpace
+                                  QueryString = text }
+                        else
+                            query)
 
-            let newSearchParams = { loadedCorpusModel.Search.Params with Queries = newQueries }
+            let newSearchParams =
+                { loadedCorpusModel.Search.Params with
+                      Queries = newQueries }
 
             let newLoadedCorpusModel =
-                { loadedCorpusModel with Search = { loadedCorpusModel.Search with Params = newSearchParams } }
+                { loadedCorpusModel with
+                      Search =
+                          { loadedCorpusModel.Search with
+                                Params = newSearchParams } }
 
             newLoadedCorpusModel, Cmd.none
 
@@ -777,9 +871,11 @@ module LoadedCorpus =
 
             let newLoadedCorpusModel =
                 { loadedCorpusModel with
-                    Search =
-                        { loadedCorpusModel.Search with
-                            Params = { loadedCorpusModel.Search.Params with Queries = newQueries } } }
+                      Search =
+                          { loadedCorpusModel.Search with
+                                Params =
+                                    { loadedCorpusModel.Search.Params with
+                                          Queries = newQueries } } }
 
             newLoadedCorpusModel, Cmd.none
 
@@ -787,22 +883,27 @@ module LoadedCorpus =
             let newQueries =
                 loadedCorpusModel.Search.Params.Queries
                 |> Array.indexed
-                |> Array.choose (fun (index, query) ->
-                    if index <> queryIndex then
-                        Some query
-                    else
-                        None)
+                |> Array.choose
+                    (fun (index, query) ->
+                        if index <> queryIndex then
+                            Some query
+                        else
+                            None)
 
             let newLoadedCorpusModel =
                 { loadedCorpusModel with
-                    Search =
-                        { loadedCorpusModel.Search with
-                            Params = { loadedCorpusModel.Search.Params with Queries = newQueries } } }
+                      Search =
+                          { loadedCorpusModel.Search with
+                                Params =
+                                    { loadedCorpusModel.Search.Params with
+                                          Queries = newQueries } } }
 
             newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedSetMainString (query, queryIndex, term, termIndex, maybeValue) ->
-            let newTerm = { term with MainStringValue = maybeValue }
+            let newTerm =
+                { term with
+                      MainStringValue = maybeValue }
 
             let newLoadedCorpusModel =
                 updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
@@ -825,9 +926,9 @@ module LoadedCorpus =
                             term.IsMiddle
 
                     { term with
-                        IsStart = isChecked
-                        IsEnd = isEnd
-                        IsMiddle = isMiddle }
+                          IsStart = isChecked
+                          IsEnd = isEnd
+                          IsMiddle = isMiddle }
                 | IsEnd ->
                     let isStart =
                         if isChecked then
@@ -842,9 +943,9 @@ module LoadedCorpus =
                             term.IsMiddle
 
                     { term with
-                        IsStart = isStart
-                        IsEnd = isChecked
-                        IsMiddle = isMiddle }
+                          IsStart = isStart
+                          IsEnd = isChecked
+                          IsMiddle = isMiddle }
                 | IsMiddle ->
                     let isStart =
                         if isChecked then
@@ -855,9 +956,9 @@ module LoadedCorpus =
                     let isEnd = if isChecked then false else term.IsEnd
 
                     { term with
-                        IsStart = isStart
-                        IsEnd = isEnd
-                        IsMiddle = isChecked }
+                          IsStart = isStart
+                          IsEnd = isEnd
+                          IsMiddle = isChecked }
                 | IsInitial -> { term with IsInitial = isChecked }
                 | IsFinal -> { term with IsFinal = isChecked }
 
@@ -871,9 +972,14 @@ module LoadedCorpus =
                 match loadedCorpusModel.Search.Interface with
                 | Extended (Some attrModalModel) ->
                     { loadedCorpusModel with
-                        Search =
-                            { loadedCorpusModel.Search with
-                                Interface = Extended(Some { attrModalModel with IncludeExcludeInput = value }) } }
+                          Search =
+                              { loadedCorpusModel.Search with
+                                    Interface =
+                                        Extended(
+                                            Some
+                                                { attrModalModel with
+                                                      IncludeExcludeInput = value }
+                                        ) } }
                 | _ -> loadedCorpusModel
 
             newLoadedCorpusModel, Cmd.none
@@ -902,9 +1008,14 @@ module LoadedCorpus =
                     updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
                     |> fun m ->
                         { m with
-                            Search =
-                                { m.Search with
-                                    Interface = Extended(Some { attrModalModel with IncludeExcludeInput = "" }) } }
+                              Search =
+                                  { m.Search with
+                                        Interface =
+                                            Extended(
+                                                Some
+                                                    { attrModalModel with
+                                                          IncludeExcludeInput = "" }
+                                            ) } }
 
                 newLoadedCorpusModel, Cmd.none
             | _ -> loadedCorpusModel, Cmd.none
@@ -925,29 +1036,32 @@ module LoadedCorpus =
         | CwbExtendedToggleAttributeCategory (query, queryIndex, term, termIndex, categorySectionIndex, category) ->
             let newCategorySections =
                 term.CategorySections
-                |> List.mapi (fun i section ->
-                    if i = categorySectionIndex then
-                        section
-                        |> Set.toArray
-                        |> Array.tryFind (fun s -> s.Attr = category.Attr && s.Value = category.Value)
-                        |> function
-                            | Some existingCat -> section.Remove(existingCat)
-                            | None ->
-                                // If the operator of the category we are currently selecting or excluding is different
-                                // from the existing ones, remove the existing ones, since it does not make any sense to
-                                // specify categories to include and to exclude at the same time (i.e., if you include specific
-                                // categories the rest are automatically excluded, and if you exclude specific categories
-                                // the rest are automatically included.)
-                                if section.Count > 0
-                                   && section.MinimumElement.Operator
-                                      <> category.Operator then
-                                    Set.singleton category
-                                else
-                                    section.Add(category)
-                    else
-                        section)
+                |> List.mapi
+                    (fun i section ->
+                        if i = categorySectionIndex then
+                            section
+                            |> Set.toArray
+                            |> Array.tryFind (fun s -> s.Attr = category.Attr && s.Value = category.Value)
+                            |> function
+                                | Some existingCat -> section.Remove(existingCat)
+                                | None ->
+                                    // If the operator of the category we are currently selecting or excluding is different
+                                    // from the existing ones, remove the existing ones, since it does not make any sense to
+                                    // specify categories to include and to exclude at the same time (i.e., if you include specific
+                                    // categories the rest are automatically excluded, and if you exclude specific categories
+                                    // the rest are automatically included.)
+                                    if section.Count > 0
+                                       && section.MinimumElement.Operator
+                                          <> category.Operator then
+                                        Set.singleton category
+                                    else
+                                        section.Add(category)
+                        else
+                            section)
 
-            let newTerm = { term with CategorySections = newCategorySections }
+            let newTerm =
+                { term with
+                      CategorySections = newCategorySections }
 
             let newLoadedCorpusModel =
                 updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
@@ -963,39 +1077,44 @@ module LoadedCorpus =
                                                  subcategory) ->
             let newCategorySections =
                 term.CategorySections
-                |> List.mapi (fun i sectionMainCategories ->
-                    if i = categorySectionIndex then
-                        // This is the section we want to change. Find the given main category
-                        // and modify the given subcategory inside it.
-                        sectionMainCategories
-                        |> Set.map (fun cat ->
-                            if cat = mainCategory then
-                                let subcategories =
-                                    match cat.Subcategories with
-                                    | Some subcats ->
-                                        subcats
-                                        |> Set.toArray
-                                        |> Array.tryFind (fun sc -> sc.Attr = subcategory.Attr)
-                                        |> function
-                                            | Some existingSubcat ->
-                                                let scs = subcats.Remove(existingSubcat)
+                |> List.mapi
+                    (fun i sectionMainCategories ->
+                        if i = categorySectionIndex then
+                            // This is the section we want to change. Find the given main category
+                            // and modify the given subcategory inside it.
+                            sectionMainCategories
+                            |> Set.map
+                                (fun cat ->
+                                    if cat = mainCategory then
+                                        let subcategories =
+                                            match cat.Subcategories with
+                                            | Some subcats ->
+                                                subcats
+                                                |> Set.toArray
+                                                |> Array.tryFind (fun sc -> sc.Attr = subcategory.Attr)
+                                                |> function
+                                                    | Some existingSubcat ->
+                                                        let scs = subcats.Remove(existingSubcat)
 
-                                                if subcategory.Values.IsEmpty then
-                                                    // All values in this subcategory have been deselected in the new version,
-                                                    // so don't add it to the list of subcategories for this main category
-                                                    scs
-                                                else
-                                                    scs.Add(subcategory)
-                                            | None -> subcats.Add(subcategory)
-                                    | None -> Set.singleton subcategory
+                                                        if subcategory.Values.IsEmpty then
+                                                            // All values in this subcategory have been deselected in the new version,
+                                                            // so don't add it to the list of subcategories for this main category
+                                                            scs
+                                                        else
+                                                            scs.Add(subcategory)
+                                                    | None -> subcats.Add(subcategory)
+                                            | None -> Set.singleton subcategory
 
-                                { cat with Subcategories = Some subcategories }
-                            else
-                                cat)
-                    else
-                        sectionMainCategories)
+                                        { cat with
+                                              Subcategories = Some subcategories }
+                                    else
+                                        cat)
+                        else
+                            sectionMainCategories)
 
-            let newTerm = { term with CategorySections = newCategorySections }
+            let newTerm =
+                { term with
+                      CategorySections = newCategorySections }
 
             let newLoadedCorpusModel =
                 updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
@@ -1005,8 +1124,8 @@ module LoadedCorpus =
         | CwbExtendedClearAttributeCategories (query, queryIndex, term, termIndex) ->
             let newTerm =
                 { term with
-                    CategorySections = []
-                    ExtraForms = [] }
+                      CategorySections = []
+                      ExtraForms = [] }
 
             let newLoadedCorpusModel =
                 updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
@@ -1027,7 +1146,9 @@ module LoadedCorpus =
                     else
                         Some newI
 
-            let newTerm = { term with PrecedingInterval = maybeNewInterval }
+            let newTerm =
+                { term with
+                      PrecedingInterval = maybeNewInterval }
 
             let newLoadedCorpusModel =
                 updateQueryTerm loadedCorpusModel query queryIndex newTerm termIndex
@@ -1035,7 +1156,8 @@ module LoadedCorpus =
             newLoadedCorpusModel, Cmd.none
 
         | CwbExtendedAddTerm (query, queryIndex) ->
-            let newQueryTerms = Array.append query.Terms [| QueryTerm.Default |]
+            let newQueryTerms =
+                Array.append query.Terms [| QueryTerm.Default |]
 
             let newLoadedCorpusModel =
                 updateQuery loadedCorpusModel query queryIndex newQueryTerms
@@ -1046,16 +1168,17 @@ module LoadedCorpus =
             let newQueryTerms =
                 query.Terms
                 |> Array.indexed
-                |> Array.choose (fun (i, t) ->
-                    if i = termIndex + 1 then
-                        // When we remove a term, we also have to remove any interval that may have
-                        // specified between it and the next term, if any. The interval is specified
-                        // on the next term.
-                        Some { t with PrecedingInterval = None }
-                    elif i <> termIndex then
-                        Some t
-                    else
-                        None)
+                |> Array.choose
+                    (fun (i, t) ->
+                        if i = termIndex + 1 then
+                            // When we remove a term, we also have to remove any interval that may have
+                            // specified between it and the next term, if any. The interval is specified
+                            // on the next term.
+                            Some { t with PrecedingInterval = None }
+                        elif i <> termIndex then
+                            Some t
+                        else
+                            None)
 
             let newLoadedCorpusModel =
                 updateQuery loadedCorpusModel query queryIndex newQueryTerms
@@ -1064,28 +1187,32 @@ module LoadedCorpus =
 
         | CwbExtendedToggleAttrModal maybeTermIndex ->
             { loadedCorpusModel with
-                Search =
-                    { loadedCorpusModel.Search with
-                        Interface =
-                            match maybeTermIndex with
-                            | Some termIndex -> Extended(Some(AttributeModalModel.Init(termIndex)))
-                            | None ->
-                                match loadedCorpusModel.Search.Interface with
-                                | Extended _ -> Extended None
-                                | someInterface -> someInterface } },
+                  Search =
+                      { loadedCorpusModel.Search with
+                            Interface =
+                                match maybeTermIndex with
+                                | Some termIndex -> Extended(Some(AttributeModalModel.Init(termIndex)))
+                                | None ->
+                                    match loadedCorpusModel.Search.Interface with
+                                    | Extended _ -> Extended None
+                                    | someInterface -> someInterface } },
             Cmd.none
 
         | SetNumRandomHits maybeNumHits ->
             { loadedCorpusModel with
-                Search =
-                    { loadedCorpusModel.Search with
-                        Params = { loadedCorpusModel.Search.Params with NumRandomHits = maybeNumHits } } },
+                  Search =
+                      { loadedCorpusModel.Search with
+                            Params =
+                                { loadedCorpusModel.Search.Params with
+                                      NumRandomHits = maybeNumHits } } },
             Cmd.none
         | SetRandomHitsSeed maybeSeed ->
             { loadedCorpusModel with
-                Search =
-                    { loadedCorpusModel.Search with
-                        Params = { loadedCorpusModel.Search.Params with RandomHitsSeed = maybeSeed } } },
+                  Search =
+                      { loadedCorpusModel.Search with
+                            Params =
+                                { loadedCorpusModel.Search.Params with
+                                      RandomHitsSeed = maybeSeed } } },
             Cmd.none
         | Search ->
             // Do three search steps only if multicpu_bounds is defined for this corpus
@@ -1107,33 +1234,36 @@ module LoadedCorpus =
             if shouldSearch then
                 let queries =
                     loadedCorpusModel.Search.Params.Queries
-                    |> Array.map (fun query ->
-                        { query with
-                            QueryString =
-                                query.QueryString
-                                |> replace "\"__QUOTE__\"" "'\"'" })
+                    |> Array.map
+                        (fun query ->
+                            { query with
+                                  QueryString =
+                                      query.QueryString
+                                      |> replace "\"__QUOTE__\"" "'\"'" })
 
                 let searchParams =
                     { loadedCorpusModel.Search.Params with
-                        CpuCounts = None
-                        End = 99UL
-                        LastCount = None
-                        Queries = queries
-                        SearchId = 0
-                        Start = 0UL
-                        Step = 1 }
+                          CpuCounts = None
+                          End = 99UL
+                          LastCount = None
+                          Queries = queries
+                          SearchId = 0
+                          Start = 0UL
+                          Step = 1 }
 
                 let newLoadedCorpusModel =
                     { loadedCorpusModel with
-                        Substate =
-                            ShowingResults(
-                                ShowingResultsModel.Init(
-                                    numSteps,
-                                    string loadedCorpusModel.Search.Params.ContextSize,
-                                    []
-                                )
-                            )
-                        Search = { loadedCorpusModel.Search with Params = searchParams } }
+                          Substate =
+                              ShowingResults(
+                                  ShowingResultsModel.Init(
+                                      numSteps,
+                                      string loadedCorpusModel.Search.Params.ContextSize,
+                                      []
+                                  )
+                              )
+                          Search =
+                              { loadedCorpusModel.Search with
+                                    Params = searchParams } }
 
                 let cmds =
                     [ Cmd.ofMsg (CwbExtendedToggleAttrModal None)
@@ -1150,14 +1280,14 @@ module LoadedCorpus =
 
         | ResetForm ->
             { loadedCorpusModel with
-                Search = Search.Init(loadedCorpusModel.Corpus.SharedInfo)
-                Substate = CorpusStart
-                OpenMetadataCategoryCode = None },
+                  Search = Search.Init(loadedCorpusModel.Corpus.SharedInfo)
+                  Substate = CorpusStart
+                  OpenMetadataCategoryCode = None },
             Cmd.ofMsg (MetadataMsg Update.Metadata.FetchTextAndTokenCounts)
         | ClosePopups ->
             { loadedCorpusModel with
-                OpenMetadataCategoryCode = None
-                ShouldShowQuickView = false },
+                  OpenMetadataCategoryCode = None
+                  ShouldShowQuickView = false },
             Cmd.none
 
 ////////////////////////////////
