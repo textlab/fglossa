@@ -17,27 +17,28 @@ let getParts (corpus: Corpus) (step: int) (corpusSize: uint64) (maybeCommand: st
         // Multicpu bounds have been defined for this corpus. The startpos for the
         // first cpu in the current step should be one above the last bounds value
         // (i.e., the last endpos) in the previous step.
-        let stepBounds = allBounds[stepIndex]
+        let stepBounds = allBounds.[stepIndex]
 
         let prevLastBounds =
             if step = 1 then
                 0UL
             else
-                (allBounds[stepIndex - 1] |> Array.last)
+                (allBounds.[stepIndex - 1] |> Array.last)
 
         stepBounds
-        |> Array.mapi (fun cpuIndex endpos ->
-            let startpos =
-                if cpuIndex = 0 then
-                    // If first cpu, continue where we left off in the previous step
-                    if prevLastBounds = 0UL then
-                        0UL
+        |> Array.mapi
+            (fun cpuIndex endpos ->
+                let startpos =
+                    if cpuIndex = 0 then
+                        // If first cpu, continue where we left off in the previous step
+                        if prevLastBounds = 0UL then
+                            0UL
+                        else
+                            prevLastBounds + 1UL
                     else
-                        prevLastBounds + 1UL
-                else
-                    stepBounds[cpuIndex - 1] + 1UL
+                        stepBounds.[cpuIndex - 1] + 1UL
 
-            (startpos, endpos))
+                (startpos, endpos))
     | _ ->
         // No multicpu bounds defined; in that case, we search the whole
         // corpus in one go in the first step and just return if step != 1.
@@ -58,7 +59,8 @@ let randomReduceCommand
     // Find the proportion of the total number of tokens that we are searching with this cpu in this search
     // step, and reduce the number of hits retrieved to the corresponding proportion of the number of random
     // hits we have asked for.
-    let proportion = (float (endpos - startpos + 1UL) / float corpusSize)
+    let proportion =
+        (float (endpos - startpos + 1UL) / float corpusSize)
 
     let nRandom =
         (float numRandomHits * proportion)
@@ -111,7 +113,8 @@ let cqpInit
 
 let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (maybeCommand: string option) =
     async {
-        let numToReturn = searchParams.End - searchParams.Start + 1UL // number of results to return initially
+        let numToReturn =
+            searchParams.End - searchParams.Start + 1UL // number of results to return initially
 
         let cwbCorpus =
             (cwbCorpusName corpus searchParams.Queries)
@@ -123,57 +126,59 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
         | Some corpusSize ->
             let! results =
                 getParts corpus searchParams.Step corpusSize maybeCommand
-                |> Array.mapi (fun cpu (startpos, endpos) ->
-                    let queryName = cwbQueryName corpus searchParams.SearchId
+                |> Array.mapi
+                    (fun cpu (startpos, endpos) ->
+                        let queryName =
+                            cwbQueryName corpus searchParams.SearchId
 
-                    let namedQuery = $"{queryName}_{searchParams.Step}_{cpu}"
+                        let namedQuery = $"{queryName}_{searchParams.Step}_{cpu}"
 
-                    let cqpInitCommands =
-                        [ yield!
-                              constructQueryCommands
-                                  logger
-                                  corpus
-                                  searchParams
-                                  namedQuery
-                                  startpos
-                                  endpos
-                                  None
-                                  (Some cpu)
-                          match searchParams.NumRandomHits with
-                          | Some numRandomHits ->
-                              yield!
-                                  randomReduceCommand
-                                      corpusSize
-                                      startpos
-                                      endpos
-                                      numRandomHits
-                                      searchParams.RandomHitsSeed
-                                      namedQuery
-                          | None -> ignore None
-                          $"save {namedQuery}" ]
+                        let cqpInitCommands =
+                            [ yield!
+                                constructQueryCommands
+                                    logger
+                                    corpus
+                                    searchParams
+                                    namedQuery
+                                    startpos
+                                    endpos
+                                    None
+                                    (Some cpu)
+                              match searchParams.NumRandomHits with
+                              | Some numRandomHits ->
+                                  yield!
+                                      randomReduceCommand
+                                          corpusSize
+                                          startpos
+                                          endpos
+                                          numRandomHits
+                                          searchParams.RandomHitsSeed
+                                          namedQuery
+                              | None -> ignore None
+                              $"save {namedQuery}" ]
 
-                    let lastCommand =
-                        match maybeCommand with
-                        | Some command -> Regex.Replace(command, "QUERY", namedQuery)
-                        | None ->
-                            match searchParams.LastCount with
-                            // No LastCount means this is the first request of this search, in which case we return
-                            // the first two pages of search results (or as many as we found in this first part of
-                            // the corpus).
-                            // If we got a LastCount value, it means this is not the first request of
-                            // this search.  In that case, we check to see if the previous request(s) managed to fill
-                            // those two pages, and if not we return results in order to keep filling them.
-                            | None -> $"cat {namedQuery} {searchParams.Start} {searchParams.End}"
-                            | Some lastCount when lastCount < numToReturn ->
-                                $"cat {namedQuery} {searchParams.Start} {searchParams.End}"
-                            | _ -> ""
+                        let lastCommand =
+                            match maybeCommand with
+                            | Some command -> Regex.Replace(command, "QUERY", namedQuery)
+                            | None ->
+                                match searchParams.LastCount with
+                                // No LastCount means this is the first request of this search, in which case we return
+                                // the first two pages of search results (or as many as we found in this first part of
+                                // the corpus).
+                                // If we got a LastCount value, it means this is not the first request of
+                                // this search.  In that case, we check to see if the previous request(s) managed to fill
+                                // those two pages, and if not we return results in order to keep filling them.
+                                | None -> $"cat {namedQuery} {searchParams.Start} {searchParams.End}"
+                                | Some lastCount when lastCount < numToReturn ->
+                                    $"cat {namedQuery} {searchParams.Start} {searchParams.End}"
+                                | _ -> ""
 
-                    [ yield! cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery cqpInitCommands
-                      // Always return the number of results, which may be
-                      // either total or cut size depending on whether we
-                      // restricted the corpus positions
-                      $"size {namedQuery}"
-                      if lastCommand <> "" then lastCommand ])
+                        [ yield! cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery cqpInitCommands
+                          // Always return the number of results, which may be
+                          // either total or cut size depending on whether we
+                          // restricted the corpus positions
+                          $"size {namedQuery}"
+                          if lastCommand <> "" then lastCommand ])
                 |> Array.map (runCqpCommands logger corpus true)
                 |> Async.Parallel
 
@@ -221,8 +226,8 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
                     {| Count = count - nExtra
                        CpuCounts = cpuCounts
                        Hits =
-                        hits
-                        |> Array.truncate (int (numToReturn - nExtra)) |}
+                           hits
+                           |> Array.truncate (int (numToReturn - nExtra)) |}
                 | _ ->
                     {| Count = count
                        CpuCounts = cpuCounts
@@ -264,7 +269,7 @@ let getFileStartEnd (searchParams: SearchParams) =
     | Some cpuCounts ->
         let firstFileIndex, firstFileStart =
             let rec sumCountsFirst sum fileIndex =
-                let newSum = sum + cpuCounts[fileIndex]
+                let newSum = sum + cpuCounts.[fileIndex]
 
                 if newSum > searchParams.Start then
                     // We found the first result file to fetch results from. Return the index of that file as well as the first
@@ -278,7 +283,7 @@ let getFileStartEnd (searchParams: SearchParams) =
 
         let lastFileIndex =
             let rec sumCountsLast sum fileIndex =
-                let newSum = sum + cpuCounts[fileIndex]
+                let newSum = sum + cpuCounts.[fileIndex]
                 // If either the end index can be found in the current file (meaning
                 // that if we add the current count to the sum, we exceed the end
                 // index) or there are no more files, the current file should be the
@@ -308,8 +313,9 @@ let getNonzeroFiles
         let files =
             multiCpuBounds
             |> Array.indexed
-            |> Array.collect (fun (index, cpuBounds) ->
-                [| for cpuIndex in 0 .. cpuBounds.Length - 1 -> $"{namedQuery}_{index + 1}_{cpuIndex}" |])
+            |> Array.collect
+                (fun (index, cpuBounds) ->
+                    [| for cpuIndex in 0 .. cpuBounds.Length - 1 -> $"{namedQuery}_{index + 1}_{cpuIndex}" |])
 
         let lastFile =
             maybeLastFile
@@ -319,7 +325,7 @@ let getNonzeroFiles
 
         // Select the range of files that contains the range of results we are asking for
         // and remove files that don't actually contain any results
-        [ for file, count in filesAndCounts[firstFile..lastFile] do
+        [ for file, count in filesAndCounts.[firstFile..lastFile] do
               if count > 0UL then file ]
     | _ -> []
 
@@ -360,21 +366,26 @@ let runCqpScripts logger corpus scripts =
 
 
 let getSortedPositions (corpus: Corpus) (searchParams: SearchParams) =
-    let namedQuery = cwbQueryName corpus searchParams.SearchId
+    let namedQuery =
+        cwbQueryName corpus searchParams.SearchId
 
-    let resultPositionsFilename = $"/tmp/glossa/result_positions_{namedQuery}"
+    let resultPositionsFilename =
+        $"/tmp/glossa/result_positions_{namedQuery}"
 
     if not (File.Exists(resultPositionsFilename)) then
-        let nonzeroFiles = getNonzeroFiles corpus searchParams namedQuery 0 None
+        let nonzeroFiles =
+            getNonzeroFiles corpus searchParams namedQuery 0 None
 
-        let firstCommands = cqpInit corpus searchParams None None namedQuery []
+        let firstCommands =
+            cqpInit corpus searchParams None None namedQuery []
 
         let moreCommands =
             nonzeroFiles
-            |> List.mapi (fun index resultFile ->
-                let redirectOperator = if index = 0 then " >" else " >>"
+            |> List.mapi
+                (fun index resultFile ->
+                    let redirectOperator = if index = 0 then " >" else " >>"
 
-                $"tabulate {resultFile} match[-1] word, match word, match[1] word, match, matchend {redirectOperator} '{resultPositionsFilename}'")
+                    $"tabulate {resultFile} match[-1] word, match word, match[1] word, match, matchend {redirectOperator} '{resultPositionsFilename}'")
 
         let commands = firstCommands @ moreCommands
 
@@ -419,14 +430,16 @@ let getSearchResults
     (pageNumbers: ResultPageNumbers)
     =
     async {
-        let queryName = cwbQueryName corpus searchParams.SearchId
+        let queryName =
+            cwbQueryName corpus searchParams.SearchId
 
         let! rawResults =
             if corpus.Config.MultiCpuBounds.IsSome then
                 // The corpus uses multiple CPUs
                 match searchParams.SortKey with
                 | Position ->
-                    let namedQuery = cwbQueryName corpus searchParams.SearchId
+                    let namedQuery =
+                        cwbQueryName corpus searchParams.SearchId
 
                     let maybeNumResultsMinusOne =
                         if searchParams.End > 0UL then
@@ -439,10 +452,17 @@ let getSearchResults
 
                     let scripts =
                         (nonzeroFiles, indexes)
-                        ||> Seq.map2 (fun resultFile (start, ``end``) ->
-                            [ yield!
-                                  cqpInit corpus searchParams (Some searchParams.SortKey) maybeAttributes namedQuery []
-                              $"cat {resultFile} {start} {``end``}" ])
+                        ||> Seq.map2
+                                (fun resultFile (start, ``end``) ->
+                                    [ yield!
+                                        cqpInit
+                                            corpus
+                                            searchParams
+                                            (Some searchParams.SortKey)
+                                            maybeAttributes
+                                            namedQuery
+                                            []
+                                      $"cat {resultFile} {start} {``end``}" ])
 
                     async {
                         let! allResults = runCqpScripts logger corpus scripts
@@ -461,7 +481,8 @@ let getSearchResults
                     }
 
                 | _ ->
-                    let namedQuery = $"{queryName}_sort_by_{searchParams.SortKey}"
+                    let namedQuery =
+                        $"{queryName}_sort_by_{searchParams.SortKey}"
 
                     let undumpSaveCommands =
                         if File.Exists($"tmp/{cwbCorpusName corpus searchParams.Queries}:{namedQuery}") then
@@ -475,7 +496,7 @@ let getSearchResults
 
                     let commands =
                         [ yield!
-                              cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery undumpSaveCommands
+                            cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery undumpSaveCommands
                           $"cat {namedQuery} {searchParams.Start} {searchParams.End}" ]
 
                     async {
@@ -499,16 +520,18 @@ let getSearchResults
             rawResults
             |> transformResults searchParams.Queries
 
-        let hitPages = hits |> Array.chunkBySize searchParams.PageSize
+        let hitPages =
+            hits |> Array.chunkBySize searchParams.PageSize
 
         return
             (hitPages |> Array.toSeq, pageNumbers)
-            ||> Seq.map2 (fun pageHits pageNumber ->
-                { PageNumber = pageNumber
-                  Results =
-                    [| for hitLines in pageHits ->
-                           { AudioType = None
-                             HasVideo = false
-                             Text = hitLines } |] })
+            ||> Seq.map2
+                    (fun pageHits pageNumber ->
+                        { PageNumber = pageNumber
+                          Results =
+                              [| for hitLines in pageHits ->
+                                     { AudioType = None
+                                       HasVideo = false
+                                       Text = hitLines } |] })
             |> Seq.toArray
     }

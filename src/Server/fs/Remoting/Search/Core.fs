@@ -8,7 +8,8 @@ open Shared
 open ServerTypes
 
 let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams) =
-    let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
+    let corpus =
+        Corpora.Server.getCorpus searchParams.CorpusCode
 
     match corpus.Config.SearchEngine with
     | Cwb -> Cwb.Core.searchCorpus connStr logger searchParams corpus
@@ -17,7 +18,8 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
 
 let getSearchResults (logger: ILogger) (searchParams: SearchParams) maybeAttributes (pageNumbers: ResultPageNumbers) =
     async {
-        let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
+        let corpus =
+            Corpora.Server.getCorpus searchParams.CorpusCode
 
         return!
             match corpus.Config.SearchEngine with
@@ -34,15 +36,16 @@ let downloadSearchResults
     (shouldCreateHeader: bool)
     =
     async {
-        let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
+        let corpus =
+            Corpora.Server.getCorpus searchParams.CorpusCode
 
         let! resultPages =
             let searchParamsForDownload =
                 { searchParams with
-                    LastCount = None
-                    Step = 1
-                    Start = 0UL
-                    End = 1000000UL }
+                      LastCount = None
+                      Step = 1
+                      Start = 0UL
+                      End = 1000000UL }
 
             let pageNumbers = Seq.initInfinite (fun index -> index)
 
@@ -54,9 +57,10 @@ let downloadSearchResults
             resultPages
             // Concatenate the search results from each result page (we don't care about
             // result pages when creating export files)
-            |> Array.collect (fun resultPage ->
-                resultPage.Results
-                |> Array.map (fun result -> result.Text))
+            |> Array.collect
+                (fun resultPage ->
+                    resultPage.Results
+                    |> Array.map (fun result -> result.Text))
             // We need to take num-random-hits results because the saved search results may
             // contain slightly more due to rounding (when multi-cpu, multi-step search has been used)
             |> fun r ->
@@ -66,28 +70,37 @@ let downloadSearchResults
             // Concatenate all lines (for multilingual corpora there may be more than one line
             // per search result, while for other corpora there is only one.)
             |> Array.collect (fun hitLines -> hitLines |> List.toArray)
-            |> Array.map (fun line ->
-                if Regex.IsMatch(line, "^\s*-->\w+:") then
-                    // Non-first line of a multilingual result: Return as is
-                    ("", "", line, "", "")
+            |> Array.map
+                (fun line ->
+                    if Regex.IsMatch(line, "^\s*-->\w+:") then
+                        // Non-first line of a multilingual result: Return as is
+                        ("", "", line, "", "")
 
-                // In all other cases, extract corpus position, sentence/utterance ID,
-                // left context, match and right context from the result line
-                elif Regex.IsMatch(line, "<who_avfile ") then
-                    // For speech corpora, the who_avfile attribute is included in the
-                    // PrintStructures, so make sure we ignore that
-                    let m =
-                        Regex.Match(
-                            line,
-                            "^\s*(\d+):\s*<who_name\s(.+?)><who_avfile.+?>:\s*(.*?)\s*\{\{(.+?)\}\}\s*(.*)"
-                        )
+                    // In all other cases, extract corpus position, sentence/utterance ID,
+                    // left context, match and right context from the result line
+                    elif Regex.IsMatch(line, "<who_avfile ") then
+                        // For speech corpora, the who_avfile attribute is included in the
+                        // PrintStructures, so make sure we ignore that
+                        let m =
+                            Regex.Match(
+                                line,
+                                "^\s*(\d+):\s*<who_name\s(.+?)><who_avfile.+?>:\s*(.*?)\s*\{\{(.+?)\}\}\s*(.*)"
+                            )
 
-                    (m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value, m.Groups[4].Value, m.Groups[5].Value)
-                else
-                    let m =
-                        Regex.Match(line, "^\s*(\d+):\s*<.+?\s(.+?)>:\s*(.*?)\s*\{\{(.+?)\}\}\s*(.*)")
+                        (m.Groups.[1].Value,
+                         m.Groups.[2].Value,
+                         m.Groups.[3].Value,
+                         m.Groups.[4].Value,
+                         m.Groups.[5].Value)
+                    else
+                        let m =
+                            Regex.Match(line, "^\s*(\d+):\s*<.+?\s(.+?)>:\s*(.*?)\s*\{\{(.+?)\}\}\s*(.*)")
 
-                    (m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value, m.Groups[4].Value, m.Groups[5].Value))
+                        (m.Groups.[1].Value,
+                         m.Groups.[2].Value,
+                         m.Groups.[3].Value,
+                         m.Groups.[4].Value,
+                         m.Groups.[5].Value))
 
         let extension =
             match format with
@@ -95,7 +108,8 @@ let downloadSearchResults
             | Tsv -> ".tsv"
             | Csv -> ".csv"
 
-        let downloadFilename = $"/glossa3_doc/{searchParams.SearchId}_res{extension}"
+        let downloadFilename =
+            $"/glossa3_doc/{searchParams.SearchId}_res{extension}"
 
         let outputFilename = $"{downloadRoot}{downloadFilename}"
 
@@ -115,7 +129,8 @@ let downloadSearchResults
         | Excel ->
             use workbook = new Excel.XLWorkbook()
 
-            let worksheet = workbook.Worksheets.Add("Search results")
+            let worksheet =
+                workbook.Worksheets.Add("Search results")
 
             if shouldCreateHeader then
                 worksheet.Cell(1, 1).Value <- "Corpus position"
@@ -128,12 +143,13 @@ let downloadSearchResults
             let rowDisplacement = if shouldCreateHeader then 2 else 1
 
             results
-            |> Array.iteri (fun resultIndex (corpusPosition, segmentId, leftContext, theMatch, rightContext) ->
-                worksheet.Cell(resultIndex + rowDisplacement, 1).Value <- corpusPosition
-                worksheet.Cell(resultIndex + rowDisplacement, 2).Value <- segmentId
-                worksheet.Cell(resultIndex + rowDisplacement, 3).Value <- leftContext
-                worksheet.Cell(resultIndex + rowDisplacement, 4).Value <- theMatch
-                worksheet.Cell(resultIndex + rowDisplacement, 5).Value <- rightContext)
+            |> Array.iteri
+                (fun resultIndex (corpusPosition, segmentId, leftContext, theMatch, rightContext) ->
+                    worksheet.Cell(resultIndex + rowDisplacement, 1).Value <- corpusPosition
+                    worksheet.Cell(resultIndex + rowDisplacement, 2).Value <- segmentId
+                    worksheet.Cell(resultIndex + rowDisplacement, 3).Value <- leftContext
+                    worksheet.Cell(resultIndex + rowDisplacement, 4).Value <- theMatch
+                    worksheet.Cell(resultIndex + rowDisplacement, 5).Value <- rightContext)
 
             workbook.SaveAs(outputFilename)
 

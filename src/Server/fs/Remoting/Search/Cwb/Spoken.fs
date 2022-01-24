@@ -10,16 +10,19 @@ open Remoting.Search.Cwb.Common
 
 let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (maybeCommand: string option) =
     async {
-        let namedQuery = cwbQueryName corpus searchParams.SearchId
+        let namedQuery =
+            cwbQueryName corpus searchParams.SearchId
 
         let startpos = 0UL
 
-        let cwbCorpus = cwbCorpusName corpus searchParams.Queries
+        let cwbCorpus =
+            cwbCorpusName corpus searchParams.Queries
 
         let corpusSizes = corpus.CorpusSizes()
-        let endpos = corpusSizes[cwbCorpus.ToLower()]
+        let endpos = corpusSizes.[cwbCorpus.ToLower()]
 
-        let displayedAttrsCmd = displayedAttrsCommand corpus searchParams.Queries None
+        let displayedAttrsCmd =
+            displayedAttrsCommand corpus searchParams.Queries None
 
         let commands =
             [ "set DataDirectory \"/tmp/glossa\""
@@ -127,7 +130,8 @@ let transformResults (corpus: Corpus) (queries: Query []) (hits: string []) =
              Text = ls } |]
 
 let sortContextWithinWho namedQuery sortKey =
-    let tmpfile = $"\"tmp/{namedQuery}_sort_by_{sortKey}\""
+    let tmpfile =
+        $"\"tmp/{namedQuery}_sort_by_{sortKey}\""
 
     let bound, ``match`` =
         match sortKey with
@@ -161,9 +165,11 @@ let getSearchResults
     (pageNumbers: ResultPageNumbers)
     =
     async {
-        let namedQuery = cwbQueryName corpus searchParams.SearchId
+        let namedQuery =
+            cwbQueryName corpus searchParams.SearchId
 
-        let sortCmds = sortWithinWho namedQuery searchParams.SortKey
+        let sortCmds =
+            sortWithinWho namedQuery searchParams.SortKey
 
         let commands =
             [ "set DataDirectory \"/tmp/glossa\""
@@ -184,13 +190,15 @@ let getSearchResults
             rawResults
             |> transformResults corpus searchParams.Queries
 
-        let hitPages = hits |> Array.chunkBySize searchParams.PageSize
+        let hitPages =
+            hits |> Array.chunkBySize searchParams.PageSize
 
         return
             (hitPages |> Array.toSeq, pageNumbers)
-            ||> Seq.map2 (fun pageHits pageNumber ->
-                { PageNumber = pageNumber
-                  Results = pageHits })
+            ||> Seq.map2
+                    (fun pageHits pageNumber ->
+                        { PageNumber = pageNumber
+                          Results = pageHits })
             |> Seq.toArray
     }
 
@@ -212,7 +220,7 @@ let extractMediaInfo (corpus: Corpus) result =
 
     let timestamps =
         [| for m in Regex.Matches(result, "<who_start\s+([\d\.]+)><who_stop\s+([\d\.]+)>.*?</who_start>") ->
-               (m.Groups[1].Value, m.Groups[2].Value) |]
+               (m.Groups.[1].Value, m.Groups.[2].Value) |]
 
     let starttimes = timestamps |> Array.map fst
     let endtimes = timestamps |> Array.map snd
@@ -220,21 +228,23 @@ let extractMediaInfo (corpus: Corpus) result =
     let overallEndtime = endtimes |> Array.last
 
     let speakers =
-        [ for m in Regex.Matches(result', "<who_name\s+(.+?)>") -> m.Groups[1].Value ]
+        [ for m in Regex.Matches(result', "<who_name\s+(.+?)>") -> m.Groups.[1].Value ]
 
     // If we get at hit at the beginning or end of a session, the context may include
     // material from the session before or after. Hence, we need to make sure that
     // we extract the line key from the segment containing the actual match (marked
     // by double braces).
     let movieLoc =
-        let m = Regex.Match(result', "<who_avfile\s+([^>]+)>[^<]*\{\{")
+        let m =
+            Regex.Match(result', "<who_avfile\s+([^>]+)>[^<]*\{\{")
 
-        m.Groups[1].Value
+        m.Groups.[1].Value
 
-    let result'' = result' |> replace "</?who_avfile ?.*?>" ""
+    let result'' =
+        result' |> replace "</?who_avfile ?.*?>" ""
 
     let mediaObjLines =
-        [ for m in Regex.Matches(result'', "<who_stop.+?>(.*?)</who_stop>") -> m.Groups[1].Value ]
+        [ for m in Regex.Matches(result'', "<who_stop.+?>(.*?)</who_stop>") -> m.Groups.[1].Value ]
 
     // Create the data structure that is needed by jPlayer for a single search result
     let displayedAttrs =
@@ -249,31 +259,34 @@ let extractMediaInfo (corpus: Corpus) result =
 
     let annotations =
         mediaObjLines
-        |> List.mapi (fun index line ->
-            let isMatch = Regex.IsMatch(line, "\{\{")
-            let line' = line |> replace "\{\{|\}\}" ""
-            let tokens = line'.Split()
+        |> List.mapi
+            (fun index line ->
+                let isMatch = Regex.IsMatch(line, "\{\{")
+                let line' = line |> replace "\{\{|\}\}" ""
+                let tokens = line'.Split()
 
-            let annotation =
-                { Speaker = speakers[index]
-                  Line =
-                    tokens
-                    |> Array.mapi (fun index token ->
-                        let attrValues = token.Split('/')
+                let annotation =
+                    { Speaker = speakers.[index]
+                      Line =
+                          tokens
+                          |> Array.mapi
+                              (fun index token ->
+                                  let attrValues = token.Split('/')
 
-                        let attrNames =
-                            "word" :: displayedAttrs
-                            |> List.truncate attrValues.Length
-                            |> List.toArray
+                                  let attrNames =
+                                      "word" :: displayedAttrs
+                                      |> List.truncate attrValues.Length
+                                      |> List.toArray
 
-                        let attrs = Array.zip attrNames attrValues |> Map.ofArray
+                                  let attrs =
+                                      Array.zip attrNames attrValues |> Map.ofArray
 
-                        (index, attrs))
-                  From = starttimes[index]
-                  To = endtimes[index]
-                  IsMatch = isMatch }
+                                  (index, attrs))
+                      From = starttimes.[index]
+                      To = endtimes.[index]
+                      IsMatch = isMatch }
 
-            (index, annotation))
+                (index, annotation))
         |> Map.ofList
 
     let matchingLineIndex =
@@ -287,11 +300,11 @@ let extractMediaInfo (corpus: Corpus) result =
       DisplayAttribute = "word"
       CorpusCode = corpus.Config.Code
       Mov =
-        { Supplied = "m4v"
-          Path = $"media/{corpus.Config.Code}"
-          MovieLoc = movieLoc
-          Start = overallStarttime
-          Stop = overallEndtime }
+          { Supplied = "m4v"
+            Path = $"media/{corpus.Config.Code}"
+            MovieLoc = movieLoc
+            Start = overallStarttime
+            Stop = overallEndtime }
       Divs = annotations
       StartAt = matchingLineIndex
       EndAt = matchingLineIndex
@@ -300,9 +313,11 @@ let extractMediaInfo (corpus: Corpus) result =
 
 let getMediaObject logger (searchParams: SearchParams) mediaPlayerType pageNumber rowIndex contextSize contextUnit =
     async {
-        let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
+        let corpus =
+            Corpora.Server.getCorpus searchParams.CorpusCode
 
-        let namedQuery = cwbQueryName corpus searchParams.SearchId
+        let namedQuery =
+            cwbQueryName corpus searchParams.SearchId
 
         let unitStr =
             if contextUnit = "episode" then
@@ -327,7 +342,7 @@ let getMediaObject logger (searchParams: SearchParams) mediaPlayerType pageNumbe
 
         let result =
             match cqpResults with
-            | Some results, _ -> results[0]
+            | Some results, _ -> results.[0]
             | _ -> failwith "Unable to fetch segment for media player"
 
         let mediaObject = extractMediaInfo corpus result

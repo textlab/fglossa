@@ -1,3 +1,1 @@
 module Remoting.Search.Common
-
-
