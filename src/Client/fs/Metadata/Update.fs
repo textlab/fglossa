@@ -35,15 +35,19 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
            <> Some category.Code then
             let newModel =
                 { model with
-                    OpenMetadataCategoryCode = Some category.Code
-                    FetchedMetadataValues = [||] }
+                      OpenMetadataCategoryCode = Some category.Code
+                      FetchedMetadataValues = [||] }
 
-            let cmd = Cmd.ofMsg (FetchMetadataValuesForCategory category)
+            let cmd =
+                Cmd.ofMsg (FetchMetadataValuesForCategory category)
 
             newModel, cmd
         else
             model, Cmd.none
-    | CloseMetadataMenu -> { model with OpenMetadataCategoryCode = None }, Cmd.none
+    | CloseMetadataMenu ->
+        { model with
+              OpenMetadataCategoryCode = None },
+        Cmd.none
     | ToggleMetadataMenuOpen category ->
         let newCode, cmd =
             if model.OpenMetadataCategoryCode = Some category.Code then
@@ -52,11 +56,13 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                 Some category.Code, Cmd.ofMsg (FetchMetadataValuesForCategory category)
 
         { model with
-            OpenMetadataCategoryCode = newCode
-            FetchedMetadataValues = [||] },
+              OpenMetadataCategoryCode = newCode
+              FetchedMetadataValues = [||] },
         cmd
     | SetIntervalCategoryMode (category, mode) ->
-        { model with IntervalCategoryModes = model.IntervalCategoryModes.Add(category.Code, mode) }, Cmd.none
+        { model with
+              IntervalCategoryModes = model.IntervalCategoryModes.Add(category.Code, mode) },
+        Cmd.none
     | FetchMetadataValuesForCategory category ->
         let tableAndColumn =
             match category.TableName with
@@ -70,7 +76,10 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                 FetchedMetadataValuesForCategory
 
         model, cmd
-    | FetchedMetadataValuesForCategory results -> { model with FetchedMetadataValues = results }, Cmd.none
+    | FetchedMetadataValuesForCategory results ->
+        { model with
+              FetchedMetadataValues = results },
+        Cmd.none
     | ToggleIntervalOpen category ->
         let newCode, cmd =
             if model.OpenMetadataCategoryCode = Some category.Code then
@@ -79,12 +88,14 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                 Some category.Code, Cmd.ofMsg (FetchMinAndMaxForCategory category)
 
         { model with
-            OpenMetadataCategoryCode = newCode
-            FetchedMetadataValues = [||]
-            FetchedMinAndMax = None },
+              OpenMetadataCategoryCode = newCode
+              FetchedMetadataValues = [||]
+              FetchedMinAndMax = None },
         cmd
     | FetchMinAndMaxForCategory category ->
-        let table = category.TableName |> Option.defaultValue "texts"
+        let table =
+            category.TableName |> Option.defaultValue "texts"
+
         let catCode = $"{table}.{category.Code}"
 
         model,
@@ -92,7 +103,10 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             serverApi.GetMinAndMaxForCategory
             (model.Corpus.SharedInfo.Code, catCode, model.Search.Params.MetadataSelection)
             FetchedMinAndMaxForCategory
-    | FetchedMinAndMaxForCategory (min, max) -> { model with FetchedMinAndMax = Some(min, max) }, Cmd.none
+    | FetchedMinAndMaxForCategory (min, max) ->
+        { model with
+              FetchedMinAndMax = Some(min, max) },
+        Cmd.none
     | FetchTextAndTokenCounts ->
         let countCmd =
             Cmd.OfAsync.perform
@@ -104,7 +118,8 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             if model.IsSelectionTableOpen then
                 // If the metadata selection table is open, fetch text metadata as well as
                 // calculating text and token counts, so that the table will be updated immediately
-                { model with SelectionTablePageNumber = 1 },
+                { model with
+                      SelectionTablePageNumber = 1 },
                 Cmd.batch [ countCmd
                             Cmd.ofMsg FetchMetadataForTexts ]
             else
@@ -113,9 +128,9 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         newModel, cmd
     | FetchedTextAndTokenCounts counts ->
         { model with
-            NumSelectedTexts = Some counts.NumTexts
-            NumSelectedTokens = Some counts.NumTokens
-            SelectionTablePageNumber = 1 },
+              NumSelectedTexts = Some counts.NumTexts
+              NumSelectedTokens = Some counts.NumTokens
+              SelectionTablePageNumber = 1 },
         Cmd.none
     | ToggleExclude category ->
         let tableAndCode =
@@ -125,10 +140,14 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         let newMetadataSelection =
             model.Search.Params.MetadataSelection
-            |> Map.change tableAndCode (fun maybeCategorySelection ->
-                maybeCategorySelection
-                |> Option.map (fun categorySelection ->
-                    { categorySelection with ShouldExclude = not categorySelection.ShouldExclude }))
+            |> Map.change
+                tableAndCode
+                (fun maybeCategorySelection ->
+                    maybeCategorySelection
+                    |> Option.map
+                        (fun categorySelection ->
+                            { categorySelection with
+                                  ShouldExclude = not categorySelection.ShouldExclude }))
 
         let openMetadataCategoryCode, fetchedMetadataValues =
             match model.OpenMetadataCategoryCode with
@@ -139,10 +158,13 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             | _ -> model.OpenMetadataCategoryCode, model.FetchedMetadataValues
 
         { model with
-            FetchedMetadataValues = fetchedMetadataValues
-            OpenMetadataCategoryCode = openMetadataCategoryCode
-            Search =
-                { model.Search with Params = { model.Search.Params with MetadataSelection = newMetadataSelection } } },
+              FetchedMetadataValues = fetchedMetadataValues
+              OpenMetadataCategoryCode = openMetadataCategoryCode
+              Search =
+                  { model.Search with
+                        Params =
+                            { model.Search.Params with
+                                  MetadataSelection = newMetadataSelection } } },
         Cmd.ofMsg FetchTextAndTokenCounts
     | SelectItem (category, selectedOption) ->
         let tableAndCode =
@@ -158,7 +180,8 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                     Array.append categorySelection.Choices [| selectedOption |]
                     |> Array.distinct
 
-                { categorySelection with Choices = newChoices }
+                { categorySelection with
+                      Choices = newChoices }
             | None ->
                 { Choices = [| selectedOption |]
                   ShouldExclude = false }
@@ -169,7 +192,11 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         let newModel =
             { model with
-                Search = { model.Search with Params = { model.Search.Params with MetadataSelection = newSelection } } }
+                  Search =
+                      { model.Search with
+                            Params =
+                                { model.Search.Params with
+                                      MetadataSelection = newSelection } } }
 
         let cmd = Cmd.ofMsg FetchTextAndTokenCounts
 
@@ -182,12 +209,14 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         let maybeNewCategorySelection =
             model.Search.Params.MetadataSelection.TryFind(tableAndCode)
-            |> Option.map (fun categorySelection ->
-                let newCategoryChoices =
-                    categorySelection.Choices
-                    |> Array.except [ optionToRemove ]
+            |> Option.map
+                (fun categorySelection ->
+                    let newCategoryChoices =
+                        categorySelection.Choices
+                        |> Array.except [ optionToRemove ]
 
-                { categorySelection with Choices = newCategoryChoices })
+                    { categorySelection with
+                          Choices = newCategoryChoices })
 
         let newSelection =
             match maybeNewCategorySelection with
@@ -202,7 +231,11 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         let newModel =
             { model with
-                Search = { model.Search with Params = { model.Search.Params with MetadataSelection = newSelection } } }
+                  Search =
+                      { model.Search with
+                            Params =
+                                { model.Search.Params with
+                                      MetadataSelection = newSelection } } }
 
         let cmd = Cmd.ofMsg FetchTextAndTokenCounts
 
@@ -220,14 +253,20 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         let newModel =
             { model with
-                Search = { model.Search with Params = { model.Search.Params with MetadataSelection = newSelection } } }
+                  Search =
+                      { model.Search with
+                            Params =
+                                { model.Search.Params with
+                                      MetadataSelection = newSelection } } }
 
         let cmd = Cmd.ofMsg FetchTextAndTokenCounts
 
         newModel, cmd
 
     | SetIntervalFrom (category, number) ->
-        let table = category.TableName |> Option.defaultValue "texts"
+        let table =
+            category.TableName |> Option.defaultValue "texts"
+
         let catCode = $"{table}.{category.Code}"
 
         let (newCategoryValues: Metadata.CategorySelection) =
@@ -243,10 +282,10 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                     |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_to")
 
                 { Choices =
-                    [| fromValue
-                       match maybeToValue with
-                       | Some toValue -> toValue
-                       | None -> ignore None |]
+                      [| fromValue
+                         match maybeToValue with
+                         | Some toValue -> toValue
+                         | None -> ignore None |]
                   ShouldExclude = false }
             | None ->
                 { Choices = [| fromValue |]
@@ -258,12 +297,18 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         let newModel =
             { model with
-                Search = { model.Search with Params = { model.Search.Params with MetadataSelection = newSelection } } }
+                  Search =
+                      { model.Search with
+                            Params =
+                                { model.Search.Params with
+                                      MetadataSelection = newSelection } } }
 
         newModel, Cmd.none
 
     | SetIntervalTo (category, number) ->
-        let table = category.TableName |> Option.defaultValue "texts"
+        let table =
+            category.TableName |> Option.defaultValue "texts"
+
         let catCode = $"{table}.{category.Code}"
 
         let (newCategoryValues: Metadata.CategorySelection) =
@@ -279,10 +324,10 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                     |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_from")
 
                 { Choices =
-                    [| match maybeFromValue with
-                       | Some fromValue -> fromValue
-                       | None -> ignore None
-                       toValue |]
+                      [| match maybeFromValue with
+                         | Some fromValue -> fromValue
+                         | None -> ignore None
+                         toValue |]
                   ShouldExclude = false }
             | None ->
                 { Choices = [| toValue |]
@@ -294,15 +339,22 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         let newModel =
             { model with
-                Search = { model.Search with Params = { model.Search.Params with MetadataSelection = newSelection } } }
+                  Search =
+                      { model.Search with
+                            Params =
+                                { model.Search.Params with
+                                      MetadataSelection = newSelection } } }
 
         newModel, Cmd.none
 
 
     | FetchMetadataForTexts ->
-        let columns = [ for category in model.Corpus.MetadataTable ->
-                            let table = category.TableName |> Option.defaultValue "texts"
-                            $"{table}.{category.Code}"  ]
+        let columns =
+            [ for category in model.Corpus.MetadataTable ->
+                  let table =
+                      category.TableName |> Option.defaultValue "texts"
+
+                  $"{table}.{category.Code}" ]
 
         let cmd =
             Cmd.OfAsync.perform
@@ -318,12 +370,19 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
     | FetchedMetadataForTexts results ->
         { model with
-            FetchedTextMetadata = results
-            IsSelectionTableOpen = true },
+              FetchedTextMetadata = results
+              IsSelectionTableOpen = true },
         Cmd.none
 
     | SetSelectionTablePage pageNumber ->
-        { model with SelectionTablePageNumber = pageNumber }, Cmd.ofMsg FetchMetadataForTexts
+        { model with
+              SelectionTablePageNumber = pageNumber },
+        Cmd.ofMsg FetchMetadataForTexts
     | SetSelectionTableSort sortInfo ->
-        { model with SelectionTableSort = Some sortInfo }, Cmd.ofMsg (SetSelectionTablePage 1)
-    | CloseSelectionTable -> { model with IsSelectionTableOpen = false }, Cmd.none
+        { model with
+              SelectionTableSort = Some sortInfo },
+        Cmd.ofMsg (SetSelectionTablePage 1)
+    | CloseSelectionTable ->
+        { model with
+              IsSelectionTableOpen = false },
+        Cmd.none

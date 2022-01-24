@@ -182,9 +182,10 @@ module ResultsView =
 
             let focusQuickView () =
                 elementRef.current
-                |> Option.iter (fun quickViewElement ->
-                    if shouldShowQuickView then
-                        quickViewElement.focus ())
+                |> Option.iter
+                    (fun quickViewElement ->
+                        if shouldShowQuickView then
+                            quickViewElement.focus ())
 
             // Focus the QuickView when mounted to enable it to receive keyboard events
             React.useEffect (focusQuickView, [| box model |])
@@ -195,14 +196,16 @@ module ResultsView =
                                   prop.ref elementRef
                                   // Set tabIndex so that the element receives keyboard events
                                   prop.tabIndex 0
-                                  prop.onKeyUp (fun e ->
-                                      if e.key = "Escape" then
-                                          dispatch CloseQuickView)
+                                  prop.onKeyUp
+                                      (fun e ->
+                                          if e.key = "Escape" then
+                                              dispatch CloseQuickView)
                                   prop.children [ QuickView.header [ Html.div [ prop.style [ style.fontSize 16
                                                                                              style.fontWeight.bold ]
                                                                                 prop.text "Metadata" ]
-                                                                     Bulma.delete [ prop.onClick (fun _ ->
-                                                                                        dispatch CloseQuickView) ] ]
+                                                                     Bulma.delete [ prop.onClick
+                                                                                        (fun _ ->
+                                                                                            dispatch CloseQuickView) ] ]
                                                   QuickView.body [ QuickView.block [ Bulma.table [ prop.style [ style.margin
                                                                                                                     5 ]
                                                                                                    prop.children [ Html.tbody [ for category in
@@ -220,9 +223,10 @@ module ResultsView =
 
             let focusDownloadWindow () =
                 elementRef.current
-                |> Option.iter (fun downloadWindowElement ->
-                    if model.ShouldShowDownloadWindow then
-                        downloadWindowElement.focus ())
+                |> Option.iter
+                    (fun downloadWindowElement ->
+                        if model.ShouldShowDownloadWindow then
+                            downloadWindowElement.focus ())
 
             // Focus the QuickView when mounted to enable it to receive keyboard events
             React.useEffect (focusDownloadWindow, [| box model |])
@@ -230,8 +234,9 @@ module ResultsView =
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
                              prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
-                                                                    prop.onCheckedChange (fun _ ->
-                                                                        dispatch (ToggleDownloadAttribute attribute)) ]
+                                                                    prop.onCheckedChange
+                                                                        (fun _ ->
+                                                                            dispatch (ToggleDownloadAttribute attribute)) ]
                                              Bulma.text.span $" {attribute.Name}" ] ]
 
             let attributeCheckboxes =
@@ -269,8 +274,11 @@ module ResultsView =
                                                                             | Some _ -> prop.disabled true
                                                                             | None -> prop.disabled disableDownload
 
-                                                                            prop.onClick (fun _ ->
-                                                                                dispatch (DownloadSearchResults Excel))
+                                                                            prop.onClick
+                                                                                (fun _ ->
+                                                                                    dispatch (
+                                                                                        DownloadSearchResults Excel
+                                                                                    ))
                                                                             prop.style [ style.marginLeft 5 ]
                                                                             prop.text "Excel" ]
                                                   )
@@ -282,8 +290,9 @@ module ResultsView =
                                                                             | Some _ -> prop.disabled true
                                                                             | None -> prop.disabled disableDownload
 
-                                                                            prop.onClick (fun _ ->
-                                                                                dispatch (DownloadSearchResults Tsv))
+                                                                            prop.onClick
+                                                                                (fun _ ->
+                                                                                    dispatch (DownloadSearchResults Tsv))
                                                                             prop.text "Tab-separated" ]
                                                   )
                                                   Bulma.levelItem (
@@ -294,8 +303,9 @@ module ResultsView =
                                                                             | Some _ -> prop.disabled true
                                                                             | None -> prop.disabled disableDownload
 
-                                                                            prop.onClick (fun _ ->
-                                                                                dispatch (DownloadSearchResults Csv))
+                                                                            prop.onClick
+                                                                                (fun _ ->
+                                                                                    dispatch (DownloadSearchResults Csv))
                                                                             prop.text "Comma-separated" ]
                                                   ) ] ] ]
 
@@ -305,9 +315,10 @@ module ResultsView =
                           prop.ref elementRef
                           // Set tabIndex so that the element receives keyboard events
                           prop.tabIndex 0
-                          prop.onKeyUp (fun e ->
-                              if e.key = "Escape" then
-                                  dispatch CloseDownloadWindow)
+                          prop.onKeyUp
+                              (fun e ->
+                                  if e.key = "Escape" then
+                                      dispatch CloseDownloadWindow)
                           prop.children [ Bulma.modalBackground [ prop.onClick (fun _ -> dispatch CloseDownloadWindow) ]
                                           Bulma.modalCard [ Bulma.modalCardHead [ Bulma.modalCardTitle
                                                                                       "Download results"
@@ -346,10 +357,11 @@ module ResultsView =
 
             let sortMenu =
                 Bulma.select [ prop.disabled isSearchingOrFetching
-                               prop.onChange (fun (s: string) ->
-                                   let sortKey = SortKey.OfString(s)
+                               prop.onChange
+                                   (fun (s: string) ->
+                                       let sortKey = SortKey.OfString(s)
 
-                                   dispatch (SetPaginatorPage(Some 1, Some sortKey)))
+                                       dispatch (SetPaginatorPage(Some 1, Some sortKey)))
                                prop.children [ Html.option [ prop.value "Position"
                                                              prop.text "Sort by position" ]
                                                Html.option [ prop.value "Match"
@@ -402,7 +414,10 @@ module ResultsView =
                                                     style.top 10
                                                     style.left 350 ]
                                        prop.children (
-                                           spinnerOverlay shouldShowSpinner (Some [ style.width 40; style.height 40 ]) []
+                                           spinnerOverlay
+                                               shouldShowSpinner
+                                               (Some [ style.width 40; style.height 40 ])
+                                               []
                                        ) ] ]
 
             let contextSelector =
@@ -415,7 +430,8 @@ module ResultsView =
                   Bulma.levelItem [ prop.style [ style.marginRight 50 ]
                                     prop.text "words" ] ]
 
-            let resultPage = concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
+            let resultPage =
+                concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
 
             [ DownloadWindow concordanceModel corpus dispatch
               MetadataQuickView concordanceModel loadedCorpusModel.ShouldShowQuickView dispatch
@@ -449,16 +465,16 @@ module ResultsView =
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
                              prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
-                                                                    prop.onCheckedChange (fun _ ->
-                                                                        dispatch (ToggleAttribute attribute)) ]
+                                                                    prop.onCheckedChange
+                                                                        (fun _ -> dispatch (ToggleAttribute attribute)) ]
                                              Bulma.text.span $" {attribute.Name}" ] ]
 
             let caseSensitiveCheckbox =
                 Bulma.field.p (
                     Html.label [ prop.style [ style.marginRight 15 ]
                                  prop.children [ Bulma.input.checkbox [ prop.isChecked model.IsCaseSensitive
-                                                                        prop.onCheckedChange (fun _ ->
-                                                                            dispatch ToggleIsCaseSensitive) ]
+                                                                        prop.onCheckedChange
+                                                                            (fun _ -> dispatch ToggleIsCaseSensitive) ]
                                                  Bulma.text.span " Case sensitive" ] ]
                 )
 
@@ -484,8 +500,10 @@ module ResultsView =
                                             prop.text "Comma-separated" ] ]
 
                 Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.button.button [ color.isSuccess
-                                                                                        prop.onClick (fun _ ->
-                                                                                            dispatch FetchFrequencyList)
+                                                                                        prop.onClick
+                                                                                            (fun _ ->
+                                                                                                dispatch
+                                                                                                    FetchFrequencyList)
                                                                                         prop.text "Update stats" ] ]
                                                 Bulma.levelItem [ prop.style [ style.marginLeft 20 ]
                                                                   prop.text "Download:" ]
@@ -556,9 +574,10 @@ module ResultsView =
                                                  prop.text "Select attribute" ]
                                    :: attrOptions
                                )
-                               prop.onChange (fun (s: string) ->
-                                   if s <> "" then
-                                       dispatch (SelectAttribute s)) ]
+                               prop.onChange
+                                   (fun (s: string) ->
+                                       if s <> "" then
+                                           dispatch (SelectAttribute s)) ]
 
             let categoryOptions =
                 [ for index, category in corpus.MetadataQuickView |> List.indexed ->
@@ -571,11 +590,12 @@ module ResultsView =
                                                  prop.text "Select category" ]
                                    :: categoryOptions
                                )
-                               prop.onChange (fun (s: string) ->
-                                   if s <> "" then
-                                       let category = corpus.MetadataQuickView[int s]
+                               prop.onChange
+                                   (fun (s: string) ->
+                                       if s <> "" then
+                                           let category = corpus.MetadataQuickView.[int s]
 
-                                       dispatch (SelectCategory category)) ]
+                                           dispatch (SelectCategory category)) ]
 
             let keepZeroValueButton =
                 Html.label [ Bulma.input.checkbox [ prop.isChecked model.KeepZeroValues
@@ -584,8 +604,8 @@ module ResultsView =
 
             let downloadButtons =
                 Bulma.levelItem (
-                    Bulma.buttons [ Bulma.button.button [ prop.onClick (fun _ ->
-                                                              dispatch (DownloadMetadataDistribution Excel))
+                    Bulma.buttons [ Bulma.button.button [ prop.onClick
+                                                              (fun _ -> dispatch (DownloadMetadataDistribution Excel))
                                                           match model.DownloadingFormat with
                                                           | Some Excel -> button.isLoading
                                                           | Some _ -> prop.disabled true
@@ -594,8 +614,8 @@ module ResultsView =
                                                                  || model.SelectedCategory.IsNone then
                                                                   prop.disabled true
                                                           prop.text "Excel" ]
-                                    Bulma.button.button [ prop.onClick (fun _ ->
-                                                              dispatch (DownloadMetadataDistribution Tsv))
+                                    Bulma.button.button [ prop.onClick
+                                                              (fun _ -> dispatch (DownloadMetadataDistribution Tsv))
                                                           match model.DownloadingFormat with
                                                           | Some Tsv -> button.isLoading
                                                           | Some _ -> prop.disabled true
@@ -604,8 +624,8 @@ module ResultsView =
                                                                  || model.SelectedCategory.IsNone then
                                                                   prop.disabled true
                                                           prop.text "Tab-separated" ]
-                                    Bulma.button.button [ prop.onClick (fun _ ->
-                                                              dispatch (DownloadMetadataDistribution Csv))
+                                    Bulma.button.button [ prop.onClick
+                                                              (fun _ -> dispatch (DownloadMetadataDistribution Csv))
                                                           match model.DownloadingFormat with
                                                           | Some Csv -> button.isLoading
                                                           | Some _ -> prop.disabled true
@@ -626,7 +646,7 @@ module ResultsView =
                         if model.MetadataDistribution.Distribution.Length > 0 then
                             let categoryValueCells =
                                 [| for valueFreq in
-                                       model.MetadataDistribution.Distribution[0]
+                                       model.MetadataDistribution.Distribution.[0]
                                            .MetadataValueFrequencies ->
                                        let value = valueFreq.MetadataValue
 
@@ -687,39 +707,42 @@ module ResultsView =
                      tabs.isToggleRounded
                      prop.children [ Html.ul [ Html.li [ if activeTab = "Concordance" then
                                                              tab.isActive
-                                                         prop.onClick (fun _ ->
-                                                             dispatch (
-                                                                 ShowingResults.SelectResultTab(
-                                                                     Concordance(
-                                                                         ConcordanceModel.Init(
-                                                                             showingResultsModel.NumSteps,
-                                                                             string
-                                                                                 loadedCorpusModel.Search.Params.ContextSize,
-                                                                             []
+                                                         prop.onClick
+                                                             (fun _ ->
+                                                                 dispatch (
+                                                                     ShowingResults.SelectResultTab(
+                                                                         Concordance(
+                                                                             ConcordanceModel.Init(
+                                                                                 showingResultsModel.NumSteps,
+                                                                                 string
+                                                                                     loadedCorpusModel.Search.Params.ContextSize,
+                                                                                 []
+                                                                             )
                                                                          )
                                                                      )
-                                                                 )
-                                                             ))
+                                                                 ))
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
                                                Html.li [ if activeTab = "Frequency lists" then
                                                              tab.isActive
-                                                         prop.onClick (fun _ ->
-                                                             dispatch (
-                                                                 ShowingResults.SelectResultTab(
-                                                                     FrequencyLists(FrequencyListsModel.Default)
-                                                                 )
-                                                             ))
+                                                         prop.onClick
+                                                             (fun _ ->
+                                                                 dispatch (
+                                                                     ShowingResults.SelectResultTab(
+                                                                         FrequencyLists(FrequencyListsModel.Default)
+                                                                     )
+                                                                 ))
                                                          prop.children [ Html.a [ prop.text "Frequency lists" ] ] ]
                                                Html.li [ if activeTab = "Metadata distribution" then
                                                              tab.isActive
-                                                         prop.onClick (fun _ ->
-                                                             dispatch (
-                                                                 ShowingResults.SelectResultTab(
-                                                                     MetadataDistribution(
-                                                                         MetadataDistributionModel.Init()
+                                                         prop.onClick
+                                                             (fun _ ->
+                                                                 dispatch (
+                                                                     ShowingResults.SelectResultTab(
+                                                                         MetadataDistribution(
+                                                                             MetadataDistributionModel.Init()
+                                                                         )
                                                                      )
-                                                                 )
-                                                             ))
+                                                                 ))
                                                          prop.children [ Html.a [ prop.text "Metadata distribution" ] ] ] ] ] ]
 
     ///////////////////////////////////////
@@ -775,9 +798,10 @@ let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) 
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
                                 prop.tabIndex 0
                                 prop.onClick (fun _ -> dispatch ClosePopups)
-                                prop.onKeyUp (fun e ->
-                                    if e.key = "Escape" then
-                                        dispatch (MetadataMsg Update.Metadata.Msg.CloseMetadataMenu))
+                                prop.onKeyUp
+                                    (fun e ->
+                                        if e.key = "Escape" then
+                                            dispatch (MetadataMsg Update.Metadata.Msg.CloseMetadataMenu))
                                 prop.children [ Bulma.columns [ if shouldShowMetadataMenu model then
                                                                     Bulma.column [ column.isNarrow
                                                                                    prop.style [ style.marginRight 20 ]

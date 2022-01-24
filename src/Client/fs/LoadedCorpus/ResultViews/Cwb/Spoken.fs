@@ -41,8 +41,9 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
                                                                                    prop.text "Close"
                                                                                    color.isInfo
                                                                                    prop.style [ style.marginLeft 40 ]
-                                                                                   prop.onClick (fun _ ->
-                                                                                       dispatch RemoveMediaObject) ]
+                                                                                   prop.onClick
+                                                                                       (fun _ ->
+                                                                                           dispatch RemoveMediaObject) ]
                                                          ) ] ] ]
 
     let mediaDisplay =
@@ -51,28 +52,30 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
         let divs =
             mediaPlayerInfo.MediaObject.Divs
             |> Map.toArray
-            |> Array.map (fun (key, value) ->
-                let tokens =
-                    value.Line
-                    |> Array.map (fun (tokenIndex, attributeMap) ->
-                        let attrObj =
-                            attributeMap
-                            |> Map.toList
-                            |> List.map (fun (attrName, attrValue) -> (attrName, box attrValue))
-                            |> createObj
+            |> Array.map
+                (fun (key, value) ->
+                    let tokens =
+                        value.Line
+                        |> Array.map
+                            (fun (tokenIndex, attributeMap) ->
+                                let attrObj =
+                                    attributeMap
+                                    |> Map.toList
+                                    |> List.map (fun (attrName, attrValue) -> (attrName, box attrValue))
+                                    |> createObj
 
-                        (string tokenIndex, attrObj))
-                    |> createObj
+                                (string tokenIndex, attrObj))
+                        |> createObj
 
-                let valueObj =
-                    [ "Speaker" ==> value.Speaker
-                      "Line" ==> tokens
-                      "From" ==> value.From
-                      "To" ==> value.To
-                      "IsMatch" ==> value.IsMatch ]
-                    |> createObj
+                    let valueObj =
+                        [ "Speaker" ==> value.Speaker
+                          "Line" ==> tokens
+                          "From" ==> value.From
+                          "To" ==> value.To
+                          "IsMatch" ==> value.IsMatch ]
+                        |> createObj
 
-                string key, valueObj)
+                    string key, valueObj)
             |> createObj
 
         Bulma.section [ match mediaPlayerInfo.Type with
@@ -89,8 +92,9 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
                                                                                    prop.text "Close"
                                                                                    color.isInfo
                                                                                    prop.style [ style.marginLeft 40 ]
-                                                                                   prop.onClick (fun _ ->
-                                                                                       dispatch RemoveMediaObject) ]
+                                                                                   prop.onClick
+                                                                                       (fun _ ->
+                                                                                           dispatch RemoveMediaObject) ]
                                                          ) ] ] ]
 
     let elementRef = React.useElementRef ()
@@ -119,9 +123,10 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
                    prop.ref elementRef
                    // Set tabIndex so that the element receives keyboard events
                    prop.tabIndex 0
-                   prop.onKeyUp (fun e ->
-                       if e.key = "Escape" then
-                           dispatch RemoveMediaObject)
+                   prop.onKeyUp
+                       (fun e ->
+                           if e.key = "Escape" then
+                               dispatch RemoveMediaObject)
                    // Stop propagation to prevent trouble caused by re-rendering
                    prop.onClick (fun e -> e.stopPropagation ())
                    prop.children [ header
@@ -129,7 +134,8 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
                                    footer ] ]
 
 
-    let root = Browser.Dom.document.getElementById "media-player-popup-root"
+    let root =
+        Browser.Dom.document.getElementById "media-player-popup-root"
 
     ReactDOM.createPortal (popup, root)
 
@@ -145,24 +151,25 @@ let concordanceTable
         | None -> Html.none
 
     let extractFields result =
-        let m = Regex.Match(result, "^<who_name\s+(\S*?)>:\s+(.*)\{\{(.+?)\}\}(.*?)$")
+        let m =
+            Regex.Match(result, "^<who_name\s+(\S*?)>:\s+(.*)\{\{(.+?)\}\}(.*?)$")
 
         let groupValues =
             m.Groups
             |> Seq.map (fun group -> group.Value)
             |> Seq.toList
 
-        let sId = groupValues[1]
+        let sId = groupValues.[1]
 
         let pre =
-            groupValues[2]
+            groupValues.[2]
             // If the result begins with a who_name tag with the same ID as the one for the
             // actual match, it feels redundant (since that speaker ID is listed just
             // to the left of it), so just remove it.
             |> replace $"^<who_name\s+{sId}>" ""
 
         let searchWord =
-            groupValues[3]
+            groupValues.[3]
             |> fun m ->
                 // Do the same with the match if there is no left context
                 if String.IsNullOrWhiteSpace(pre) then
@@ -170,7 +177,7 @@ let concordanceTable
                 else
                     m
 
-        let post = groupValues[4]
+        let post = groupValues.[4]
 
         (sId, pre, searchWord, post)
 
@@ -190,8 +197,9 @@ let concordanceTable
                                                               prop.title "Show video"
                                                               prop.style [ style.marginTop 2
                                                                            style.marginBottom 2 ]
-                                                              prop.onClick (fun _ ->
-                                                                  dispatch (FetchMediaObject(VideoPlayer, rowIndex)))
+                                                              prop.onClick
+                                                                  (fun _ ->
+                                                                      dispatch (FetchMediaObject(VideoPlayer, rowIndex)))
                                                               prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-film" ] ] ] ] ]
                                     match resultInfo.AudioType with
                                     | Some Sound -> audioButton "Play audio" "fa-volume-up"
@@ -206,8 +214,11 @@ let concordanceTable
                                                                            style.marginBottom 2
                                                                            style.paddingLeft 6
                                                                            style.paddingRight 6 ]
-                                                              prop.onClick (fun _ ->
-                                                                  dispatch (FetchMediaObject(WaveformPlayer, rowIndex)))
+                                                              prop.onClick
+                                                                  (fun _ ->
+                                                                      dispatch (
+                                                                          FetchMediaObject(WaveformPlayer, rowIndex)
+                                                                      ))
                                                               prop.children [ Html.img [ prop.src "speech/waveform.png"
                                                                                          prop.style [ style.width 12 ] ] ] ] ] ]
 
@@ -258,20 +269,21 @@ let concordanceTable
         else
             let attrs =
                 token.Split("/")
-                |> Array.mapi (fun index attr ->
-                    attr
-                    // TODO: Fix the use of italics. Does not work with Feliz.Bulma.Tooltip
-                    // |> fun a ->
-                    //     // Show the orthographic or phonetic form in italics
-                    //     // if present
-                    //     match maybeOrtPhonIndex with
-                    //     | Some ortPhonIndex when ortPhonIndex = index -> $"<i>{a}</i>"
-                    //     | _ -> a
-                    |> fun a ->
-                        // Show the lemma in quotes, if present
-                        match maybeLemmaIndex with
-                        | Some lemmaIndex when lemmaIndex = index -> $"\"{a}\""
-                        | _ -> a)
+                |> Array.mapi
+                    (fun index attr ->
+                        attr
+                        // TODO: Fix the use of italics. Does not work with Feliz.Bulma.Tooltip
+                        // |> fun a ->
+                        //     // Show the orthographic or phonetic form in italics
+                        //     // if present
+                        //     match maybeOrtPhonIndex with
+                        //     | Some ortPhonIndex when ortPhonIndex = index -> $"<i>{a}</i>"
+                        //     | _ -> a
+                        |> fun a ->
+                            // Show the lemma in quotes, if present
+                            match maybeLemmaIndex with
+                            | Some lemmaIndex when lemmaIndex = index -> $"\"{a}\""
+                            | _ -> a)
 
             let maybeUrlsIndex =
                 attrs
@@ -282,20 +294,22 @@ let concordanceTable
                 |> Array.indexed
                 |> Array.filter (fun (index, _) -> tipFieldIndexes |> List.contains index)
                 // Remove attributes that contain URLs for linking to dictionaries etc.
-                |> Array.filter (fun (index, _) ->
-                    match maybeUrlsIndex with
-                    | Some urlsIndex -> index <> urlsIndex
-                    | None -> true)
-                |> Array.filter (fun (_, attr) ->
-                    [ "__UNDEF__"
-                      "\"__UNDEF__\""
-                      "<i>__UNDEF__</i>"
-                      "-"
-                      "_"
-                      "\"_\""
-                      "<i>_</i>" ]
-                    |> List.contains attr
-                    |> not)
+                |> Array.filter
+                    (fun (index, _) ->
+                        match maybeUrlsIndex with
+                        | Some urlsIndex -> index <> urlsIndex
+                        | None -> true)
+                |> Array.filter
+                    (fun (_, attr) ->
+                        [ "__UNDEF__"
+                          "\"__UNDEF__\""
+                          "<i>__UNDEF__</i>"
+                          "-"
+                          "_"
+                          "\"_\""
+                          "<i>_</i>" ]
+                        |> List.contains attr
+                        |> not)
                 |> Array.map snd
 
             let tipText = tipAttrs |> String.concat " "
@@ -303,7 +317,7 @@ let concordanceTable
             let maybeUrls =
                 match maybeUrlsIndex with
                 | Some urlsIndex ->
-                    attrs[urlsIndex]
+                    attrs.[urlsIndex]
                     |> replace "!!" "/"
                     |> fun s -> s.Split('$')
                     |> Array.filter (not << String.IsNullOrWhiteSpace)
@@ -311,7 +325,7 @@ let concordanceTable
                 | None -> None
 
             let dt =
-                attrs[displayedFieldIndex]
+                attrs.[displayedFieldIndex]
                 |> replace "__UNDEF__" ""
 
             let displayedText =
@@ -319,11 +333,12 @@ let concordanceTable
                 | Some urls ->
                     let links =
                         (urls, [| "[1]"; "[2]" |])
-                        ||> Array.map2 (fun url symbol ->
-                            Html.a [ prop.key url
-                                     prop.href url
-                                     prop.target "_blank"
-                                     prop.dangerouslySetInnerHTML symbol ])
+                        ||> Array.map2
+                                (fun url symbol ->
+                                    Html.a [ prop.key url
+                                             prop.href url
+                                             prop.target "_blank"
+                                             prop.dangerouslySetInnerHTML symbol ])
 
                     Html.span [ prop.style [ style.whitespace.nowrap ]
                                 prop.children [ Html.span dt
@@ -356,25 +371,26 @@ let concordanceTable
 
         tokens
         |> Array.indexed
-        |> Array.choose (fun (index, token) ->
-            let m = Regex.Match(token, "<who_name_(.+?)>")
+        |> Array.choose
+            (fun (index, token) ->
+                let m = Regex.Match(token, "<who_name_(.+?)>")
 
-            if m.Success then
-                // Extract the speaker ID and put it in front of its segment
-                let speakerId = m.Groups[1].Value
+                if m.Success then
+                    // Extract the speaker ID and put it in front of its segment
+                    let speakerId = m.Groups.[1].Value
 
-                Some(
-                    (Html.span [ prop.key index
-                                 prop.className "speaker-id"
-                                 prop.text $"<{speakerId}> " ],
-                     "")
-                )
-            // Ignore end-of-segment tags; process all other tokens
-            elif not (token.Contains("</who_name>")) then
-                processToken token index displayedFieldIndex maybeOrtPhonIndex maybeLemmaIndex tipFieldIndexes
-                |> Some
-            else
-                None)
+                    Some(
+                        (Html.span [ prop.key index
+                                     prop.className "speaker-id"
+                                     prop.text $"<{speakerId}> " ],
+                         "")
+                    )
+                // Ignore end-of-segment tags; process all other tokens
+                elif not (token.Contains("</who_name>")) then
+                    processToken token index displayedFieldIndex maybeOrtPhonIndex maybeLemmaIndex tipFieldIndexes
+                    |> Some
+                else
+                    None)
 
     // Returns one or more rows representing a single search result
     let singleResultRows
@@ -391,7 +407,8 @@ let concordanceTable
 
         let sId, pre, searchWord, post = extractFields line
 
-        let ortPre = processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes pre
+        let ortPre =
+            processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes pre
 
         let ortMatch =
             processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes searchWord
@@ -499,8 +516,9 @@ let concordanceTable
             results
             |> Array.toList
             |> List.indexed
-            |> List.collect (fun (index, result) ->
-                singleResultRows ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes phonTipIndexes result index)
+            |> List.collect
+                (fun (index, result) ->
+                    singleResultRows ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes phonTipIndexes result index)
         | None -> []
 
 
