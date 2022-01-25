@@ -166,6 +166,7 @@ type MetadataDistributionModel =
       MetadataDistribution: MetadataDistribution
       KeepZeroValues: bool
       ExcludedAttributeValues: ExcludedAttributeValues
+      IsFetching: bool
       DownloadingFormat: DownloadFormat option }
     static member Init() =
         { SelectedAttributeCode = None
@@ -177,6 +178,7 @@ type MetadataDistributionModel =
           ExcludedAttributeValues =
               { Accumulated = Set.empty
                 New = Set.empty }
+          IsFetching = false
           DownloadingFormat = None }
 
 type ResultTab =

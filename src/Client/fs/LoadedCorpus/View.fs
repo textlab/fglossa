@@ -636,6 +636,86 @@ module ResultsView =
                                                           prop.text "Comma-separated" ] ]
                 )
 
+            let distributionTable =
+                if model.MetadataDistribution.Distribution.Length > 0 then
+                    let removeSelectedRowsButton =
+                        Bulma.button.button [ button.isSmall
+                                              color.isDanger
+                                              prop.title "Remove selected rows"
+                                              prop.disabled model.ExcludedAttributeValues.New.IsEmpty
+                                              prop.onClick (fun _ -> dispatch RemoveSelectedAttributeValues)
+                                              prop.children [ Bulma.icon [ Html.i [ prop.className "fas fa-trash" ] ] ] ]
+
+
+                    let categoryValueCells =
+                        [| for valueFreq in
+                               model.MetadataDistribution.Distribution.[0]
+                                   .MetadataValueFrequencies ->
+                               let value = valueFreq.MetadataValue
+
+                               if value = "Undefined" then
+                                   Html.td [ Html.i value ]
+                               else
+                                   Html.td value |]
+
+                    let table =
+                        let frequencyRows =
+                            [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
+                                   let attrValue = attrValueDistribution.AttributeValue
+
+                                   let checkboxCell =
+                                       Html.td [ Bulma.input.checkbox [ prop.isChecked (
+                                                                            model.ExcludedAttributeValues.New.Contains(
+                                                                                attrValue
+                                                                            )
+                                                                        )
+                                                                        prop.onCheckedChange
+                                                                            (fun isChecked ->
+                                                                                dispatch (
+                                                                                    AddOrRemoveExcludedAttributeValue(
+                                                                                        attrValue,
+                                                                                        isChecked
+                                                                                    )
+                                                                                )) ] ]
+
+                                   let attrValueCell =
+                                       Html.td [ if attrValue = "__UNDEF__" then
+                                                     Html.i "Undefined"
+                                                 else
+                                                     Html.text attrValue ]
+
+                                   let frequencyCells =
+                                       [| for valueFreq in attrValueDistribution.MetadataValueFrequencies ->
+                                              Html.td (string valueFreq.Frequency) |]
+
+                                   Html.tr (Array.append [| checkboxCell; attrValueCell |] frequencyCells) |]
+
+                        let totalsRow =
+                            let totalsCells =
+                                [| for total in model.MetadataDistribution.CategoryValueTotals do
+                                       if model.KeepZeroValues || total > 0UL then
+                                           Html.td [ Html.b (string total) ] |]
+
+                            Html.tr (
+                                Array.append
+                                    [| Html.td ""
+                                       Html.td [ Html.b "Total" ] |]
+                                    totalsCells
+                            )
+
+                        Bulma.table [ prop.className "metadata-distribution-table"
+                                      prop.children [ Html.thead [ Html.tr (
+                                                                       Array.append
+                                                                           [| Html.td removeSelectedRowsButton
+                                                                              Html.td "" |]
+                                                                           categoryValueCells
+                                                                   ) ]
+                                                      Html.tbody (Array.append frequencyRows [| totalsRow |]) ] ]
+
+                    Bulma.tableContainer [ table ]
+                else
+                    Html.none
+
             Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem attrMenu
                                                         Bulma.levelItem categoryMenu
                                                         Bulma.levelItem [ prop.style [ style.marginLeft 5 ]
@@ -643,83 +723,7 @@ module ResultsView =
                                                         Bulma.levelItem [ prop.style [ style.marginLeft 20 ]
                                                                           prop.text "Download:" ]
                                                         downloadButtons ] ]
-                        if model.MetadataDistribution.Distribution.Length > 0 then
-                            let removeSelectedRowsButton =
-                                Bulma.button.button [ button.isSmall
-                                                      color.isDanger
-                                                      prop.title "Remove selected rows"
-                                                      prop.disabled model.ExcludedAttributeValues.New.IsEmpty
-                                                      prop.onClick (fun _ -> dispatch RemoveSelectedAttributeValues)
-                                                      prop.children [ Bulma.icon [ Html.i [ prop.className
-                                                                                                "fas fa-trash" ] ] ] ]
-
-
-                            let categoryValueCells =
-                                [| for valueFreq in
-                                       model.MetadataDistribution.Distribution.[0]
-                                           .MetadataValueFrequencies ->
-                                       let value = valueFreq.MetadataValue
-
-                                       if value = "Undefined" then
-                                           Html.td [ Html.i value ]
-                                       else
-                                           Html.td value |]
-
-                            let table =
-                                let frequencyRows =
-                                    [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
-                                           let attrValue = attrValueDistribution.AttributeValue
-
-                                           let checkboxCell =
-                                               Html.td [ Bulma.input.checkbox [ prop.isChecked (
-                                                                                    model.ExcludedAttributeValues.New.Contains(
-                                                                                        attrValue
-                                                                                    )
-                                                                                )
-                                                                                prop.onCheckedChange
-                                                                                    (fun isChecked ->
-                                                                                        dispatch (
-                                                                                            AddOrRemoveExcludedAttributeValue(
-                                                                                                attrValue,
-                                                                                                isChecked
-                                                                                            )
-                                                                                        )) ] ]
-
-                                           let attrValueCell =
-                                               Html.td [ if attrValue = "__UNDEF__" then
-                                                             Html.i "Undefined"
-                                                         else
-                                                             Html.text attrValue ]
-
-                                           let frequencyCells =
-                                               [| for valueFreq in attrValueDistribution.MetadataValueFrequencies ->
-                                                      Html.td (string valueFreq.Frequency) |]
-
-                                           Html.tr (Array.append [| checkboxCell; attrValueCell |] frequencyCells) |]
-
-                                let totalsRow =
-                                    let totalsCells =
-                                        [| for total in model.MetadataDistribution.CategoryValueTotals do
-                                               if model.KeepZeroValues || total > 0UL then
-                                                   Html.td [ Html.b (string total) ] |]
-
-                                    Html.tr (
-                                        Array.append
-                                            [| Html.td ""
-                                               Html.td [ Html.b "Total" ] |]
-                                            totalsCells
-                                    )
-
-                                Bulma.table [ prop.className "metadata-distribution-table"
-                                              prop.children [ Html.thead [ Html.tr (
-                                                                               Array.append
-                                                                                   [| Html.td removeSelectedRowsButton
-                                                                                      Html.td "" |]
-                                                                                   categoryValueCells
-                                                                           ) ]
-                                                              Html.tbody (Array.append frequencyRows [| totalsRow |]) ] ]
-
-                            Bulma.tableContainer [ table ] ]
+                        spinnerOverlay model.IsFetching None [ distributionTable ] ]
 
 
     let tabs

@@ -603,11 +603,11 @@ module LoadedCorpus =
                 : LoadedCorpusModel * MetadataDistributionModel * Cmd<Msg> =
 
                 let buildCmd
-                    { SelectedAttributeCode = maybeAttributeCode
-                      SelectedCategory = maybeCategory
-                      KeepZeroValues = keepZeroValues
-                      ExcludedAttributeValues = excludedAttributeValues
-                      DownloadingFormat = maybeDownloadingFormat }
+                    ({ SelectedAttributeCode = maybeAttributeCode
+                       SelectedCategory = maybeCategory
+                       KeepZeroValues = keepZeroValues
+                       ExcludedAttributeValues = excludedAttributeValues
+                       DownloadingFormat = maybeDownloadingFormat } as metadataDistributionModel)
                     =
                     match maybeAttributeCode, maybeCategory with
                     | Some attributeCode, Some category ->
@@ -636,7 +636,8 @@ module LoadedCorpus =
                                  keepZeroValues,
                                  excludedAttributeValues.Accumulated,
                                  downloadingFormat)
-                                DownloadedMetadataDistribution
+                                DownloadedMetadataDistribution,
+                            metadataDistributionModel
                         | None ->
                             Cmd.OfAsync.perform
                                 serverApi.GetMetadataDistribution
@@ -646,8 +647,10 @@ module LoadedCorpus =
                                  categoryType,
                                  keepZeroValues,
                                  excludedAttributeValues.Accumulated)
-                                FetchedMetadataDistribution
-                    | _ -> Cmd.none
+                                FetchedMetadataDistribution,
+                            { metadataDistributionModel with
+                                  IsFetching = true }
+                    | _ -> Cmd.none, metadataDistributionModel
 
                 match msg with
                 | SelectAttribute attributeCode ->
@@ -655,26 +658,26 @@ module LoadedCorpus =
                         { metadataDistributionModel with
                               SelectedAttributeCode = Some attributeCode }
 
-                    let cmd = buildCmd newMetadataDistributionModel
+                    let cmd, newMetadataDistributionModel' = buildCmd newMetadataDistributionModel
 
-                    loadedCorpusModel, newMetadataDistributionModel, cmd
+                    loadedCorpusModel, newMetadataDistributionModel', cmd
 
                 | SelectCategory category ->
                     let newMetadataDistributionModel =
                         { metadataDistributionModel with
                               SelectedCategory = Some category }
 
-                    let cmd = buildCmd newMetadataDistributionModel
+                    let cmd, newMetadataDistributionModel' = buildCmd newMetadataDistributionModel
 
-                    loadedCorpusModel, newMetadataDistributionModel, cmd
+                    loadedCorpusModel, newMetadataDistributionModel', cmd
 
                 | SetKeepZero shouldKeepZeroValues ->
                     let newMetadataDistributionModel =
                         { metadataDistributionModel with
                               KeepZeroValues = shouldKeepZeroValues }
 
-                    let cmd = buildCmd newMetadataDistributionModel
-                    loadedCorpusModel, newMetadataDistributionModel, cmd
+                    let cmd, newMetadataDistributionModel' = buildCmd newMetadataDistributionModel
+                    loadedCorpusModel, newMetadataDistributionModel', cmd
 
                 | AddOrRemoveExcludedAttributeValue (value, shouldAdd) ->
                     let newExclusions =
@@ -709,13 +712,14 @@ module LoadedCorpus =
                         { metadataDistributionModel with
                               ExcludedAttributeValues = newExclusions }
 
-                    let cmd = buildCmd newMetadataDistributionModel
-                    loadedCorpusModel, newMetadataDistributionModel, cmd
+                    let cmd, newMetadataDistributionModel' = buildCmd newMetadataDistributionModel
+                    loadedCorpusModel, newMetadataDistributionModel', cmd
 
                 | FetchedMetadataDistribution metadataDistribution ->
                     loadedCorpusModel,
                     { metadataDistributionModel with
-                          MetadataDistribution = metadataDistribution },
+                          MetadataDistribution = metadataDistribution
+                          IsFetching = false },
                     Cmd.none
 
                 | DownloadMetadataDistribution format ->
@@ -723,8 +727,8 @@ module LoadedCorpus =
                         { metadataDistributionModel with
                               DownloadingFormat = Some format }
 
-                    let cmd = buildCmd newMetadataDistributionModel
-                    loadedCorpusModel, newMetadataDistributionModel, cmd
+                    let cmd, newMetadataDistributionModel' = buildCmd newMetadataDistributionModel
+                    loadedCorpusModel, newMetadataDistributionModel', cmd
 
                 | DownloadedMetadataDistribution path ->
                     Browser.Dom.window.location.href <- path

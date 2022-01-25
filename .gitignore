@@ -20,4 +20,5 @@ build/
 src/Corpora
 /src/Server/db/fglossa.sqlite
 /src/Client/public/tmp
+/src/Client/public/glossa3_doc
 /self-contained
