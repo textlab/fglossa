@@ -105,4 +105,7 @@ html {
     td:nth-child(n+3) {
         text-align: right;
     }
+    thead th:not(:first-child) {
+        padding-top: 14px;
+    }
 }

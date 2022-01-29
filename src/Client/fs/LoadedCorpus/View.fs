@@ -639,12 +639,12 @@ module ResultsView =
             let distributionTable =
                 if model.MetadataDistribution.Distribution.Length > 0 then
                     let removeSelectedRowsButton =
-                        Bulma.button.button [ button.isSmall
+                        Bulma.button.button [ button.isOutlined
                                               color.isDanger
                                               prop.title "Remove selected rows"
                                               prop.disabled model.ExcludedAttributeValues.New.IsEmpty
                                               prop.onClick (fun _ -> dispatch RemoveSelectedAttributeValues)
-                                              prop.children [ Bulma.icon [ Html.i [ prop.className "fas fa-trash" ] ] ] ]
+                                              prop.children [ Bulma.icon [ Html.i [ prop.className "fas fa-trash-alt" ] ] ] ]
 
 
                     let categoryValueCells =
@@ -654,9 +654,9 @@ module ResultsView =
                                let value = valueFreq.MetadataValue
 
                                if value = "Undefined" then
-                                   Html.td [ Html.i value ]
+                                   Html.th [ Html.i value ]
                                else
-                                   Html.td value |]
+                                   Html.th value |]
 
                     let table =
                         let frequencyRows =
@@ -690,27 +690,23 @@ module ResultsView =
 
                                    Html.tr (Array.append [| checkboxCell; attrValueCell |] frequencyCells) |]
 
-                        let totalsRow =
+                        let totalsFooter =
                             let totalsCells =
                                 [| for total in model.MetadataDistribution.CategoryValueTotals do
                                        if model.KeepZeroValues || total > 0UL then
-                                           Html.td [ Html.b (string total) ] |]
+                                           Html.th (string total) |]
 
-                            Html.tr (
-                                Array.append
-                                    [| Html.td ""
-                                       Html.td [ Html.b "Total" ] |]
-                                    totalsCells
-                            )
+                            Html.tr (Array.append [| Html.th ""; Html.th "Total" |] totalsCells)
 
                         Bulma.table [ prop.className "metadata-distribution-table"
                                       prop.children [ Html.thead [ Html.tr (
                                                                        Array.append
-                                                                           [| Html.td removeSelectedRowsButton
-                                                                              Html.td "" |]
+                                                                           [| Html.th removeSelectedRowsButton
+                                                                              Html.th "" |]
                                                                            categoryValueCells
                                                                    ) ]
-                                                      Html.tbody (Array.append frequencyRows [| totalsRow |]) ] ]
+                                                      Html.tbody frequencyRows
+                                                      Html.tfoot [ totalsFooter ] ] ]
 
                     Bulma.tableContainer [ table ]
                 else
