@@ -231,13 +231,15 @@ let downloadFrequencyList
         return downloadFilename
     }
 
-type StringCategoryTextIds =
+type StringCategoryTextIdsAndTokenCount =
     { CategoryValue: string
-      TextIds: string }
+      TextIds: string
+      TokenCount: int64 }
 
-type NumberCategoryTextIds =
+type NumberCategoryTextIdsAndTokenCount =
     { CategoryValue: int64
-      TextIds: string }
+      TextIds: string
+      TokenCount: int64 }
 
 let getMetadataDistribution
     (logger: ILogger)
@@ -349,8 +351,10 @@ let getMetadataDistribution
         let column = getQualifiedColumnName catCode
 
         let categorySql =
-            $"SELECT {column} AS CategoryValue, GROUP_CONCAT(DISTINCT texts.tid) AS TextIds FROM texts{catJoin}{joins} \
-             WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql} GROUP BY {column}"
+            $"SELECT {column} AS CategoryValue, GROUP_CONCAT(DISTINCT texts.tid) AS TextIds, \
+              SUM(texts.endpos - texts.startpos + 1) AS TokenCount \
+              FROM texts{catJoin}{joins} \
+              WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql} GROUP BY {column}"
 
         let parameters = metadataSelectionToParamDict searchParams.MetadataSelection
 
@@ -358,7 +362,7 @@ let getMetadataDistribution
         // we need to convert them to strings. Because of type checking on the data we get from the database,
         // we need to implement the query for each value type separately even though they look identical (the
         // compiler will infer different types for the values in each case).
-        let categoryValuesToTextIds =
+        let categoryValuesWithTextIdsAndTokenCounts =
             match categoryType with
             | Metadata.StringCategoryType ->
                 let categoryRes =
@@ -366,7 +370,7 @@ let getMetadataDistribution
                         .Result
 
                 match categoryRes with
-                | Ok (catDist: StringCategoryTextIds seq) -> catDist
+                | Ok (catDist: StringCategoryTextIdsAndTokenCount seq) -> catDist
                 | Error ex -> raise ex
             | Metadata.NumberCategoryType ->
                 let categoryRes =
@@ -374,11 +378,12 @@ let getMetadataDistribution
                         .Result
 
                 match categoryRes with
-                | Ok (catDist: NumberCategoryTextIds seq) ->
+                | Ok (catDist: NumberCategoryTextIdsAndTokenCount seq) ->
                     seq {
                         for d in catDist ->
                             { CategoryValue = string d.CategoryValue
-                              TextIds = d.TextIds }
+                              TextIds = d.TextIds
+                              TokenCount = d.TokenCount }
                     }
                 | Error ex -> raise ex
             |> Seq.toArray
@@ -389,7 +394,7 @@ let getMetadataDistribution
                    let textIdsToFreqs = pair.Value
 
                    let metadataValueFrequencies =
-                       [| for row in categoryValuesToTextIds do
+                       [| for row in categoryValuesWithTextIdsAndTokenCounts do
                               // For each text ID that is associated with the current metadata category value,
                               // find the frequency associated with it in the map associated with the current attribute value.
                               // Summing all those frequencies gives us the total number of occurrences of this
@@ -420,7 +425,7 @@ let getMetadataDistribution
                 (fun sums attributeValueDistribution ->
                     Array.zip sums attributeValueDistribution.MetadataValueFrequencies
                     |> Array.map (fun (sum, freq) -> sum + freq.Frequency))
-                (Array.create categoryValuesToTextIds.Length 0UL)
+                (Array.create categoryValuesWithTextIdsAndTokenCounts.Length 0UL)
 
         let distribution' =
             if keepZeroValues then
@@ -436,7 +441,15 @@ let getMetadataDistribution
 
         return
             { Distribution = distribution'
-              CategoryValueTotals = totals }
+              CategoryValueTotals =
+                  if keepZeroValues then totals
+                  else totals |> Array.filter (fun t -> t > 0UL)
+              CategoryValueTokenCounts =
+                  if keepZeroValues then
+                      [| for row in categoryValuesWithTextIdsAndTokenCounts -> row.TokenCount |]
+                  else
+                      [| for (row, total) in Array.zip categoryValuesWithTextIdsAndTokenCounts totals do
+                          if total > 0UL then row.TokenCount |] }
     }
 
 let downloadMetadataDistribution
@@ -499,7 +512,6 @@ let downloadMetadataDistribution
             distribution.CategoryValueTotals
             |> Array.iter (fun categoryValueTotal ->
                 // Create a column for each metadata value total
-                if keepZeroValues || categoryValueTotal > 0UL then
                     worksheet.Cell(totalsRowIndex, colIndex).Value <- categoryValueTotal
                     colIndex <- colIndex + 1
                 )
@@ -524,14 +536,7 @@ let downloadMetadataDistribution
                     |> fun s -> $"{attributeValueDistribution.AttributeValue}\t{s}")
 
             let totalsRow =
-                let totals =
-                    if keepZeroValues then
-                        distribution.CategoryValueTotals
-                    else
-                        distribution.CategoryValueTotals
-                        |> Array.filter(fun total -> total > 0UL)
-
-                totals
+                distribution.CategoryValueTotals
                 |> Array.map string
                 |> String.concat "\t"
                 |> fun s -> "Total\t" + s
@@ -561,14 +566,7 @@ let downloadMetadataDistribution
                     |> fun s -> $"\"{attributeValueDistribution.AttributeValue}\",{s}")
 
             let totalsRow =
-                let totals =
-                    if keepZeroValues then
-                        distribution.CategoryValueTotals
-                    else
-                        distribution.CategoryValueTotals
-                        |> Array.filter(fun total -> total > 0UL)
-
-                totals
+                distribution.CategoryValueTotals
                 |> Array.map string
                 |> String.concat ","
                 |> fun s -> "Total," + s

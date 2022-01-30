@@ -308,7 +308,8 @@ type AttributeValueDistribution =
 
 type MetadataDistribution =
     { Distribution: AttributeValueDistribution []
-      CategoryValueTotals: uint64 [] }
+      CategoryValueTotals: uint64 []
+      CategoryValueTokenCounts: int64 [] }
 
 // Define type aliases that help clarify the parameters of the IServerApi functions.
 // If we could have used an actual interface instead, we could have used methods

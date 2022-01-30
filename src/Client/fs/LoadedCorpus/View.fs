@@ -691,9 +691,7 @@ module ResultsView =
 
                     let totalsFooter =
                         let totalsCells =
-                            [| for total in model.MetadataDistribution.CategoryValueTotals do
-                                   if model.KeepZeroValues || total > 0UL then
-                                       Html.th (string total) |]
+                            [| for total in model.MetadataDistribution.CategoryValueTotals -> Html.th (string total) |]
 
                         Html.tr (Array.append [| Html.th ""; Html.th "Total" |] totalsCells)
 
