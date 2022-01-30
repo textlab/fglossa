@@ -111,10 +111,7 @@ module MetadataMenu =
                                                  "width" ==> 200 ],
                                      listItem)
 
-        let tableAndColumn =
-            match category.TableName with
-            | Some tableName -> $"{tableName}.{category.Code}"
-            | None -> category.Code
+        let tableAndColumn =  category.GetQualifiedColumnName()
 
         let categorySelection =
             metadataSelection.TryFind(tableAndColumn)
@@ -221,8 +218,7 @@ module MetadataMenu =
         (isInSidebar: bool)
         dispatch
         =
-        let table = category.TableName |> Option.defaultValue "texts"
-        let catCode = $"{table}.{category.Code}"
+        let catCode = category.GetQualifiedColumnName()
 
         let maybeCategorySelection = metadataSelection.TryFind(catCode)
 
@@ -373,8 +369,7 @@ module MetadataMenu =
                                      prop.children [ Html.ul [ listButton; intervalButton ] ] ] ]
 
     let freeTextSearch (category: LongTextCategory) dispatch =
-        let table = category.TableName |> Option.defaultValue "texts"
-        let catCode = $"{table}.{category.Code}"
+        let catCode = category.GetQualifiedColumnName()
 
         Html.li (
             Html.a [ prop.key catCode
@@ -588,8 +583,7 @@ module MetadataMenu =
                                   let direction =
                                       match model.SelectionTableSort with
                                       | Some sortInfo ->
-                                          let table = category.TableName |> Option.defaultValue "texts"
-                                          if sortInfo.CategoryCode = $"{table}.{category.Code}" then
+                                          if sortInfo.CategoryCode = category.GetQualifiedColumnName() then
                                               // We were already sorting on this category, so just
                                               // change direction
                                               if sortInfo.Direction = Asc then
@@ -601,9 +595,8 @@ module MetadataMenu =
                                       | None -> Asc
 
                                   dispatch (
-                                      let table = category.TableName |> Option.defaultValue "texts"
                                       SetSelectionTableSort
-                                          { CategoryCode = $"{table}.{category.Code}"
+                                          { CategoryCode = category.GetQualifiedColumnName()
                                             Direction = direction }
                                   ))
                           // Note that if the menu is open, we render it in its open form before the heading, so that it will

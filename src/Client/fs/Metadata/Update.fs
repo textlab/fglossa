@@ -64,10 +64,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
               IntervalCategoryModes = model.IntervalCategoryModes.Add(category.Code, mode) },
         Cmd.none
     | FetchMetadataValuesForCategory category ->
-        let tableAndColumn =
-            match category.TableName with
-            | Some tableName -> $"{tableName}.{category.Code}"
-            | None -> category.Code
+        let tableAndColumn = category.GetQualifiedColumnName()
 
         let cmd =
             Cmd.OfAsync.perform
@@ -93,10 +90,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
               FetchedMinAndMax = None },
         cmd
     | FetchMinAndMaxForCategory category ->
-        let table =
-            category.TableName |> Option.defaultValue "texts"
-
-        let catCode = $"{table}.{category.Code}"
+        let catCode = category.GetQualifiedColumnName()
 
         model,
         Cmd.OfAsync.perform
@@ -133,10 +127,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
               SelectionTablePageNumber = 1 },
         Cmd.none
     | ToggleExclude category ->
-        let tableAndCode =
-            match category.TableName with
-            | Some tableName -> $"{tableName}.{category.Code}"
-            | None -> category.Code
+        let tableAndCode = category.GetQualifiedColumnName()
 
         let newMetadataSelection =
             model.Search.Params.MetadataSelection
@@ -167,10 +158,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                                   MetadataSelection = newMetadataSelection } } },
         Cmd.ofMsg FetchTextAndTokenCounts
     | SelectItem (category, selectedOption) ->
-        let tableAndCode =
-            match category.TableName with
-            | Some tableName -> $"{tableName}.{category.Code}"
-            | None -> category.Code
+        let tableAndCode = category.GetQualifiedColumnName()
 
         let newCategorySelection =
             // Find the already selected values for this category, if any, and append the new one
@@ -202,10 +190,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         newModel, cmd
     | DeselectItem (category, optionToRemove) ->
-        let tableAndCode =
-            match category.TableName with
-            | Some tableName -> $"{tableName}.{category.Code}"
-            | None -> category.Code
+        let tableAndCode = category.GetQualifiedColumnName()
 
         let maybeNewCategorySelection =
             model.Search.Params.MetadataSelection.TryFind(tableAndCode)
@@ -241,10 +226,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         newModel, cmd
     | DeselectAllItems category ->
-        let tableAndCode =
-            match category.TableName with
-            | Some tableName -> $"{tableName}.{category.Code}"
-            | None -> category.Code
+        let tableAndCode = category.GetQualifiedColumnName()
 
         let newSelection =
             // Remove the given category from the metadata selection
@@ -264,10 +246,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         newModel, cmd
 
     | SetIntervalFrom (category, number) ->
-        let table =
-            category.TableName |> Option.defaultValue "texts"
-
-        let catCode = $"{table}.{category.Code}"
+        let catCode = category.GetQualifiedColumnName()
 
         let (newCategoryValues: Metadata.CategorySelection) =
             let fromValue: Metadata.CategoryMenuOption =
@@ -306,10 +285,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         newModel, Cmd.none
 
     | SetIntervalTo (category, number) ->
-        let table =
-            category.TableName |> Option.defaultValue "texts"
-
-        let catCode = $"{table}.{category.Code}"
+        let catCode = category.GetQualifiedColumnName()
 
         let (newCategoryValues: Metadata.CategorySelection) =
             let toValue: Metadata.CategoryMenuOption =
@@ -350,11 +326,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
     | FetchMetadataForTexts ->
         let columns =
-            [ for category in model.Corpus.MetadataTable ->
-                  let table =
-                      category.TableName |> Option.defaultValue "texts"
-
-                  $"{table}.{category.Code}" ]
+            [ for category in model.Corpus.MetadataTable -> category.GetQualifiedColumnName() ]
 
         let cmd =
             Cmd.OfAsync.perform

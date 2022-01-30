@@ -620,10 +620,7 @@ module LoadedCorpus =
                             | :? Metadata.NumberCategory -> Metadata.NumberCategoryType
                             | _ -> failwith $"Unknown metadata category type for {category}"
 
-                        let table =
-                            category.TableName |> Option.defaultValue "texts"
-
-                        let catCode = $"{table}.{category.Code}"
+                        let catCode = category.GetQualifiedColumnName()
 
                         match maybeDownloadingFormat with
                         | Some downloadingFormat ->

@@ -40,6 +40,13 @@ module Metadata =
         abstract member TableName : string option
         default _.TableName = None
 
+        member this.GetQualifiedColumnName() =
+            let tableName =
+                this.TableName |> Option.defaultValue "texts"
+
+            $"{tableName}.{this.Code}"
+
+
     /// Metadata category that can be presented as a metadata value list
     [<AbstractClass>]
     type StringCategory(aName) =
