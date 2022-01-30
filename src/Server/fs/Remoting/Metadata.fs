@@ -49,7 +49,10 @@ let generateMetadataSelectionJoins (maybeRequestedCategoryCode: string option) (
               // Don't include the category we are fetching values for, since that will already be joined in
               // (if it is a many-to-many category)
               let shouldInclude =
-                  if code.Contains('.') then
+                  if
+                      code.Contains('.')
+                      && not (code.Contains("texts."))
+                  then
                       match maybeRequestedCategoryCode with
                       | Some requestedCategoryCode when not (requestedCategoryCode.Contains('.')) -> true
                       | Some requestedCategoryCode when
