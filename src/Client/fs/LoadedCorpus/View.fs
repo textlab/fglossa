@@ -658,46 +658,46 @@ module ResultsView =
                                else
                                    Html.th value |]
 
-                    let table =
-                        let frequencyRows =
-                            [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
-                                   let attrValue = attrValueDistribution.AttributeValue
+                    let frequencyRows =
+                        [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
+                               let attrValue = attrValueDistribution.AttributeValue
 
-                                   let checkboxCell =
-                                       Html.td [ Bulma.input.checkbox [ prop.isChecked (
-                                                                            model.ExcludedAttributeValues.New.Contains(
-                                                                                attrValue
-                                                                            )
+                               let checkboxCell =
+                                   Html.td [ Bulma.input.checkbox [ prop.isChecked (
+                                                                        model.ExcludedAttributeValues.New.Contains(
+                                                                            attrValue
                                                                         )
-                                                                        prop.onCheckedChange
-                                                                            (fun isChecked ->
-                                                                                dispatch (
-                                                                                    AddOrRemoveExcludedAttributeValue(
-                                                                                        attrValue,
-                                                                                        isChecked
-                                                                                    )
-                                                                                )) ] ]
+                                                                    )
+                                                                    prop.onCheckedChange
+                                                                        (fun isChecked ->
+                                                                            dispatch (
+                                                                                AddOrRemoveExcludedAttributeValue(
+                                                                                    attrValue,
+                                                                                    isChecked
+                                                                                )
+                                                                            )) ] ]
 
-                                   let attrValueCell =
-                                       Html.td [ if attrValue = "__UNDEF__" then
-                                                     Html.i "Undefined"
-                                                 else
-                                                     Html.text attrValue ]
+                               let attrValueCell =
+                                   Html.td [ if attrValue = "__UNDEF__" then
+                                                 Html.i "Undefined"
+                                             else
+                                                 Html.text attrValue ]
 
-                                   let frequencyCells =
-                                       [| for valueFreq in attrValueDistribution.MetadataValueFrequencies ->
-                                              Html.td (string valueFreq.Frequency) |]
+                               let frequencyCells =
+                                   [| for valueFreq in attrValueDistribution.MetadataValueFrequencies ->
+                                          Html.td (string valueFreq.Frequency) |]
 
-                                   Html.tr (Array.append [| checkboxCell; attrValueCell |] frequencyCells) |]
+                               Html.tr (Array.append [| checkboxCell; attrValueCell |] frequencyCells) |]
 
-                        let totalsFooter =
-                            let totalsCells =
-                                [| for total in model.MetadataDistribution.CategoryValueTotals do
-                                       if model.KeepZeroValues || total > 0UL then
-                                           Html.th (string total) |]
+                    let totalsFooter =
+                        let totalsCells =
+                            [| for total in model.MetadataDistribution.CategoryValueTotals do
+                                   if model.KeepZeroValues || total > 0UL then
+                                       Html.th (string total) |]
 
-                            Html.tr (Array.append [| Html.th ""; Html.th "Total" |] totalsCells)
+                        Html.tr (Array.append [| Html.th ""; Html.th "Total" |] totalsCells)
 
+                    let table =
                         Bulma.table [ prop.className "metadata-distribution-table"
                                       prop.children [ Html.thead [ Html.tr (
                                                                        Array.append
