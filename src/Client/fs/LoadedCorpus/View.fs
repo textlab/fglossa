@@ -654,9 +654,11 @@ module ResultsView =
                                let value = valueFreq.MetadataValue
 
                                if value = "Undefined" then
-                                   Html.th [ Html.i value ]
+                                   Html.th [ prop.key value
+                                             prop.children (Html.i value) ]
                                else
-                                   Html.th value |]
+                                   Html.th [ prop.key value
+                                             prop.text value ] |]
 
                     let frequencyRows =
                         [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
@@ -699,8 +701,11 @@ module ResultsView =
                         Bulma.table [ prop.className "metadata-distribution-table"
                                       prop.children [ Html.thead [ Html.tr (
                                                                        Array.append
-                                                                           [| Html.th removeSelectedRowsButton
-                                                                              Html.th "" |]
+                                                                           [| Html.th [ prop.key "remove-btn"
+                                                                                        prop.children
+                                                                                            removeSelectedRowsButton ]
+                                                                              Html.th [ prop.key "attr-value"
+                                                                                        prop.text "" ] |]
                                                                            categoryValueCells
                                                                    ) ]
                                                       Html.tbody frequencyRows
