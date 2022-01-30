@@ -44,8 +44,8 @@ let downloadSearchResults
                 { searchParams with
                       LastCount = None
                       Step = 1
-                      Start = 0UL
-                      End = 1000000UL }
+                      Start = 0L
+                      End = 1000000L }
 
             let pageNumbers = Seq.initInfinite (fun index -> index)
 

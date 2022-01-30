@@ -13,7 +13,7 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
         let namedQuery =
             cwbQueryName corpus searchParams.SearchId
 
-        let startpos = 0UL
+        let startpos = 0L
 
         let cwbCorpus =
             cwbCorpusName corpus searchParams.Queries
@@ -68,7 +68,7 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
                    Hits = hits |}
         | _ ->
             return
-                {| Count = 0UL
+                {| Count = 0L
                    CpuCounts = [||]
                    Hits = [||] |}
     }

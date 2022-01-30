@@ -253,13 +253,13 @@ module LoadedCorpus =
                         let firstResult =
                             (pageNumbers.[0] - 1)
                             * loadedCorpusModel.Search.Params.PageSize
-                            |> uint64
+                            |> int64
 
                         let lastResult =
                             ((pageNumbers |> Array.last)
                              * loadedCorpusModel.Search.Params.PageSize)
                             - 1
-                            |> uint64
+                            |> int64
 
                         let searchParams =
                             { loadedCorpusModel.Search.Params with
@@ -552,7 +552,7 @@ module LoadedCorpus =
                     let listItems =
                         [| for row in rows ->
                                let m = Regex.Match(row, "(\d+)\s+(.+)")
-                               let freq = UInt64.Parse(m.Groups.[1].Value)
+                               let freq = Int64.Parse(m.Groups.[1].Value)
 
                                let attrValues = m.Groups.[2].Value.Split('\t')
 
@@ -855,7 +855,7 @@ module LoadedCorpus =
         | CwbExtendedAddTerm of query: CwbExtended.Query * queryIndex: int
         | CwbExtendedRemoveTerm of query: CwbExtended.Query * queryIndex: int * termIndex: int
         | CwbExtendedToggleAttrModal of maybeTermIndex: int option
-        | SetNumRandomHits of uint64 option
+        | SetNumRandomHits of int64 option
         | SetRandomHitsSeed of int option
         | Search
         | ResetForm
@@ -1295,11 +1295,11 @@ module LoadedCorpus =
                 let searchParams =
                     { loadedCorpusModel.Search.Params with
                           CpuCounts = None
-                          End = 99UL
+                          End = 99L
                           LastCount = None
                           Queries = queries
                           SearchId = 0
-                          Start = 0UL
+                          Start = 0L
                           Step = 1 }
 
                 let newLoadedCorpusModel =

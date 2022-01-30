@@ -9,7 +9,7 @@ open Shared
 open Shared.StringUtils
 open Remoting.Search.Cwb.Common
 
-let getParts (corpus: Corpus) (step: int) (corpusSize: uint64) (maybeCommand: string option) =
+let getParts (corpus: Corpus) (step: int) (corpusSize: int64) (maybeCommand: string option) =
     let stepIndex = step - 1
 
     match corpus.Config.MultiCpuBounds with
@@ -21,7 +21,7 @@ let getParts (corpus: Corpus) (step: int) (corpusSize: uint64) (maybeCommand: st
 
         let prevLastBounds =
             if step = 1 then
-                0UL
+                0L
             else
                 (allBounds.[stepIndex - 1] |> Array.last)
 
@@ -31,28 +31,28 @@ let getParts (corpus: Corpus) (step: int) (corpusSize: uint64) (maybeCommand: st
                 let startpos =
                     if cpuIndex = 0 then
                         // If first cpu, continue where we left off in the previous step
-                        if prevLastBounds = 0UL then
-                            0UL
+                        if prevLastBounds = 0L then
+                            0L
                         else
-                            prevLastBounds + 1UL
+                            prevLastBounds + 1L
                     else
-                        stepBounds.[cpuIndex - 1] + 1UL
+                        stepBounds.[cpuIndex - 1] + 1L
 
                 (startpos, endpos))
     | _ ->
         // No multicpu bounds defined; in that case, we search the whole
         // corpus in one go in the first step and just return if step != 1.
         if step = 1 || maybeCommand.IsSome then
-            [| (0UL, (corpusSize - 1UL)) |]
+            [| (0L, (corpusSize - 1L)) |]
         else
             Array.empty
 
 
 let randomReduceCommand
-    (corpusSize: uint64)
-    (startpos: uint64)
-    (endpos: uint64)
-    (numRandomHits: uint64)
+    (corpusSize: int64)
+    (startpos: int64)
+    (endpos: int64)
+    (numRandomHits: int64)
     (maybeRandomHitsSeed: int option)
     (namedQuery: string)
     =
@@ -60,7 +60,7 @@ let randomReduceCommand
     // step, and reduce the number of hits retrieved to the corresponding proportion of the number of random
     // hits we have asked for.
     let proportion =
-        (float (endpos - startpos + 1UL) / float corpusSize)
+        (float (endpos - startpos + 1L) / float corpusSize)
 
     let nRandom =
         (float numRandomHits * proportion)
@@ -114,7 +114,7 @@ let cqpInit
 let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (maybeCommand: string option) =
     async {
         let numToReturn =
-            searchParams.End - searchParams.Start + 1UL // number of results to return initially
+            searchParams.End - searchParams.Start + 1L // number of results to return initially
 
         let cwbCorpus =
             (cwbCorpusName corpus searchParams.Queries)
@@ -191,7 +191,7 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
                 | Some _ ->
                     // If the number of hits we have fetched so far (lastCount) is already bigger than or equal to numToReturn,
                     // we don't need to return any more hits
-                    0UL
+                    0L
                 | None ->
                     // If there is no last count, it means that this is the first request of this search, so return
                     // numToReturn hits
@@ -279,7 +279,7 @@ let getFileStartEnd (searchParams: SearchParams) =
                 else
                     sumCountsFirst newSum (fileIndex + 1)
 
-            sumCountsFirst 0UL 0
+            sumCountsFirst 0L 0
 
         let lastFileIndex =
             let rec sumCountsLast sum fileIndex =
@@ -295,7 +295,7 @@ let getFileStartEnd (searchParams: SearchParams) =
                     // Otherwise, continue with the next file
                     sumCountsLast newSum (fileIndex + 1)
 
-            sumCountsLast 0UL 0
+            sumCountsLast 0L 0
 
         (firstFileIndex, firstFileStart, lastFileIndex)
     | None -> failwith "No cpu counts found!"
@@ -326,11 +326,11 @@ let getNonzeroFiles
         // Select the range of files that contains the range of results we are asking for
         // and remove files that don't actually contain any results
         [ for file, count in filesAndCounts.[firstFile..lastFile] do
-              if count > 0UL then file ]
+              if count > 0L then file ]
     | _ -> []
 
 
-let getFilesIndexes corpus searchParams namedQuery (maybeNumResultsMinusOne: uint64 option) =
+let getFilesIndexes corpus searchParams namedQuery (maybeNumResultsMinusOne: int64 option) =
     let firstFileIndex, firstFileStart, lastFileIndex = getFileStartEnd searchParams
 
     let nonZeroFiles =
@@ -348,8 +348,8 @@ let getFilesIndexes corpus searchParams namedQuery (maybeNumResultsMinusOne: uin
         | Some numResultsMinusOne ->
             Seq.append
                 (Seq.singleton (firstFileStart, firstFileStart + numResultsMinusOne))
-                (Seq.initInfinite (fun _ -> (0UL, numResultsMinusOne)))
-        | None -> Seq.initInfinite (fun _ -> (0UL, 0UL))
+                (Seq.initInfinite (fun _ -> (0L, numResultsMinusOne)))
+        | None -> Seq.initInfinite (fun _ -> (0L, 0L))
 
     (nonZeroFiles, indexes)
 
@@ -442,7 +442,7 @@ let getSearchResults
                         cwbQueryName corpus searchParams.SearchId
 
                     let maybeNumResultsMinusOne =
-                        if searchParams.End > 0UL then
+                        if searchParams.End > 0L then
                             Some(searchParams.End - searchParams.Start)
                         else
                             None

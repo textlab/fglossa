@@ -124,7 +124,7 @@ module ResultsView =
                     dispatch (SetPaginatorPage(Some pageNo, None))
 
             match concordanceModel.NumResults with
-            | Some results when results > uint64 loadedCorpusModel.Search.Params.PageSize ->
+            | Some results when results > int64 loadedCorpusModel.Search.Params.PageSize ->
                 [ Bulma.levelItem [ Bulma.buttons [ iconButton
                                                         "fa-angle-double-left"
                                                         (concordanceModel.PaginatorPageNo = 1
@@ -381,7 +381,7 @@ module ResultsView =
                 let text =
                     match concordanceModel.NumResults with
                     | Some numResults ->
-                        if numResults > 0UL then
+                        if numResults > 0L then
                             // We have received a non-zero number of results
                             let pagesStr = if numPages = 1 then "page" else "pages"
 

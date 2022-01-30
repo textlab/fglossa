@@ -96,7 +96,7 @@ type ConcordanceModel =
       HeadersInDownload: bool
       DownloadAttributes: Cwb.PositionalAttribute list
       // The page numbers of the result pages currently being fetched from the server
-      NumResults: uint64 option
+      NumResults: int64 option
       NumSteps: int
       PagesBeingFetched: int []
       // The page number shown in the paginator, which may differ from the actual
@@ -138,7 +138,7 @@ type ConcordanceModel =
         | None -> 0
 
 type FrequencyListItem =
-    { Frequency: uint64
+    { Frequency: int64
       AttributeValues: string [] }
 
 type FrequencyListsModel =

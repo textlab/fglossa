@@ -136,8 +136,8 @@ let getFrequencyList
                 { searchParams with
                     LastCount = None
                     Step = 1
-                    Start = 0UL
-                    End = 1000000UL }
+                    Start = 0L
+                    End = 1000000L }
 
             match corpus.Config.Modality with
             | Spoken -> Spoken.runQueries logger corpus searchParamsForFrequencyList (Some cmd)
@@ -272,8 +272,8 @@ let getMetadataDistribution
             { searchParams with
                 LastCount = None
                 Step = 1
-                Start = 0UL
-                End = 1000000UL }
+                Start = 0L
+                End = 1000000L }
 
         let! attrResults =
             match corpus.Config.Modality with
@@ -283,11 +283,11 @@ let getMetadataDistribution
         let attrDistributionMap =
             attrResults.Hits
             |> Array.fold
-                (fun (distrMap: Map<string, Map<string, uint64>>) hit ->
+                (fun (distrMap: Map<string, Map<string, int64>>) hit ->
                     let parts = hit.Split("\t")
                     let attrValue = parts[0]
                     let textId = parts[1]
-                    let freq = uint64 parts[2]
+                    let freq = int64 parts[2]
 
                     // Add the mapping from textId to frequency to the map associated
                     // with the current attribute value, creating a new map with only
@@ -407,7 +407,7 @@ let getMetadataDistribution
                                           |> function
                                               | Some freq -> sum + freq
                                               | None -> sum)
-                                      0UL
+                                      0L
 
                               { MetadataValue =
                                   if isNull row.CategoryValue then
@@ -425,7 +425,7 @@ let getMetadataDistribution
                 (fun sums attributeValueDistribution ->
                     Array.zip sums attributeValueDistribution.MetadataValueFrequencies
                     |> Array.map (fun (sum, freq) -> sum + freq.Frequency))
-                (Array.create categoryValuesWithTextIdsAndTokenCounts.Length 0UL)
+                (Array.create categoryValuesWithTextIdsAndTokenCounts.Length 0L)
 
         let distribution' =
             if keepZeroValues then
@@ -435,7 +435,7 @@ let getMetadataDistribution
                 |> Array.map (fun attributeValueDistribution ->
                     let newMetadataValueFreqs =
                         Array.zip attributeValueDistribution.MetadataValueFrequencies totals
-                        |> Array.choose (fun (freq, total) -> if total > 0UL then Some freq else None)
+                        |> Array.choose (fun (freq, total) -> if total > 0L then Some freq else None)
 
                     { attributeValueDistribution with MetadataValueFrequencies = newMetadataValueFreqs })
 
@@ -443,13 +443,13 @@ let getMetadataDistribution
             { Distribution = distribution'
               CategoryValueTotals =
                   if keepZeroValues then totals
-                  else totals |> Array.filter (fun t -> t > 0UL)
+                  else totals |> Array.filter (fun t -> t > 0L)
               CategoryValueTokenCounts =
                   if keepZeroValues then
                       [| for row in categoryValuesWithTextIdsAndTokenCounts -> row.TokenCount |]
                   else
                       [| for (row, total) in Array.zip categoryValuesWithTextIdsAndTokenCounts totals do
-                          if total > 0UL then row.TokenCount |] }
+                          if total > 0L then row.TokenCount |] }
     }
 
 let downloadMetadataDistribution

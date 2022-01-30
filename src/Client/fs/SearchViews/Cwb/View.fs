@@ -180,7 +180,7 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                                                                        prop.onChange
                                                                            (fun (s: string) ->
                                                                                let value =
-                                                                                   match System.UInt64.TryParse(s) with
+                                                                                   match System.Int64.TryParse(s) with
                                                                                    | true, v -> Some v
                                                                                    | false, _ -> None
 

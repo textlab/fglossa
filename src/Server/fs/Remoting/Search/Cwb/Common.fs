@@ -112,8 +112,8 @@ let printPositionsMatchingMetadata
     (logger: ILogger)
     (corpus: Corpus)
     (searchParams: SearchParams)
-    (startpos: uint64)
-    (endpos: uint64)
+    (startpos: int64)
+    (endpos: int64)
     (positionsFilename: string)
     =
     task {
@@ -194,7 +194,7 @@ let printPositionsMatchingMetadata
 
                 match corpusSizes.TryFind(cwbCorpus) with
                 | Some corpusSize ->
-                    let endpos' = Math.Min(endpos, corpusSize - 1UL)
+                    let endpos' = Math.Min(endpos, corpusSize - 1L)
                     File.WriteAllText(positionsFilename, $"{startpos}\t{endpos'}\n")
                 | None -> failwith $"No corpus size found for {cwbCorpus} in {corpusSizes}!"
     }
@@ -294,8 +294,8 @@ let constructQueryCommands
     (corpus: Corpus)
     (searchParams: SearchParams)
     (namedQuery: string)
-    (startpos: uint64)
-    (endpos: uint64)
+    (startpos: int64)
+    (endpos: int64)
     (maybeSTag: string option)
     (maybeCpuIndex: int option)
     =
@@ -374,9 +374,9 @@ let runCqpCommands (logger: ILogger) (corpus: Corpus) isCounting (commands: stri
                 match isCounting with
                 | true ->
                     (if not isUndumpError then
-                         results |> Array.head |> uint64
+                         results |> Array.head |> int64
                      else
-                         0UL)
+                         0L)
                     |> Some
                 | false -> None
 

@@ -130,7 +130,7 @@ type SharedCorpusInfo =
       LanguageConfig: LanguageConfig
       Modality: CorpusModality
       Logo: string option
-      MultiCpuBounds: uint64 [] [] option
+      MultiCpuBounds: int64 [] [] option
       Name: string
       TotalTexts: int64
       TotalTokens: int64
@@ -209,17 +209,17 @@ type SortKey =
 type SearchParams =
     { ContextSize: int
       CorpusCode: string
-      CpuCounts: uint64 [] option
-      End: uint64
-      LastCount: uint64 option
+      CpuCounts: int64 [] option
+      End: int64
+      LastCount: int64 option
       MetadataSelection: Metadata.Selection
-      NumRandomHits: uint64 option
+      NumRandomHits: int64 option
       PageSize: int
       Queries: Query []
       RandomHitsSeed: int option
       SearchId: int
       SortKey: SortKey
-      Start: uint64
+      Start: int64
       Step: int }
     static member Init(corpusConfig: SharedCorpusInfo) =
         let languageCode =
@@ -233,7 +233,7 @@ type SearchParams =
         { ContextSize = 15
           CorpusCode = corpusConfig.Code
           CpuCounts = None
-          End = 99UL
+          End = 99L
           LastCount = None
           MetadataSelection = Map.empty
           NumRandomHits = None
@@ -242,7 +242,7 @@ type SearchParams =
           RandomHitsSeed = None
           SearchId = 0
           SortKey = Position
-          Start = 0UL
+          Start = 0L
           Step = 1 }
 
 type SpeechSegment =
@@ -290,8 +290,8 @@ type SearchResultPage =
       Results: SearchResult [] }
 
 type SearchResultInfo =
-    { Count: uint64
-      CpuCounts: uint64 []
+    { Count: int64
+      CpuCounts: int64 []
       SearchId: int
       SearchStep: int
       ResultPages: SearchResultPage [] }
@@ -307,7 +307,7 @@ type DownloadFormat =
 
 type MetadataValueFrequency =
     { MetadataValue: string
-      Frequency: uint64 }
+      Frequency: int64 }
 
 type AttributeValueDistribution =
     { AttributeValue: string
@@ -315,7 +315,7 @@ type AttributeValueDistribution =
 
 type MetadataDistribution =
     { Distribution: AttributeValueDistribution []
-      CategoryValueTotals: uint64 []
+      CategoryValueTotals: int64 []
       CategoryValueTokenCounts: int64 [] }
 
 // Define type aliases that help clarify the parameters of the IServerApi functions.
