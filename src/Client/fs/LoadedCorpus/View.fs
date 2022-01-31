@@ -648,10 +648,8 @@ module ResultsView =
 
 
                     let categoryValueCells =
-                        [| for valueFreq in
-                               model.MetadataDistribution.Distribution.[0]
-                                   .MetadataValueFrequencies ->
-                               let value = valueFreq.MetadataValue
+                        [| for categoryValueStat in model.MetadataDistribution.CategoryValueStats ->
+                               let value = categoryValueStat.Value
 
                                if value = "Undefined" then
                                    Html.th [ prop.key value
@@ -687,13 +685,13 @@ module ResultsView =
 
                                let frequencyCells =
                                    [| for valueFreq in attrValueDistribution.MetadataValueFrequencies ->
-                                          Html.td (string valueFreq.Frequency) |]
+                                          Html.td (string valueFreq) |]
 
                                Html.tr (Array.append [| checkboxCell; attrValueCell |] frequencyCells) |]
 
                     let totalsFooter =
                         let totalsCells =
-                            [| for total in model.MetadataDistribution.CategoryValueTotals -> Html.th (string total) |]
+                            [| for stat in model.MetadataDistribution.CategoryValueStats -> Html.th (string stat.Total) |]
 
                         Html.tr (Array.append [| Html.th ""; Html.th "Total" |] totalsCells)
 

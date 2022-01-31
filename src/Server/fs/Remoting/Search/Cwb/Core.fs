@@ -354,7 +354,7 @@ let getMetadataDistribution
             $"SELECT {column} AS CategoryValue, GROUP_CONCAT(DISTINCT texts.tid) AS TextIds, \
               SUM(texts.endpos - texts.startpos + 1) AS TokenCount \
               FROM texts{catJoin}{joins} \
-              WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql} GROUP BY {column}"
+              WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql} GROUP BY {column} ORDER BY {column}"
 
         let parameters = metadataSelectionToParamDict searchParams.MetadataSelection
 
@@ -399,22 +399,14 @@ let getMetadataDistribution
                               // find the frequency associated with it in the map associated with the current attribute value.
                               // Summing all those frequencies gives us the total number of occurrences of this
                               // attribute value in texts associated with the current metadata value.
-                              let total =
-                                  row.TextIds.Split(",")
-                                  |> Array.fold
-                                      (fun sum textId ->
-                                          textIdsToFreqs.TryFind(textId)
-                                          |> function
-                                              | Some freq -> sum + freq
-                                              | None -> sum)
-                                      0L
-
-                              { MetadataValue =
-                                  if isNull row.CategoryValue then
-                                      "Undefined"
-                                  else
-                                      row.CategoryValue
-                                Frequency = total } |]
+                              row.TextIds.Split(",")
+                              |> Array.fold
+                                  (fun sum textId ->
+                                      textIdsToFreqs.TryFind(textId)
+                                      |> function
+                                          | Some freq -> sum + freq
+                                          | None -> sum)
+                                  0L |]
 
                    { AttributeValue = attrValue
                      MetadataValueFrequencies = metadataValueFrequencies } |]
@@ -424,7 +416,7 @@ let getMetadataDistribution
             |> Array.fold
                 (fun sums attributeValueDistribution ->
                     Array.zip sums attributeValueDistribution.MetadataValueFrequencies
-                    |> Array.map (fun (sum, freq) -> sum + freq.Frequency))
+                    |> Array.map (fun (sum, freq) -> sum + freq))
                 (Array.create categoryValuesWithTextIdsAndTokenCounts.Length 0L)
 
         let distribution' =
@@ -439,17 +431,16 @@ let getMetadataDistribution
 
                     { attributeValueDistribution with MetadataValueFrequencies = newMetadataValueFreqs })
 
+        let categoryValueStats =
+            [ for catVal, total in Array.zip categoryValuesWithTextIdsAndTokenCounts totals do
+                if keepZeroValues || total > 0L then
+                    { Value = catVal.CategoryValue
+                      Total = total
+                      TokenCount = catVal.TokenCount } ]
+
         return
             { Distribution = distribution'
-              CategoryValueTotals =
-                  if keepZeroValues then totals
-                  else totals |> Array.filter (fun t -> t > 0L)
-              CategoryValueTokenCounts =
-                  if keepZeroValues then
-                      [| for row in categoryValuesWithTextIdsAndTokenCounts -> row.TokenCount |]
-                  else
-                      [| for (row, total) in Array.zip categoryValuesWithTextIdsAndTokenCounts totals do
-                          if total > 0L then row.TokenCount |] }
+              CategoryValueStats = categoryValueStats }
     }
 
 let downloadMetadataDistribution
@@ -486,12 +477,10 @@ let downloadMetadataDistribution
             // Create headers
             worksheet.Cell(1, 1).Value <- "Attribute value"
 
-            // Get the headers as the metadata values found in the first result row
-            let firstRow = distribution.Distribution |> Array.head
-
-            firstRow.MetadataValueFrequencies
-            |> Array.iteri (fun index metadataValueFreq ->
-                worksheet.Cell(1, index + 2).Value <- metadataValueFreq.MetadataValue)
+            // Create header row with the different metadata category values
+            distribution.CategoryValueStats
+            |> List.iteri (fun index categoryValueStat ->
+                worksheet.Cell(1, index + 2).Value <- categoryValueStat.Value)
 
             // Create a row for each attribute value
             distribution.Distribution
@@ -502,28 +491,24 @@ let downloadMetadataDistribution
                 // Create a column for each metadata value frequency
                 attributeValueDistribution.MetadataValueFrequencies
                 |> Array.iteri (fun columnIndex metadataValueFreq ->
-                    worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- metadataValueFreq.Frequency))
+                    worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- metadataValueFreq))
 
             let totalsRowIndex = distribution.Distribution.Length + 2
 
             worksheet.Cell(totalsRowIndex, 1).Value <- "Total"
 
             let mutable colIndex = 2
-            distribution.CategoryValueTotals
-            |> Array.iter (fun categoryValueTotal ->
+            for categoryValueStat in distribution.CategoryValueStats do
                 // Create a column for each metadata value total
-                    worksheet.Cell(totalsRowIndex, colIndex).Value <- categoryValueTotal
+                    worksheet.Cell(totalsRowIndex, colIndex).Value <- categoryValueStat.Total
                     colIndex <- colIndex + 1
-                )
 
             workbook.SaveAs(outputFilename)
         | Tsv ->
-            // Get the headers as the metadata values found in the first result row
+            // Create header row with the different metadata category values
             let headerRow =
-                let firstRow = distribution.Distribution |> Array.head
-
-                firstRow.MetadataValueFrequencies
-                |> Array.map (fun metadataValueFreq -> metadataValueFreq.MetadataValue)
+                distribution.CategoryValueStats
+                |> List.map (fun categoryValueStat -> categoryValueStat.Value)
                 |> String.concat "\t"
                 |> fun s -> "Attribute value\t" + s
 
@@ -531,13 +516,13 @@ let downloadMetadataDistribution
                 distribution.Distribution
                 |> Array.map (fun attributeValueDistribution ->
                     attributeValueDistribution.MetadataValueFrequencies
-                    |> Array.map (fun metadataValueFreq -> string metadataValueFreq.Frequency)
+                    |> Array.map (fun metadataValueFreq -> string metadataValueFreq)
                     |> String.concat "\t"
                     |> fun s -> $"{attributeValueDistribution.AttributeValue}\t{s}")
 
             let totalsRow =
-                distribution.CategoryValueTotals
-                |> Array.map string
+                distribution.CategoryValueStats
+                |> List.map (fun stat -> string stat.Total)
                 |> String.concat "\t"
                 |> fun s -> "Total\t" + s
 
@@ -548,12 +533,10 @@ let downloadMetadataDistribution
                                [| totalsRow |] ]
             )
         | Csv ->
-            // Get the headers as the metadata values found in the first result row
+            // Create header row with the different metadata category values
             let headerRow =
-                let firstRow = distribution.Distribution |> Array.head
-
-                firstRow.MetadataValueFrequencies
-                |> Array.map (fun metadataValueFreq -> $"\"{metadataValueFreq.MetadataValue}\"")
+                distribution.CategoryValueStats
+                |> List.map (fun categoryValueStat -> $"\"{categoryValueStat.Value}\"")
                 |> String.concat ","
                 |> fun s -> "\"Attribute value\"," + s
 
@@ -561,13 +544,13 @@ let downloadMetadataDistribution
                 distribution.Distribution
                 |> Array.map (fun attributeValueDistribution ->
                     attributeValueDistribution.MetadataValueFrequencies
-                    |> Array.map (fun metadataValueFreq -> string metadataValueFreq.Frequency)
+                    |> Array.map (fun metadataValueFreq -> string metadataValueFreq)
                     |> String.concat ","
                     |> fun s -> $"\"{attributeValueDistribution.AttributeValue}\",{s}")
 
             let totalsRow =
-                distribution.CategoryValueTotals
-                |> Array.map string
+                distribution.CategoryValueStats
+                |> List.map (fun stat -> string stat.Total)
                 |> String.concat ","
                 |> fun s -> "Total," + s
 

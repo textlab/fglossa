@@ -305,18 +305,18 @@ type DownloadFormat =
     | Csv
     | Tsv
 
-type MetadataValueFrequency =
-    { MetadataValue: string
-      Frequency: int64 }
-
 type AttributeValueDistribution =
     { AttributeValue: string
-      MetadataValueFrequencies: MetadataValueFrequency [] }
+      MetadataValueFrequencies: int64 [] }
+
+type CategoryValueStat =
+    { Value: string
+      Total: int64
+      TokenCount: int64 }
 
 type MetadataDistribution =
     { Distribution: AttributeValueDistribution []
-      CategoryValueTotals: int64 []
-      CategoryValueTokenCounts: int64 [] }
+      CategoryValueStats: CategoryValueStat list }
 
 // Define type aliases that help clarify the parameters of the IServerApi functions.
 // If we could have used an actual interface instead, we could have used methods
