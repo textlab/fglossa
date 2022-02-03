@@ -386,6 +386,8 @@ let getMetadataDistribution
                               TokenCount = d.TokenCount }
                     }
                 | Error ex -> raise ex
+            |> Seq.filter (fun categoryValueInfo ->
+                (not (isNull categoryValueInfo.CategoryValue)) && categoryValueInfo.CategoryValue <> "\N")
             |> Seq.toArray
 
         let distribution =
@@ -394,12 +396,12 @@ let getMetadataDistribution
                    let textIdsToFreqs = pair.Value
 
                    let metadataValueFrequencies =
-                       [| for row in categoryValuesWithTextIdsAndTokenCounts do
+                       [| for categoryValueInfo in categoryValuesWithTextIdsAndTokenCounts do
                               // For each text ID that is associated with the current metadata category value,
                               // find the frequency associated with it in the map associated with the current attribute value.
                               // Summing all those frequencies gives us the total number of occurrences of this
                               // attribute value in texts associated with the current metadata value.
-                              row.TextIds.Split(",")
+                              categoryValueInfo.TextIds.Split(",")
                               |> Array.fold
                                   (fun sum textId ->
                                       textIdsToFreqs.TryFind(textId)
