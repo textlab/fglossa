@@ -649,14 +649,12 @@ module ResultsView =
 
                     let categoryValueCells =
                         [| for categoryValueStat in model.MetadataDistribution.CategoryValueStats ->
-                               let value = categoryValueStat.Value
-
-                               if value = "Undefined" then
-                                   Html.th [ prop.key value
-                                             prop.children (Html.i value) ]
-                               else
-                                   Html.th [ prop.key value
-                                             prop.text value ] |]
+                               Html.th [ prop.key categoryValueStat.Value
+                                         prop.children [ Html.text categoryValueStat.Value
+                                                         Html.br []
+                                                         Html.span [ prop.style [ style.fontWeight.normal ]
+                                                                     prop.text
+                                                                         $" ({categoryValueStat.TokenCount} tokens)" ] ] ] |]
 
                     let frequencyRows =
                         [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
@@ -697,6 +695,7 @@ module ResultsView =
 
                     let table =
                         Bulma.table [ prop.className "metadata-distribution-table"
+                                      table.isBordered
                                       prop.children [ Html.thead [ Html.tr (
                                                                        Array.append
                                                                            [| Html.th [ prop.key "remove-btn"
