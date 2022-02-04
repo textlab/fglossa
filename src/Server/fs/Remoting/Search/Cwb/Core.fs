@@ -482,7 +482,7 @@ let downloadMetadataDistribution
             // Create header row with the different metadata category values
             distribution.CategoryValueStats
             |> List.iteri (fun index categoryValueStat ->
-                worksheet.Cell(1, index + 2).Value <- categoryValueStat.Value)
+                worksheet.Cell(1, index + 2).Value <- $"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)")
 
             // Create a row for each attribute value
             distribution.Distribution
@@ -510,7 +510,7 @@ let downloadMetadataDistribution
             // Create header row with the different metadata category values
             let headerRow =
                 distribution.CategoryValueStats
-                |> List.map (fun categoryValueStat -> categoryValueStat.Value)
+                |> List.map (fun categoryValueStat -> $"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)")
                 |> String.concat "\t"
                 |> fun s -> "Attribute value\t" + s
 
@@ -538,7 +538,7 @@ let downloadMetadataDistribution
             // Create header row with the different metadata category values
             let headerRow =
                 distribution.CategoryValueStats
-                |> List.map (fun categoryValueStat -> $"\"{categoryValueStat.Value}\"")
+                |> List.map (fun categoryValueStat -> $"\"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)\"")
                 |> String.concat ","
                 |> fun s -> "\"Attribute value\"," + s
 
