@@ -491,26 +491,40 @@ let downloadMetadataDistribution
             |> List.iteri (fun index categoryValueStat ->
                 worksheet.Cell(1, index + 2).Value <- $"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)")
 
+            let totalsColumnNumber = distribution.CategoryValueStats.Length + 3
+
+            // Create a header with the total token count for all category values
+            worksheet.Cell(1, totalsColumnNumber).Value <- $"Total ({distribution.TotalTokenCount} tokens)"
+
             // Create a row for each attribute value
             distribution.Distribution
-            |> Array.iteri (fun rowIndex attributeValueDistribution ->
+            |> Array.iteri (fun rowIndex attrValueDistribution ->
                 // Put the attribute value in the first column
-                worksheet.Cell(rowIndex + 2, 1).Value <- attributeValueDistribution.AttributeValue
+                worksheet.Cell(rowIndex + 2, 1).Value <- attrValueDistribution.AttributeValue
 
                 // Create a column for each metadata value frequency
-                attributeValueDistribution.MetadataValueFrequencies
+                attrValueDistribution.MetadataValueFrequencies
                 |> Array.iteri (fun columnIndex metadataValueFreq ->
-                    worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- metadataValueFreq))
+                    worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- metadataValueFreq)
+
+                // Create a cell with the total number of search hits for this attribute value
+                worksheet.Cell(rowIndex + 2, totalsColumnNumber).Value <- (string attrValueDistribution.AttributeValueTotal))
 
             let totalsRowIndex = distribution.Distribution.Length + 2
 
             worksheet.Cell(totalsRowIndex, 1).Value <- "Total"
 
-            let mutable colIndex = 2
-            for categoryValueStat in distribution.CategoryValueStats do
+            distribution.CategoryValueStats
+            |> List.iteri(fun colIndex categoryValueStat ->
                 // Create a column for each metadata value total
-                    worksheet.Cell(totalsRowIndex, colIndex).Value <- categoryValueStat.CategoryValueTotal
-                    colIndex <- colIndex + 1
+                    worksheet.Cell(totalsRowIndex, colIndex + 2).Value <- categoryValueStat.CategoryValueTotal)
+
+            // Create a cell with the total number of search hits
+            worksheet.Cell(totalsRowIndex, totalsColumnNumber).Value <- (
+                          distribution.CategoryValueStats
+                          |> List.sumBy (fun categoryValue -> categoryValue.CategoryValueTotal)
+                          |> string
+                      )
 
             workbook.SaveAs(outputFilename)
         | Tsv ->
@@ -519,21 +533,26 @@ let downloadMetadataDistribution
                 distribution.CategoryValueStats
                 |> List.map (fun categoryValueStat -> $"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)")
                 |> String.concat "\t"
-                |> fun s -> "Attribute value\t" + s
+                |> fun s -> $"Attribute value\t{s}\tTotal ({distribution.TotalTokenCount} tokens)"
 
             let valueRows =
                 distribution.Distribution
-                |> Array.map (fun attributeValueDistribution ->
-                    attributeValueDistribution.MetadataValueFrequencies
-                    |> Array.map (fun metadataValueFreq -> string metadataValueFreq)
+                |> Array.map (fun attrValueDistribution ->
+                    attrValueDistribution.MetadataValueFrequencies
+                    |> Array.map string
                     |> String.concat "\t"
-                    |> fun s -> $"{attributeValueDistribution.AttributeValue}\t{s}")
+                    |> fun s -> $"{attrValueDistribution.AttributeValue}\t{s}\t{attrValueDistribution.AttributeValueTotal}")
+
+            let totalHits =
+                distribution.CategoryValueStats
+                |> List.sumBy (fun categoryValue -> categoryValue.CategoryValueTotal)
+                |> string
 
             let totalsRow =
                 distribution.CategoryValueStats
                 |> List.map (fun stat -> string stat.CategoryValueTotal)
                 |> String.concat "\t"
-                |> fun s -> "Total\t" + s
+                |> fun s -> $"Total\t{s}\t{totalHits}"
 
             File.WriteAllLines(
                 outputFilename,
@@ -547,21 +566,26 @@ let downloadMetadataDistribution
                 distribution.CategoryValueStats
                 |> List.map (fun categoryValueStat -> $"\"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)\"")
                 |> String.concat ","
-                |> fun s -> "\"Attribute value\"," + s
+                |> fun s -> $"\"Attribute value\",{s},\"Total ({distribution.TotalTokenCount} tokens)\""
 
             let valueRows =
                 distribution.Distribution
-                |> Array.map (fun attributeValueDistribution ->
-                    attributeValueDistribution.MetadataValueFrequencies
-                    |> Array.map (fun metadataValueFreq -> string metadataValueFreq)
+                |> Array.map (fun attrValueDistribution ->
+                    attrValueDistribution.MetadataValueFrequencies
+                    |> Array.map string
                     |> String.concat ","
-                    |> fun s -> $"\"{attributeValueDistribution.AttributeValue}\",{s}")
+                    |> fun s -> $"\"{attrValueDistribution.AttributeValue}\",{s},{attrValueDistribution.AttributeValueTotal}")
+
+            let totalHits =
+                distribution.CategoryValueStats
+                |> List.sumBy (fun categoryValue -> categoryValue.CategoryValueTotal)
+                |> string
 
             let totalsRow =
                 distribution.CategoryValueStats
                 |> List.map (fun stat -> string stat.CategoryValueTotal)
                 |> String.concat ","
-                |> fun s -> "Total," + s
+                |> fun s -> $"\"Total\",{s},{totalHits}"
 
             File.WriteAllLines(
                 outputFilename,
