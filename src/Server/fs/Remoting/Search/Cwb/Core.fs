@@ -411,7 +411,8 @@ let getMetadataDistribution
                                   0L |]
 
                    { AttributeValue = attrValue
-                     MetadataValueFrequencies = metadataValueFrequencies } |]
+                     MetadataValueFrequencies = metadataValueFrequencies
+                     AttributeValueTotal = metadataValueFrequencies |> Array.sum } |]
 
         let totals =
             distribution
@@ -437,12 +438,18 @@ let getMetadataDistribution
             [ for catVal, total in Array.zip categoryValuesWithTextIdsAndTokenCounts totals do
                 if keepZeroValues || total > 0L then
                     { Value = catVal.CategoryValue
-                      Total = total
+                      CategoryValueTotal = total
                       TokenCount = catVal.TokenCount } ]
+
+        // The total token count that will be shown in a column to to the right of the individual category
+        // value columns includes the token counts of values that have zero search hits as well, so we calculate
+        // it from categoryValuesWithTextIdsAndTokenCounts and not categoryValueStats.
+        let totalTokenCount = categoryValuesWithTextIdsAndTokenCounts |> Array.sumBy (fun c -> c.TokenCount)
 
         return
             { Distribution = distribution'
-              CategoryValueStats = categoryValueStats }
+              CategoryValueStats = categoryValueStats
+              TotalTokenCount = totalTokenCount }
     }
 
 let downloadMetadataDistribution
@@ -502,7 +509,7 @@ let downloadMetadataDistribution
             let mutable colIndex = 2
             for categoryValueStat in distribution.CategoryValueStats do
                 // Create a column for each metadata value total
-                    worksheet.Cell(totalsRowIndex, colIndex).Value <- categoryValueStat.Total
+                    worksheet.Cell(totalsRowIndex, colIndex).Value <- categoryValueStat.CategoryValueTotal
                     colIndex <- colIndex + 1
 
             workbook.SaveAs(outputFilename)
@@ -524,7 +531,7 @@ let downloadMetadataDistribution
 
             let totalsRow =
                 distribution.CategoryValueStats
-                |> List.map (fun stat -> string stat.Total)
+                |> List.map (fun stat -> string stat.CategoryValueTotal)
                 |> String.concat "\t"
                 |> fun s -> "Total\t" + s
 
@@ -552,7 +559,7 @@ let downloadMetadataDistribution
 
             let totalsRow =
                 distribution.CategoryValueStats
-                |> List.map (fun stat -> string stat.Total)
+                |> List.map (fun stat -> string stat.CategoryValueTotal)
                 |> String.concat ","
                 |> fun s -> "Total," + s
 

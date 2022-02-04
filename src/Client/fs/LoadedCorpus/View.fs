@@ -600,7 +600,7 @@ module ResultsView =
             let keepZeroValueButton =
                 Html.label [ Bulma.input.checkbox [ prop.isChecked model.KeepZeroValues
                                                     prop.onCheckedChange (dispatch << SetKeepZero) ]
-                             Html.text " Include metadata values with zero total" ]
+                             Html.text " Show metadata values with zero total" ]
 
             let downloadButtons =
                 Bulma.levelItem (
@@ -656,6 +656,9 @@ module ResultsView =
                                                                      prop.text
                                                                          $" ({categoryValueStat.TokenCount} tokens)" ] ] ] |]
 
+                    let statsHeaderCells =
+                        [| Html.th $"Total ({model.MetadataDistribution.TotalTokenCount} tokens)" |]
+
                     let frequencyRows =
                         [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
                                let attrValue = attrValueDistribution.AttributeValue
@@ -685,25 +688,38 @@ module ResultsView =
                                    [| for valueFreq in attrValueDistribution.MetadataValueFrequencies ->
                                           Html.td (string valueFreq) |]
 
-                               Html.tr (Array.append [| checkboxCell; attrValueCell |] frequencyCells) |]
+                               Html.tr (
+                                   Array.concat [ [| checkboxCell; attrValueCell |]
+                                                  frequencyCells
+                                                  [| Html.td (string attrValueDistribution.AttributeValueTotal) |] ]
+                               ) |]
 
                     let totalsFooter =
                         let totalsCells =
-                            [| for stat in model.MetadataDistribution.CategoryValueStats -> Html.th (string stat.Total) |]
+                            [| for stat in model.MetadataDistribution.CategoryValueStats ->
+                                   Html.th (string stat.CategoryValueTotal) |]
 
-                        Html.tr (Array.append [| Html.th ""; Html.th "Total" |] totalsCells)
+                        Html.tr (
+                            Array.concat [ [| Html.th ""; Html.th "Total" |]
+                                           totalsCells
+                                           [| Html.th (
+                                                  model.MetadataDistribution.CategoryValueStats
+                                                  |> List.sumBy (fun categoryValue -> categoryValue.CategoryValueTotal)
+                                                  |> string
+                                              ) |] ]
+                        )
 
                     let table =
                         Bulma.table [ prop.className "metadata-distribution-table"
                                       table.isBordered
                                       prop.children [ Html.thead [ Html.tr (
-                                                                       Array.append
-                                                                           [| Html.th [ prop.key "remove-btn"
-                                                                                        prop.children
-                                                                                            removeSelectedRowsButton ]
-                                                                              Html.th [ prop.key "attr-value"
-                                                                                        prop.text "" ] |]
-                                                                           categoryValueCells
+                                                                       Array.concat [ [| Html.th [ prop.key "remove-btn"
+                                                                                                   prop.children
+                                                                                                       removeSelectedRowsButton ]
+                                                                                         Html.th [ prop.key "attr-value"
+                                                                                                   prop.text "" ] |]
+                                                                                      categoryValueCells
+                                                                                      statsHeaderCells ]
                                                                    ) ]
                                                       Html.tbody frequencyRows
                                                       Html.tfoot [ totalsFooter ] ] ]
