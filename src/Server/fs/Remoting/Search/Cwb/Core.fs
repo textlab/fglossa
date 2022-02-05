@@ -155,19 +155,9 @@ let downloadFrequencyList
     (attributes: Cwb.PositionalAttribute list)
     (isCaseSensitive: bool)
     (format: DownloadFormat)
-    : Async<string> =
+    : Async<byte []> =
     async {
         let! freqList = getFrequencyList logger searchParams attributes isCaseSensitive
-
-        let extension =
-            match format with
-            | Excel -> ".xlsx"
-            | Tsv -> ".tsv"
-            | Csv -> ".csv"
-
-        let downloadFilename = $"/glossa3_doc/{searchParams.SearchId}_freq{extension}"
-
-        let outputFilename = $"../Client/public{downloadFilename}"
 
         match format with
         | Excel ->
@@ -194,7 +184,9 @@ let downloadFrequencyList
                 |> Array.iteri (fun columnIndex attrValue ->
                     worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- attrValue))
 
-            workbook.SaveAs(outputFilename)
+            use outputStream = new MemoryStream()
+            workbook.SaveAs(outputStream)
+            return outputStream.ToArray()
         | Tsv ->
             let headers =
                 attributes
@@ -206,7 +198,11 @@ let downloadFrequencyList
                 freqList
                 |> Array.map (fun row -> Regex.Replace(row, "^(\d+) ", "$1\t"))
 
-            File.WriteAllLines(outputFilename, Array.append [| headers |] valueRows)
+            let output =
+                Array.append [| headers |] valueRows
+                |> String.concat "\n"
+
+            return System.Text.Encoding.UTF8.GetBytes(output)
         | Csv ->
             let headers =
                 attributes
@@ -226,9 +222,11 @@ let downloadFrequencyList
 
                     $"{m.Groups[1].Value},{attrValues}")
 
-            File.WriteAllLines(outputFilename, Array.append [| headers |] valueRows)
+            let output =
+                Array.append [| headers |] valueRows
+                |> String.concat "\n"
 
-        return downloadFilename
+            return System.Text.Encoding.UTF8.GetBytes(output)
     }
 
 type StringCategoryTextIdsAndTokenCount =
@@ -461,21 +459,11 @@ let downloadMetadataDistribution
     (keepZeroValues: bool)
     (accExcludedAttrValues: Set<string>)
     (format: DownloadFormat)
-    : Task<string> =
+    : Task<byte[]> =
     task {
         let! distribution =
             getMetadataDistribution
                 logger searchParams attributeCode categoryCode categoryType keepZeroValues accExcludedAttrValues
-
-        let extension =
-            match format with
-            | Excel -> ".xlsx"
-            | Tsv -> ".tsv"
-            | Csv -> ".csv"
-
-        let downloadFilename = $"/glossa3_doc/{searchParams.SearchId}_distr{extension}"
-
-        let outputFilename = $"{downloadRoot}{downloadFilename}"
 
         match format with
         | Excel ->
@@ -526,7 +514,9 @@ let downloadMetadataDistribution
                           |> string
                       )
 
-            workbook.SaveAs(outputFilename)
+            use outputStream = new MemoryStream()
+            workbook.SaveAs(outputStream)
+            return outputStream.ToArray()
         | Tsv ->
             // Create header row with the different metadata category values
             let headerRow =
@@ -554,12 +544,13 @@ let downloadMetadataDistribution
                 |> String.concat "\t"
                 |> fun s -> $"Total\t{s}\t{totalHits}"
 
-            File.WriteAllLines(
-                outputFilename,
-                Array.concat [ [| headerRow |]
-                               valueRows
-                               [| totalsRow |] ]
-            )
+            let output =
+               Array.concat [ [| headerRow |]
+                              valueRows
+                              [| totalsRow |] ]
+               |> String.concat "\n"
+            let fileBytes = System.Text.Encoding.UTF8.GetBytes(output)
+            return fileBytes
         | Csv ->
             // Create header row with the different metadata category values
             let headerRow =
@@ -587,12 +578,11 @@ let downloadMetadataDistribution
                 |> String.concat ","
                 |> fun s -> $"\"Total\",{s},{totalHits}"
 
-            File.WriteAllLines(
-                outputFilename,
-                Array.concat [ [| headerRow |]
-                               valueRows
-                               [| totalsRow |] ]
-            )
-
-        return downloadFilename
+            let output =
+               Array.concat [ [| headerRow |]
+                              valueRows
+                              [| totalsRow |] ]
+               |> String.concat "\n"
+            let fileBytes = System.Text.Encoding.UTF8.GetBytes(output)
+            return fileBytes
     }

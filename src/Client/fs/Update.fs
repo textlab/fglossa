@@ -3,6 +3,7 @@ module Update
 open System
 open System.Text.RegularExpressions
 open Elmish
+open Fable.Remoting.Client
 open Shared
 open Model
 open CwbExtended
@@ -89,7 +90,7 @@ module LoadedCorpus =
                 | ToggleDownloadAttribute of Cwb.PositionalAttribute
                 | ToggleHeadersInDownload
                 | DownloadSearchResults of DownloadFormat
-                | DownloadedSearchResults of string
+                | DownloadedSearchResults of byte []
 
             let update
                 (msg: Msg)
@@ -491,8 +492,18 @@ module LoadedCorpus =
                     { concordanceModel with
                           DownloadingFormat = Some format },
                     cmd
-                | DownloadedSearchResults path ->
-                    Browser.Dom.window.location.href <- path
+                | DownloadedSearchResults fileBytes ->
+                    let extension =
+                        match concordanceModel.DownloadingFormat with
+                        | Some Excel -> ".xlsx"
+                        | Some Tsv -> ".tsv"
+                        | Some Csv -> ".csv"
+                        | None -> failwith "No download format provided!"
+
+                    let downloadFilename =
+                        $"{loadedCorpusModel.Search.Params.SearchId}_res{extension}"
+
+                    fileBytes.SaveFileAs(downloadFilename)
 
                     loadedCorpusModel,
                     { concordanceModel with
@@ -510,7 +521,7 @@ module LoadedCorpus =
                 | FetchFrequencyList
                 | FetchedFrequencyList of string []
                 | DownloadFrequencyList of DownloadFormat
-                | DownloadedFrequencyList of string
+                | DownloadedFrequencyList of byte []
 
             let update
                 (msg: Msg)
@@ -574,8 +585,18 @@ module LoadedCorpus =
                          frequencyListsModel.IsCaseSensitive,
                          format)
                         DownloadedFrequencyList
-                | DownloadedFrequencyList path ->
-                    Browser.Dom.window.location.href <- path
+                | DownloadedFrequencyList fileBytes ->
+                    let extension =
+                        match frequencyListsModel.DownloadingFormat with
+                        | Some Excel -> ".xlsx"
+                        | Some Tsv -> ".tsv"
+                        | Some Csv -> ".csv"
+                        | None -> failwith "No download format provided!"
+
+                    let downloadFilename =
+                        $"{loadedCorpusModel.Search.Params.SearchId}_freq{extension}"
+
+                    fileBytes.SaveFileAs(downloadFilename)
 
                     loadedCorpusModel,
                     { frequencyListsModel with
@@ -594,7 +615,7 @@ module LoadedCorpus =
                 | RemoveSelectedAttributeValues
                 | FetchedMetadataDistribution of MetadataDistribution
                 | DownloadMetadataDistribution of DownloadFormat
-                | DownloadedMetadataDistribution of string
+                | DownloadedMetadataDistribution of byte []
 
             let update
                 (msg: Msg)
@@ -727,8 +748,18 @@ module LoadedCorpus =
                     let cmd, newMetadataDistributionModel' = buildCmd newMetadataDistributionModel
                     loadedCorpusModel, newMetadataDistributionModel', cmd
 
-                | DownloadedMetadataDistribution path ->
-                    Browser.Dom.window.location.href <- path
+                | DownloadedMetadataDistribution fileBytes ->
+                    let extension =
+                        match metadataDistributionModel.DownloadingFormat with
+                        | Some Excel -> ".xlsx"
+                        | Some Tsv -> ".tsv"
+                        | Some Csv -> ".csv"
+                        | None -> failwith "No download format provided!"
+
+                    let downloadFilename =
+                        $"{loadedCorpusModel.Search.Params.SearchId}_distr{extension}"
+
+                    fileBytes.SaveFileAs(downloadFilename)
 
                     loadedCorpusModel,
                     { metadataDistributionModel with

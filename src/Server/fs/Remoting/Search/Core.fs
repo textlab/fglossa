@@ -5,7 +5,6 @@ open System.Text.RegularExpressions
 open Serilog
 open ClosedXML
 open Shared
-open ServerTypes
 
 let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams) =
     let corpus =
@@ -34,7 +33,7 @@ let downloadSearchResults
     (attributes: Cwb.PositionalAttribute list)
     (format: DownloadFormat)
     (shouldCreateHeader: bool)
-    =
+    : Async<byte []> =
     async {
         let corpus =
             Corpora.Server.getCorpus searchParams.CorpusCode
@@ -102,17 +101,6 @@ let downloadSearchResults
                          m.Groups.[4].Value,
                          m.Groups.[5].Value))
 
-        let extension =
-            match format with
-            | Excel -> ".xlsx"
-            | Tsv -> ".tsv"
-            | Csv -> ".csv"
-
-        let downloadFilename =
-            $"/glossa3_doc/{searchParams.SearchId}_res{extension}"
-
-        let outputFilename = $"{downloadRoot}{downloadFilename}"
-
         let idHeader =
             match corpus.Config.Modality with
             | Spoken -> "Informant ID"
@@ -151,8 +139,9 @@ let downloadSearchResults
                     worksheet.Cell(resultIndex + rowDisplacement, 4).Value <- theMatch
                     worksheet.Cell(resultIndex + rowDisplacement, 5).Value <- rightContext)
 
-            workbook.SaveAs(outputFilename)
-
+            use outputStream = new MemoryStream()
+            workbook.SaveAs(outputStream)
+            return outputStream.ToArray()
         | Tsv ->
             let headerRow = headers |> String.concat "\t"
 
@@ -165,7 +154,11 @@ let downloadSearchResults
                          rightContext ]
                        |> String.concat "\t" |]
 
-            File.WriteAllLines(outputFilename, Array.append [| headerRow |] resultRows)
+            let output =
+                Array.append [| headerRow |] resultRows
+                |> String.concat "\n"
+
+            return System.Text.Encoding.UTF8.GetBytes(output)
 
         | Csv ->
             let headerRow =
@@ -177,7 +170,9 @@ let downloadSearchResults
                 [| for corpusPosition, segmentId, leftContext, theMatch, rightContext in results ->
                        $"\"{corpusPosition}\",\"{segmentId}\",\"{leftContext}\",\"{theMatch}\",\"{rightContext}\"" |]
 
-            File.WriteAllLines(outputFilename, Array.append [| headerRow |] resultRows)
+            let output =
+                Array.append [| headerRow |] resultRows
+                |> String.concat "\n"
 
-        return downloadFilename
+            return System.Text.Encoding.UTF8.GetBytes(output)
     }
