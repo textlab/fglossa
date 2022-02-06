@@ -657,7 +657,9 @@ module ResultsView =
                                                                          $" ({categoryValueStat.TokenCount} tokens)" ] ] ] |]
 
                     let statsHeaderCells =
-                        [| Html.th $"Total ({model.MetadataDistribution.TotalTokenCount} tokens)" |]
+                        [| Html.th [ Html.span "Total"
+                                     Html.span [ prop.style [ style.fontWeight.normal ]
+                                                 prop.text $" ({model.MetadataDistribution.TotalTokenCount} tokens)" ] ] |]
 
                     let frequencyRows =
                         [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
