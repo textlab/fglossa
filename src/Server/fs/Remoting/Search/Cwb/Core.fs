@@ -507,9 +507,13 @@ let downloadMetadataDistribution
                 worksheet.Cell(1, index + 2).Value <- $"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)")
 
             let totalsColumnNumber = distribution.CategoryValueStats.Length + 3
+            let dpColumnNumber = totalsColumnNumber + 1
 
             // Create a header with the total token count for all category values
             worksheet.Cell(1, totalsColumnNumber).Value <- $"Total ({distribution.TotalTokenCount} tokens)"
+
+            // Create a header for Deviation of proportions (Gries 2008)
+            worksheet.Cell(1, dpColumnNumber).Value <- "Deviation of proportions"
 
             // Create a row for each attribute value
             distribution.Distribution
@@ -523,7 +527,10 @@ let downloadMetadataDistribution
                     worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- metadataValueFreq)
 
                 // Create a cell with the total number of search hits for this attribute value
-                worksheet.Cell(rowIndex + 2, totalsColumnNumber).Value <- (string attrValueDistribution.AttributeValueTotal))
+                worksheet.Cell(rowIndex + 2, totalsColumnNumber).Value <- (string attrValueDistribution.AttributeValueTotal)
+
+                // Create a cell with the Deviation of proportion value for this attribute value
+                worksheet.Cell(rowIndex + 2, dpColumnNumber).Value <- $"%.2f{attrValueDistribution.Dp}")
 
             let totalsRowIndex = distribution.Distribution.Length + 2
 
@@ -541,6 +548,9 @@ let downloadMetadataDistribution
                           |> string
                       )
 
+            // Create a cell with the total Deviation of proportions
+            worksheet.Cell(totalsRowIndex, dpColumnNumber).Value <- $"%.2f{distribution.TotalDp}"
+
             use outputStream = new MemoryStream()
             workbook.SaveAs(outputStream)
             return outputStream.ToArray()
@@ -550,7 +560,7 @@ let downloadMetadataDistribution
                 distribution.CategoryValueStats
                 |> List.map (fun categoryValueStat -> $"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)")
                 |> String.concat "\t"
-                |> fun s -> $"Attribute value\t{s}\tTotal ({distribution.TotalTokenCount} tokens)"
+                |> fun s -> $"Attribute value\t{s}\tTotal ({distribution.TotalTokenCount} tokens)\tDeviation of proportions"
 
             let valueRows =
                 distribution.Distribution
@@ -558,7 +568,9 @@ let downloadMetadataDistribution
                     attrValueDistribution.MetadataValueFrequencies
                     |> Array.map string
                     |> String.concat "\t"
-                    |> fun s -> $"{attrValueDistribution.AttributeValue}\t{s}\t{attrValueDistribution.AttributeValueTotal}")
+                    |> fun s ->
+                        $"{attrValueDistribution.AttributeValue}\t{s}\t\
+                          {attrValueDistribution.AttributeValueTotal}\t%.2f{attrValueDistribution.Dp}")
 
             let totalHits =
                 distribution.CategoryValueStats
@@ -569,7 +581,7 @@ let downloadMetadataDistribution
                 distribution.CategoryValueStats
                 |> List.map (fun stat -> string stat.CategoryValueTotal)
                 |> String.concat "\t"
-                |> fun s -> $"Total\t{s}\t{totalHits}"
+                |> fun s -> $"Total\t{s}\t{totalHits}\t%.2f{distribution.TotalDp}"
 
             let output =
                Array.concat [ [| headerRow |]
@@ -584,7 +596,7 @@ let downloadMetadataDistribution
                 distribution.CategoryValueStats
                 |> List.map (fun categoryValueStat -> $"\"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)\"")
                 |> String.concat ","
-                |> fun s -> $"\"Attribute value\",{s},\"Total ({distribution.TotalTokenCount} tokens)\""
+                |> fun s -> $"\"Attribute value\",{s},\"Total ({distribution.TotalTokenCount} tokens)\",\"Deviation of proportions\""
 
             let valueRows =
                 distribution.Distribution
@@ -592,7 +604,9 @@ let downloadMetadataDistribution
                     attrValueDistribution.MetadataValueFrequencies
                     |> Array.map string
                     |> String.concat ","
-                    |> fun s -> $"\"{attrValueDistribution.AttributeValue}\",{s},{attrValueDistribution.AttributeValueTotal}")
+                    |> fun s ->
+                        $"\"{attrValueDistribution.AttributeValue}\",{s},\
+                          {attrValueDistribution.AttributeValueTotal},%.2f{attrValueDistribution.Dp}")
 
             let totalHits =
                 distribution.CategoryValueStats
@@ -603,7 +617,7 @@ let downloadMetadataDistribution
                 distribution.CategoryValueStats
                 |> List.map (fun stat -> string stat.CategoryValueTotal)
                 |> String.concat ","
-                |> fun s -> $"\"Total\",{s},{totalHits}"
+                |> fun s -> $"\"Total\",{s},{totalHits},%.2f{distribution.TotalDp}"
 
             let output =
                Array.concat [ [| headerRow |]
