@@ -388,12 +388,18 @@ let getMetadataDistribution
                 (not (isNull categoryValueInfo.CategoryValue)) && categoryValueInfo.CategoryValue <> "\N")
             |> Seq.toArray
 
+        let totalTokenCount = categoryValuesWithTextIdsAndTokenCounts |> Array.sumBy (fun c -> c.TokenCount)
+        let totalTokenCountFloat = float totalTokenCount
+
+        let expectedProportions =
+            [| for categoryValueInfo in categoryValuesWithTextIdsAndTokenCounts ->  float categoryValueInfo.TokenCount / totalTokenCountFloat |]
+
         let distribution =
             [| for pair in attrDistributionMap ->
                    let attrValue = pair.Key
                    let textIdsToFreqs = pair.Value
 
-                   let metadataValueFrequencies =
+                   let metadataValueFreqs =
                        [| for categoryValueInfo in categoryValuesWithTextIdsAndTokenCounts do
                               // For each text ID that is associated with the current metadata category value,
                               // find the frequency associated with it in the map associated with the current attribute value.
@@ -408,9 +414,21 @@ let getMetadataDistribution
                                           | None -> sum)
                                   0L |]
 
+                   let attrValueTotal = metadataValueFreqs |> Array.sum
+                   let attrValueTotalFloat = float attrValueTotal
+                   let observedProportions =
+                       [| for freq in metadataValueFreqs -> float freq / attrValueTotalFloat |]
+                   // Compute the Deviation of Proportions score (Gries 2008)
+                   let dp =
+                       Array.zip expectedProportions observedProportions
+                       |> Array.sumBy (fun (expected, observed) ->
+                           abs (expected - observed))
+                       |> fun sum -> sum / 2.
+
                    { AttributeValue = attrValue
-                     MetadataValueFrequencies = metadataValueFrequencies
-                     AttributeValueTotal = metadataValueFrequencies |> Array.sum } |]
+                     MetadataValueFrequencies = metadataValueFreqs
+                     AttributeValueTotal = attrValueTotal
+                     Dp = dp } |]
 
         let totals =
             distribution
@@ -419,6 +437,16 @@ let getMetadataDistribution
                     Array.zip sums attributeValueDistribution.MetadataValueFrequencies
                     |> Array.map (fun (sum, freq) -> sum + freq))
                 (Array.create categoryValuesWithTextIdsAndTokenCounts.Length 0L)
+
+        let summedTotalsFloat = Array.sum totals |> float
+
+        let totalsProportions =
+            [| for total in totals -> float total / summedTotalsFloat |]
+
+        let totalDp =
+            Array.zip expectedProportions totalsProportions
+            |> Array.sumBy (fun (expected, observed) -> abs (expected - observed))
+            |> fun sum -> sum / 2.
 
         let distribution' =
             if keepZeroValues then
@@ -439,15 +467,14 @@ let getMetadataDistribution
                       CategoryValueTotal = total
                       TokenCount = catVal.TokenCount } ]
 
-        // The total token count that will be shown in a column to to the right of the individual category
-        // value columns includes the token counts of values that have zero search hits as well, so we calculate
-        // it from categoryValuesWithTextIdsAndTokenCounts and not categoryValueStats.
-        let totalTokenCount = categoryValuesWithTextIdsAndTokenCounts |> Array.sumBy (fun c -> c.TokenCount)
-
         return
             { Distribution = distribution'
               CategoryValueStats = categoryValueStats
-              TotalTokenCount = totalTokenCount }
+              // The total token count that will be shown in a column to to the right of the individual category
+              // value columns includes the token counts of values that have zero search hits as well, so we don't
+              // care about the keepZeroValues parameter here
+              TotalTokenCount = totalTokenCount
+              TotalDp = totalDp }
     }
 
 let downloadMetadataDistribution

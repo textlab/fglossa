@@ -659,7 +659,8 @@ module ResultsView =
                     let statsHeaderCells =
                         [| Html.th [ Html.span "Total"
                                      Html.span [ prop.style [ style.fontWeight.normal ]
-                                                 prop.text $" ({model.MetadataDistribution.TotalTokenCount} tokens)" ] ] |]
+                                                 prop.text $" ({model.MetadataDistribution.TotalTokenCount} tokens)" ] ]
+                           Html.th "Deviation of proportions" |]
 
                     let frequencyRows =
                         [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
@@ -693,7 +694,8 @@ module ResultsView =
                                Html.tr (
                                    Array.concat [ [| checkboxCell; attrValueCell |]
                                                   frequencyCells
-                                                  [| Html.td (string attrValueDistribution.AttributeValueTotal) |] ]
+                                                  [| Html.td (string attrValueDistribution.AttributeValueTotal)
+                                                     Html.td $"%.2f{attrValueDistribution.Dp}" |] ]
                                ) |]
 
                     let totalsFooter =
@@ -705,10 +707,11 @@ module ResultsView =
                             Array.concat [ [| Html.th ""; Html.th "Total" |]
                                            totalsCells
                                            [| Html.th (
-                                                  model.MetadataDistribution.CategoryValueStats
-                                                  |> List.sumBy (fun categoryValue -> categoryValue.CategoryValueTotal)
-                                                  |> string
-                                              ) |] ]
+                                               model.MetadataDistribution.CategoryValueStats
+                                               |> List.sumBy (fun categoryValue -> categoryValue.CategoryValueTotal)
+                                               |> string
+                                              )
+                                              Html.th $"%.2f{model.MetadataDistribution.TotalDp}" |] ]
                         )
 
                     let table =

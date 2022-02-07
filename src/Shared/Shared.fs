@@ -308,7 +308,9 @@ type DownloadFormat =
 type AttributeValueDistribution =
     { AttributeValue: string
       MetadataValueFrequencies: int64 []
-      AttributeValueTotal: int64 }
+      AttributeValueTotal: int64
+      // Deviation of proportions (Gries 2008: "Dispersions and adjusted frequencies in corpora")
+      Dp: float }
 
 type CategoryValueStat =
     { Value: string
@@ -318,7 +320,8 @@ type CategoryValueStat =
 type MetadataDistribution =
     { Distribution: AttributeValueDistribution []
       CategoryValueStats: CategoryValueStat list
-      TotalTokenCount: int64 }
+      TotalTokenCount: int64
+      TotalDp: float }
 
 // Define type aliases that help clarify the parameters of the IServerApi functions.
 // If we could have used an actual interface instead, we could have used methods
