@@ -145,11 +145,13 @@ type FrequencyListsModel =
     { Attributes: Cwb.PositionalAttribute list
       Frequencies: FrequencyListItem [] option
       IsCaseSensitive: bool
+      TokenBoundaries: FreqListTokenBoundaries
       DownloadingFormat: DownloadFormat option }
     static member Default =
         { Attributes = []
           Frequencies = None
           IsCaseSensitive = false
+          TokenBoundaries = { From = None; To = None }
           DownloadingFormat = None }
 
 /// Attribute values that are excluded from the metadata distribution table.

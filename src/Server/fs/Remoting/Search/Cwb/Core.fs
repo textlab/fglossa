@@ -116,6 +116,7 @@ let getFrequencyList
     (searchParams: SearchParams)
     (attributes: Cwb.PositionalAttribute list)
     (isCaseSensitive: bool)
+    (freqListTokenBoundaries: FreqListTokenBoundaries)
     : Async<string []> =
     async {
         let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
@@ -123,8 +124,15 @@ let getFrequencyList
         let! results =
             let caseStr = if isCaseSensitive then "" else " %c"
 
+            let matchStr =
+                match freqListTokenBoundaries.From, freqListTokenBoundaries.To with
+                | Some fromToken, Some toToken -> $"match[{fromToken - 1}] .. match[{toToken - 1}]"
+                | Some fromToken, None -> $"match[{fromToken - 1}] .. matchend"
+                | None, Some toToken -> $"match .. match[{toToken - 1}]"
+                | None, None -> "match .. matchend"
+
             let attrs =
-                [ for attr in attributes -> $"match .. matchend {attr.Code}{caseStr}" ]
+                [ for attr in attributes -> $"{matchStr} {attr.Code}{caseStr}" ]
                 |> String.concat ", "
 
             let awk =
@@ -154,10 +162,11 @@ let downloadFrequencyList
     (searchParams: SearchParams)
     (attributes: Cwb.PositionalAttribute list)
     (isCaseSensitive: bool)
+    (freqListTokenBoundaries: FreqListTokenBoundaries)
     (format: DownloadFormat)
     : Async<byte []> =
     async {
-        let! freqList = getFrequencyList logger searchParams attributes isCaseSensitive
+        let! freqList = getFrequencyList logger searchParams attributes isCaseSensitive freqListTokenBoundaries
 
         match format with
         | Excel ->
@@ -390,6 +399,11 @@ let getMetadataDistribution
 
         let totalTokenCount = categoryValuesWithTextIdsAndTokenCounts |> Array.sumBy (fun c -> c.TokenCount)
         let totalTokenCountFloat = float totalTokenCount
+
+        let multiValueSql = $"SELECT GROUP_CONCAT(DISTINCT {column}) FROM texts \
+                              INNER JOIN authors_texts ON authors_texts.tid = texts.tid \
+                              INNER JOIN authors on authors.id = authors_texts.authors_id \
+                              GROUP BY texts.tid HAVING COUNT({column}) > 1"
 
         let expectedProportions =
             [| for categoryValueInfo in categoryValuesWithTextIdsAndTokenCounts ->  float categoryValueInfo.TokenCount / totalTokenCountFloat |]

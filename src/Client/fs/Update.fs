@@ -518,6 +518,8 @@ module LoadedCorpus =
             type Msg =
                 | ToggleAttribute of Cwb.PositionalAttribute
                 | ToggleIsCaseSensitive
+                | SetFromToken of int option
+                | SetToToken of int option
                 | FetchFrequencyList
                 | FetchedFrequencyList of string []
                 | DownloadFrequencyList of DownloadFormat
@@ -550,6 +552,46 @@ module LoadedCorpus =
                     { frequencyListsModel with
                           IsCaseSensitive = not frequencyListsModel.IsCaseSensitive },
                     Cmd.none
+                | SetFromToken maybeTokenNumber ->
+                    // Check that the From token, if set, is smaller than or equal to the To token, if set.
+                    let boundaries =
+                        match maybeTokenNumber with
+                        | None ->
+                            { frequencyListsModel.TokenBoundaries with
+                                  From = None }
+                        | Some num when
+                            frequencyListsModel.TokenBoundaries.To.IsNone
+                            || num
+                               <= frequencyListsModel.TokenBoundaries.To.Value
+                            ->
+                            { frequencyListsModel.TokenBoundaries with
+                                  From = maybeTokenNumber }
+                        | _ -> frequencyListsModel.TokenBoundaries
+
+                    loadedCorpusModel,
+                    { frequencyListsModel with
+                          TokenBoundaries = boundaries },
+                    Cmd.none
+                | SetToToken maybeTokenNumber ->
+                    // Check that the To token, if set, is larger than or equal to the To token, if set.
+                    let boundaries =
+                        match maybeTokenNumber with
+                        | None ->
+                            { frequencyListsModel.TokenBoundaries with
+                                  To = None }
+                        | Some num when
+                            frequencyListsModel.TokenBoundaries.From.IsNone
+                            || num
+                               >= frequencyListsModel.TokenBoundaries.From.Value
+                            ->
+                            { frequencyListsModel.TokenBoundaries with
+                                  To = maybeTokenNumber }
+                        | _ -> frequencyListsModel.TokenBoundaries
+
+                    loadedCorpusModel,
+                    { frequencyListsModel with
+                          TokenBoundaries = boundaries },
+                    Cmd.none
                 | FetchFrequencyList ->
                     loadedCorpusModel,
                     frequencyListsModel,
@@ -557,7 +599,8 @@ module LoadedCorpus =
                         serverApi.GetFrequencyList
                         (loadedCorpusModel.Search.Params,
                          frequencyListsModel.Attributes,
-                         frequencyListsModel.IsCaseSensitive)
+                         frequencyListsModel.IsCaseSensitive,
+                         frequencyListsModel.TokenBoundaries)
                         FetchedFrequencyList
                 | FetchedFrequencyList rows ->
                     let listItems =
@@ -583,6 +626,7 @@ module LoadedCorpus =
                         (loadedCorpusModel.Search.Params,
                          frequencyListsModel.Attributes,
                          frequencyListsModel.IsCaseSensitive,
+                         frequencyListsModel.TokenBoundaries,
                          format)
                         DownloadedFrequencyList
                 | DownloadedFrequencyList fileBytes ->

@@ -460,7 +460,12 @@ module ResultsView =
         ////////////////////////////////////////////////////
         /// View.LoadedCorpus.ResultsView.FrequencyLists.view
         ////////////////////////////////////////////////////
-        let view (model: FrequencyListsModel) (corpus: Corpus) (dispatch: Msg -> unit) =
+        let view
+            (loadedCorpusModel: LoadedCorpusModel)
+            (frequencyListsModel: FrequencyListsModel)
+            (corpus: Corpus)
+            (dispatch: Msg -> unit)
+            =
 
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
@@ -472,28 +477,78 @@ module ResultsView =
             let caseSensitiveCheckbox =
                 Bulma.field.p (
                     Html.label [ prop.style [ style.marginRight 15 ]
-                                 prop.children [ Bulma.input.checkbox [ prop.isChecked model.IsCaseSensitive
+                                 prop.children [ Bulma.input.checkbox [ prop.isChecked
+                                                                            frequencyListsModel.IsCaseSensitive
                                                                         prop.onCheckedChange
                                                                             (fun _ -> dispatch ToggleIsCaseSensitive) ]
                                                  Bulma.text.span " Case sensitive" ] ]
                 )
 
+            let fromTokenInput =
+                let value =
+                    frequencyListsModel.TokenBoundaries.From
+                    |> Option.map string
+                    |> Option.defaultValue ""
+
+                let onChange (v: string) =
+                    if v = "" then
+                        dispatch (SetFromToken None)
+                    else
+                        match Int32.TryParse(v) with
+                        | true, v -> dispatch (SetFromToken(Some v))
+                        | false, _ -> ignore None
+
+                Bulma.field.div [ field.isHorizontal
+                                  prop.children [ Bulma.fieldLabel [ fieldLabel.isNormal
+                                                                     prop.style [ style.marginRight (length.em 0.5) ]
+                                                                     prop.children [ Html.label [ Html.text
+                                                                                                      "From token:" ] ] ]
+                                                  Bulma.field.div (
+                                                      Bulma.control.div [ Bulma.input.text [ prop.style [ style.width 60 ]
+                                                                                             prop.value value
+                                                                                             prop.onChange onChange ] ]
+                                                  ) ] ]
+
+            let toTokenInput =
+                let value =
+                    frequencyListsModel.TokenBoundaries.To
+                    |> Option.map string
+                    |> Option.defaultValue ""
+
+                let onChange (v: string) =
+                    if v = "" then
+                        dispatch (SetToToken None)
+                    else
+                        match Int32.TryParse(v) with
+                        | true, v -> dispatch (SetToToken(Some v))
+                        | false, _ -> ignore None
+
+                Bulma.field.div [ field.isHorizontal
+                                  prop.children [ Bulma.fieldLabel [ fieldLabel.isNormal
+                                                                     prop.style [ style.marginRight (length.em 0.5) ]
+                                                                     prop.children [ Html.label [ Html.text "To token:" ] ] ]
+                                                  Bulma.field.div (
+                                                      Bulma.control.div [ Bulma.input.text [ prop.style [ style.width 60 ]
+                                                                                             prop.value value
+                                                                                             prop.onChange onChange ] ]
+                                                  ) ] ]
+
             let buttonRow =
                 let buttons =
                     [ Bulma.button.button [ prop.onClick (fun _ -> dispatch (DownloadFrequencyList Excel))
-                                            match model.DownloadingFormat with
+                                            match frequencyListsModel.DownloadingFormat with
                                             | Some Excel -> button.isLoading
                                             | Some _ -> prop.disabled true
                                             | None -> ()
                                             prop.text "Excel" ]
                       Bulma.button.button [ prop.onClick (fun _ -> dispatch (DownloadFrequencyList Tsv))
-                                            match model.DownloadingFormat with
+                                            match frequencyListsModel.DownloadingFormat with
                                             | Some Tsv -> button.isLoading
                                             | Some _ -> prop.disabled true
                                             | None -> ()
                                             prop.text "Tab-separated" ]
                       Bulma.button.button [ prop.onClick (fun _ -> dispatch (DownloadFrequencyList Csv))
-                                            match model.DownloadingFormat with
+                                            match frequencyListsModel.DownloadingFormat with
                                             | Some Csv -> button.isLoading
                                             | Some _ -> prop.disabled true
                                             | None -> ()
@@ -516,24 +571,29 @@ module ResultsView =
                     | Some attrs ->
                         let checkboxes =
                             [ for attr in corpus.SharedInfo.GetDefaultAttribute() :: attrs ->
-                                  Bulma.control.div [ checkbox (model.Attributes |> List.contains attr) attr ] ]
+                                  Bulma.control.div [ checkbox
+                                                          (frequencyListsModel.Attributes
+                                                           |> List.contains attr)
+                                                          attr ] ]
 
                         Html.span [ Bulma.field.div [ field.isGrouped
                                                       field.isGroupedMultiline
                                                       prop.children checkboxes ]
-                                    caseSensitiveCheckbox
+                                    Bulma.level [ Bulma.levelLeft [ Bulma.levelItem caseSensitiveCheckbox
+                                                                    Bulma.levelItem fromTokenInput
+                                                                    Bulma.levelItem toTokenInput ] ]
                                     buttonRow ]
                     | None -> Html.span caseSensitiveCheckbox
                 | Multilingual _languages -> failwith "NOT IMPLEMENTED"
 
             let frequencyTable =
-                match model.Frequencies with
+                match frequencyListsModel.Frequencies with
                 | Some frequencyRows ->
                     Bulma.tableContainer [ prop.style [ style.marginTop 20 ]
                                            prop.children [ Bulma.table [ Html.thead [ Html.tr [ Html.th "Count"
                                                                                                 yield!
                                                                                                     [ for attr in
-                                                                                                          model.Attributes ->
+                                                                                                          frequencyListsModel.Attributes ->
                                                                                                           Html.th
                                                                                                               attr.Name ] ] ]
                                                                          Html.tbody [ for row in frequencyRows ->
@@ -820,7 +880,11 @@ module ResultsView =
                           corpus
                           (ShowingResults.ConcordanceMsg >> dispatch)
               | FrequencyLists frequencyListsModel ->
-                  FrequencyLists.view frequencyListsModel corpus (ShowingResults.FrequencyListsMsg >> dispatch)
+                  FrequencyLists.view
+                      loadedCorpusModel
+                      frequencyListsModel
+                      corpus
+                      (ShowingResults.FrequencyListsMsg >> dispatch)
               | MetadataDistribution metadataDistributionModel ->
                   MetadataDistribution.view
                       corpus

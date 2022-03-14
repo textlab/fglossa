@@ -323,6 +323,10 @@ type MetadataDistribution =
       TotalTokenCount: int64
       TotalDp: float }
 
+// Used when we want to compute frequencies for only a subsequence of each search result
+// (e.g. only the first token in each result)
+type FreqListTokenBoundaries = { From: int option; To: int option }
+
 // Define type aliases that help clarify the parameters of the IServerApi functions.
 // If we could have used an actual interface instead, we could have used methods
 // with named attributes, but unfortunately Fable.Remote requires us to use a record
@@ -360,7 +364,7 @@ type IServerApi =
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       DownloadSearchResults: SearchParams * Cwb.PositionalAttribute list * DownloadFormat * ShouldCreateHeader -> Async<byte []>
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
-      GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive -> Async<string []>
-      DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * DownloadFormat -> Async<byte []>
+      GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * FreqListTokenBoundaries -> Async<string []>
+      DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * FreqListTokenBoundaries * DownloadFormat -> Async<byte []>
       GetMetadataDistribution: SearchParams * AttributeCode * Metadata.CategoryCode * Metadata.CategoryType * KeepZeroValues * AccExcludedAttrValues -> Async<MetadataDistribution>
       DownloadMetadataDistribution: SearchParams * AttributeCode * Metadata.CategoryCode * Metadata.CategoryType * KeepZeroValues * AccExcludedAttrValues * DownloadFormat -> Async<byte []> }
