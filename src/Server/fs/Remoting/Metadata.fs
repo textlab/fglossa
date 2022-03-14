@@ -319,6 +319,12 @@ let getMetadataForTexts
                 (fun column ->
                     (not (column.Contains('.')))
                     || column.Contains("texts."))
+            |> List.map
+                (fun column ->
+                    if column = "texts.tid" then
+                        "DISTINCT(texts.tid)"
+                    else
+                        column)
             |> String.concat ", "
 
         let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection

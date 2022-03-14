@@ -87,7 +87,7 @@ module Written =
                 generateMetadataSelectionJoins None nonExcludedManyToManyCategories
 
             let sql =
-                $"SELECT count(texts.tid) as NumTexts, sum(endpos - startpos + 1) as NumTokens FROM texts{joins} \
+                $"SELECT count(DISTINCT texts.tid) as NumTexts, sum(endpos - startpos + 1) as NumTokens FROM texts{joins} \
                   WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
 
             let parameters = metadataSelectionToParamDict selection
