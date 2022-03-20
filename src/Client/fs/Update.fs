@@ -73,6 +73,7 @@ module LoadedCorpus =
             type Msg =
                 | PerformSearchStep
                 | SearchResultsReceived of SearchResultInfo
+                | FetchedGeoCoordinates of GeoDistributionMap
                 | FetchResultWindow of centrePageNo: int * maybeSortKey: SortKey option
                 | FetchedResultWindow of SearchResultPage []
                 | SetPaginatorTextValue of string
@@ -126,11 +127,13 @@ module LoadedCorpus =
                     loadedCorpusModel, concordanceModel, cmd
 
                 | SearchResultsReceived results ->
+                    let searchParams = loadedCorpusModel.Search.Params
+
                     let shouldRunMoreSteps =
                         concordanceModel.NumSteps > results.SearchStep
 
                     let newSearchParams =
-                        loadedCorpusModel.Search.Params
+                        searchParams
                         |> fun p ->
                             let lastCount = results.Count
 
@@ -155,7 +158,10 @@ module LoadedCorpus =
                         if shouldRunMoreSteps then
                             Cmd.ofMsg PerformSearchStep
                         else
-                            Cmd.none
+                            match loadedCorpusModel.Corpus.SharedInfo.GeoCoordinates with
+                            | Some _coords ->
+                                Cmd.OfAsync.perform serverApi.GetGeoDistribution searchParams FetchedGeoCoordinates
+                            | None -> Cmd.none
 
                     let fetchedPages =
                         results.ResultPages
@@ -200,6 +206,10 @@ module LoadedCorpus =
                                         Params = newSearchParams } }
 
                     newLoadedCorpusModel, newConcordanceModel, cmd
+
+                | FetchedGeoCoordinates coordMap ->
+                    printfn "her"
+                    loadedCorpusModel, concordanceModel, Cmd.none
 
                 // Fetch a window of search result pages centred on centrePageNo. Ignores pages that have
                 // already been fetched or that are currently being fetched in another request (note that such

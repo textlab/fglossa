@@ -121,33 +121,44 @@ type LanguageConfig =
     | Monolingual of Cwb.PositionalAttribute list option
     | Multilingual of Language []
 
+type ExternalTool = | Voyant
+
+type GeoMapConfig =
+    { CenterLat: float
+      CenterLng: float
+      ZoomLevel: float
+      LocationMetadataCategoryCode: string
+      Coordinates: (string * float * float) [] }
+
 /// Corpus info that is shared between server and client.
 type SharedCorpusInfo =
     { Code: string
+      ExternalTools: ExternalTool list
       FontFamily: string option
-      GeoCoordinates: (string * float * float) [] option
+      GeoCoordinates: GeoMapConfig option
       Info: string option
       LanguageConfig: LanguageConfig
-      Modality: CorpusModality
       Logo: string option
+      Modality: CorpusModality
       MultiCpuBounds: int64 [] [] option
       Name: string
+      SearchEngine: SearchEngine
       TotalTexts: int64
-      TotalTokens: int64
-      SearchEngine: SearchEngine }
+      TotalTokens: int64 }
     static member Init(code, name, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine, ?geoCoordinates) =
         { Code = code
+          ExternalTools = []
           FontFamily = None
           GeoCoordinates = defaultArg geoCoordinates None
           Info = None
           LanguageConfig = defaultArg languageConfig (Monolingual None)
-          Modality = defaultArg modality Written
           Logo = logo
+          Modality = defaultArg modality Written
           MultiCpuBounds = defaultArg multiCpuBounds None
           Name = name
+          SearchEngine = defaultArg searchEngine Cwb
           TotalTexts = 0L
-          TotalTokens = 0L
-          SearchEngine = defaultArg searchEngine Cwb }
+          TotalTokens = 0L }
 
     member this.TryGetAttribute(attrCode: string) =
         match this.LanguageConfig with
@@ -327,6 +338,9 @@ type MetadataDistribution =
 // (e.g. only the first token in each result)
 type FreqListTokenBoundaries = { From: int option; To: int option }
 
+// Map from attribute value to geographical location to frequency
+type GeoDistributionMap = Map<string, Map<string, int64>>
+
 // Define type aliases that help clarify the parameters of the IServerApi functions.
 // If we could have used an actual interface instead, we could have used methods
 // with named attributes, but unfortunately Fable.Remote requires us to use a record
@@ -364,6 +378,7 @@ type IServerApi =
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       DownloadSearchResults: SearchParams * Cwb.PositionalAttribute list * DownloadFormat * ShouldCreateHeader -> Async<byte []>
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
+      GetGeoDistribution: SearchParams -> Async<GeoDistributionMap>
       GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * FreqListTokenBoundaries -> Async<string []>
       DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * FreqListTokenBoundaries * DownloadFormat -> Async<byte []>
       GetMetadataDistribution: SearchParams * AttributeCode * Metadata.CategoryCode * Metadata.CategoryType * KeepZeroValues * AccExcludedAttrValues -> Async<MetadataDistribution>

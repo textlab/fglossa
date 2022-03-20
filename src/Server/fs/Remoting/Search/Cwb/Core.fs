@@ -111,6 +111,13 @@ let getSearchResults
                 | Fcs -> failwith "NOT IMPLEMENTED"
     }
 
+let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
+    let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
+
+    match corpus.Config.Modality with
+    | Spoken -> Spoken.getGeoDistribution logger searchParams
+    | Written -> failwith "NOT IMPLEMENTED"
+
 let getFrequencyList
     (logger: ILogger)
     (searchParams: SearchParams)

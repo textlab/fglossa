@@ -2,10 +2,13 @@ module Remoting.Search.Cwb.Spoken
 
 open System.IO
 open System.Text.RegularExpressions
+open Microsoft.Data.Sqlite
 open Serilog
 open ServerTypes
 open Shared
 open Shared.StringUtils
+open Database
+open Remoting.Metadata
 open Remoting.Search.Cwb.Common
 
 let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (maybeCommand: string option) =
@@ -310,6 +313,85 @@ let extractMediaInfo (corpus: Corpus) result =
       EndAt = matchingLineIndex
       MinStart = 0
       MaxEnd = lastLineIndex }
+
+type TidAndPlace = { Tid: string; Place: string }
+
+let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
+    task {
+        let corpus =
+            Corpora.Server.getCorpus searchParams.CorpusCode
+
+        match corpus.Config.GeoCoordinates with
+        | Some coords ->
+            let namedQuery =
+                cwbQueryName corpus searchParams.SearchId
+
+            let attr =
+                if corpus.Config.HasAttribute("phon") then
+                    "phon"
+                else
+                    "word"
+
+            let commands =
+                [ "set DataDirectory \"tmp\""
+                  cwbCorpusName corpus []
+                  $"group {namedQuery} match who_name by match {attr}" ]
+
+            let! cwbResults = runCqpCommands logger corpus false commands
+
+            // Get pairs of informant code and place name from MySQL
+            let connStr = getConnectionString corpus.Config.Code
+            use conn = new SqliteConnection(connStr)
+
+            let sql =
+                $"SELECT DISTINCT tid as Tid, {coords.LocationMetadataCategoryCode} as Place FROM texts"
+
+            let parameters =
+                metadataSelectionToParamDict searchParams.MetadataSelection
+
+            let! res = query logger conn sql (Some parameters)
+
+            return
+                match res with
+                | Ok (results: TidAndPlace seq) ->
+                    let informantPlaceMap =
+                        results
+                        |> Seq.map (fun r -> r.Tid, r.Place)
+                        |> Map.ofSeq
+
+                    // Keep the previous form in a volatile because when consecutive
+                    // entries in the frequency list have the same form (but obviously
+                    // different informants), the form is left blank.
+                    let mutable prevForm = ""
+
+                    //                    cwbResults
+//                    // The first element contains the actual results
+//                    |> fst
+//                    |> Option.defaultValue [||]
+//                    |> Array.tail
+//                    |> Array.fold (fun (state: Map<string, Map<string, int>>) line ->
+//                            let parts = line.Split('\t')
+//                            let form =
+//                                let candidate = parts[0]
+//                                if System.String.IsNullOrWhiteSpace(candidate) then
+//                                    prevForm
+//                                else
+//                                    prevForm <- candidate
+//                                    candidate
+//
+//                            match informantPlaceMap.TryFind(parts[1]) with
+//                            | Some place ->
+//                                 let freq = System.Int32.Parse(parts[2])
+//                                 state.Add
+//                            | None -> state
+//
+//                        )
+//                        Map.empty
+                    Map.empty
+                // The first line is only decoration, so throw it away
+                | Error ex -> raise ex
+        | None -> return failwith "Cannot get geo distribution for corpus without geo coordinates!"
+    }
 
 let getMediaObject logger (searchParams: SearchParams) mediaPlayerType pageNumber rowIndex contextSize contextUnit =
     async {

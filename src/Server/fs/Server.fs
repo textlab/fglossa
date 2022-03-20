@@ -62,12 +62,27 @@ let createServerApi ctx =
                   resultIndex
                   contextSize
                   contextUnit
+      GetGeoDistribution =
+          fun searchParams ->
+              Remoting.Search.Cwb.Core.getGeoDistribution logger searchParams
+              |> Async.AwaitTask
       GetFrequencyList =
           fun (searchParams, attributes, isCaseSensitive, freqListTokenBoundaries) ->
-              Remoting.Search.Cwb.Core.getFrequencyList logger searchParams attributes isCaseSensitive freqListTokenBoundaries
+              Remoting.Search.Cwb.Core.getFrequencyList
+                  logger
+                  searchParams
+                  attributes
+                  isCaseSensitive
+                  freqListTokenBoundaries
       DownloadFrequencyList =
           fun (searchParams, attributes, isCaseSensitive, freqListTokenBoundaries, format) ->
-              Remoting.Search.Cwb.Core.downloadFrequencyList logger searchParams attributes isCaseSensitive freqListTokenBoundaries format
+              Remoting.Search.Cwb.Core.downloadFrequencyList
+                  logger
+                  searchParams
+                  attributes
+                  isCaseSensitive
+                  freqListTokenBoundaries
+                  format
       GetMetadataDistribution =
           fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues, accExcludedAttrValues) ->
               Remoting.Search.Cwb.Core.getMetadataDistribution
