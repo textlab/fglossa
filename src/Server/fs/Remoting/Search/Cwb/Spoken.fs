@@ -333,7 +333,7 @@ let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
                     "word"
 
             let commands =
-                [ "set DataDirectory \"tmp\""
+                [ "set DataDirectory \"tmp/glossa\""
                   cwbCorpusName corpus []
                   $"group {namedQuery} match who_name by match {attr}" ]
 
@@ -364,30 +364,55 @@ let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
                     // different informants), the form is left blank.
                     let mutable prevForm = ""
 
-                    //                    cwbResults
-//                    // The first element contains the actual results
-//                    |> fst
-//                    |> Option.defaultValue [||]
-//                    |> Array.tail
-//                    |> Array.fold (fun (state: Map<string, Map<string, int>>) line ->
-//                            let parts = line.Split('\t')
-//                            let form =
-//                                let candidate = parts[0]
-//                                if System.String.IsNullOrWhiteSpace(candidate) then
-//                                    prevForm
-//                                else
-//                                    prevForm <- candidate
-//                                    candidate
-//
-//                            match informantPlaceMap.TryFind(parts[1]) with
-//                            | Some place ->
-//                                 let freq = System.Int32.Parse(parts[2])
-//                                 state.Add
-//                            | None -> state
-//
-//                        )
-//                        Map.empty
-                    Map.empty
+                    cwbResults
+                    // The first element contains the actual results
+                    |> fst
+                    |> Option.defaultValue [||]
+                    |> Array.tail
+                    |> Array.fold
+                        (fun (state: Map<string, Map<string, int64>>) line ->
+                            let parts = line.Split('\t')
+
+                            let form =
+                                let candidate = parts.[0]
+
+                                if System.String.IsNullOrWhiteSpace(candidate) then
+                                    prevForm
+                                else
+                                    prevForm <- candidate
+                                    candidate
+
+                            match informantPlaceMap.TryFind(parts.[1]) with
+                            | Some place ->
+                                let freq = System.Int64.Parse(parts.[2])
+
+                                state
+                                |> Map.change
+                                    form
+                                    (fun (maybePlaceMap: Map<string, int64> option) ->
+                                        match maybePlaceMap with
+                                        | Some placeMap ->
+                                            // We have already created a place map for this form
+                                            placeMap
+                                            |> Map.change
+                                                place
+                                                (fun (maybeAccFreq: int64 option) ->
+                                                    match maybeAccFreq with
+                                                    | Some accFreq ->
+                                                        // We have already registered one or more frequencies
+                                                        // for this place (and form), so accumulate
+                                                        Some(accFreq + freq)
+                                                    | None ->
+                                                        // This is the first time we see this place for the given
+                                                        // form, so start with the current frequency
+                                                        Some freq)
+                                            |> Some
+                                        | None ->
+                                            // We have not yet created a place map for this form, so create one
+                                            // with the current place and frequency
+                                            [ (place, freq) ] |> Map.ofList |> Some)
+                            | None -> state)
+                        Map.empty
                 // The first line is only decoration, so throw it away
                 | Error ex -> raise ex
         | None -> return failwith "Cannot get geo distribution for corpus without geo coordinates!"

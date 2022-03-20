@@ -46,6 +46,7 @@ module LoadingCorpus =
                   FetchedMetadataValues = [||]
                   FetchedMinAndMax = None
                   FetchedTextMetadata = [| [||] |]
+                  GeoDistributionMap = Map.empty
                   IsNarrowWindow = false
                   IsSelectionTableOpen = false
                   IntervalCategoryModes = Map.empty
@@ -160,7 +161,7 @@ module LoadedCorpus =
                         else
                             match loadedCorpusModel.Corpus.SharedInfo.GeoCoordinates with
                             | Some _coords ->
-                                Cmd.OfAsync.perform serverApi.GetGeoDistribution searchParams FetchedGeoCoordinates
+                                Cmd.OfAsync.perform serverApi.GetGeoDistribution newSearchParams FetchedGeoCoordinates
                             | None -> Cmd.none
 
                     let fetchedPages =
@@ -208,8 +209,10 @@ module LoadedCorpus =
                     newLoadedCorpusModel, newConcordanceModel, cmd
 
                 | FetchedGeoCoordinates coordMap ->
-                    printfn "her"
-                    loadedCorpusModel, concordanceModel, Cmd.none
+                    { loadedCorpusModel with
+                          GeoDistributionMap = coordMap },
+                    concordanceModel,
+                    Cmd.none
 
                 // Fetch a window of search result pages centred on centrePageNo. Ignores pages that have
                 // already been fetched or that are currently being fetched in another request (note that such

@@ -1,5 +1,7 @@
 @import "~bulma/bulma.sass";
+
 $tooltip-font-size: $size-6;
+
 @import "~@creativebulma/bulma-tooltip/src/sass/index.sass";
 @import "~@fortawesome/fontawesome-free/css/all.min.css";
 @import "spinner.scss";
@@ -7,6 +9,7 @@ $tooltip-font-size: $size-6;
 @import "~jquery-ui-dist/jquery-ui.min.css";
 @import "media.scss";
 @import "jplayer.blue.monday.css";
+@import "geo-map.scss";
 
 html {
     font-size: 14px;
@@ -23,25 +26,25 @@ html {
         width: 50%;
         text-align: right;
         vertical-align: middle;
-      }
+    }
 
-      td.right-context {
+    td.right-context {
         width: 50%;
         vertical-align: middle;
-      }
+    }
 
-      td.aligned-text {
+    td.aligned-text {
         font-style: italic;
 
         span.aligned-id {
-          color: #999;
+            color: #999;
         }
-      }
+    }
 
-      td.match {
+    td.match {
         font-weight: bold;
         vertical-align: middle;
-      }
+    }
 }
 
 .interval-category-table td {
@@ -102,12 +105,15 @@ html {
     td:first-child {
         text-align: center;
     }
+
     td:nth-child(n+3) {
         text-align: right;
     }
+
     tfoot th:nth-child(n+3) {
         text-align: right;
     }
+
     thead th:not(:first-child) {
         padding-top: 14px;
     }
