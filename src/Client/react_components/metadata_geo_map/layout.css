@@ -1,0 +1,77 @@
+#grid {
+    display: grid;
+    background: #000;
+    grid-template-rows: 30px 1fr;
+    grid-template-columns: 35% 1fr;
+    grid-gap: 8px;
+    grid-template-areas: "head head" "meta map";
+}
+.head{
+    background: #000;
+    color: #FFF;
+    grid-area: head;
+    font-size: 2vw;
+}
+/* Now using css on body
+      #outer-grid > div {
+	  background-color: limegreen;
+	  color: red;
+	  padding: 4px;
+	  font-size: 2vw;
+      }
+*/
+#inner-grid {
+    background:black;
+    display: grid;
+    /*    border: 1px solid white; */
+    padding: 3px;
+    grid-template-columns: 18% 20% 1fr 10%;
+    grid-auto-rows: minmax(min-content, max-content);
+    /*	  grid-template-rows: 12ch 12ch minmax(30px, 4ch); */
+    grid-gap: 1px;
+    /*	  grid-template-areas: "this that other" "tids tids tids"; */
+}
+/*      #tids{grid-area: tids;}*/
+#inner-grid > div {
+    text-align: center;
+    background: black;
+    padding: 0px;
+    border: 1px solid purple;
+    font-size: 1vw;
+}
+.nulls{
+    padding-right: 10px;
+/*    background: red; */
+    color: white;
+    float:left;
+}
+.divTable{
+    display: table;
+    width: 100%;
+}
+.divTableRow {
+    display: table-row;
+}
+.divTableHeading {
+    background-color: #EEE;
+    display: table-header-group;
+}
+.divTableCell, .divTableHead {
+    color:white;
+    border: 1px solid #999999;
+    display: table-cell;
+    padding: 3px 10px;
+}
+.divTableHeading {
+    background-color: #EEE;
+    display: table-header-group;
+    font-weight: bold;
+}
+.divTableFoot {
+    background-color: #EEE;
+    display: table-footer-group;
+    font-weight: bold;
+}
+.divTableBody {
+    display: table-row-group;
+}

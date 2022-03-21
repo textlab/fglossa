@@ -321,7 +321,7 @@ let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
         let corpus =
             Corpora.Server.getCorpus searchParams.CorpusCode
 
-        match corpus.Config.GeoCoordinates with
+        match corpus.Config.GeoMapConfig with
         | Some coords ->
             let namedQuery =
                 cwbQueryName corpus searchParams.SearchId

@@ -27,6 +27,8 @@ type Msg =
     | SetSelectionTablePage of pageNumber: int
     | SetSelectionTableSort of Metadata.SortInfo
     | CloseSelectionTable
+    | OpenMetadataGeoMap
+    | CloseMetadataGeoMap
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
     match msg with
@@ -357,4 +359,12 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
     | CloseSelectionTable ->
         { model with
               IsSelectionTableOpen = false },
+        Cmd.none
+    | OpenMetadataGeoMap ->
+        { model with
+              IsMetadataGeoMapOpen = true },
+        Cmd.none
+    | CloseMetadataGeoMap ->
+        { model with
+              IsMetadataGeoMapOpen = false },
         Cmd.none

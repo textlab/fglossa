@@ -47,6 +47,7 @@ module LoadingCorpus =
                   FetchedMinAndMax = None
                   FetchedTextMetadata = [| [||] |]
                   GeoDistributionMap = Map.empty
+                  IsMetadataGeoMapOpen = false
                   IsNarrowWindow = false
                   IsSelectionTableOpen = false
                   IntervalCategoryModes = Map.empty
@@ -159,7 +160,7 @@ module LoadedCorpus =
                         if shouldRunMoreSteps then
                             Cmd.ofMsg PerformSearchStep
                         else
-                            match loadedCorpusModel.Corpus.SharedInfo.GeoCoordinates with
+                            match loadedCorpusModel.Corpus.SharedInfo.GeoMapConfig with
                             | Some _coords ->
                                 Cmd.OfAsync.perform serverApi.GetGeoDistribution newSearchParams FetchedGeoCoordinates
                             | None -> Cmd.none

@@ -135,7 +135,7 @@ type SharedCorpusInfo =
     { Code: string
       ExternalTools: ExternalTool list
       FontFamily: string option
-      GeoCoordinates: GeoMapConfig option
+      GeoMapConfig: GeoMapConfig option
       Info: string option
       LanguageConfig: LanguageConfig
       Logo: string option
@@ -145,11 +145,11 @@ type SharedCorpusInfo =
       SearchEngine: SearchEngine
       TotalTexts: int64
       TotalTokens: int64 }
-    static member Init(code, name, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine, ?geoCoordinates) =
+    static member Init(code, name, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine, ?geoMapConfig) =
         { Code = code
           ExternalTools = []
           FontFamily = None
-          GeoCoordinates = defaultArg geoCoordinates None
+          GeoMapConfig = defaultArg geoMapConfig None
           Info = None
           LanguageConfig = defaultArg languageConfig (Monolingual None)
           Logo = logo

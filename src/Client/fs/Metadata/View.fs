@@ -3,6 +3,7 @@ module View.Metadata
 open Fable.Core.JsInterop
 open Feliz
 open Feliz.Bulma
+open Shared
 open Shared.Metadata
 open Shared.StringUtils
 open Model
@@ -17,6 +18,12 @@ let textAndTokenCountText (model: LoadedCorpusModel) =
         $"{selectedTexts} of {model.Corpus.SharedInfo.TotalTexts} texts ({selectedTokens} of {model.Corpus.SharedInfo.TotalTokens} tokens) selected"
     | _ -> $"All {model.Corpus.SharedInfo.TotalTexts} texts ({model.Corpus.SharedInfo.TotalTokens} tokens) selected"
 
+[<ReactComponent(import = "default", from = "../../react_components/metadata_geo_map/Meta.jsx")>]
+let MetadataGeoMap
+    (coords: obj)
+    (config: {| API_KEY: string; CENTER: {| lat: float; lng: float |}; ZOOM: float |})
+    (meta: string[] [])
+    = React.imported()
 
 module MetadataMenu =
     [<ReactComponent>]
@@ -678,6 +685,49 @@ module MetadataMenu =
 
         ReactDOM.createPortal (popup, root)
 
+
+    [<ReactComponent>]
+    let MetadataGeoMapModal (geoMapConfig: GeoMapConfig) (dispatch: Msg -> unit) =
+        let elementRef = React.useElementRef ()
+
+        let focusModal () =
+            elementRef.current
+            |> Option.iter (fun modalElement -> modalElement.focus ())
+
+        // Focus the modal when mounted to enable it to receive keyboard events
+        React.useEffectOnce focusModal
+
+        let coords =
+            createObj [| for (place, lat, lng) in geoMapConfig.Coordinates -> (place, [| lat; lng |]) |]
+
+        let config =
+            {| API_KEY = "AIzaSyCeGVnQFiyEzY0bOKoaLt-GZxjdztiG8gc"
+               CENTER = {| lat = 64.92379165427583; lng = 16.706251160048125 |}
+               ZOOM = 4.7 |}
+        let meta = [|
+            [| "tid";"rec";"age";"birth";"sex";"place" |]
+            [| "aal_01um"; "2008"; "25"; "1984"; "M"; "Ål"|]
+            [| "alvdal_04gk"; "2008"; "74"; "1933"; "F"; "Alvdal"|]
+        |]
+
+        Bulma.modal [ modal.isActive
+                      // Set elementRef in order to apply the focusModal() function to this element
+                      prop.ref elementRef
+                      // Set tabIndex so that the element receives keyboard events
+                      prop.tabIndex 0
+                      prop.onKeyUp
+                          (fun e ->
+                              if e.key = "Escape" then
+                                  dispatch CloseMetadataGeoMap)
+                      prop.children [ Bulma.modalBackground [ prop.onClick
+                                                                  (fun _ -> dispatch CloseMetadataGeoMap) ]
+                                      Bulma.modalContent [ prop.style [ style.width 1440 ]
+                                                           prop.children [ MetadataGeoMap coords config meta ] ]
+
+                                      Bulma.modalClose [ button.isLarge
+                                                         prop.onClick (fun _ -> dispatch CloseMetadataGeoMap) ] ] ]
+
+
     /// The main view of the metadata menu on the left hand side of the interface
     let view (model: LoadedCorpusModel) (dispatch: Update.Metadata.Msg -> unit) =
         let menuItems =
@@ -734,18 +784,21 @@ module MetadataMenu =
                                                                   prop.onClick (fun _ -> dispatch FetchMetadataForTexts)
                                                                   prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-binoculars" ] ] ]
                                                                                   Html.span "Show" ] ]
-                                            // if model.Corpus.SharedInfo.GeoCoordinates.IsSome then
-                                            //     Bulma.button.button [ button.isSmall
-                                            //                           button.isOutlined
-                                            //                           color.isInfo
-                                            //                           prop.title "Show map"
-                                            //                           prop.onClick (fun _ ->
-                                            //                               dispatch FetchMetadataForTexts)
-                                            //                           prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-globe" ] ] ]
-                                            //                                           Html.span "Map" ] ]
-                                             ] ]
+                                            if model.Corpus.SharedInfo.GeoMapConfig.IsSome then
+                                                Bulma.button.button [ button.isSmall
+                                                                      button.isOutlined
+                                                                      color.isInfo
+                                                                      prop.title "Show map"
+                                                                      prop.onClick (fun _ ->
+                                                                          dispatch OpenMetadataGeoMap)
+                                                                      prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-globe" ] ] ]
+                                                                                      Html.span "Map" ] ] ] ]
 
-        Html.span [ Html.div [ prop.style [ style.width 200
+        Html.span [ if model.IsMetadataGeoMapOpen then
+                        match model.Corpus.SharedInfo.GeoMapConfig with
+                        | Some config -> MetadataGeoMapModal config dispatch
+                        | None -> Html.none
+                    Html.div [ prop.style [ style.width 200
                                             style.paddingLeft (length.em 0.75)
                                             style.marginBottom (length.rem 0.75) ]
                                prop.children [ Html.text (textAndTokenCountText model)

@@ -971,7 +971,7 @@ module ResultsView =
                                                                      )
                                                                  ))
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
-                                               if loadedCorpusModel.Corpus.SharedInfo.GeoCoordinates.IsSome then
+                                               if loadedCorpusModel.Corpus.SharedInfo.GeoMapConfig.IsSome then
                                                    Html.li [ if activeTab = "GeoDistributionMap" then
                                                                  tab.isActive
                                                              prop.onClick

@@ -215,6 +215,7 @@ type LoadedCorpusModel =
       FetchedMinAndMax: (int64 * int64) option
       FetchedTextMetadata: string [] []
       GeoDistributionMap: GeoDistributionMap
+      IsMetadataGeoMapOpen: bool
       IsNarrowWindow: bool
       IsSelectionTableOpen: bool
       // This determines whether a certain category will displayed as a select
