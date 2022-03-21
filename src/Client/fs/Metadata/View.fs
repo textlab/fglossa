@@ -687,7 +687,7 @@ module MetadataMenu =
 
 
     [<ReactComponent>]
-    let MetadataGeoMapModal (geoMapConfig: GeoMapConfig) (dispatch: Msg -> unit) =
+    let MetadataGeoMapModal (geoMapConfig: GeoMapConfig) (metadata: string [][]) (dispatch: Msg -> unit) =
         let elementRef = React.useElementRef ()
 
         let focusModal () =
@@ -704,11 +704,9 @@ module MetadataMenu =
             {| API_KEY = "AIzaSyCeGVnQFiyEzY0bOKoaLt-GZxjdztiG8gc"
                CENTER = {| lat = 64.92379165427583; lng = 16.706251160048125 |}
                ZOOM = 4.7 |}
-        let meta = [|
-            [| "tid";"rec";"age";"birth";"sex";"place" |]
-            [| "aal_01um"; "2008"; "25"; "1984"; "M"; "Ål"|]
-            [| "alvdal_04gk"; "2008"; "74"; "1933"; "F"; "Alvdal"|]
-        |]
+
+        let meta =
+            Array.append [| [| "tid";"rec";"age";"birth";"sex";"place" |] |] metadata
 
         Bulma.modal [ modal.isActive
                       // Set elementRef in order to apply the focusModal() function to this element
@@ -790,13 +788,13 @@ module MetadataMenu =
                                                                       color.isInfo
                                                                       prop.title "Show map"
                                                                       prop.onClick (fun _ ->
-                                                                          dispatch OpenMetadataGeoMap)
+                                                                          dispatch FetchMetadataForGeoMap)
                                                                       prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-globe" ] ] ]
                                                                                       Html.span "Map" ] ] ] ]
 
         Html.span [ if model.IsMetadataGeoMapOpen then
                         match model.Corpus.SharedInfo.GeoMapConfig with
-                        | Some config -> MetadataGeoMapModal config dispatch
+                        | Some config -> MetadataGeoMapModal config model.FetchedTextMetadata dispatch
                         | None -> Html.none
                     Html.div [ prop.style [ style.width 200
                                             style.paddingLeft (length.em 0.75)

@@ -27,7 +27,8 @@ type Msg =
     | SetSelectionTablePage of pageNumber: int
     | SetSelectionTableSort of Metadata.SortInfo
     | CloseSelectionTable
-    | OpenMetadataGeoMap
+    | FetchMetadataForGeoMap
+    | OpenMetadataGeoMap of string [] []
     | CloseMetadataGeoMap
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
@@ -360,8 +361,26 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         { model with
               IsSelectionTableOpen = false },
         Cmd.none
-    | OpenMetadataGeoMap ->
+    | FetchMetadataForGeoMap ->
+        let cmd =
+            Cmd.OfAsync.perform
+                serverApi.GetMetadataForTexts
+                (model.Corpus.SharedInfo.Code,
+                 model.Search.Params.MetadataSelection,
+                 [ "texts.tid"
+                   "texts.rec"
+                   "texts.age"
+                   "texts.birth"
+                   "texts.sex"
+                   "texts.place" ],
+                 0,
+                 None)
+                OpenMetadataGeoMap
+
+        model, cmd
+    | OpenMetadataGeoMap res ->
         { model with
+              FetchedTextMetadata = res
               IsMetadataGeoMapOpen = true },
         Cmd.none
     | CloseMetadataGeoMap ->

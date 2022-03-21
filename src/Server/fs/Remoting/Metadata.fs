@@ -272,8 +272,14 @@ let getMetadataForTexts
 
         use conn = new SqliteConnection(connStr)
 
-        let limit = 50
-        let offset = (pageNumber - 1) * limit
+        let limitOffsetSql =
+            if pageNumber = 0 then
+                // pageNumber = 0 means don't limit the number of results
+                ""
+            else
+                let limit = 50
+                let offset = (pageNumber - 1) * limit
+                $" LIMIT {limit} OFFSET {offset}"
 
         let sanitizedColumns = columns |> List.map sanitizeString
 
@@ -371,7 +377,7 @@ let getMetadataForTexts
 
         let sql =
             $"SELECT {columnSql} FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql} \
-             ORDER BY {orderBy} LIMIT {limit} OFFSET {offset}"
+             ORDER BY {orderBy}{limitOffsetSql}"
 
         let parameters = metadataSelectionToParamDict selection
 
