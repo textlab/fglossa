@@ -23,6 +23,14 @@ module Cwb =
           Name: string }
 
 module Metadata =
+    type GeoMapControlType =
+        | StringControl
+        | IntervalControl
+
+    type GeoMapCategoryConfig =
+        { QualifiedColumnName: string
+          ControlType: GeoMapControlType }
+
     /// Base class for all metadata categories
     [<AbstractClass>]
     type Category(aName: string) =
@@ -46,11 +54,22 @@ module Metadata =
 
             $"{tableName}.{this.Code}"
 
+        /// This indicates what kind of selection control should be used for the category
+        /// in the geographical map used for selecting informants in a spoken corpus. It is
+        /// overridden for each subtype of Category, and can also be overriden by individual
+        /// categories if needed.
+        abstract member GeoMapControlType : GeoMapControlType
+
+        member this.GetGeoMapConfig() =
+            { QualifiedColumnName = this.GetQualifiedColumnName()
+              ControlType = this.GeoMapControlType }
+
 
     /// Metadata category that can be presented as a metadata value list
     [<AbstractClass>]
     type StringCategory(aName) =
         inherit Category(aName)
+        override _.GeoMapControlType = StringControl
 
     /// Metadata category that can be presented as a metadata value list (like StringCategory),
     /// but that will be sorted numerically.
@@ -58,11 +77,13 @@ module Metadata =
     [<AbstractClass>]
     type NumberCategory(aName) =
         inherit Category(aName)
+        override _.GeoMapControlType = IntervalControl
 
     /// Metadata category that can be used with a free text search input.
     [<AbstractClass>]
     type LongTextCategory(aName) =
         inherit Category(aName)
+        override _.GeoMapControlType = StringControl
 
     type MenuState =
         | Open
@@ -127,7 +148,8 @@ type GeoMapConfig =
     { CenterLat: float
       CenterLng: float
       ZoomLevel: float
-      LocationMetadataCategoryCode: string
+      MetadataCategories: Metadata.GeoMapCategoryConfig list
+      LocationMetadataCategory: Metadata.GeoMapCategoryConfig
       Coordinates: (string * float * float) [] }
 
 /// Corpus info that is shared between server and client.

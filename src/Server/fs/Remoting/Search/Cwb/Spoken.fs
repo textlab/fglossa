@@ -344,7 +344,7 @@ let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
             use conn = new SqliteConnection(connStr)
 
             let sql =
-                $"SELECT DISTINCT tid as Tid, {coords.LocationMetadataCategoryCode} as Place FROM texts"
+                $"SELECT DISTINCT tid as Tid, {coords.LocationMetadataCategory.QualifiedColumnName} as Place FROM texts"
 
             let parameters =
                 metadataSelectionToParamDict searchParams.MetadataSelection
