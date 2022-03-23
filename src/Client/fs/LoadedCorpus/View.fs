@@ -469,6 +469,9 @@ module ResultsView =
         let GeoMap (coordMap: Map<string, Map<string, int64>>) =
             let selectedColor, setSelectedColor = React.useState ("yellow")
 
+            // coloredPhons is a map from a color name to a set of phonetic forms whose buttons have that color
+            let (coloredPhons: Map<string, Set<string>>), setColorPhons = React.useState (Map.empty)
+
             let colorPicker selectedColor color =
                 let borderColor =
                     if
@@ -485,11 +488,84 @@ module ResultsView =
                                                    style.borderWidth (if selectedColor = color then 4 else 1) ]
                                       prop.onClick (fun _ -> setSelectedColor color) ]
 
+            let phonButton phon =
+                let maybeColor =
+                    coloredPhons
+                    |> Map.tryFindKey (fun _ v -> v |> Set.contains phon)
+
+                let darkColors =
+                    [ "green"
+                      "blue"
+                      "purple"
+                      "black"
+                      "red" ]
+
+                let colorStyles =
+                    match maybeColor with
+                    | Some color ->
+                        let foregroundColor =
+                            if darkColors |> List.contains color then
+                                "white"
+                            else
+                                "dark"
+
+                        [ style.color foregroundColor
+                          style.backgroundColor color ]
+                    | None -> []
+
+                let total =
+                    coordMap.[phon] |> Map.toArray |> Array.sumBy snd
+
+                let titleText =
+                    coordMap.[phon]
+                    |> Map.toArray
+                    |> Array.sortBy snd
+                    |> Array.rev
+                    |> Array.map (fun (location, freq) -> $"{location}: {freq}")
+                    |> String.concat "; "
+                    |> fun s -> $"{s}; Total: {total}"
+
+                Bulma.button.button [ prop.style ([ style.padding 5 ] |> List.append colorStyles)
+                                      prop.title titleText
+                                      prop.text phon
+                                      prop.onClick
+                                          (fun _ ->
+                                              // If the button already has a color, remove it
+                                              // (regardless of whether another color picker has
+                                              // been selected or not, this color should be removed)
+                                              let newMap =
+                                                  match maybeColor with
+                                                  | Some color ->
+                                                      coloredPhons.Change(
+                                                          color,
+                                                          (fun maybePhons ->
+                                                              match maybePhons with
+                                                              | Some phons -> Some(phons.Remove(phon))
+                                                              | None -> None)
+                                                      )
+                                                  | None -> coloredPhons
+
+                                              // If the selected colour picker differs from the current colour
+                                              // of the button, set the button to have the new button colour.
+                                              let newMap' =
+                                                  if maybeColor.IsNone
+                                                     || maybeColor.Value <> selectedColor then
+                                                      newMap.Change(
+                                                          selectedColor,
+                                                          (fun maybePhons ->
+                                                              match maybePhons with
+                                                              | Some phons -> Some(phons.Add(phon))
+                                                              | None -> Some(Set.singleton phon))
+                                                      )
+                                                  else
+                                                      newMap
+
+                                              setColorPhons newMap') ]
+
             Html.div [ prop.className "geo-map"
                        prop.children [ Html.div [ for color in geoMapColors -> colorPicker selectedColor color ]
-                                       Html.div [
-                                                  //                                           for phon in coordMap.Keys |> Array.sort ->
-                                                   ] ] ]
+                                       Bulma.buttons [ prop.style [ style.marginTop 10 ]
+                                                       prop.children [ for phon in coordMap.Keys -> phonButton phon ] ] ] ]
     //      [:div.geo-map {:style {:margin-top 4}}
 //       [:div {:style {:padding "5px 5px 5px 0" :margin-right 4 :float "left"}}
 //        (for [color geo-map-colors]
