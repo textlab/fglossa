@@ -1,6 +1,9 @@
 // Modified version of https://github.com/iamdanfox/react-maps
+import * as React from "react";
+import ReactDOM from 'react-dom';
+import createClass from 'create-react-class';
 
-export const GeoDistributionMap = createReactClass({
+export const GeoDistributionMap = createClass({
 
   // initialize local variables
   getInitialState: function() {
@@ -93,7 +96,7 @@ export const GeoDistributionMap = createReactClass({
       height: this.props.height
     }
 
-    return React.DOM.div({style:style})
+    return <div style={style}/>
   },
 
   componentDidMount : function() {

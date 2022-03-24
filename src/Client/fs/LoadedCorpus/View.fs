@@ -454,7 +454,7 @@ module ResultsView =
                   LoadedCorpus.ResultViews.Cwb.Written.concordanceTable concordanceModel corpus resultPage dispatch ]
 
 
-    module GeoDistributionMap =
+    module GeoDistrMap =
         let geoMapColors =
             [ "yellow"
               "green"
@@ -465,8 +465,24 @@ module ResultsView =
               "red"
               "orange" ]
 
+        [<ReactComponent(import = "GeoDistributionMap", from = "../../react_components/geo_distribution_map.jsx")>]
+        let GeoDistributionMap
+            (initLat: float)
+            (initLon: float)
+            (initZoom: float)
+            (width: int)
+            (height: int)
+            //            (points: int [])
+            (gmaps_api_key: string)
+            =
+            React.imported ()
+
         [<ReactComponent>]
-        let GeoMap (coordMap: Map<string, Map<string, int64>>) =
+        let GeoMapController
+            (googleMapsApiKey: string)
+            (geoMapConfig: GeoMapConfig)
+            (coordMap: Map<string, Map<string, int64>>)
+            =
             let selectedColor, setSelectedColor = React.useState ("yellow")
 
             // coloredPhons is a map from a color name to a set of phonetic forms whose buttons have that color
@@ -565,7 +581,14 @@ module ResultsView =
             Html.div [ prop.className "geo-map"
                        prop.children [ Html.div [ for color in geoMapColors -> colorPicker selectedColor color ]
                                        Bulma.buttons [ prop.style [ style.marginTop 10 ]
-                                                       prop.children [ for phon in coordMap.Keys -> phonButton phon ] ] ] ]
+                                                       prop.children [ for phon in coordMap.Keys -> phonButton phon ] ]
+                                       Html.div [ GeoDistributionMap
+                                                      geoMapConfig.CenterLat
+                                                      geoMapConfig.CenterLng
+                                                      geoMapConfig.ZoomLevel
+                                                      640
+                                                      460
+                                                      googleMapsApiKey ] ] ]
     //      [:div.geo-map {:style {:margin-top 4}}
 //       [:div {:style {:padding "5px 5px 5px 0" :margin-right 4 :float "left"}}
 //        (for [color geo-map-colors]
@@ -1048,6 +1071,13 @@ module ResultsView =
                                                                  ))
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
                                                if loadedCorpusModel.Corpus.SharedInfo.GeoMapConfig.IsSome then
+                                                   let googleMapsApiKey =
+                                                       match loadedCorpusModel.Corpus.SharedInfo.GoogleMapsApiKey with
+                                                       | Some key -> key
+                                                       | None ->
+                                                           failwith
+                                                               "No Google Maps API key provided! Set it in the environment variable GOOGLE_MAPS_API_KEY."
+
                                                    Html.li [ if activeTab = "GeoDistributionMap" then
                                                                  tab.isActive
                                                              prop.onClick
@@ -1055,7 +1085,9 @@ module ResultsView =
                                                                      dispatch (
                                                                          ShowingResults.SelectResultTab(
                                                                              GeoDistributionMap(
-                                                                                 loadedCorpusModel.GeoDistributionMap
+                                                                                 googleMapsApiKey,
+                                                                                 loadedCorpusModel.Corpus.SharedInfo.GeoMapConfig.Value,
+                                                                                 loadedCorpusModel.GeoDistribution
                                                                              )
                                                                          )
                                                                      ))
@@ -1105,7 +1137,8 @@ module ResultsView =
                           concordanceModel
                           corpus
                           (ShowingResults.ConcordanceMsg >> dispatch)
-              | GeoDistributionMap coordMap -> GeoDistributionMap.GeoMap coordMap
+              | GeoDistributionMap (googleMapsApiKey, geoMapConfig, coordMap) ->
+                  GeoDistrMap.GeoMapController googleMapsApiKey geoMapConfig coordMap
               | FrequencyLists frequencyListsModel ->
                   FrequencyLists.view
                       loadedCorpusModel

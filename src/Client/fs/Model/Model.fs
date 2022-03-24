@@ -187,7 +187,7 @@ type MetadataDistributionModel =
 
 type ResultTab =
     | Concordance of ConcordanceModel
-    | GeoDistributionMap of GeoDistributionMap
+    | GeoDistributionMap of string * GeoMapConfig * GeoDistribution
     | FrequencyLists of FrequencyListsModel
     | MetadataDistribution of MetadataDistributionModel
 
@@ -214,7 +214,7 @@ type LoadedCorpusModel =
       FetchedMetadataValues: string []
       FetchedMinAndMax: (int64 * int64) option
       FetchedTextMetadata: string [] []
-      GeoDistributionMap: GeoDistributionMap
+      GeoDistribution: GeoDistribution
       IsMetadataGeoMapOpen: bool
       IsNarrowWindow: bool
       IsSelectionTableOpen: bool

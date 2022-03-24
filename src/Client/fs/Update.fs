@@ -46,7 +46,7 @@ module LoadingCorpus =
                   FetchedMetadataValues = [||]
                   FetchedMinAndMax = None
                   FetchedTextMetadata = [| [||] |]
-                  GeoDistributionMap = Map.empty
+                  GeoDistribution = Map.empty
                   IsMetadataGeoMapOpen = false
                   IsNarrowWindow = false
                   IsSelectionTableOpen = false
@@ -75,7 +75,7 @@ module LoadedCorpus =
             type Msg =
                 | PerformSearchStep
                 | SearchResultsReceived of SearchResultInfo
-                | FetchedGeoCoordinates of GeoDistributionMap
+                | FetchedGeoCoordinates of GeoDistribution
                 | FetchResultWindow of centrePageNo: int * maybeSortKey: SortKey option
                 | FetchedResultWindow of SearchResultPage []
                 | SetPaginatorTextValue of string
@@ -209,9 +209,9 @@ module LoadedCorpus =
 
                     newLoadedCorpusModel, newConcordanceModel, cmd
 
-                | FetchedGeoCoordinates coordMap ->
+                | FetchedGeoCoordinates geoDistribution ->
                     { loadedCorpusModel with
-                          GeoDistributionMap = coordMap },
+                          GeoDistribution = geoDistribution },
                     concordanceModel,
                     Cmd.none
 

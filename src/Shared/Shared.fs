@@ -158,6 +158,7 @@ type SharedCorpusInfo =
       ExternalTools: ExternalTool list
       FontFamily: string option
       GeoMapConfig: GeoMapConfig option
+      GoogleMapsApiKey: string option
       Info: string option
       LanguageConfig: LanguageConfig
       Logo: string option
@@ -172,6 +173,7 @@ type SharedCorpusInfo =
           ExternalTools = []
           FontFamily = None
           GeoMapConfig = defaultArg geoMapConfig None
+          GoogleMapsApiKey = None
           Info = None
           LanguageConfig = defaultArg languageConfig (Monolingual None)
           Logo = logo
@@ -361,7 +363,7 @@ type MetadataDistribution =
 type FreqListTokenBoundaries = { From: int option; To: int option }
 
 // Map from attribute value to geographical location to frequency
-type GeoDistributionMap = Map<string, Map<string, int64>>
+type GeoDistribution = Map<string, Map<string, int64>>
 
 // Define type aliases that help clarify the parameters of the IServerApi functions.
 // If we could have used an actual interface instead, we could have used methods
@@ -400,7 +402,7 @@ type IServerApi =
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       DownloadSearchResults: SearchParams * Cwb.PositionalAttribute list * DownloadFormat * ShouldCreateHeader -> Async<byte []>
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
-      GetGeoDistribution: SearchParams -> Async<GeoDistributionMap>
+      GetGeoDistribution: SearchParams -> Async<GeoDistribution>
       GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * FreqListTokenBoundaries -> Async<string []>
       DownloadFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * FreqListTokenBoundaries * DownloadFormat -> Async<byte []>
       GetMetadataDistribution: SearchParams * AttributeCode * Metadata.CategoryCode * Metadata.CategoryType * KeepZeroValues * AccExcludedAttrValues -> Async<MetadataDistribution>

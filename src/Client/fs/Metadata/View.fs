@@ -687,7 +687,7 @@ module MetadataMenu =
 
 
     [<ReactComponent>]
-    let MetadataGeoMapModal (geoMapConfig: GeoMapConfig) (metadata: string [][]) (dispatch: Msg -> unit) =
+    let MetadataGeoMapModal (googleMapsApiKey: string) (geoMapConfig: GeoMapConfig) (metadata: string [][]) (dispatch: Msg -> unit) =
         let elementRef = React.useElementRef ()
 
         let focusModal () =
@@ -701,9 +701,9 @@ module MetadataMenu =
             createObj [| for (place, lat, lng) in geoMapConfig.Coordinates -> (place, [| lat; lng |]) |]
 
         let config =
-            {| API_KEY = "AIzaSyCeGVnQFiyEzY0bOKoaLt-GZxjdztiG8gc"
-               CENTER = {| lat = 64.92379165427583; lng = 16.706251160048125 |}
-               ZOOM = 4.7 |}
+            {| API_KEY = googleMapsApiKey
+               CENTER = {| lat = geoMapConfig.CenterLat; lng = geoMapConfig.CenterLng |}
+               ZOOM = geoMapConfig.ZoomLevel |}
 
         let meta =
             Array.append [| [| "tid";"rec";"age";"birth";"sex";"place" |] |] metadata
@@ -794,7 +794,12 @@ module MetadataMenu =
 
         Html.span [ if model.IsMetadataGeoMapOpen then
                         match model.Corpus.SharedInfo.GeoMapConfig with
-                        | Some config -> MetadataGeoMapModal config model.FetchedTextMetadata dispatch
+                        | Some config ->
+                           match model.Corpus.SharedInfo.GoogleMapsApiKey with
+                           | Some key ->
+                               MetadataGeoMapModal key config model.FetchedTextMetadata dispatch
+                           | None ->
+                                failwith "No Google Maps API key provided! Set it in the environment variable GOOGLE_MAPS_API_KEY."
                         | None -> Html.none
                     Html.div [ prop.style [ style.width 200
                                             style.paddingLeft (length.em 0.75)

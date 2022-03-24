@@ -36,7 +36,14 @@ type Corpus(config: SharedCorpusInfo) =
         with
         | :? FileNotFoundException -> None
 
-    member _.Config = { config with Info = corpusInfo }
+    member _.Config =
+        let googleMapsApiKey =
+            System.Environment.GetEnvironmentVariable("GOOGLE_MAPS_API_KEY")
+            |> Option.ofObj
+
+        { config with
+              Info = corpusInfo
+              GoogleMapsApiKey = googleMapsApiKey }
 
     member val Encoding = System.Text.Encoding.UTF8 with get, set
 
