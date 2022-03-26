@@ -32,8 +32,8 @@ const libraries = ["drawing", "geometry"];
 const polygonOptions = {
     fillColor: `#2196F3`,
     strokeColor: `#000000`,
-    fillOpacity: 0.5,
-    strokeWeight: 1.0,
+    fillOpacity: 0.6,
+    strokeWeight: 0.5,
     clickable: true,
     editable: true,
     draggable: true,
@@ -308,7 +308,7 @@ function Menu(props){
 	    let row = [];
 	    row.push(
 		<div className="divTableCell" key={"row_label"+j}>
-		    {ucfirst(e.key)}
+		    {ucfirst(e.name)}
 		</div>
 	    );
 	    if(e.type == "interval"){
@@ -324,13 +324,19 @@ function Menu(props){
 			    onChange={({ min, max }) => props.interval([k,min,max])}
 			/>
  		);
+		let null_checkbox = [];
+		if(e.nulls){
+		    null_checkbox.push(
+			    <Checkbox
+				key={k+"_null"}
+				label={"null"}
+				onChange={(e) => props.discrete({cat: k,val: null,checked: e.target.checked})}
+			    />
+		    );
+		}
 		row.push(
 		    <div className="divTableCell" key={k+"_null_div"}>
-			<Checkbox
-			    key={k+"_null"}
-			    label={"null"}
-			    onChange={(e) => props.discrete({cat: k,val: null,checked: e.target.checked})}
-			/>
+			{null_checkbox}
 		    </div>);
 		let rowID = "row_id"+j++;
 		comps.push(<div key={rowID} className="divTableRow">{row}</div>);
@@ -338,20 +344,17 @@ function Menu(props){
 	    }
 	    let checks = [];
 	    let k = e.key;
-	    let nulls = false;
+	    let nulls = [];
 	    e.val.forEach(
 		function(i){
-		    if(i == "null"){ // Seriously?!?
-			nulls = true;
-		    }
 		    let check = (
 			<Checkbox
 			    key={k+"_"+i}
 			    label={i}
 			    onChange={(e) => props.discrete({cat: k,val: i,checked: e.target.checked})}
 			/>);
-		    if(nulls){
-			nulls = check;
+		    if(i == "null"){
+			nulls.push(check);
 			return;
 		    }
 		    checks.push(
@@ -364,13 +367,11 @@ function Menu(props){
 		    {checks}
 		</div>
 	    );
-	    if(nulls){
-		row.push(
+	    row.push(
 		<div key={k+"_null"} className="divTableCell">
 		    {nulls}
 		</div>
-		);
-	    }
+	    );
 	    let rowID = "row_id"+j++;
 	    comps.push(<div key={rowID} className="divTableRow">{row}</div>);
 	});
@@ -387,20 +388,20 @@ class Sets {
     static tid2loc = {};
     static SuperSet = {}; // SuperSet is a hash of hashes, where the innerhashes are key/set pairs. The sets are simply tids, on which set operations can be performed.
 
-    static initSuperSet(meta){
+    static initSuperSet(meta, cats, id_key, loc_key){
 	let column_names = {};
-	for (const [k, v] of Object.entries(meta[0])) {
-	    if(v !== "tid"){
-		column_names[k] = v;
-		this.SuperSet[v] = {};
+	for (const [k, v] of Object.entries(cats)) {
+	    if(k !== id_key){
+		column_names[v.COLUMN] = k;
+		this.SuperSet[k] = {};
 	    }
 	}
-	for (const [k, v] of Object.entries(meta.slice(1,meta.length))) {
-	    let tid = v[0];
+	for (const [k, v] of Object.entries(meta)) {
+	    let tid = v[cats[id_key].COLUMN]; //ALWAYS 0
 	    for (const [i, e] of Object.entries(v)){
 		if(i != 0 & e != 0){
 		    let key = column_names[i];
-		    if(key == "place"){this.tid2loc[tid] = e}
+		    if(key == loc_key){this.tid2loc[tid] = e}
 		    if(!(e in this.SuperSet[key])){
 			this.SuperSet[key][e] = new Set();
 		    }
@@ -411,7 +412,7 @@ class Sets {
 	    }
 	}
     }
-    
+
     static union(sets){
 	let u = new Set();
 	for(const [i, set] of Object.entries(sets)){
@@ -436,7 +437,7 @@ class Sets {
     // updates the k values in activeSets {sex: {…}, agegroup: {…}, age: {…}}, in the range l - r, but checks each value is actually present in SuperSet
 
     static interval_add_set(k,l,r, activeSets = {}){
-	let nullval = activeSets[k] && activeSets[k][null]
+	let nullval = activeSets[k] && activeSets[k][null];
 	activeSets[k] = {} // IE, this is going to be reset, so needs to be purged
 	if(nullval){activeSets = this.add_set(k,null, activeSets)}
 	var i;
@@ -498,18 +499,18 @@ class Sets {
     
 }
 
-export default function Meta({ coords, config, meta }){
-    
-    Sets.initSuperSet(meta);
+export default function Meta({ coords, config, meta, ok, cancel }){
+    const location_key = config.LOCATOR;
+    const id = config.ID;
+    Sets.initSuperSet(meta, config.CATEGORY, id, location_key);
     const zoom = config.ZOOM;
     const API_KEY = config.API_KEY;
     const center = config.CENTER
-//    const center = {lat: coords.CENTER[0], lng: coords.CENTER[1]};
-    const locs = Object.keys(Sets.SuperSet["place"]);
-    const menu_data = initMenuData(Sets.SuperSet);
+    const locs = Object.keys(Sets.SuperSet[location_key]);
+    const menu_data = initMenuData(Sets.SuperSet, config.CATEGORY, location_key);
     const markers = locs.map(function(loc){
 	return {id: loc, polyselected: true, selected: true, coords:{id: loc, lat: coords[loc][0],lng: coords[loc][1]}}});
-    let a = Sets.initActiveSets([{type: 'discrete', key: 'place', val: locs}]);
+    let a = Sets.initActiveSets([{type: 'discrete', key: location_key, val: locs}]);
     a = Sets.initActiveSets(menu_data, a);
     const [activeSets, aUpdate] = useState(a);
     const [c, cUpdate] = useState(markers);
@@ -531,10 +532,10 @@ export default function Meta({ coords, config, meta }){
     };
 
     const mapCallback = (d) => {
-	aUpdate(Sets.remove_active_set("place", activeSets));
+	aUpdate(Sets.remove_active_set(location_key, activeSets));
 	d.forEach(
 	    function(e){
-		aUpdate(Sets.add_set("place", e, activeSets));
+		aUpdate(Sets.add_set(location_key, e, activeSets));
 	    }
 	);
 	for(const [k,v] of Object.entries(c)){
@@ -561,15 +562,23 @@ export default function Meta({ coords, config, meta }){
     return (
 	    <div id="grid">
 		<div className="head" id="head">
+		    <button onClick={() => ok(activeSets)}>
+			{"OK"}
+		    </button>
+		    <button onClick={() => cancel()}>
+			{"CANCEL"}
+		    </button>
+		    {/*
 		    <button onClick={() => console.log([...Sets.select_tids(activeSets)])}>
 			{"tids"}
 		    </button>
 		    <button onClick={() => console.log(activeSets)}>
 			{"meta"}
 		    </button>
-		    <button onClick={() => console.log(activeSets["place"])}>
+		    <button onClick={() => console.log(activeSets[location_key])}>
 			{"locs"}
 		    </button>
+		    */}
 		    <span>{ntids + " informants in "}</span>
 		    <span>{nlocs + " locations"}</span>
 		</div>
@@ -594,23 +603,16 @@ export default function Meta({ coords, config, meta }){
 }
 /* Some auxfuns */
 
-function initMenuData(meta){
-    // meta = cat -> val -> Set of tids
+function initMenuData(meta, cats, ignore){
     let menu_data = [];
-    let geo_data = ["place","geo","region","country"];
-    let interval_data = ["age", "birth", "rec"];
-    let discrete_data = ["sex","gender","agegroup"];
-    
     for (const [key, value] of Object.entries(meta)) {
-	
-	if(geo_data.includes(key)){ continue; }
-	
-	if(interval_data.includes(key)){
+	if(key == ignore){ continue; }
+	if(cats[key].TYPE == "interval"){
 	    let [min,max,nulls] = getInterval(Object.keys(value));
-	    menu_data.push({type:"interval",key:key,val:{min:min,max:max},nulls:nulls});
+	    menu_data.push({type:"interval",key:key,val:{min:min,max:max},nulls:nulls,name:cats[key].NAME});
 	    continue;
 	}
-	menu_data.push({type:"discrete",key:key,val:Object.keys(value)});
+	menu_data.push({type:"discrete",key:key,val:Object.keys(value),name:cats[key].NAME});
     }
     return menu_data;
 }
