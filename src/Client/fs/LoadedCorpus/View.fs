@@ -472,7 +472,11 @@ module ResultsView =
             (initZoom: float)
             (width: int)
             (height: int)
-            //            (points: int [])
+            (points: {| latitude: float
+                        longitude: float
+                        name: string
+                        label: string
+                        icon: string |} [])
             (gmaps_api_key: string)
             =
             React.imported ()
@@ -578,6 +582,77 @@ module ResultsView =
 
                                               setColorPhons newMap') ]
 
+            let locationNames =
+                coordMap.Values
+                |> Seq.collect (fun locationMap -> locationMap.Keys)
+                |> Seq.toArray
+                |> Array.distinct
+
+            // Convert the hash map with frequency distribution over locations per phon
+            // to one with the frequency distribution over phons per locations
+            let locationPhonFreqs =
+                coordMap
+                |> Map.toArray
+                |> Array.collect
+                    (fun (phon, locationMap) ->
+                        locationMap
+                        |> Map.toArray
+                        |> Array.map (fun (location, freq) -> (location, phon, freq)))
+                |> Array.groupBy (fun (location, _, _) -> location)
+                |> Array.map
+                    (fun (location, phonFreqs) ->
+                        let phonFreqMap =
+                            [| for (_, phon, freq) in phonFreqs -> phon, freq |]
+                            |> Map.ofArray
+
+                        (location, phonFreqMap))
+                |> Map.ofArray
+
+            let allCoordsMap =
+                geoMapConfig.Coordinates
+                |> Array.map (fun (locationName, lat, lng) -> locationName, (lat, lng))
+                |> Map.ofArray
+
+            let coords =
+                [| for locationName in locationNames ->
+                       {| Name = locationName
+                          Coords = allCoordsMap.[locationName]
+                          Phons =
+                              locationPhonFreqs.[locationName]
+                              |> Map.toArray
+                              |> Array.map (fun (phon, freq) -> $"{phon}: {freq}")
+                              |> String.concat "; " |} |]
+
+            // These are the small red dots that mark all locations where hits were found
+            let smallDots =
+                [| for coord in coords ->
+                       {| latitude = fst coord.Coords
+                          longitude = snd coord.Coords
+                          name = coord.Name
+                          label = $"{coord.Name}: {coord.Phons}"
+                          icon = "" |} |]
+
+            // Now find, for each color in the color picker, those locations where we
+            // found one or more of the phonetic forms selected for that color, and create
+            // colored markers for them.
+            let selectedPoints =
+                [| for (color, phons) in coloredPhons |> Map.toArray do
+                       yield!
+                           [| for phon in phons do
+                                  let locationFreqs = coordMap.[phon]
+                                  let selectedLocations = Set.ofSeq locationFreqs.Keys
+
+                                  let selectedCoords =
+                                      smallDots
+                                      |> Array.filter (fun dot -> selectedLocations.Contains(dot.name))
+
+                                  yield!
+                                      [| for coordMap in selectedCoords ->
+                                             {| coordMap with
+                                                    icon = $"speech/mm_20_{color}.png" |} |] |] |]
+
+            let points = Array.append smallDots selectedPoints
+
             Html.div [ prop.className "geo-map"
                        prop.children [ Html.div [ for color in geoMapColors -> colorPicker selectedColor color ]
                                        Bulma.buttons [ prop.style [ style.marginTop 10 ]
@@ -588,6 +663,7 @@ module ResultsView =
                                                       geoMapConfig.ZoomLevel
                                                       640
                                                       460
+                                                      points
                                                       googleMapsApiKey ] ] ]
     //      [:div.geo-map {:style {:margin-top 4}}
 //       [:div {:style {:padding "5px 5px 5px 0" :margin-right 4 :float "left"}}

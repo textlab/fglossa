@@ -71,7 +71,7 @@ export const GeoDistributionMap = createClass({
         position: location,
         map: map,
         title: point.label,
-        icon: point.icon || 'img/speech/red_dot.png'
+        icon: point.icon || 'speech/red_dot.png'
       });
 
       markers.push( marker );
