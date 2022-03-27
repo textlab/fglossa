@@ -733,16 +733,19 @@ module MetadataMenu =
                let catControlType =
                    geoMapConfig.MetadataCategories
                    |> List.pick (fun c -> if c.QualifiedColumnName = catCode then Some c.ControlType else None)
-               if catControlType = IntervalControl then
-                   let numericSelection = selection |> Seq.map System.Int64.Parse
-                   printfn $"Min: {Seq.min numericSelection}"
-                   printfn $"Max: {Seq.max numericSelection}"
+               match catControlType with
+               | IntervalControl ->
                    match categoryObj with
                    | :? NumberCategory as numberCat ->
+                       let numericSelection = selection |> Seq.map System.Int64.Parse
                        dispatch (SetIntervalCategoryMode (numberCat, IntervalMode))
                        dispatch (SetIntervalFrom (numberCat, string (Seq.min numericSelection)))
                        dispatch (SetIntervalTo (numberCat, string (Seq.max numericSelection)))
+                       dispatch CloseMetadataGeoMap
                    | _ -> failwith $"Non-numerical category defined as interval: {catCode}"
+               | DiscreteControl ->
+                   let choices = [| for value in selection -> { Name = value; Value = value } |]
+                   dispatch (SetSelection (categoryObj, choices))
 
         Bulma.modal [ modal.isActive
                       // Set elementRef in order to apply the focusModal() function to this element
@@ -761,7 +764,7 @@ module MetadataMenu =
                                                                                config
                                                                                metadata
                                                                                okHandler
-                                                                               (fun () -> ())] ]
+                                                                               (fun () -> dispatch CloseMetadataGeoMap)] ]
 
                                       Bulma.modalClose [ button.isLarge
                                                          prop.onClick (fun _ -> dispatch CloseMetadataGeoMap) ] ] ]

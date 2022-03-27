@@ -19,6 +19,7 @@ type Msg =
     | ToggleExclude of category: Metadata.Category
     | SelectItem of Metadata.Category * Metadata.CategoryMenuOption
     | DeselectItem of Metadata.Category * Metadata.CategoryMenuOption
+    | SetSelection of Metadata.Category * Metadata.CategoryMenuOption []
     | DeselectAllItems of Metadata.Category
     | SetIntervalFrom of Metadata.NumberCategory * string
     | SetIntervalTo of Metadata.NumberCategory * string
@@ -228,6 +229,25 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         let cmd = Cmd.ofMsg FetchTextAndTokenCounts
 
         newModel, cmd
+    | SetSelection (category, choices) ->
+        let tableAndCode = category.GetQualifiedColumnName()
+
+        // Replace the entire current selection for this metadata category (if any)
+        // with the given choices
+        let newSelection =
+            model.Search.Params.MetadataSelection
+            |> Map.add
+                tableAndCode
+                { Choices = choices
+                  ShouldExclude = false }
+
+        { model with
+              Search =
+                  { model.Search with
+                        Params =
+                            { model.Search.Params with
+                                  MetadataSelection = newSelection } } },
+        Cmd.none
     | DeselectAllItems category ->
         let tableAndCode = category.GetQualifiedColumnName()
 
