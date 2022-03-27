@@ -21,8 +21,10 @@ let textAndTokenCountText (model: LoadedCorpusModel) =
 [<ReactComponent(import = "default", from = "../../react_components/metadata_geo_map/Meta.jsx")>]
 let MetadataGeoMap
     (coords: obj)
-    (config: {| API_KEY: string; CENTER: {| lat: float; lng: float |}; ZOOM: float |})
+    (config: {| API_KEY: string; CENTER: {| lat: float; lng: float |}; ZOOM: float; LOCATOR: string; ID: string; CATEGORY: obj |})
     (meta: string[] [])
+    (ok: obj -> unit)
+    (cancel: unit -> unit)
     = React.imported()
 
 module MetadataMenu =
@@ -687,7 +689,13 @@ module MetadataMenu =
 
 
     [<ReactComponent>]
-    let MetadataGeoMapModal (googleMapsApiKey: string) (geoMapConfig: GeoMapConfig) (metadata: string [][]) (dispatch: Msg -> unit) =
+    let MetadataGeoMapModal
+        (googleMapsApiKey: string)
+        (geoMapConfig: GeoMapConfig)
+        (metadata: string [][])
+        (allCategories: Category list)
+        (dispatch: Msg -> unit) =
+
         let elementRef = React.useElementRef ()
 
         let focusModal () =
@@ -703,10 +711,38 @@ module MetadataMenu =
         let config =
             {| API_KEY = googleMapsApiKey
                CENTER = {| lat = geoMapConfig.CenterLat; lng = geoMapConfig.CenterLng |}
-               ZOOM = geoMapConfig.ZoomLevel |}
+               ZOOM = geoMapConfig.ZoomLevel
+               LOCATOR = geoMapConfig.LocationMetadataCategory.QualifiedColumnName
+               ID = "texts.tid"
+               CATEGORY =
+                   createObj
+                      (geoMapConfig.MetadataCategories
+                       |> List.mapi (fun index cat ->
+                           cat.QualifiedColumnName,
+                           {| COLUMN = index
+                              CODE = cat.QualifiedColumnName
+                              TYPE = cat.ControlType.ToString()
+                              NAME = cat.QualifiedColumnName |})) |}
 
-        let meta =
-            Array.append [| [| "tid";"rec";"age";"birth";"sex";"place" |] |] metadata
+        let okHandler (results: obj) =
+           let catCodes = Fable.Core.JS.Constructors.Object.keys(results)
+           let values = Fable.Core.JS.Constructors.Object.values(results)
+           for catCode, value in Seq.zip catCodes values do
+               let categoryObj = allCategories |> List.find (fun c -> c.GetQualifiedColumnName() = catCode)
+               let selection = Fable.Core.JS.Constructors.Object.keys(value)
+               let catControlType =
+                   geoMapConfig.MetadataCategories
+                   |> List.pick (fun c -> if c.QualifiedColumnName = catCode then Some c.ControlType else None)
+               if catControlType = IntervalControl then
+                   let numericSelection = selection |> Seq.map System.Int64.Parse
+                   printfn $"Min: {Seq.min numericSelection}"
+                   printfn $"Max: {Seq.max numericSelection}"
+                   match categoryObj with
+                   | :? NumberCategory as numberCat ->
+                       dispatch (SetIntervalCategoryMode (numberCat, IntervalMode))
+                       dispatch (SetIntervalFrom (numberCat, string (Seq.min numericSelection)))
+                       dispatch (SetIntervalTo (numberCat, string (Seq.max numericSelection)))
+                   | _ -> failwith $"Non-numerical category defined as interval: {catCode}"
 
         Bulma.modal [ modal.isActive
                       // Set elementRef in order to apply the focusModal() function to this element
@@ -720,7 +756,12 @@ module MetadataMenu =
                       prop.children [ Bulma.modalBackground [ prop.onClick
                                                                   (fun _ -> dispatch CloseMetadataGeoMap) ]
                                       Bulma.modalContent [ prop.style [ style.width 1440 ]
-                                                           prop.children [ MetadataGeoMap coords config meta ] ]
+                                                           prop.children [ MetadataGeoMap
+                                                                               coords
+                                                                               config
+                                                                               metadata
+                                                                               okHandler
+                                                                               (fun () -> ())] ]
 
                                       Bulma.modalClose [ button.isLarge
                                                          prop.onClick (fun _ -> dispatch CloseMetadataGeoMap) ] ] ]
@@ -797,7 +838,7 @@ module MetadataMenu =
                         | Some config ->
                            match model.Corpus.SharedInfo.GoogleMapsApiKey with
                            | Some key ->
-                               MetadataGeoMapModal key config model.FetchedTextMetadata dispatch
+                               MetadataGeoMapModal key config model.FetchedTextMetadata model.Corpus.MetadataQuickView dispatch
                            | None ->
                                 failwith "No Google Maps API key provided! Set it in the environment variable GOOGLE_MAPS_API_KEY."
                         | None -> Html.none

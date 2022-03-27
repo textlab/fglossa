@@ -24,8 +24,12 @@ module Cwb =
 
 module Metadata =
     type GeoMapControlType =
-        | StringControl
+        | DiscreteControl
         | IntervalControl
+        override this.ToString() =
+            match this with
+            | DiscreteControl -> "discrete"
+            | IntervalControl -> "interval"
 
     type GeoMapCategoryConfig =
         { QualifiedColumnName: string
@@ -69,7 +73,7 @@ module Metadata =
     [<AbstractClass>]
     type StringCategory(aName) =
         inherit Category(aName)
-        override _.GeoMapControlType = StringControl
+        override _.GeoMapControlType = DiscreteControl
 
     /// Metadata category that can be presented as a metadata value list (like StringCategory),
     /// but that will be sorted numerically.
@@ -83,7 +87,7 @@ module Metadata =
     [<AbstractClass>]
     type LongTextCategory(aName) =
         inherit Category(aName)
-        override _.GeoMapControlType = StringControl
+        override _.GeoMapControlType = DiscreteControl
 
     type MenuState =
         | Open
