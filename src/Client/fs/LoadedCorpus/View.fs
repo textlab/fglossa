@@ -483,6 +483,7 @@ module ResultsView =
 
         [<ReactComponent>]
         let GeoMapController
+            (isVisible: bool)
             (googleMapsApiKey: string)
             (geoMapConfig: GeoMapConfig)
             (coordMap: Map<string, Map<string, int64>>)
@@ -654,6 +655,8 @@ module ResultsView =
             let points = Array.append smallDots selectedPoints
 
             Html.div [ prop.className "geo-map"
+                       if not isVisible then
+                           prop.style [ style.display.none ]
                        prop.children [ Html.div [ for color in geoMapColors -> colorPicker selectedColor color ]
                                        Bulma.buttons [ prop.style [ style.marginTop 10 ]
                                                        prop.children [ for phon in coordMap.Keys -> phonButton phon ] ]
@@ -1037,25 +1040,13 @@ module ResultsView =
                                                                  dispatch (ShowingResults.SelectResultTab Concordance))
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
                                                if loadedCorpusModel.Corpus.SharedInfo.GeoMapConfig.IsSome then
-                                                   let googleMapsApiKey =
-                                                       match loadedCorpusModel.Corpus.SharedInfo.GoogleMapsApiKey with
-                                                       | Some key -> key
-                                                       | None ->
-                                                           failwith
-                                                               "No Google Maps API key provided! Set it in the environment variable GOOGLE_MAPS_API_KEY."
-
                                                    Html.li [ if activeTab = "GeoDistributionMap" then
                                                                  tab.isActive
                                                              prop.onClick
                                                                  (fun _ ->
                                                                      dispatch (
-                                                                         ShowingResults.SelectResultTab(
-                                                                             GeoDistributionMap(
-                                                                                 googleMapsApiKey,
-                                                                                 loadedCorpusModel.Corpus.SharedInfo.GeoMapConfig.Value,
-                                                                                 loadedCorpusModel.GeoDistribution
-                                                                             )
-                                                                         )
+                                                                         ShowingResults.SelectResultTab
+                                                                             GeoDistributionMap
                                                                      ))
                                                              prop.children [ Html.a [ prop.text "Map" ] ] ]
                                                Html.li [ if activeTab = "Frequency lists" then
@@ -1094,7 +1085,26 @@ module ResultsView =
         dispatch
         =
         let resultsView =
+            let sharedInfo = loadedCorpusModel.Corpus.SharedInfo
+
             [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ tabs loadedCorpusModel showingResultsModel dispatch ] ] ]
+
+              // Somewhat hackish solution in order to make Google Maps behave. If we put the component with the
+              // map inside a tab that is only rendered when the Map link is clicked, for some reason the markers
+              // on the map will not be drawn the second time the tab is clicked. When we put the component here,
+              // outside the individual result tabs, it works.
+              match sharedInfo.GoogleMapsApiKey, sharedInfo.GeoMapConfig with
+              | Some googleMapsApiKey, Some geoMapConfig ->
+                  GeoDistrMap.GeoMapController
+                      (showingResultsModel.ActiveTab = GeoDistributionMap)
+                      googleMapsApiKey
+                      geoMapConfig
+                      loadedCorpusModel.GeoDistribution
+              | None, Some _ ->
+                  failwith "No Google Maps API key provided! Set it in the environment variable GOOGLE_MAPS_API_KEY."
+
+              | _ -> Html.none
+
               match showingResultsModel.ActiveTab with
               | Concordance ->
                   yield!
@@ -1103,8 +1113,10 @@ module ResultsView =
                           showingResultsModel.ConcordanceModel
                           corpus
                           (ShowingResults.ConcordanceMsg >> dispatch)
-              | GeoDistributionMap (googleMapsApiKey, geoMapConfig, coordMap) ->
-                  GeoDistrMap.GeoMapController googleMapsApiKey geoMapConfig coordMap
+              | GeoDistributionMap ->
+                  // See comment above. The Google Map component is placed outside the individual result
+                  // tabs for the drawing of markers to work.
+                  Html.none
               | FrequencyLists frequencyListsModel ->
                   FrequencyLists.view
                       loadedCorpusModel
