@@ -186,7 +186,7 @@ type MetadataDistributionModel =
           DownloadingFormat = None }
 
 type ResultTab =
-    | Concordance of ConcordanceModel
+    | Concordance
     | GeoDistributionMap of string * GeoMapConfig * GeoDistribution
     | FrequencyLists of FrequencyListsModel
     | MetadataDistribution of MetadataDistributionModel
@@ -194,16 +194,18 @@ type ResultTab =
 type ShowingResultsModel =
     { ActiveTab: ResultTab
       SearchResults: SearchResultInfo option
-      NumSteps: int }
+      NumSteps: int
+      ConcordanceModel: ConcordanceModel }
     static member Init
         (
             numSteps: int,
             contextSizeTextValue: string,
             quickViewMetadata: Metadata.CategoryNameAndValue list
         ) =
-        { ActiveTab = Concordance(ConcordanceModel.Init(numSteps, contextSizeTextValue, quickViewMetadata))
+        { ActiveTab = Concordance
           SearchResults = None
-          NumSteps = numSteps }
+          NumSteps = numSteps
+          ConcordanceModel = ConcordanceModel.Init(numSteps, contextSizeTextValue, quickViewMetadata) }
 
 type LoadedCorpusSubstate =
     | CorpusStart

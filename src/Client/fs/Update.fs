@@ -841,13 +841,14 @@ module LoadedCorpus =
             (showingResultsModel: ShowingResultsModel)
             : LoadedCorpusModel * ShowingResultsModel * Cmd<Msg> =
             match msg, showingResultsModel.ActiveTab with
-            | ConcordanceMsg msg', Concordance m ->
+            | ConcordanceMsg msg', Concordance ->
                 let newLoadedCorpusModel, newConcordanceModel, cmd =
-                    Concordance.update msg' loadedCorpusModel m
+                    Concordance.update msg' loadedCorpusModel showingResultsModel.ConcordanceModel
 
                 newLoadedCorpusModel,
                 { showingResultsModel with
-                      ActiveTab = Concordance newConcordanceModel },
+                      ActiveTab = Concordance
+                      ConcordanceModel = newConcordanceModel },
                 Cmd.map ConcordanceMsg cmd
             | FrequencyListsMsg msg', FrequencyLists m ->
                 let newLoadedCorpusModel, newFrequencyListsModel, cmd =

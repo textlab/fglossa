@@ -1034,18 +1034,7 @@ module ResultsView =
                                                              tab.isActive
                                                          prop.onClick
                                                              (fun _ ->
-                                                                 dispatch (
-                                                                     ShowingResults.SelectResultTab(
-                                                                         Concordance(
-                                                                             ConcordanceModel.Init(
-                                                                                 showingResultsModel.NumSteps,
-                                                                                 string
-                                                                                     loadedCorpusModel.Search.Params.ContextSize,
-                                                                                 []
-                                                                             )
-                                                                         )
-                                                                     )
-                                                                 ))
+                                                                 dispatch (ShowingResults.SelectResultTab Concordance))
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
                                                if loadedCorpusModel.Corpus.SharedInfo.GeoMapConfig.IsSome then
                                                    let googleMapsApiKey =
@@ -1107,11 +1096,11 @@ module ResultsView =
         let resultsView =
             [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ tabs loadedCorpusModel showingResultsModel dispatch ] ] ]
               match showingResultsModel.ActiveTab with
-              | Concordance concordanceModel ->
+              | Concordance ->
                   yield!
                       Concordance.view
                           loadedCorpusModel
-                          concordanceModel
+                          showingResultsModel.ConcordanceModel
                           corpus
                           (ShowingResults.ConcordanceMsg >> dispatch)
               | GeoDistributionMap (googleMapsApiKey, geoMapConfig, coordMap) ->
@@ -1130,9 +1119,9 @@ module ResultsView =
 
         let shouldShowResultsTableSpinner =
             match showingResultsModel.ActiveTab with
-            | Concordance concordanceModel when
-                concordanceModel.IsSearching
-                && concordanceModel.NumResults.IsNone
+            | Concordance when
+                showingResultsModel.ConcordanceModel.IsSearching
+                && showingResultsModel.ConcordanceModel.NumResults.IsNone
                 ->
                 true
             | _ -> false
