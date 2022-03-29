@@ -438,7 +438,7 @@ module MetadataMenu =
                                                                                                      "fa-angle-down" ] ] ] ] ]
                     if isExpanded then
                         Html.ul [ prop.className "menu-list"
-                                  prop.style [ style.border (3, borderStyle.solid, "#0090d6")
+                                  prop.style [ style.border (2, borderStyle.solid, "#0090d6")
                                                style.borderRadius 5
                                                style.marginTop 5
                                                style.padding 5 ]
