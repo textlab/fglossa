@@ -116,8 +116,7 @@ module MetadataMenu =
             reactBare?createElement (FixedSizeList,
                                      createObj [ "height" ==> 200
                                                  "itemCount" ==> fetchedMetadataValues.Length
-                                                 "itemSize" ==> 32
-                                                 "width" ==> 200 ],
+                                                 "itemSize" ==> 32 ],
                                      listItem)
 
         let tableAndColumn =  category.GetQualifiedColumnName()
@@ -439,11 +438,10 @@ module MetadataMenu =
                                                                                                      "fa-angle-down" ] ] ] ] ]
                     if isExpanded then
                         Html.ul [ prop.className "menu-list"
-                                  prop.style [ style.border (2, borderStyle.solid, "#dfdfdf")
+                                  prop.style [ style.border (3, borderStyle.solid, "#0090d6")
                                                style.borderRadius 5
                                                style.marginTop 5
-                                               style.paddingTop 5
-                                               style.paddingBottom 5 ]
+                                               style.padding 5 ]
                                   prop.children children ]
 
                      ]
