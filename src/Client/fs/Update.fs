@@ -985,14 +985,11 @@ module LoadedCorpus =
         | SetQueryText (text, queryIndex, hasFinalSpace) ->
             let newQueries =
                 loadedCorpusModel.Search.Params.Queries
-                |> Array.mapi
-                    (fun index query ->
-                        if index = queryIndex then
-                            { query with
-                                  HasFinalSpace = hasFinalSpace
-                                  QueryString = text }
-                        else
-                            query)
+                |> Array.updateAt
+                    queryIndex
+                    { loadedCorpusModel.Search.Params.Queries.[queryIndex] with
+                          HasFinalSpace = hasFinalSpace
+                          QueryString = text }
 
             let newSearchParams =
                 { loadedCorpusModel.Search.Params with
