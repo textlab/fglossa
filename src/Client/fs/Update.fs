@@ -1023,13 +1023,7 @@ module LoadedCorpus =
         | RemoveQueryRow queryIndex ->
             let newQueries =
                 loadedCorpusModel.Search.Params.Queries
-                |> Array.indexed
-                |> Array.choose
-                    (fun (index, query) ->
-                        if index <> queryIndex then
-                            Some query
-                        else
-                            None)
+                |> Array.removeAt queryIndex
 
             let newLoadedCorpusModel =
                 { loadedCorpusModel with

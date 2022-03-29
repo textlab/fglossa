@@ -528,11 +528,7 @@ let updateQuery model query queryIndex newQueryTerms =
 
     let newQueries =
         model.Search.Params.Queries
-        |> Array.mapi (fun i q ->
-            if i = queryIndex then
-                { q with QueryString = newQueryCqp }
-            else
-                q)
+        |> Array.updateAt queryIndex { model.Search.Params.Queries.[queryIndex] with QueryString = newQueryCqp }
 
     { model with Search = { model.Search with Params = { model.Search.Params with Queries = newQueries } } }
 
@@ -540,6 +536,6 @@ let updateQuery model query queryIndex newQueryTerms =
 let updateQueryTerm model query queryIndex newTerm termIndex =
     let newQueryTerms =
         query.Terms
-        |> Array.mapi (fun i t -> if i = termIndex then newTerm else t)
+        |> Array.updateAt termIndex newTerm
 
     updateQuery model query queryIndex newQueryTerms
