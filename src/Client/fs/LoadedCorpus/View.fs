@@ -465,29 +465,24 @@ module ResultsView =
               "red"
               "orange" ]
 
-        [<ReactComponent(import = "GeoDistributionMap", from = "../../react_components/geo_distribution_map.jsx")>]
+        [<ReactComponent(import = "default", from = "../../react_components/result_map.jsx")>]
         let GeoDistributionMap
             (initLat: float)
-            (initLon: float)
+            (initLng: float)
             (initZoom: float)
             (width: int)
             (height: int)
             (points: {| latitude: float
                         longitude: float
                         name: string
+                        key: string
                         label: string
                         icon: string |} [])
-            (gmaps_api_key: string)
             =
             React.imported ()
 
         [<ReactComponent>]
-        let GeoMapController
-            (isVisible: bool)
-            (googleMapsApiKey: string)
-            (geoMapConfig: GeoMapConfig)
-            (coordMap: Map<string, Map<string, int64>>)
-            =
+        let GeoMapController (geoMapConfig: GeoMapConfig) (coordMap: Map<string, Map<string, int64>>) =
             let selectedColor, setSelectedColor = React.useState ("yellow")
 
             // coloredPhons is a map from a color name to a set of phonetic forms whose buttons have that color
@@ -630,6 +625,7 @@ module ResultsView =
                        {| latitude = fst coord.Coords
                           longitude = snd coord.Coords
                           name = coord.Name
+                          key = coord.Name
                           label = $"{coord.Name}: {coord.Phons}"
                           icon = "" |} |]
 
@@ -650,13 +646,14 @@ module ResultsView =
                                   yield!
                                       [| for coordMap in selectedCoords ->
                                              {| coordMap with
+                                                    key = $"{coordMap.key}_{color}"
                                                     icon = $"speech/mm_20_{color}.png" |} |] |] |]
 
-            let points = Array.append smallDots selectedPoints
+            let points =
+                Array.append smallDots selectedPoints
+                |> Array.distinct
 
             Html.div [ prop.className "geo-map"
-                       if not isVisible then
-                           prop.style [ style.display.none ]
                        prop.children [ Html.div [ for color in geoMapColors -> colorPicker selectedColor color ]
                                        Bulma.buttons [ prop.style [ style.marginTop 10 ]
                                                        prop.children [ for phon in coordMap.Keys -> phonButton phon ] ]
@@ -666,8 +663,7 @@ module ResultsView =
                                                       geoMapConfig.ZoomLevel
                                                       640
                                                       460
-                                                      points
-                                                      googleMapsApiKey ] ] ]
+                                                      points ] ] ]
 
     module FrequencyLists =
         open ShowingResults.FrequencyLists
@@ -1045,8 +1041,12 @@ module ResultsView =
                                                              prop.onClick
                                                                  (fun _ ->
                                                                      dispatch (
-                                                                         ShowingResults.SelectResultTab
-                                                                             GeoDistributionMap
+                                                                         ShowingResults.SelectResultTab(
+                                                                             GeoDistributionMap(
+                                                                                 loadedCorpusModel.Corpus.SharedInfo.GeoMapConfig.Value,
+                                                                                 loadedCorpusModel.GeoDistribution
+                                                                             )
+                                                                         )
                                                                      ))
                                                              prop.children [ Html.a [ prop.text "Map" ] ] ]
                                                Html.li [ if activeTab = "Frequency lists" then
@@ -1085,26 +1085,7 @@ module ResultsView =
         dispatch
         =
         let resultsView =
-            let sharedInfo = loadedCorpusModel.Corpus.SharedInfo
-
             [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ tabs loadedCorpusModel showingResultsModel dispatch ] ] ]
-
-              // Somewhat hackish solution in order to make Google Maps behave. If we put the component with the
-              // map inside a tab that is only rendered when the Map link is clicked, for some reason the markers
-              // on the map will not be drawn the second time the tab is clicked. When we put the component here,
-              // outside the individual result tabs, it works.
-              match sharedInfo.GoogleMapsApiKey, sharedInfo.GeoMapConfig with
-              | Some googleMapsApiKey, Some geoMapConfig ->
-                  GeoDistrMap.GeoMapController
-                      (showingResultsModel.ActiveTab = GeoDistributionMap)
-                      googleMapsApiKey
-                      geoMapConfig
-                      loadedCorpusModel.GeoDistribution
-              | None, Some _ ->
-                  failwith "No Google Maps API key provided! Set it in the environment variable GOOGLE_MAPS_API_KEY."
-
-              | _ -> Html.none
-
               match showingResultsModel.ActiveTab with
               | Concordance ->
                   yield!
@@ -1113,10 +1094,7 @@ module ResultsView =
                           showingResultsModel.ConcordanceModel
                           corpus
                           (ShowingResults.ConcordanceMsg >> dispatch)
-              | GeoDistributionMap ->
-                  // See comment above. The Google Map component is placed outside the individual result
-                  // tabs for the drawing of markers to work.
-                  Html.none
+              | GeoDistributionMap (geoMapConfig, coordMap) -> GeoDistrMap.GeoMapController geoMapConfig coordMap
               | FrequencyLists frequencyListsModel ->
                   FrequencyLists.view
                       loadedCorpusModel

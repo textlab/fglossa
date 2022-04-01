@@ -187,7 +187,7 @@ type MetadataDistributionModel =
 
 type ResultTab =
     | Concordance
-    | GeoDistributionMap
+    | GeoDistributionMap of GeoMapConfig * GeoDistribution
     | FrequencyLists of FrequencyListsModel
     | MetadataDistribution of MetadataDistributionModel
 
