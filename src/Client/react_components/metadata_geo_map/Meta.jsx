@@ -142,13 +142,6 @@ function Map({ apiKey, center, callback, coords, zoom }) {
     );
     return (
 	<div className="MapComp">
-	    <LoadScriptOnlyIfNeeded
-		id="script-loader"
-		googleMapsApiKey={apiKey}
-		libraries={libraries}
-		language="no"
-		region="no"
-	    >
 		<GoogleMap
 		    mapContainerClassName="Map"
 		    center={center}
@@ -177,7 +170,6 @@ function Map({ apiKey, center, callback, coords, zoom }) {
 		    ) : null
 		}
 		</GoogleMap>
-	</LoadScriptOnlyIfNeeded>
 	</div>
     );
 }

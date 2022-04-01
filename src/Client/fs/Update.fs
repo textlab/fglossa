@@ -9,6 +9,16 @@ open Model
 open CwbExtended
 open Shared.StringUtils
 
+
+let loadGoogleMapsApi apiKey =
+    let script =
+        Browser.Dom.document.createElement ("script") :?> Browser.Types.HTMLScriptElement
+
+    script.src <- $"https://maps.googleapis.com/maps/api/js?key={apiKey}&libraries=drawing,geometry"
+
+    Browser.Dom.document.head.appendChild (script)
+    |> ignore
+
 let cleanupResult (result: SearchResult) =
     let cleanLines =
         result.Text
@@ -60,6 +70,9 @@ module LoadingCorpus =
                   SelectionTablePageNumber = 1
                   SelectionTableSort = None
                   Substate = CorpusStart }
+
+            corpus.SharedInfo.GoogleMapsApiKey
+            |> Option.iter loadGoogleMapsApi
 
             LoadedCorpus m, Cmd.none
 
