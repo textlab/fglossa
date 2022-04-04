@@ -739,11 +739,11 @@ module MetadataMenu =
                        dispatch (SetIntervalCategoryMode (numberCat, IntervalMode))
                        dispatch (SetIntervalFrom (numberCat, string (Seq.min numericSelection)))
                        dispatch (SetIntervalTo (numberCat, string (Seq.max numericSelection)))
-                       dispatch CloseMetadataGeoMap
                    | _ -> failwith $"Non-numerical category defined as interval: {catCode}"
                | DiscreteControl ->
                    let choices = [| for value in selection -> { Name = value; Value = value } |]
                    dispatch (SetSelection (categoryObj, choices))
+           dispatch CloseMetadataGeoMap
 
         Bulma.modal [ modal.isActive
                       // Set elementRef in order to apply the focusModal() function to this element

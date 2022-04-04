@@ -1,29 +1,13 @@
 import React, {useState, useRef, useCallback, useEffect} from "react";
-//import ReactDOM from "react-dom";
-
-
-//import {Sets} from './sets.js';
-//import meta from "./meta.json";
-// For the Multirange slider
-
-
-//import coords from "./coords.json";
-//import config from "./config.js";
-//import meta from "./meta.json";
-
 import classnames from "classnames";
 import PropTypes from "prop-types";
 
-//import Map from "./Map";
-//import Menu from "./Menu";
 import "./multiRangeSlider.css";
 
-// layout for whole App
 import "./layout.css";
 
-// for Map component
 import "./map.css";
-import { LoadScript, GoogleMap, DrawingManager, Marker } from "@react-google-maps/api";
+import { GoogleMap, DrawingManager, Marker } from "@react-google-maps/api";
 import dot from './dot.svg';
 //import yel from './yellow.svg';
 import green from './green.svg';
@@ -46,7 +30,6 @@ const options = {
     },
     polygonOptions: polygonOptions
 };
-
 const polygonsContain = (polygons,coords) => {
     if(Object.keys(polygons).length === 0){
 	return coords.map((coord) => {return coord.id});
@@ -73,41 +56,17 @@ const polygonContains = (polygon,coords) => {
     }
     return markers;
 }
-class LoadScriptOnlyIfNeeded extends LoadScript {
-    componentDidMount() {
-	const cleaningUp = true;
-	const isBrowser = typeof document !== "undefined"; // require('@react-google-maps/api/src/utils/isbrowser')
-	const isAlreadyLoaded =
-	      window.google &&
-	      window.google.maps &&
-	      document.querySelector("body.first-hit-completed"); // AJAX page loading system is adding this class the first time the app is loaded
-	if (!isAlreadyLoaded && isBrowser) {
-	    // @ts-ignore
-	    if (window.google && !cleaningUp) {
-		console.error("google api is already presented");
-		return;
-	    }
-
-	    this.isCleaningUp().then(this.injectScript);
-	}
-
-	if (isAlreadyLoaded) {
-	    this.setState({ loaded: true });
-	}
-    }
-}
-
 function Map({ apiKey, center, callback, coords, zoom }) {
     // Define refs for Polygon instance and listeners
     let enveloped = [];
     const polyHash = useRef({});
-    
+
     const [state, setState] = useState({
 	drawingMode: "polygon"
     });
-    
+
     const [polyid, polyidinc] = useState(0);
-    
+
 //    const [ markers, setMarkers] = useState([...coords.values()]);
 
     const onPolygonComplete = React.useCallback(
@@ -141,7 +100,7 @@ function Map({ apiKey, center, callback, coords, zoom }) {
 	},
     );
     return (
-	<div className="MapComp">
+	<div className="MapComp" style={{marginTop: 20}}>
 		<GoogleMap
 		    mapContainerClassName="Map"
 		    center={center}
@@ -484,7 +443,6 @@ class Sets {
 		}
 		activeSets = this.interval_add_set(v.key,v.val.min,v.val.max, activeSets);
 	    }
-	    
 	}
 	return activeSets;
     }
@@ -492,6 +450,7 @@ class Sets {
 }
 
 export default function Meta({ coords, config, meta, ok, cancel }){
+    const changed = useRef({});
     const location_key = config.LOCATOR;
     const id = config.ID;
     Sets.initSuperSet(meta, config.CATEGORY, id, location_key);
@@ -524,6 +483,7 @@ export default function Meta({ coords, config, meta, ok, cancel }){
     };
 
     const mapCallback = (d) => {
+	changed.current[location_key] = true;
 	aUpdate(Sets.remove_active_set(location_key, activeSets));
 	d.forEach(
 	    function(e){
@@ -543,38 +503,56 @@ export default function Meta({ coords, config, meta, ok, cancel }){
 	updatePlaces();
     };
     const intervalCallback = (d) => {
+	changed.current[d[0]] = true;
 	aUpdate(Sets.interval_add_set(d[0],d[1],d[2], activeSets));
 	updatePlaces();
     };
     const discreteCallback = (d) => {
+	changed.current[d.cat] = true;
 	d.checked ? aUpdate(Sets.add_set(d.cat,d.val,activeSets)) : aUpdate(Sets.rem_set(d.cat,d.val, activeSets));
 	updatePlaces();
     };
+    const okCallback = () => {
+	let result = {};
+	for (const [k, v] of Object.entries(changed.current)){
+	    result[k] = activeSets[k];
+	}
+	ok(result);
+    };
 
     return (
-	    <div id="grid">
+	    <div id="grid" style={{padding: 10}}>
 		<div className="head" id="head">
-		    <button onClick={() => ok(activeSets)}>
-			{"OK"}
-		    </button>
-		    <button onClick={() => cancel()}>
-			{"CANCEL"}
-		    </button>
-		    {/*
-		    <button onClick={() => console.log([...Sets.select_tids(activeSets)])}>
-			{"tids"}
-		    </button>
-		    <button onClick={() => console.log(activeSets)}>
-			{"meta"}
-		    </button>
-		    <button onClick={() => console.log(activeSets[location_key])}>
-			{"locs"}
-		    </button>
-		    */}
-		    <span>{ntids + " informants in "}</span>
-		    <span>{nlocs + " locations"}</span>
+                  <nav className="level">
+                    <div className="level-left">
+                      <div className="level-item">
+		        <button className="button is-success" onClick={() => okCallback(activeSets)}>
+		            {"OK"}
+		        </button>
+                      </div>
+                      <div className="level-item">
+		        <button className="button" onClick={() => cancel()}>
+		            {"CANCEL"}
+		        </button>
+		        {/*
+		        <button onClick={() => console.log([...Sets.select_tids(activeSets)])}>
+		            {"tids"}
+		        </button>
+		        <button onClick={() => console.log(activeSets)}>
+		            {"meta"}
+		        </button>
+		        <button onClick={() => console.log(activeSets[location_key])}>
+		            {"locs"}
+		        </button>
+		        */}
+                      </div>
+                      <div className="level-item">
+		        <span>{ntids + " informants in " + nlocs + " locations"}</span>
+                      </div>
+                    </div>
+                  </nav>
 		</div>
-		<div className="inner-grid">
+		<div className="inner-grid" style={{marginTop: 20}}>
 		    <div className="divTableBody">
 			<Menu
 			    meta={menu_data}
