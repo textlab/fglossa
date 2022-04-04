@@ -407,11 +407,6 @@ let getMetadataDistribution
         let totalTokenCount = categoryValuesWithTextIdsAndTokenCounts |> Array.sumBy (fun c -> c.TokenCount)
         let totalTokenCountFloat = float totalTokenCount
 
-        let multiValueSql = $"SELECT GROUP_CONCAT(DISTINCT {column}) FROM texts \
-                              INNER JOIN authors_texts ON authors_texts.tid = texts.tid \
-                              INNER JOIN authors on authors.id = authors_texts.authors_id \
-                              GROUP BY texts.tid HAVING COUNT({column}) > 1"
-
         let expectedProportions =
             [| for categoryValueInfo in categoryValuesWithTextIdsAndTokenCounts ->  float categoryValueInfo.TokenCount / totalTokenCountFloat |]
 
