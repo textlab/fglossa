@@ -333,7 +333,7 @@ let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
                     "word"
 
             let commands =
-                [ "set DataDirectory \"tmp/glossa\""
+                [ "set DataDirectory \"/tmp/glossa\""
                   cwbCorpusName corpus []
                   $"group {namedQuery} match who_name by match {attr}" ]
 
