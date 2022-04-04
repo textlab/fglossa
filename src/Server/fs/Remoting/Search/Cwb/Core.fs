@@ -1,5 +1,6 @@
 module Remoting.Search.Cwb.Core
 
+open System
 open System.IO
 open System.Threading.Tasks
 open FSharp.Control.Tasks
@@ -250,10 +251,20 @@ type StringCategoryTextIdsAndTokenCount =
       TextIds: string
       TokenCount: int64 }
 
+type StringCategoryTextIdsAndBounds =
+    { CategoryValue: string
+      TextIds: string
+      Bounds: string }
+
 type NumberCategoryTextIdsAndTokenCount =
     { CategoryValue: int64
       TextIds: string
       TokenCount: int64 }
+
+type NumberCategoryTextIdsAndBounds =
+    { CategoryValue: int64
+      TextIds: string
+      Bounds: string }
 
 let getMetadataDistribution
     (logger: ILogger)
@@ -364,9 +375,14 @@ let getMetadataDistribution
 
         let column = getQualifiedColumnName catCode
 
+        let tokenCountSql =
+            match corpus.Config.Modality with
+            | Spoken -> "GROUP_CONCAT(texts.bounds, ':') AS Bounds"
+            | Written -> "SUM(texts.endpos - texts.startpos + 1) AS TokenCount"
+
         let categorySql =
             $"SELECT {column} AS CategoryValue, GROUP_CONCAT(DISTINCT texts.tid) AS TextIds, \
-              SUM(texts.endpos - texts.startpos + 1) AS TokenCount \
+              {tokenCountSql} \
               FROM texts{catJoin}{joins} \
               WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql} GROUP BY {column} ORDER BY {column}"
 
@@ -377,8 +393,50 @@ let getMetadataDistribution
         // we need to implement the query for each value type separately even though they look identical (the
         // compiler will infer different types for the values in each case).
         let categoryValuesWithTextIdsAndTokenCounts =
-            match categoryType with
-            | Metadata.StringCategoryType ->
+            match categoryType, corpus.Config.Modality with
+            | Metadata.StringCategoryType, Spoken ->
+                let categoryRes =
+                    (query logger conn categorySql (Some parameters))
+                        .Result
+
+                match categoryRes with
+                | Ok (catDist: StringCategoryTextIdsAndBounds seq) ->
+                        seq {
+                            for d in catDist ->
+                                let tokenCount =
+                                    d.Bounds.Split(':')
+                                    |> Array.sumBy (fun b ->
+                                        let parts = b.Split('-')
+                                        let startBound = Int64.Parse(parts.[0])
+                                        let endBound = Int64.Parse(parts.[1])
+                                        endBound - startBound + 1L)
+                                { StringCategoryTextIdsAndTokenCount.CategoryValue = d.CategoryValue
+                                  TextIds = d.TextIds
+                                  TokenCount = tokenCount }
+                        }
+                | Error ex -> raise ex
+            | Metadata.NumberCategoryType, Spoken ->
+                let categoryRes =
+                    (query logger conn categorySql (Some parameters))
+                        .Result
+
+                match categoryRes with
+                | Ok (catDist: NumberCategoryTextIdsAndBounds seq) ->
+                        seq {
+                            for d in catDist ->
+                                let tokenCount =
+                                    d.Bounds.Split(':')
+                                    |> Array.sumBy (fun b ->
+                                        let parts = b.Split('-')
+                                        let startBound = Int64.Parse(parts.[0])
+                                        let endBound = Int64.Parse(parts.[1])
+                                        endBound - startBound + 1L)
+                                { CategoryValue = string d.CategoryValue
+                                  TextIds = d.TextIds
+                                  TokenCount = tokenCount }
+                        }
+                | Error ex -> raise ex
+            | Metadata.StringCategoryType, Written ->
                 let categoryRes =
                     (query logger conn categorySql (Some parameters))
                         .Result
@@ -386,7 +444,7 @@ let getMetadataDistribution
                 match categoryRes with
                 | Ok (catDist: StringCategoryTextIdsAndTokenCount seq) -> catDist
                 | Error ex -> raise ex
-            | Metadata.NumberCategoryType ->
+            | Metadata.NumberCategoryType, Written ->
                 let categoryRes =
                     (query logger conn categorySql (Some parameters))
                         .Result
