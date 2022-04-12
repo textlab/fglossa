@@ -19,8 +19,7 @@ module Spoken =
             let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
             let nonExcludedManyToManyCategories =
-                selection
-                |> Map.filter (fun key value -> not (key.Contains('.') && value.ShouldExclude))
+                getNonExcludedManyToManyCategories selection
 
             let metadataSelectionSql =
                 generateMetadataSelectionSql None nonExcludedManyToManyCategories
@@ -77,8 +76,7 @@ module Written =
             let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
             let nonExcludedManyToManyCategories =
-                selection
-                |> Map.filter (fun key value -> not (key.Contains('.') && value.ShouldExclude))
+                getNonExcludedManyToManyCategories selection
 
             let metadataSelectionSql =
                 generateMetadataSelectionSql None nonExcludedManyToManyCategories

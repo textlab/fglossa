@@ -43,6 +43,12 @@ let metadataSelectionToParamDict (selection: Metadata.Selection) =
     |> Map.ofList
     |> mapToParamDict
 
+// Finds categories that are NOT excluded many-to-many categories, i.e., categories that are either
+// not many-to-many (which means they are found in the texts table) or not excluded
+let getNonExcludedManyToManyCategories (selection: Metadata.Selection) =
+    selection
+    |> Map.filter (fun key value -> key.Contains("texts.") || not value.ShouldExclude)
+
 let generateMetadataSelectionJoins (maybeRequestedCategoryCode: string option) (selection: Metadata.Selection) =
     let categoryTables =
         [ for code, _ in selection |> Map.toList do
@@ -123,7 +129,7 @@ let generateMetadataSelectionSql (maybeRequestedCategoryCode: string option) (se
                       // positive matches from other categories.
                       if
                           category.Value.ShouldExclude
-                          && not (category.Key.Contains('.'))
+                          && category.Key.Contains("texts.")
                       then
                           // Somewhat counterintuitively, the results returned by 'NOT IN' does not include NULL values
                           // (even though they are clearly not included in the set), so we need to check for that as well.
@@ -134,10 +140,9 @@ let generateMetadataSelectionSql (maybeRequestedCategoryCode: string option) (se
 
 let generateManyToManyExclusions (selection: Metadata.Selection) =
     [ for category in selection do
-          if
-              category.Key.Contains('.')
-              && category.Value.ShouldExclude
-          then
+          if category.Key.Contains('.')
+             && not (category.Key.Contains("texts."))
+             && category.Value.ShouldExclude then
               let parts = category.Key.Split('.')
               let table = parts.[0]
               let column = parts.[1]
@@ -176,8 +181,7 @@ let getMetadataForCategory
         let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
         let nonExcludedManyToManyCategories =
-            selection
-            |> Map.filter (fun key value -> not (key.Contains('.') && value.ShouldExclude))
+            getNonExcludedManyToManyCategories selection
 
         let metadataSelectionSql =
             generateMetadataSelectionSql (Some catCode) nonExcludedManyToManyCategories
@@ -228,8 +232,7 @@ let getMinAndMaxForCategory
         let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
         let nonExcludedManyToManyCategories =
-            selection
-            |> Map.filter (fun key value -> not (key.Contains('.') && value.ShouldExclude))
+            getNonExcludedManyToManyCategories selection
 
         let metadataSelectionSql =
             generateMetadataSelectionSql (Some catCode) nonExcludedManyToManyCategories
@@ -336,8 +339,7 @@ let getMetadataForTexts
         let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
 
         let nonExcludedManyToManyCategories =
-            selection
-            |> Map.filter (fun key value -> key.Contains("texts.") || not value.ShouldExclude)
+            getNonExcludedManyToManyCategories selection
 
         let metadataSelectionSql =
             generateMetadataSelectionSql None nonExcludedManyToManyCategories

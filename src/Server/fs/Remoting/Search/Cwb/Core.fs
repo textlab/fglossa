@@ -364,9 +364,7 @@ let getMetadataDistribution
                 ""
         let excludedManyToManyCategoriesSql = generateManyToManyExclusions searchParams.MetadataSelection
 
-        let nonExcludedManyToManyCategories =
-            searchParams.MetadataSelection
-            |> Map.filter (fun key value -> not (key.Contains('.') && value.ShouldExclude))
+        let nonExcludedManyToManyCategories = getNonExcludedManyToManyCategories searchParams.MetadataSelection
 
         let metadataSelectionSql =
             generateMetadataSelectionSql None nonExcludedManyToManyCategories
