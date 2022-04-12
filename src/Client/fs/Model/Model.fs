@@ -223,7 +223,7 @@ type LoadedCorpusModel =
       // This determines whether a certain category will displayed as a select
       // list or an interval. When a category is not yet registered in the map, it will
       // be shown as a list, but may be individually switched to an interval by the user.
-      IntervalCategoryModes: Map<CorpusCode, ListOrIntervalMode>
+      IntervalCategoryModes: Map<Metadata.CategoryCode, ListOrIntervalMode>
       NumSelectedTexts: int64 option
       NumSelectedTokens: int64 option
       OpenMetadataCategoryCode: string option
