@@ -4,14 +4,15 @@ import PropTypes from "prop-types";
 
 import "./multiRangeSlider.css";
 
+// layout for whole App
 import "./layout.css";
 
+// for Map component
 import "./map.css";
 import { GoogleMap, DrawingManager, Marker } from "@react-google-maps/api";
 import dot from './dot.svg';
 //import yel from './yellow.svg';
 import green from './green.svg';
-const libraries = ["drawing", "geometry"];
 
 const polygonOptions = {
     fillColor: `#2196F3`,
@@ -56,6 +57,7 @@ const polygonContains = (polygon,coords) => {
     }
     return markers;
 }
+
 function Map({ apiKey, center, callback, coords, zoom }) {
     // Define refs for Polygon instance and listeners
     let enveloped = [];
@@ -138,7 +140,7 @@ function Map({ apiKey, center, callback, coords, zoom }) {
 // MULTIRANGE SLIDER
 
 const MultiRangeSlider = ({ cat, min, max, onChange }) => {
-    const [isInitialRender, setIsInitialRender] = useState(0);
+//    const [isInitialRender, setIsInitialRender] = useState(0);
     const [minVal, setMinVal] = useState(min);
     const [maxVal, setMaxVal] = useState(max);
     const minValRef = useRef(null);
@@ -156,7 +158,7 @@ const MultiRangeSlider = ({ cat, min, max, onChange }) => {
 	if (maxValRef.current) {
 	    const minPercent = getPercent(minVal);
 	    const maxPercent = getPercent(+maxValRef.current.value); // Preceding with '+' converts the value from type string to type number
-	    
+
 	    if (range.current) {
 		range.current.style.left = `${minPercent}%`;
 		range.current.style.width = `${maxPercent - minPercent}%`;
@@ -215,7 +217,7 @@ const MultiRangeSlider = ({ cat, min, max, onChange }) => {
 		    }}
 		    className="thumb thumb--zindex-4"
 		/>
-		
+
 		<div className="slider">
 		    <div className="slider__track" />
 		    <div ref={range} className="slider__range" />
@@ -384,7 +386,7 @@ class Sets {
 	a.filter(x => !b.includes(x));
     }
 
-    
+
     // updates the k values in activeSets {sex: {…}, agegroup: {…}, age: {…}}, in the range l - r, but checks each value is actually present in SuperSet
 
     static interval_add_set(k,l,r, activeSets = {}){
@@ -429,7 +431,10 @@ class Sets {
 	delete activeSets[k];
 	return activeSets;
     }
-
+    static empty_active_set(k, activeSets){
+	activeSets[k] = {};
+	return activeSets;
+    }
     static initActiveSets(data, activeSets = {}){
 	for(const [i,v] of Object.entries(data)){
 	    if(v.type == "discrete"){
@@ -446,11 +451,10 @@ class Sets {
 	}
 	return activeSets;
     }
-    
+
 }
 
 export default function Meta({ coords, config, meta, ok, cancel }){
-    const changed = useRef({});
     const location_key = config.LOCATOR;
     const id = config.ID;
     Sets.initSuperSet(meta, config.CATEGORY, id, location_key);
@@ -458,11 +462,14 @@ export default function Meta({ coords, config, meta, ok, cancel }){
     const API_KEY = config.API_KEY;
     const center = config.CENTER
     const locs = Object.keys(Sets.SuperSet[location_key]);
-    const menu_data = initMenuData(Sets.SuperSet, config.CATEGORY, location_key);
+    let menu_data = initMenuData(Sets.SuperSet, config.CATEGORY, "");
+    const orig = useRef(menu_data);
     const markers = locs.map(function(loc){
 	return {id: loc, polyselected: true, selected: true, coords:{id: loc, lat: coords[loc][0],lng: coords[loc][1]}}});
-    let a = Sets.initActiveSets([{type: 'discrete', key: location_key, val: locs}]);
-    a = Sets.initActiveSets(menu_data, a);
+//    let a = Sets.initActiveSets([{type: 'discrete', key: location_key, val: locs}]);
+    //    a = Sets.initActiveSets(menu_data, a);
+    let a = Sets.initActiveSets(menu_data);
+    menu_data = menu_data.filter(e => e.key != location_key); // don't want the location data being rendered in the menu
     const [activeSets, aUpdate] = useState(a);
     const [c, cUpdate] = useState(markers);
     const [ntids, ntidsUpdate] = useState([...Sets.select_tids(activeSets)].length);
@@ -483,8 +490,8 @@ export default function Meta({ coords, config, meta, ok, cancel }){
     };
 
     const mapCallback = (d) => {
-	changed.current[location_key] = true;
-	aUpdate(Sets.remove_active_set(location_key, activeSets));
+//	aUpdate(Sets.remove_active_set(location_key, activeSets));
+	aUpdate(Sets.empty_active_set(location_key, activeSets));
 	d.forEach(
 	    function(e){
 		aUpdate(Sets.add_set(location_key, e, activeSets));
@@ -503,71 +510,79 @@ export default function Meta({ coords, config, meta, ok, cancel }){
 	updatePlaces();
     };
     const intervalCallback = (d) => {
-	changed.current[d[0]] = true;
 	aUpdate(Sets.interval_add_set(d[0],d[1],d[2], activeSets));
 	updatePlaces();
     };
     const discreteCallback = (d) => {
-	changed.current[d.cat] = true;
 	d.checked ? aUpdate(Sets.add_set(d.cat,d.val,activeSets)) : aUpdate(Sets.rem_set(d.cat,d.val, activeSets));
 	updatePlaces();
     };
     const okCallback = () => {
-	let result = {};
-	for (const [k, v] of Object.entries(changed.current)){
-	    result[k] = activeSets[k];
+	let result = {}
+	for(const e of Object.values(orig.current)){
+	    if(e.type == 'interval'){
+		let comp = getInterval(Object.keys(activeSets[e.key]));
+		if(!(comp[0] == e.val.min && comp[1] == e.val.max && comp[2] == e.nulls)){
+		    result[e.key] = comp;
+		}
+	    }
+	    else{
+		//
+		let comp = Object.keys(activeSets[e.key]);
+		if(comp.length != e.val.length){
+		    result[e.key] = comp;
+		}
+	    }
 	}
+//	result[location_key] = Object.keys(activeSets[location_key]);
 	ok(result);
     };
-
     return (
 	    <div id="grid" style={{padding: 10}}>
-		<div className="head" id="head">
-                  <nav className="level">
-                    <div className="level-left">
-                      <div className="level-item">
-		        <button className="button is-success" onClick={() => okCallback(activeSets)}>
-		            {"OK"}
-		        </button>
-                      </div>
-                      <div className="level-item">
-		        <button className="button" onClick={() => cancel()}>
-		            {"CANCEL"}
-		        </button>
+		    <div className="head" id="head">
+                <nav className="level">
+                   <div className="level-left">
+                     <div className="level-item">
+                      <button className="button is-success" onClick={() => okCallback(activeSets)}>
+                       {"OK"}
+                      </button>
+                    </div>
+                    <div className="level-item">
+                     <button className="button" onClick={() => cancel()}>{"CANCEL"}</button>
 		        {/*
 		        <button onClick={() => console.log([...Sets.select_tids(activeSets)])}>
-		            {"tids"}
+		    	{"tids"}
 		        </button>
 		        <button onClick={() => console.log(activeSets)}>
-		            {"meta"}
+		    	{"meta"}
 		        </button>
 		        <button onClick={() => console.log(activeSets[location_key])}>
-		            {"locs"}
+		    	{"locs"}
 		        </button>
 		        */}
-                      </div>
-                      <div className="level-item">
-		        <span>{ntids + " informants in " + nlocs + " locations"}</span>
-                      </div>
                     </div>
-                  </nav>
-		</div>
-		<div className="inner-grid" style={{marginTop: 20}}>
-		    <div className="divTableBody">
-			<Menu
-			    meta={menu_data}
-			    interval={(d) => intervalCallback(d)} 
-			    discrete={(d) => discreteCallback(d)}
-			/>
-		    </div>
-		</div>
-		<Map
-		    apiKey={API_KEY}
-		    center={center}
-		    callback={(d) => mapCallback(d)}
-		    coords={c}
-		    zoom={zoom}
-		/>
+                     <div className="level-item">
+                      <span>{ntids + " informants in " + nlocs + " locations"}</span>
+                     </div>
+                   </div>
+                </nav>
+            </div>
+            <div className="inner-grid" style={{marginTop: 20}}>
+                <div className="divTableBody">
+                 <Menu
+                     meta={menu_data}
+                     interval={(d) => intervalCallback(d)}
+                     discrete={(d) => discreteCallback(d)}
+                 />
+                </div>
+            </div>
+            <Map
+                apiKey={API_KEY}
+                center={center}
+                callback={(d) => mapCallback(d)}
+                coords={c}
+                zoom={zoom}
+            />
 	    </div>
 	);
 }
