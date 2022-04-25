@@ -727,7 +727,6 @@ module MetadataMenu =
            let values = Fable.Core.JS.Constructors.Object.values(results)
            for catCode, value in Seq.zip catCodes values do
                let categoryObj = allCategories |> List.find (fun c -> c.GetQualifiedColumnName() = catCode)
-               let selection = Fable.Core.JS.Constructors.Object.keys(value)
                let catControlType =
                    geoMapConfig.MetadataCategories
                    |> List.pick (fun c -> if c.QualifiedColumnName = catCode then Some c.ControlType else None)
@@ -735,13 +734,15 @@ module MetadataMenu =
                | IntervalControl ->
                    match categoryObj with
                    | :? NumberCategory as numberCat ->
-                       let numericSelection = selection |> Seq.map System.Int64.Parse
+                       let valueArray = value :?> string []
+                       let min = valueArray.[0]
+                       let max = valueArray.[1]
                        dispatch (SetIntervalCategoryMode (numberCat, IntervalMode))
-                       dispatch (SetIntervalFrom (numberCat, string (Seq.min numericSelection)))
-                       dispatch (SetIntervalTo (numberCat, string (Seq.max numericSelection)))
+                       dispatch (SetIntervalFrom (numberCat, min))
+                       dispatch (SetIntervalTo (numberCat, max))
                    | _ -> failwith $"Non-numerical category defined as interval: {catCode}"
                | DiscreteControl ->
-                   let choices = [| for value in selection -> { Name = value; Value = value } |]
+                   let choices = [| for v in (value :?> string []) -> { Name = v; Value = v } |]
                    dispatch (SetSelection (categoryObj, choices))
            dispatch CloseMetadataGeoMap
 
