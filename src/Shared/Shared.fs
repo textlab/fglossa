@@ -33,6 +33,7 @@ module Metadata =
 
     type GeoMapCategoryConfig =
         { QualifiedColumnName: string
+          Name: string
           ControlType: GeoMapControlType }
 
     /// Base class for all metadata categories
@@ -66,6 +67,7 @@ module Metadata =
 
         member this.GetGeoMapConfig() =
             { QualifiedColumnName = this.GetQualifiedColumnName()
+              Name = this.Name
               ControlType = this.GeoMapControlType }
 
 

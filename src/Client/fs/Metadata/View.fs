@@ -720,7 +720,7 @@ module MetadataMenu =
                            {| COLUMN = index
                               CODE = cat.QualifiedColumnName
                               TYPE = cat.ControlType.ToString()
-                              NAME = cat.QualifiedColumnName |})) |}
+                              NAME = cat.Name |})) |}
 
         let okHandler (results: obj) =
            let catCodes = Fable.Core.JS.Constructors.Object.keys(results)
