@@ -97,15 +97,15 @@ let generateMetadataSelectionSql (maybeRequestedCategoryCode: string option) (se
                   |> Array.filter (fun choice -> not (System.String.IsNullOrWhiteSpace(choice.Value)))
 
               if choices.Length > 0 then
-                  // If we find 'glossa_interval_from' and/or 'glossa_interval_to' we have an interval; otherwise
+                  // If we find 'app_interval_from' and/or 'app_interval_to' we have an interval; otherwise
                   // we options from a select list
                   let maybeFrom =
                       choices
-                      |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_from")
+                      |> Array.tryFind (fun choice -> choice.Name = "app_interval_from")
 
                   let maybeTo =
                       choices
-                      |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_to")
+                      |> Array.tryFind (fun choice -> choice.Name = "app_interval_to")
 
                   match (maybeFrom, maybeTo) with
                   | Some fromValue, Some toValue ->

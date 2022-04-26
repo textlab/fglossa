@@ -273,7 +273,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         let (newCategoryValues: Metadata.CategorySelection) =
             let fromValue: Metadata.CategoryMenuOption =
-                { Name = "glossa_interval_from"
+                { Name = "app_interval_from"
                   Value = number }
 
             // Find the already selected values for this category, if any, and append the new one
@@ -281,7 +281,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             | Some categoryValues ->
                 let maybeToValue =
                     categoryValues.Choices
-                    |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_to")
+                    |> Array.tryFind (fun choice -> choice.Name = "app_interval_to")
 
                 { Choices =
                       [| fromValue
@@ -312,7 +312,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         let (newCategoryValues: Metadata.CategorySelection) =
             let toValue: Metadata.CategoryMenuOption =
-                { Name = "glossa_interval_to"
+                { Name = "app_interval_to"
                   Value = number }
 
             // Find the already selected values for this category, if any, and append the new one
@@ -320,7 +320,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             | Some categoryValues ->
                 let maybeFromValue =
                     categoryValues.Choices
-                    |> Array.tryFind (fun choice -> choice.Name = "glossa_interval_from")
+                    |> Array.tryFind (fun choice -> choice.Name = "app_interval_from")
 
                 { Choices =
                       [| match maybeFromValue with

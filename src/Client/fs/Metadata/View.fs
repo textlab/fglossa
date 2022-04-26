@@ -241,8 +241,8 @@ module MetadataMenu =
                     else
                         None))
 
-        let maybeFrom = pickValue "glossa_interval_from"
-        let maybeTo = pickValue "glossa_interval_to"
+        let maybeFrom = pickValue "app_interval_from"
+        let maybeTo = pickValue "app_interval_to"
 
         let intervalStateFromProps =
             [ ("From:", maybeFrom)
