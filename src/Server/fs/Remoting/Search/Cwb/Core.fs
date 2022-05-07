@@ -20,7 +20,8 @@ let maxCqpProcesses = 8
 
 let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams) (corpus: Corpus) =
     async {
-        let cqpProcs = Process.runCmdWithOutput "pgrep" "-f cqp"
+        let cqpProcs =
+            Process.runCmdWithOutput "pgrep" "-f cqp"
 
         let nCqpProcs = cqpProcs.Split('\n').Length
 
@@ -46,7 +47,8 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                 if searchParams.SearchId = 0 then
                     // a SearchId of 0 means a new, unsaved search, so save it
                     // and set the database ID of the search to be the SearchId
-                    use connection = new SqliteConnection(connStr)
+                    use connection =
+                        new SqliteConnection(connStr)
 
                     let res =
                         (insert logger connection "Search" searchData)
@@ -58,7 +60,8 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                 else
                     searchParams.SearchId
 
-            let searchParamsWithSearchId = { searchParams with SearchId = searchId }
+            let searchParamsWithSearchId =
+                { searchParams with SearchId = searchId }
 
             let! searchResults =
                 match corpus.Config.Modality with
@@ -113,7 +116,8 @@ let getSearchResults
     }
 
 let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
-    let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
+    let corpus =
+        Corpora.Server.getCorpus searchParams.CorpusCode
 
     match corpus.Config.Modality with
     | Spoken -> Spoken.getGeoDistribution logger searchParams
@@ -127,10 +131,12 @@ let getFrequencyList
     (freqListTokenBoundaries: FreqListTokenBoundaries)
     : Async<string []> =
     async {
-        let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
+        let corpus =
+            Corpora.Server.getCorpus searchParams.CorpusCode
 
         let! results =
-            let caseStr = if isCaseSensitive then "" else " %c"
+            let caseStr =
+                if isCaseSensitive then "" else " %c"
 
             let matchStr =
                 match freqListTokenBoundaries.From, freqListTokenBoundaries.To with
@@ -146,7 +152,8 @@ let getFrequencyList
             let awk =
                 "|LC_ALL=C awk '{f[$0]++}END{for(k in f){print f[k], k}}' |LC_ALL=C sort -nr"
 
-            let cmd = $"tabulate QUERY {attrs} >\" {awk}\""
+            let cmd =
+                $"tabulate QUERY {attrs} >\" {awk}\""
 
             let searchParamsForFrequencyList =
                 { searchParams with
@@ -180,7 +187,8 @@ let downloadFrequencyList
         | Excel ->
             use workbook = new Excel.XLWorkbook()
 
-            let worksheet = workbook.Worksheets.Add("Frequency list")
+            let worksheet =
+                workbook.Worksheets.Add("Frequency list")
 
             // Create headers
             worksheet.Cell(1, 1).Value <- "Count"
@@ -276,14 +284,16 @@ let getMetadataDistribution
     (accExcludedAttrValues: Set<string>)
     : Task<MetadataDistribution> =
     task {
-        let corpus = Corpora.Server.getCorpus searchParams.CorpusCode
+        let corpus =
+            Corpora.Server.getCorpus searchParams.CorpusCode
 
         let textIdAttr =
             match corpus.Config.Modality with
             | Spoken -> "who_name"
             | Written -> "text_id"
 
-        let queryName = cwbQueryName corpus searchParams.SearchId
+        let queryName =
+            cwbQueryName corpus searchParams.SearchId
 
         let namedQuery =
             match corpus.Config.Modality with
@@ -350,26 +360,36 @@ let getMetadataDistribution
         //     |> Array.iter (fun (metadataValue, freq) -> printfn $"{metadataValue}: {freq}"))
 
 
-        let connStr = getConnectionString corpus.Config.Code
+        let connStr =
+            getConnectionString corpus.Config.Code
 
         use conn = new SqliteConnection(connStr)
 
-        let catCode = Database.sanitizeString categoryCode
+        let catCode =
+            Database.sanitizeString categoryCode
 
         let catJoin =
             if catCode.Contains('.') then
                 let catTable = catCode.Split('.')[0]
-                if catTable <> "texts" then " " + createJoin catTable else ""
+
+                if catTable <> "texts" then
+                    " " + createJoin catTable
+                else
+                    ""
             else
                 ""
-        let excludedManyToManyCategoriesSql = generateManyToManyExclusions searchParams.MetadataSelection
 
-        let nonExcludedManyToManyCategories = getNonExcludedManyToManyCategories searchParams.MetadataSelection
+        let excludedManyToManyCategoriesSql =
+            generateManyToManyExclusions searchParams.MetadataSelection
+
+        let nonExcludedManyToManyCategories =
+            getNonExcludedManyToManyCategories searchParams.MetadataSelection
 
         let metadataSelectionSql =
             generateMetadataSelectionSql None nonExcludedManyToManyCategories
 
-        let joins = generateMetadataSelectionJoins (Some catCode) nonExcludedManyToManyCategories
+        let joins =
+            generateMetadataSelectionJoins (Some catCode) nonExcludedManyToManyCategories
 
         let column = getQualifiedColumnName catCode
 
@@ -384,7 +404,8 @@ let getMetadataDistribution
               FROM texts{catJoin}{joins} \
               WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql} GROUP BY {column} ORDER BY {column}"
 
-        let parameters = metadataSelectionToParamDict searchParams.MetadataSelection
+        let parameters =
+            metadataSelectionToParamDict searchParams.MetadataSelection
 
         // For string categories, we return the values we get from the database, but for numerical categories
         // we need to convert them to strings. Because of type checking on the data we get from the database,
@@ -399,19 +420,20 @@ let getMetadataDistribution
 
                 match categoryRes with
                 | Ok (catDist: StringCategoryTextIdsAndBounds seq) ->
-                        seq {
-                            for d in catDist ->
-                                let tokenCount =
-                                    d.Bounds.Split(':')
-                                    |> Array.sumBy (fun b ->
-                                        let parts = b.Split('-')
-                                        let startBound = Int64.Parse(parts.[0])
-                                        let endBound = Int64.Parse(parts.[1])
-                                        endBound - startBound + 1L)
-                                { StringCategoryTextIdsAndTokenCount.CategoryValue = d.CategoryValue
-                                  TextIds = d.TextIds
-                                  TokenCount = tokenCount }
-                        }
+                    seq {
+                        for d in catDist ->
+                            let tokenCount =
+                                d.Bounds.Split(':')
+                                |> Array.sumBy (fun b ->
+                                    let parts = b.Split('-')
+                                    let startBound = Int64.Parse(parts.[0])
+                                    let endBound = Int64.Parse(parts.[1])
+                                    endBound - startBound + 1L)
+
+                            { StringCategoryTextIdsAndTokenCount.CategoryValue = d.CategoryValue
+                              TextIds = d.TextIds
+                              TokenCount = tokenCount }
+                    }
                 | Error ex -> raise ex
             | Metadata.NumberCategoryType, Spoken ->
                 let categoryRes =
@@ -420,19 +442,20 @@ let getMetadataDistribution
 
                 match categoryRes with
                 | Ok (catDist: NumberCategoryTextIdsAndBounds seq) ->
-                        seq {
-                            for d in catDist ->
-                                let tokenCount =
-                                    d.Bounds.Split(':')
-                                    |> Array.sumBy (fun b ->
-                                        let parts = b.Split('-')
-                                        let startBound = Int64.Parse(parts.[0])
-                                        let endBound = Int64.Parse(parts.[1])
-                                        endBound - startBound + 1L)
-                                { CategoryValue = string d.CategoryValue
-                                  TextIds = d.TextIds
-                                  TokenCount = tokenCount }
-                        }
+                    seq {
+                        for d in catDist ->
+                            let tokenCount =
+                                d.Bounds.Split(':')
+                                |> Array.sumBy (fun b ->
+                                    let parts = b.Split('-')
+                                    let startBound = Int64.Parse(parts.[0])
+                                    let endBound = Int64.Parse(parts.[1])
+                                    endBound - startBound + 1L)
+
+                            { CategoryValue = string d.CategoryValue
+                              TextIds = d.TextIds
+                              TokenCount = tokenCount }
+                    }
                 | Error ex -> raise ex
             | Metadata.StringCategoryType, Written ->
                 let categoryRes =
@@ -457,14 +480,21 @@ let getMetadataDistribution
                     }
                 | Error ex -> raise ex
             |> Seq.filter (fun categoryValueInfo ->
-                (not (isNull categoryValueInfo.CategoryValue)) && categoryValueInfo.CategoryValue <> "\N")
+                (not (isNull categoryValueInfo.CategoryValue))
+                && categoryValueInfo.CategoryValue <> "\N")
             |> Seq.toArray
 
-        let totalTokenCount = categoryValuesWithTextIdsAndTokenCounts |> Array.sumBy (fun c -> c.TokenCount)
-        let totalTokenCountFloat = float totalTokenCount
+        let totalTokenCount =
+            categoryValuesWithTextIdsAndTokenCounts
+            |> Array.sumBy (fun c -> c.TokenCount)
+
+        let totalTokenCountFloat =
+            float totalTokenCount
 
         let expectedProportions =
-            [| for categoryValueInfo in categoryValuesWithTextIdsAndTokenCounts ->  float categoryValueInfo.TokenCount / totalTokenCountFloat |]
+            [| for categoryValueInfo in categoryValuesWithTextIdsAndTokenCounts ->
+                   float categoryValueInfo.TokenCount
+                   / totalTokenCountFloat |]
 
         let distribution =
             [| for pair in attrDistributionMap ->
@@ -486,15 +516,18 @@ let getMetadataDistribution
                                           | None -> sum)
                                   0L |]
 
-                   let attrValueTotal = metadataValueFreqs |> Array.sum
-                   let attrValueTotalFloat = float attrValueTotal
+                   let attrValueTotal =
+                       metadataValueFreqs |> Array.sum
+
+                   let attrValueTotalFloat =
+                       float attrValueTotal
+
                    let observedProportions =
                        [| for freq in metadataValueFreqs -> float freq / attrValueTotalFloat |]
                    // Compute the Deviation of Proportions score (Gries 2008)
                    let dp =
                        Array.zip expectedProportions observedProportions
-                       |> Array.sumBy (fun (expected, observed) ->
-                           abs (expected - observed))
+                       |> Array.sumBy (fun (expected, observed) -> abs (expected - observed))
                        |> fun sum -> sum / 2.
 
                    { AttributeValue = attrValue
@@ -510,7 +543,8 @@ let getMetadataDistribution
                     |> Array.map (fun (sum, freq) -> sum + freq))
                 (Array.create categoryValuesWithTextIdsAndTokenCounts.Length 0L)
 
-        let summedTotalsFloat = Array.sum totals |> float
+        let summedTotalsFloat =
+            Array.sum totals |> float
 
         let totalsProportions =
             [| for total in totals -> float total / summedTotalsFloat |]
@@ -534,10 +568,10 @@ let getMetadataDistribution
 
         let categoryValueStats =
             [ for catVal, total in Array.zip categoryValuesWithTextIdsAndTokenCounts totals do
-                if keepZeroValues || total > 0L then
-                    { Value = catVal.CategoryValue
-                      CategoryValueTotal = total
-                      TokenCount = catVal.TokenCount } ]
+                  if keepZeroValues || total > 0L then
+                      { Value = catVal.CategoryValue
+                        CategoryValueTotal = total
+                        TokenCount = catVal.TokenCount } ]
 
         return
             { Distribution = distribution'
@@ -558,17 +592,24 @@ let downloadMetadataDistribution
     (keepZeroValues: bool)
     (accExcludedAttrValues: Set<string>)
     (format: DownloadFormat)
-    : Task<byte[]> =
+    : Task<byte []> =
     task {
         let! distribution =
             getMetadataDistribution
-                logger searchParams attributeCode categoryCode categoryType keepZeroValues accExcludedAttrValues
+                logger
+                searchParams
+                attributeCode
+                categoryCode
+                categoryType
+                keepZeroValues
+                accExcludedAttrValues
 
         match format with
         | Excel ->
             use workbook = new Excel.XLWorkbook()
 
-            let worksheet = workbook.Worksheets.Add("Metadata distribution")
+            let worksheet =
+                workbook.Worksheets.Add("Metadata distribution")
 
             // Create headers
             worksheet.Cell(1, 1).Value <- "Attribute value"
@@ -578,7 +619,9 @@ let downloadMetadataDistribution
             |> List.iteri (fun index categoryValueStat ->
                 worksheet.Cell(1, index + 2).Value <- $"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)")
 
-            let totalsColumnNumber = distribution.CategoryValueStats.Length + 3
+            let totalsColumnNumber =
+                distribution.CategoryValueStats.Length + 3
+
             let dpColumnNumber = totalsColumnNumber + 1
 
             // Create a header with the total token count for all category values
@@ -599,26 +642,27 @@ let downloadMetadataDistribution
                     worksheet.Cell(rowIndex + 2, columnIndex + 2).Value <- metadataValueFreq)
 
                 // Create a cell with the total number of search hits for this attribute value
-                worksheet.Cell(rowIndex + 2, totalsColumnNumber).Value <- (string attrValueDistribution.AttributeValueTotal)
+                worksheet.Cell(rowIndex + 2, totalsColumnNumber).Value <- (string
+                                                                               attrValueDistribution.AttributeValueTotal)
 
                 // Create a cell with the Deviation of proportion value for this attribute value
                 worksheet.Cell(rowIndex + 2, dpColumnNumber).Value <- $"%.2f{attrValueDistribution.Dp}")
 
-            let totalsRowIndex = distribution.Distribution.Length + 2
+            let totalsRowIndex =
+                distribution.Distribution.Length + 2
 
             worksheet.Cell(totalsRowIndex, 1).Value <- "Total"
 
             distribution.CategoryValueStats
-            |> List.iteri(fun colIndex categoryValueStat ->
+            |> List.iteri (fun colIndex categoryValueStat ->
                 // Create a column for each metadata value total
-                    worksheet.Cell(totalsRowIndex, colIndex + 2).Value <- categoryValueStat.CategoryValueTotal)
+                worksheet.Cell(totalsRowIndex, colIndex + 2).Value <- categoryValueStat.CategoryValueTotal)
 
             // Create a cell with the total number of search hits
-            worksheet.Cell(totalsRowIndex, totalsColumnNumber).Value <- (
-                          distribution.CategoryValueStats
-                          |> List.sumBy (fun categoryValue -> categoryValue.CategoryValueTotal)
-                          |> string
-                      )
+            worksheet.Cell(totalsRowIndex, totalsColumnNumber).Value <- (distribution.CategoryValueStats
+                                                                         |> List.sumBy (fun categoryValue ->
+                                                                             categoryValue.CategoryValueTotal)
+                                                                         |> string)
 
             // Create a cell with the total Deviation of proportions
             worksheet.Cell(totalsRowIndex, dpColumnNumber).Value <- $"%.2f{distribution.TotalDp}"
@@ -630,9 +674,11 @@ let downloadMetadataDistribution
             // Create header row with the different metadata category values
             let headerRow =
                 distribution.CategoryValueStats
-                |> List.map (fun categoryValueStat -> $"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)")
+                |> List.map (fun categoryValueStat ->
+                    $"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)")
                 |> String.concat "\t"
-                |> fun s -> $"Attribute value\t{s}\tTotal ({distribution.TotalTokenCount} tokens)\tDeviation of proportions"
+                |> fun s ->
+                    $"Attribute value\t{s}\tTotal ({distribution.TotalTokenCount} tokens)\tDeviation of proportions"
 
             let valueRows =
                 distribution.Distribution
@@ -656,19 +702,24 @@ let downloadMetadataDistribution
                 |> fun s -> $"Total\t{s}\t{totalHits}\t%.2f{distribution.TotalDp}"
 
             let output =
-               Array.concat [ [| headerRow |]
-                              valueRows
-                              [| totalsRow |] ]
-               |> String.concat "\n"
-            let fileBytes = System.Text.Encoding.UTF8.GetBytes(output)
+                Array.concat [ [| headerRow |]
+                               valueRows
+                               [| totalsRow |] ]
+                |> String.concat "\n"
+
+            let fileBytes =
+                System.Text.Encoding.UTF8.GetBytes(output)
+
             return fileBytes
         | Csv ->
             // Create header row with the different metadata category values
             let headerRow =
                 distribution.CategoryValueStats
-                |> List.map (fun categoryValueStat -> $"\"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)\"")
+                |> List.map (fun categoryValueStat ->
+                    $"\"{categoryValueStat.Value} ({categoryValueStat.TokenCount} tokens)\"")
                 |> String.concat ","
-                |> fun s -> $"\"Attribute value\",{s},\"Total ({distribution.TotalTokenCount} tokens)\",\"Deviation of proportions\""
+                |> fun s ->
+                    $"\"Attribute value\",{s},\"Total ({distribution.TotalTokenCount} tokens)\",\"Deviation of proportions\""
 
             let valueRows =
                 distribution.Distribution
@@ -692,10 +743,13 @@ let downloadMetadataDistribution
                 |> fun s -> $"\"Total\",{s},{totalHits},%.2f{distribution.TotalDp}"
 
             let output =
-               Array.concat [ [| headerRow |]
-                              valueRows
-                              [| totalsRow |] ]
-               |> String.concat "\n"
-            let fileBytes = System.Text.Encoding.UTF8.GetBytes(output)
+                Array.concat [ [| headerRow |]
+                               valueRows
+                               [| totalsRow |] ]
+                |> String.concat "\n"
+
+            let fileBytes =
+                System.Text.Encoding.UTF8.GetBytes(output)
+
             return fileBytes
     }

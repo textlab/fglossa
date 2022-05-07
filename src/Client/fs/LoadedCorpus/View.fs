@@ -182,10 +182,9 @@ module ResultsView =
 
             let focusQuickView () =
                 elementRef.current
-                |> Option.iter
-                    (fun quickViewElement ->
-                        if shouldShowQuickView then
-                            quickViewElement.focus ())
+                |> Option.iter (fun quickViewElement ->
+                    if shouldShowQuickView then
+                        quickViewElement.focus ())
 
             // Focus the QuickView when mounted to enable it to receive keyboard events
             React.useEffect (focusQuickView, [| box model |])
@@ -196,24 +195,23 @@ module ResultsView =
                                   prop.ref elementRef
                                   // Set tabIndex so that the element receives keyboard events
                                   prop.tabIndex 0
-                                  prop.onKeyUp
-                                      (fun e ->
-                                          if e.key = "Escape" then
-                                              dispatch CloseQuickView)
+                                  prop.onKeyUp (fun e ->
+                                      if e.key = "Escape" then
+                                          dispatch CloseQuickView)
                                   prop.children [ QuickView.header [ Html.div [ prop.style [ style.fontSize 16
                                                                                              style.fontWeight.bold ]
                                                                                 prop.text "Metadata" ]
-                                                                     Bulma.delete [ prop.onClick
-                                                                                        (fun _ ->
-                                                                                            dispatch CloseQuickView) ] ]
+                                                                     Bulma.delete [ prop.onClick (fun _ ->
+                                                                                        dispatch CloseQuickView) ] ]
                                                   QuickView.body [ QuickView.block [ Bulma.table [ prop.style [ style.margin
                                                                                                                     5 ]
                                                                                                    prop.children [ Html.tbody [ for category in
                                                                                                                                     model.QuickViewMetadata ->
-                                                                                                                                    Html.tr [ Html.td (
-                                                                                                                                                  category.Name
-                                                                                                                                                  + ":"
-                                                                                                                                              )
+                                                                                                                                    Html.tr [ Html
+                                                                                                                                                  .td (
+                                                                                                                                                      category.Name
+                                                                                                                                                      + ":"
+                                                                                                                                                  )
                                                                                                                                               Html.td
                                                                                                                                                   category.Value ] ] ] ] ] ] ] ]
 
@@ -223,10 +221,9 @@ module ResultsView =
 
             let focusDownloadWindow () =
                 elementRef.current
-                |> Option.iter
-                    (fun downloadWindowElement ->
-                        if model.ShouldShowDownloadWindow then
-                            downloadWindowElement.focus ())
+                |> Option.iter (fun downloadWindowElement ->
+                    if model.ShouldShowDownloadWindow then
+                        downloadWindowElement.focus ())
 
             // Focus the QuickView when mounted to enable it to receive keyboard events
             React.useEffect (focusDownloadWindow, [| box model |])
@@ -234,9 +231,8 @@ module ResultsView =
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
                              prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
-                                                                    prop.onCheckedChange
-                                                                        (fun _ ->
-                                                                            dispatch (ToggleDownloadAttribute attribute)) ]
+                                                                    prop.onCheckedChange (fun _ ->
+                                                                        dispatch (ToggleDownloadAttribute attribute)) ]
                                              Bulma.text.span $" {attribute.Name}" ] ]
 
             let attributeCheckboxes =
@@ -255,7 +251,8 @@ module ResultsView =
                 | Multilingual _languages -> failwith "NOT IMPLEMENTED"
 
             let modalFooter =
-                let disableDownload = model.DownloadAttributes.IsEmpty
+                let disableDownload =
+                    model.DownloadAttributes.IsEmpty
 
                 [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem (
                                                       Html.label [ Bulma.input.checkbox [ prop.isChecked
@@ -274,11 +271,8 @@ module ResultsView =
                                                                             | Some _ -> prop.disabled true
                                                                             | None -> prop.disabled disableDownload
 
-                                                                            prop.onClick
-                                                                                (fun _ ->
-                                                                                    dispatch (
-                                                                                        DownloadSearchResults Excel
-                                                                                    ))
+                                                                            prop.onClick (fun _ ->
+                                                                                dispatch (DownloadSearchResults Excel))
                                                                             prop.style [ style.marginLeft 5 ]
                                                                             prop.text "Excel" ]
                                                   )
@@ -290,9 +284,8 @@ module ResultsView =
                                                                             | Some _ -> prop.disabled true
                                                                             | None -> prop.disabled disableDownload
 
-                                                                            prop.onClick
-                                                                                (fun _ ->
-                                                                                    dispatch (DownloadSearchResults Tsv))
+                                                                            prop.onClick (fun _ ->
+                                                                                dispatch (DownloadSearchResults Tsv))
                                                                             prop.text "Tab-separated" ]
                                                   )
                                                   Bulma.levelItem (
@@ -303,9 +296,8 @@ module ResultsView =
                                                                             | Some _ -> prop.disabled true
                                                                             | None -> prop.disabled disableDownload
 
-                                                                            prop.onClick
-                                                                                (fun _ ->
-                                                                                    dispatch (DownloadSearchResults Csv))
+                                                                            prop.onClick (fun _ ->
+                                                                                dispatch (DownloadSearchResults Csv))
                                                                             prop.text "Comma-separated" ]
                                                   ) ] ] ]
 
@@ -315,10 +307,9 @@ module ResultsView =
                           prop.ref elementRef
                           // Set tabIndex so that the element receives keyboard events
                           prop.tabIndex 0
-                          prop.onKeyUp
-                              (fun e ->
-                                  if e.key = "Escape" then
-                                      dispatch CloseDownloadWindow)
+                          prop.onKeyUp (fun e ->
+                              if e.key = "Escape" then
+                                  dispatch CloseDownloadWindow)
                           prop.children [ Bulma.modalBackground [ prop.onClick (fun _ -> dispatch CloseDownloadWindow) ]
                                           Bulma.modalCard [ Bulma.modalCardHead [ Bulma.modalCardTitle
                                                                                       "Download results"
@@ -357,11 +348,10 @@ module ResultsView =
 
             let sortMenu =
                 Bulma.select [ prop.disabled isSearchingOrFetching
-                               prop.onChange
-                                   (fun (s: string) ->
-                                       let sortKey = SortKey.OfString(s)
+                               prop.onChange (fun (s: string) ->
+                                   let sortKey = SortKey.OfString(s)
 
-                                       dispatch (SetPaginatorPage(Some 1, Some sortKey)))
+                                   dispatch (SetPaginatorPage(Some 1, Some sortKey)))
                                prop.children [ Html.option [ prop.value "Position"
                                                              prop.text "Sort by position" ]
                                                Html.option [ prop.value "Match"
@@ -383,7 +373,8 @@ module ResultsView =
                     | Some numResults ->
                         if numResults > 0L then
                             // We have received a non-zero number of results
-                            let pagesStr = if numPages = 1 then "page" else "pages"
+                            let pagesStr =
+                                if numPages = 1 then "page" else "pages"
 
                             if concordanceModel.IsSearching then
                                 $"Showing {numResults} matches ({numPages} {pagesStr}); searching..."
@@ -483,10 +474,12 @@ module ResultsView =
 
         [<ReactComponent>]
         let GeoMapController (geoMapConfig: GeoMapConfig) (coordMap: Map<string, Map<string, int64>>) =
-            let selectedColor, setSelectedColor = React.useState ("yellow")
+            let selectedColor, setSelectedColor =
+                React.useState ("yellow")
 
             // coloredPhons is a map from a color name to a set of phonetic forms whose buttons have that color
-            let (coloredPhons: Map<string, Set<string>>), setColorPhons = React.useState (Map.empty)
+            let (coloredPhons: Map<string, Set<string>>), setColorPhons =
+                React.useState (Map.empty)
 
             let colorPicker selectedColor color =
                 let borderColor =
@@ -544,39 +537,38 @@ module ResultsView =
                 Bulma.button.button [ prop.style ([ style.padding 5 ] |> List.append colorStyles)
                                       prop.title titleText
                                       prop.text phon
-                                      prop.onClick
-                                          (fun _ ->
-                                              // If the button already has a color, remove it
-                                              // (regardless of whether another color picker has
-                                              // been selected or not, this color should be removed)
-                                              let newMap =
-                                                  match maybeColor with
-                                                  | Some color ->
-                                                      coloredPhons.Change(
-                                                          color,
-                                                          (fun maybePhons ->
-                                                              match maybePhons with
-                                                              | Some phons -> Some(phons.Remove(phon))
-                                                              | None -> None)
-                                                      )
-                                                  | None -> coloredPhons
+                                      prop.onClick (fun _ ->
+                                          // If the button already has a color, remove it
+                                          // (regardless of whether another color picker has
+                                          // been selected or not, this color should be removed)
+                                          let newMap =
+                                              match maybeColor with
+                                              | Some color ->
+                                                  coloredPhons.Change(
+                                                      color,
+                                                      (fun maybePhons ->
+                                                          match maybePhons with
+                                                          | Some phons -> Some(phons.Remove(phon))
+                                                          | None -> None)
+                                                  )
+                                              | None -> coloredPhons
 
-                                              // If the selected colour picker differs from the current colour
-                                              // of the button, set the button to have the new button colour.
-                                              let newMap' =
-                                                  if maybeColor.IsNone
-                                                     || maybeColor.Value <> selectedColor then
-                                                      newMap.Change(
-                                                          selectedColor,
-                                                          (fun maybePhons ->
-                                                              match maybePhons with
-                                                              | Some phons -> Some(phons.Add(phon))
-                                                              | None -> Some(Set.singleton phon))
-                                                      )
-                                                  else
-                                                      newMap
+                                          // If the selected colour picker differs from the current colour
+                                          // of the button, set the button to have the new button colour.
+                                          let newMap' =
+                                              if maybeColor.IsNone
+                                                 || maybeColor.Value <> selectedColor then
+                                                  newMap.Change(
+                                                      selectedColor,
+                                                      (fun maybePhons ->
+                                                          match maybePhons with
+                                                          | Some phons -> Some(phons.Add(phon))
+                                                          | None -> Some(Set.singleton phon))
+                                                  )
+                                              else
+                                                  newMap
 
-                                              setColorPhons newMap') ]
+                                          setColorPhons newMap') ]
 
             let locationNames =
                 coordMap.Values
@@ -589,19 +581,17 @@ module ResultsView =
             let locationPhonFreqs =
                 coordMap
                 |> Map.toArray
-                |> Array.collect
-                    (fun (phon, locationMap) ->
-                        locationMap
-                        |> Map.toArray
-                        |> Array.map (fun (location, freq) -> (location, phon, freq)))
+                |> Array.collect (fun (phon, locationMap) ->
+                    locationMap
+                    |> Map.toArray
+                    |> Array.map (fun (location, freq) -> (location, phon, freq)))
                 |> Array.groupBy (fun (location, _, _) -> location)
-                |> Array.map
-                    (fun (location, phonFreqs) ->
-                        let phonFreqMap =
-                            [| for (_, phon, freq) in phonFreqs -> phon, freq |]
-                            |> Map.ofArray
+                |> Array.map (fun (location, phonFreqs) ->
+                    let phonFreqMap =
+                        [| for (_, phon, freq) in phonFreqs -> phon, freq |]
+                        |> Map.ofArray
 
-                        (location, phonFreqMap))
+                    (location, phonFreqMap))
                 |> Map.ofArray
 
             let allCoordsMap =
@@ -614,10 +604,10 @@ module ResultsView =
                        {| Name = locationName
                           Coords = allCoordsMap.[locationName]
                           Phons =
-                              locationPhonFreqs.[locationName]
-                              |> Map.toArray
-                              |> Array.map (fun (phon, freq) -> $"{phon}: {freq}")
-                              |> String.concat "; " |} |]
+                           locationPhonFreqs.[locationName]
+                           |> Map.toArray
+                           |> Array.map (fun (phon, freq) -> $"{phon}: {freq}")
+                           |> String.concat "; " |} |]
 
             // These are the small red dots that mark all locations where hits were found
             let smallDots =
@@ -637,7 +627,9 @@ module ResultsView =
                        yield!
                            [| for phon in phons do
                                   let locationFreqs = coordMap.[phon]
-                                  let selectedLocations = Set.ofSeq locationFreqs.Keys
+
+                                  let selectedLocations =
+                                      Set.ofSeq locationFreqs.Keys
 
                                   let selectedCoords =
                                       smallDots
@@ -646,8 +638,8 @@ module ResultsView =
                                   yield!
                                       [| for coordMap in selectedCoords ->
                                              {| coordMap with
-                                                    key = $"{coordMap.key}_{color}"
-                                                    icon = $"speech/mm_20_{color}.png" |} |] |] |]
+                                                 key = $"{coordMap.key}_{color}"
+                                                 icon = $"speech/mm_20_{color}.png" |} |] |] |]
 
             let points =
                 Array.append smallDots selectedPoints
@@ -681,8 +673,8 @@ module ResultsView =
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
                              prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
-                                                                    prop.onCheckedChange
-                                                                        (fun _ -> dispatch (ToggleAttribute attribute)) ]
+                                                                    prop.onCheckedChange (fun _ ->
+                                                                        dispatch (ToggleAttribute attribute)) ]
                                              Bulma.text.span $" {attribute.Name}" ] ]
 
             let caseSensitiveCheckbox =
@@ -690,8 +682,8 @@ module ResultsView =
                     Html.label [ prop.style [ style.marginRight 15 ]
                                  prop.children [ Bulma.input.checkbox [ prop.isChecked
                                                                             frequencyListsModel.IsCaseSensitive
-                                                                        prop.onCheckedChange
-                                                                            (fun _ -> dispatch ToggleIsCaseSensitive) ]
+                                                                        prop.onCheckedChange (fun _ ->
+                                                                            dispatch ToggleIsCaseSensitive) ]
                                                  Bulma.text.span " Case sensitive" ] ]
                 )
 
@@ -766,10 +758,8 @@ module ResultsView =
                                             prop.text "Comma-separated" ] ]
 
                 Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.button.button [ color.isSuccess
-                                                                                        prop.onClick
-                                                                                            (fun _ ->
-                                                                                                dispatch
-                                                                                                    FetchFrequencyList)
+                                                                                        prop.onClick (fun _ ->
+                                                                                            dispatch FetchFrequencyList)
                                                                                         prop.text "Update stats" ] ]
                                                 Bulma.levelItem [ prop.style [ style.marginLeft 20 ]
                                                                   prop.text "Download:" ]
@@ -845,10 +835,9 @@ module ResultsView =
                                                  prop.text "Select attribute" ]
                                    :: attrOptions
                                )
-                               prop.onChange
-                                   (fun (s: string) ->
-                                       if s <> "" then
-                                           dispatch (SelectAttribute s)) ]
+                               prop.onChange (fun (s: string) ->
+                                   if s <> "" then
+                                       dispatch (SelectAttribute s)) ]
 
             let categoryOptions =
                 [ for index, category in corpus.MetadataQuickView |> List.indexed ->
@@ -861,12 +850,12 @@ module ResultsView =
                                                  prop.text "Select category" ]
                                    :: categoryOptions
                                )
-                               prop.onChange
-                                   (fun (s: string) ->
-                                       if s <> "" then
-                                           let category = corpus.MetadataQuickView.[int s]
+                               prop.onChange (fun (s: string) ->
+                                   if s <> "" then
+                                       let category =
+                                           corpus.MetadataQuickView.[int s]
 
-                                           dispatch (SelectCategory category)) ]
+                                       dispatch (SelectCategory category)) ]
 
             let keepZeroValueButton =
                 Html.label [ Bulma.input.checkbox [ prop.isChecked model.KeepZeroValues
@@ -875,8 +864,8 @@ module ResultsView =
 
             let downloadButtons =
                 Bulma.levelItem (
-                    Bulma.buttons [ Bulma.button.button [ prop.onClick
-                                                              (fun _ -> dispatch (DownloadMetadataDistribution Excel))
+                    Bulma.buttons [ Bulma.button.button [ prop.onClick (fun _ ->
+                                                              dispatch (DownloadMetadataDistribution Excel))
                                                           match model.DownloadingFormat with
                                                           | Some Excel -> button.isLoading
                                                           | Some _ -> prop.disabled true
@@ -885,8 +874,8 @@ module ResultsView =
                                                                  || model.SelectedCategory.IsNone then
                                                                   prop.disabled true
                                                           prop.text "Excel" ]
-                                    Bulma.button.button [ prop.onClick
-                                                              (fun _ -> dispatch (DownloadMetadataDistribution Tsv))
+                                    Bulma.button.button [ prop.onClick (fun _ ->
+                                                              dispatch (DownloadMetadataDistribution Tsv))
                                                           match model.DownloadingFormat with
                                                           | Some Tsv -> button.isLoading
                                                           | Some _ -> prop.disabled true
@@ -895,8 +884,8 @@ module ResultsView =
                                                                  || model.SelectedCategory.IsNone then
                                                                   prop.disabled true
                                                           prop.text "Tab-separated" ]
-                                    Bulma.button.button [ prop.onClick
-                                                              (fun _ -> dispatch (DownloadMetadataDistribution Csv))
+                                    Bulma.button.button [ prop.onClick (fun _ ->
+                                                              dispatch (DownloadMetadataDistribution Csv))
                                                           match model.DownloadingFormat with
                                                           | Some Csv -> button.isLoading
                                                           | Some _ -> prop.disabled true
@@ -935,7 +924,8 @@ module ResultsView =
 
                     let frequencyRows =
                         [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
-                               let attrValue = attrValueDistribution.AttributeValue
+                               let attrValue =
+                                   attrValueDistribution.AttributeValue
 
                                let checkboxCell =
                                    Html.td [ Bulma.input.checkbox [ prop.isChecked (
@@ -943,14 +933,13 @@ module ResultsView =
                                                                             attrValue
                                                                         )
                                                                     )
-                                                                    prop.onCheckedChange
-                                                                        (fun isChecked ->
-                                                                            dispatch (
-                                                                                AddOrRemoveExcludedAttributeValue(
-                                                                                    attrValue,
-                                                                                    isChecked
-                                                                                )
-                                                                            )) ] ]
+                                                                    prop.onCheckedChange (fun isChecked ->
+                                                                        dispatch (
+                                                                            AddOrRemoveExcludedAttributeValue(
+                                                                                attrValue,
+                                                                                isChecked
+                                                                            )
+                                                                        )) ] ]
 
                                let attrValueCell =
                                    Html.td [ if attrValue = "__UNDEF__" then
@@ -978,9 +967,9 @@ module ResultsView =
                             Array.concat [ [| Html.th ""; Html.th "Total" |]
                                            totalsCells
                                            [| Html.th (
-                                               model.MetadataDistribution.CategoryValueStats
-                                               |> List.sumBy (fun categoryValue -> categoryValue.CategoryValueTotal)
-                                               |> string
+                                                  model.MetadataDistribution.CategoryValueStats
+                                                  |> List.sumBy (fun categoryValue -> categoryValue.CategoryValueTotal)
+                                                  |> string
                                               )
                                               Html.th $"%.2f{model.MetadataDistribution.TotalDp}" |] ]
                         )
@@ -1031,45 +1020,41 @@ module ResultsView =
                      tabs.isToggleRounded
                      prop.children [ Html.ul [ Html.li [ if activeTab = "Concordance" then
                                                              tab.isActive
-                                                         prop.onClick
-                                                             (fun _ ->
-                                                                 dispatch (ShowingResults.SelectResultTab Concordance))
+                                                         prop.onClick (fun _ ->
+                                                             dispatch (ShowingResults.SelectResultTab Concordance))
                                                          prop.children [ Html.a [ prop.text "Concordance" ] ] ]
                                                if loadedCorpusModel.Corpus.SharedInfo.GeoMapConfig.IsSome then
                                                    Html.li [ if activeTab = "GeoDistributionMap" then
                                                                  tab.isActive
-                                                             prop.onClick
-                                                                 (fun _ ->
-                                                                     dispatch (
-                                                                         ShowingResults.SelectResultTab(
-                                                                             GeoDistributionMap(
-                                                                                 loadedCorpusModel.Corpus.SharedInfo.GeoMapConfig.Value,
-                                                                                 loadedCorpusModel.GeoDistribution
-                                                                             )
+                                                             prop.onClick (fun _ ->
+                                                                 dispatch (
+                                                                     ShowingResults.SelectResultTab(
+                                                                         GeoDistributionMap(
+                                                                             loadedCorpusModel.Corpus.SharedInfo.GeoMapConfig.Value,
+                                                                             loadedCorpusModel.GeoDistribution
                                                                          )
-                                                                     ))
+                                                                     )
+                                                                 ))
                                                              prop.children [ Html.a [ prop.text "Map" ] ] ]
                                                Html.li [ if activeTab = "Frequency lists" then
                                                              tab.isActive
-                                                         prop.onClick
-                                                             (fun _ ->
-                                                                 dispatch (
-                                                                     ShowingResults.SelectResultTab(
-                                                                         FrequencyLists(FrequencyListsModel.Default)
-                                                                     )
-                                                                 ))
+                                                         prop.onClick (fun _ ->
+                                                             dispatch (
+                                                                 ShowingResults.SelectResultTab(
+                                                                     FrequencyLists(FrequencyListsModel.Default)
+                                                                 )
+                                                             ))
                                                          prop.children [ Html.a [ prop.text "Frequency lists" ] ] ]
                                                Html.li [ if activeTab = "Metadata distribution" then
                                                              tab.isActive
-                                                         prop.onClick
-                                                             (fun _ ->
-                                                                 dispatch (
-                                                                     ShowingResults.SelectResultTab(
-                                                                         MetadataDistribution(
-                                                                             MetadataDistributionModel.Init()
-                                                                         )
+                                                         prop.onClick (fun _ ->
+                                                             dispatch (
+                                                                 ShowingResults.SelectResultTab(
+                                                                     MetadataDistribution(
+                                                                         MetadataDistributionModel.Init()
                                                                      )
-                                                                 ))
+                                                                 )
+                                                             ))
                                                          prop.children [ Html.a [ prop.text "Metadata distribution" ] ] ] ] ] ]
 
     ///////////////////////////////////////
@@ -1125,15 +1110,15 @@ module ResultsView =
 /// View.LoadedCorpus.view
 //////////////////////////////
 let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) =
-    let topRowButtonsElement = topRowButtons model dispatch
+    let topRowButtonsElement =
+        topRowButtons model dispatch
 
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
                                 prop.tabIndex 0
                                 prop.onClick (fun _ -> dispatch ClosePopups)
-                                prop.onKeyUp
-                                    (fun e ->
-                                        if e.key = "Escape" then
-                                            dispatch (MetadataMsg Update.Metadata.Msg.CloseMetadataMenu))
+                                prop.onKeyUp (fun e ->
+                                    if e.key = "Escape" then
+                                        dispatch (MetadataMsg Update.Metadata.Msg.CloseMetadataMenu))
                                 prop.children [ Bulma.columns [ if shouldShowMetadataMenu model then
                                                                     Bulma.column [ column.isNarrow
                                                                                    prop.style [ style.marginRight 20 ]

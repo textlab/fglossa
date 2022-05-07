@@ -18,6 +18,7 @@ module CwbAttributeMenu =
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
     type Heading = string
+
     type AttributeValue = string
     type AttributeValueHumanReadable = string
 
@@ -79,7 +80,7 @@ type Corpus
     member val MetadataTable = defaultArg metadataTable []
     member val MetadataQuickView = defaultArg metadataQuickView []
 
-    abstract member ResultLinks : pageNumber: int * rowIndex: int -> ReactElement
+    abstract member ResultLinks: pageNumber: int * rowIndex: int -> ReactElement
     default _.ResultLinks(_, _) = Html.none
 
 type MediaPlayerInfo =
@@ -176,14 +177,14 @@ type MetadataDistributionModel =
         { SelectedAttributeCode = None
           SelectedCategory = None
           MetadataDistribution =
-              { Distribution = [||]
-                CategoryValueStats = []
-                TotalTokenCount = 0
-                TotalDp = 0. }
+            { Distribution = [||]
+              CategoryValueStats = []
+              TotalTokenCount = 0
+              TotalDp = 0. }
           KeepZeroValues = true
           ExcludedAttributeValues =
-              { Accumulated = Set.empty
-                New = Set.empty }
+            { Accumulated = Set.empty
+              New = Set.empty }
           IsFetching = false
           DownloadingFormat = None }
 

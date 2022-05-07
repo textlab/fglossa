@@ -201,7 +201,8 @@ let insert (logger: ILogger) (connection: #DbConnection) (table: string) (data: 
             // In order to make last_insert_rowid() work, we need to run the insert and the
             // call to last_insert_rowid() inside a single transaction (according to the documentation, simply
             // using the same db connection should be sufficient, but it doesn't work here for some reason).
-            use transaction = connection.BeginTransaction()
+            use transaction =
+                connection.BeginTransaction()
 
             connection.Execute(sql, parameters, transaction)
             |> ignore

@@ -26,20 +26,19 @@ let createJoin table =
 let metadataSelectionToParamDict (selection: Metadata.Selection) =
     selection
     |> Map.toList
-    |> List.map
-        (fun (key, sel) ->
-            let newKey =
-                if key.Contains('.') then
-                    // Remove table name, since the fully qualified name is invalid as a parameter name in SQL
-                    key.Split('.').[1]
-                else
-                    key
+    |> List.map (fun (key, sel) ->
+        let newKey =
+            if key.Contains('.') then
+                // Remove table name, since the fully qualified name is invalid as a parameter name in SQL
+                key.Split('.').[1]
+            else
+                key
 
-            let newValue =
-                sel.Choices
-                |> Array.map (fun choice -> choice.Value)
+        let newValue =
+            sel.Choices
+            |> Array.map (fun choice -> choice.Value)
 
-            newKey, newValue)
+        newKey, newValue)
     |> Map.ofList
     |> mapToParamDict
 
@@ -89,7 +88,8 @@ let generateMetadataSelectionSql (maybeRequestedCategoryCode: string option) (se
               | _ -> false
 
           if shouldInclude then
-              let column = getQualifiedColumnName category.Key
+              let column =
+                  getQualifiedColumnName category.Key
 
               let choices =
                   // Remove empty values
@@ -178,7 +178,8 @@ let getMetadataForCategory
             else
                 ""
 
-        let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
+        let excludedManyToManyCategoriesSql =
+            generateManyToManyExclusions selection
 
         let nonExcludedManyToManyCategories =
             getNonExcludedManyToManyCategories selection
@@ -195,7 +196,8 @@ let getMetadataForCategory
             $"SELECT distinct({column}) FROM texts{catJoin}{joins} WHERE {column} <> '' AND {column} IS NOT NULL\
              {metadataSelectionSql}{excludedManyToManyCategoriesSql} ORDER BY {column}"
 
-        let parameters = metadataSelectionToParamDict selection
+        let parameters =
+            metadataSelectionToParamDict selection
 
         let! res = query logger conn sql (Some parameters)
 
@@ -229,7 +231,8 @@ let getMinAndMaxForCategory
             else
                 ""
 
-        let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
+        let excludedManyToManyCategoriesSql =
+            generateManyToManyExclusions selection
 
         let nonExcludedManyToManyCategories =
             getNonExcludedManyToManyCategories selection
@@ -246,7 +249,8 @@ let getMinAndMaxForCategory
             $"SELECT min({column}) as Min, max({column}) as Max FROM texts{catJoin}{joins} \
               WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
 
-        let parameters = metadataSelectionToParamDict selection
+        let parameters =
+            metadataSelectionToParamDict selection
 
         let! res = querySingle logger conn sql (Some parameters)
 
@@ -284,7 +288,8 @@ let getMetadataForTexts
                 let offset = (pageNumber - 1) * limit
                 $" LIMIT {limit} OFFSET {offset}"
 
-        let sanitizedColumns = columns |> List.map sanitizeString
+        let sanitizedColumns =
+            columns |> List.map sanitizeString
 
         let manyToManyTables =
             [ for column in sanitizedColumns do
@@ -293,7 +298,8 @@ let getMetadataForTexts
                       if table <> "texts" then table ]
             |> List.distinct
 
-        let mutable manyToManyMap: Map<string, Map<string, string>> = Map.empty
+        let mutable manyToManyMap: Map<string, Map<string, string>> =
+            Map.empty
 
         for table in manyToManyTables do
             let selectColumns =
@@ -308,7 +314,8 @@ let getMetadataForTexts
                        INNER JOIN {table} ON {table}.id = {joinTable}.{table}_id WHERE {column} NOT IN ('', '\N') \
                        GROUP BY {joinTable}.tid"
 
-                let res = (query logger conn sql None).Result
+                let res =
+                    (query logger conn sql None).Result
 
                 let results =
                     match res with
@@ -324,19 +331,18 @@ let getMetadataForTexts
             sanitizedColumns
             // Don't include many-to-many categories in the SQL, since we won't be joining with those tables
             // now (we will get those values from the queries we performed in the previous step instead)
-            |> List.filter
-                (fun column ->
-                    (not (column.Contains('.')))
-                    || column.Contains("texts."))
-            |> List.map
-                (fun column ->
-                    if column = "texts.tid" then
-                        "DISTINCT(texts.tid)"
-                    else
-                        column)
+            |> List.filter (fun column ->
+                (not (column.Contains('.')))
+                || column.Contains("texts."))
+            |> List.map (fun column ->
+                if column = "texts.tid" then
+                    "DISTINCT(texts.tid)"
+                else
+                    column)
             |> String.concat ", "
 
-        let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
+        let excludedManyToManyCategoriesSql =
+            generateManyToManyExclusions selection
 
         let nonExcludedManyToManyCategories =
             getNonExcludedManyToManyCategories selection
@@ -352,7 +358,8 @@ let getMetadataForTexts
                 | Some sortInfo when sortInfo.CategoryCode.Contains("texts.") -> s
                 // If we sort on a many-to-many category, we need to make sure it is joined in
                 | Some sortInfo ->
-                    let table = sortInfo.CategoryCode.Split('.').[0]
+                    let table =
+                        sortInfo.CategoryCode.Split('.').[0]
 
                     let metadataSelectionTables =
                         [ for key in selection.Keys -> key.Split('.').[0] ]
@@ -381,7 +388,8 @@ let getMetadataForTexts
             $"SELECT {columnSql} FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql} \
              ORDER BY {orderBy}{limitOffsetSql}"
 
-        let parameters = metadataSelectionToParamDict selection
+        let parameters =
+            metadataSelectionToParamDict selection
 
         // Since each corpus has a different set of metadata categories, we cannot use the 'query'
         // function, which requires the result rows to conform to a specific type. Instead, we use
@@ -448,11 +456,14 @@ let getMetadataForSingleText
                 | Some rows ->
                     // Since the results of queryDynamic are DapperRow objects, which implement
                     // IDictionary<string, obj>, we cast to that in order to access the data dynamically
-                    let row: IDictionary<string, obj> = rows |> Seq.cast |> Seq.head
+                    let row: IDictionary<string, obj> =
+                        rows |> Seq.cast |> Seq.head
 
                     [ for category in categories ->
                           let text = row.[category.Code] |> string
-                          let value = if text <> "\N" then text else ""
+
+                          let value =
+                              if text <> "\N" then text else ""
 
                           { Name = category.Name; Value = value } ]
                 | None -> []

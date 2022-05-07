@@ -2,9 +2,11 @@ open System.Text.RegularExpressions
 
 let evalReplace pattern (evaluator: MatchEvaluator) str = Regex.Replace(str, pattern, evaluator)
 
-let initEval = MatchEvaluator(fun m -> m.Value.ToUpper())
+let initEval =
+    MatchEvaluator(fun m -> m.Value.ToUpper())
 
-let middleEval = MatchEvaluator(fun m -> m.Groups[ 1 ].Value.ToUpper())
+let middleEval =
+    MatchEvaluator(fun m -> m.Groups[ 1 ].Value.ToUpper())
 
 let toCamelCase str =
     str

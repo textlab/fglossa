@@ -18,67 +18,63 @@ let concordanceTable
     /// Processes a pre-match, match, or post-match field.
     let processField displayedAttributeIndex maybeOrigCorrIndex maybeLemmaIndex (field: string) =
         Regex.Split(field, "\s+")
-        |> Array.mapi
-            (fun index token ->
-                if token.Contains('/') then
-                    let attributes =
-                        token.Split('/')
-                        |> fun attrs ->
-                            // Show the corrected or original
-                            // form in italics, if present
-                            match maybeOrigCorrIndex with
-                            | Some origCorrIndex ->
-                                attrs
-                                |> Array.mapi
-                                    (fun attrIndex attr ->
-                                        if attrIndex = origCorrIndex then
-                                            $"<i>{attr}</i>"
-                                        else
-                                            attr)
-                            | None -> attrs
-                        |> fun attrs ->
-                            // Show the lemma in quotes, if
-                            // present
-                            match maybeLemmaIndex with
-                            | Some lemmaIndex ->
-                                attrs
-                                |> Array.mapi
-                                    (fun attrIndex attr ->
-                                        if attrIndex = lemmaIndex then
-                                            $"\"{attr}\""
-                                        else
-                                            attr)
-                            | None -> attrs
+        |> Array.mapi (fun index token ->
+            if token.Contains('/') then
+                let attributes =
+                    token.Split('/')
+                    |> fun attrs ->
+                        // Show the corrected or original
+                        // form in italics, if present
+                        match maybeOrigCorrIndex with
+                        | Some origCorrIndex ->
+                            attrs
+                            |> Array.mapi (fun attrIndex attr ->
+                                if attrIndex = origCorrIndex then
+                                    $"<i>{attr}</i>"
+                                else
+                                    attr)
+                        | None -> attrs
+                    |> fun attrs ->
+                        // Show the lemma in quotes, if
+                        // present
+                        match maybeLemmaIndex with
+                        | Some lemmaIndex ->
+                            attrs
+                            |> Array.mapi (fun attrIndex attr ->
+                                if attrIndex = lemmaIndex then
+                                    $"\"{attr}\""
+                                else
+                                    attr)
+                        | None -> attrs
 
-                    let tipText =
-                        attributes
-                        |> Array.filter
-                            (fun attr ->
-                                not (
-                                    [ "__UNDEF__"
-                                      "\"__UNDEF__\""
-                                      "-"
-                                      "_"
-                                      "\"_\""
-                                      "<i>_</i>" ]
-                                    |> List.contains attr
-                                ))
-                        |> String.concat " "
+                let tipText =
+                    attributes
+                    |> Array.filter (fun attr ->
+                        not (
+                            [ "__UNDEF__"
+                              "\"__UNDEF__\""
+                              "-"
+                              "_"
+                              "\"_\""
+                              "<i>_</i>" ]
+                            |> List.contains attr
+                        ))
+                    |> String.concat " "
 
-                    Html.span [ prop.key index
-                                tooltip.text tipText
-                                prop.className "has-tooltip-arrow"
-                                match corpus.SharedInfo.FontFamily with
-                                | Some fontFamily -> prop.style [ style.fontFamily fontFamily ]
-                                | None -> ignore None
-                                prop.dangerouslySetInnerHTML (attributes.[displayedAttributeIndex] + " ") ]
-                else
-                    // With multi-word expressions, the non-last parts become simple strings
-                    // without any attributes (i.e., no slashes) when we split the text on
-                    // whitespace. Just print out those non-last parts and leave the tooltip
-                    // to be attached to the last part.
-                    Html.span [ prop.key index
-                                prop.text $"{token} " ])
+                Html.span [ prop.key index
+                            tooltip.text tipText
+                            prop.className "has-tooltip-arrow"
+                            match corpus.SharedInfo.FontFamily with
+                            | Some fontFamily -> prop.style [ style.fontFamily fontFamily ]
+                            | None -> ignore None
+                            prop.dangerouslySetInnerHTML (attributes.[displayedAttributeIndex] + " ") ]
+            else
+                // With multi-word expressions, the non-last parts become simple strings
+                // without any attributes (i.e., no slashes) when we split the text on
+                // whitespace. Just print out those non-last parts and leave the tooltip
+                // to be attached to the last part.
+                Html.span [ prop.key index
+                            prop.text $"{token} " ])
 
 
     let nonFirstMultilingualRow maybeOrigCorrIndex maybeLemmaIndex (index: int) line =
@@ -135,7 +131,8 @@ let concordanceTable
         match searchResult.Text with
         // Only one line per search result
         | mainLine :: otherLines when otherLines.IsEmpty ->
-            let sId, pre, searchWord, post = extractFields mainLine
+            let sId, pre, searchWord, post =
+                extractFields mainLine
 
             let processedWordFields =
                 { SId = sId
@@ -143,7 +140,8 @@ let concordanceTable
                   SearchWord = processField wordIndex maybeOrigCorrIndex maybeLemmaIndex searchWord
                   PostMatch = processField wordIndex maybeOrigCorrIndex maybeLemmaIndex post }
 
-            let wordRow = mainRow processedWordFields index
+            let wordRow =
+                mainRow processedWordFields index
 
             match maybeOrigCorrIndex with
             | Some origCorrIndex ->
@@ -160,7 +158,8 @@ let concordanceTable
 
         // Multiple lines per search result
         | mainLine :: otherLines ->
-            let sId, pre, searchWord, post = extractFields mainLine
+            let sId, pre, searchWord, post =
+                extractFields mainLine
 
             let processedWordFields =
                 { SId = sId
@@ -168,7 +167,8 @@ let concordanceTable
                   SearchWord = processField wordIndex maybeOrigCorrIndex maybeLemmaIndex searchWord
                   PostMatch = processField wordIndex maybeOrigCorrIndex maybeLemmaIndex post }
 
-            let mainTableRow = mainRow processedWordFields index
+            let mainTableRow =
+                mainRow processedWordFields index
 
             let otherTableRows =
                 otherLines
@@ -208,8 +208,8 @@ let concordanceTable
             results
             |> Array.toList
             |> List.indexed
-            |> List.collect
-                (fun (index, result) -> singleResultRows wordIndex maybeOrigIndex maybeLemmaIndex result index)
+            |> List.collect (fun (index, result) ->
+                singleResultRows wordIndex maybeOrigIndex maybeLemmaIndex result index)
         | None -> []
 
     Bulma.table [ table.isFullWidth

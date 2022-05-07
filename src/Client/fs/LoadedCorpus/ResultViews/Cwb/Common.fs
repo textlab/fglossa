@@ -9,7 +9,8 @@ open Update.LoadedCorpus.ShowingResults.Concordance
 
 [<ReactComponent>]
 let TranslationButton pageNumber rowIndex (translations: Map<string, string>) googleTransKey dispatch =
-    let translationKey = $"{pageNumber}_{rowIndex}"
+    let translationKey =
+        $"{pageNumber}_{rowIndex}"
 
     let onClick _ =
         let q = "dette er en test"
@@ -19,13 +20,13 @@ let TranslationButton pageNumber rowIndex (translations: Map<string, string>) go
         let url =
             $"https://www.googleapis.com/language/translate/v2?q={q}&key={googleTransKey}&target={target}"
 
-//        promise {
+        //        promise {
 //            let! response = fetch url []
 //            let! text = response.text ()
 //            dispatch (SetTranslation (translationKey, text))
 //        }
 //        |> Promise.start
-        dispatch (SetTranslation (translationKey, "En oversettelse"))
+        dispatch (SetTranslation(translationKey, "En oversettelse"))
 
     Html.div [ prop.style [ style.display.inlineBlock
                             style.marginLeft 7
@@ -59,15 +60,13 @@ let idColumn (corpus: Corpus) (model: ConcordanceModel) sId (pageNumber: int) ro
     let textId = Regex.Replace(sId, "\..+", "")
 
     Html.div [ Html.a [ prop.href ""
-                        prop.onClick
-                            (fun e ->
-                                e.preventDefault ()
-                                e.stopPropagation ()
-                                dispatch (FetchMetadataForText(corpus, textId)))
+                        prop.onClick (fun e ->
+                            e.preventDefault ()
+                            e.stopPropagation ()
+                            dispatch (FetchMetadataForText(corpus, textId)))
                         prop.children [ Html.span sId ] ]
                match corpus.SharedInfo.GoogleTranslateApiKey with
-               | Some key ->
-                   TranslationButton pageNumber rowIndex model.Translations key dispatch
+               | Some key -> TranslationButton pageNumber rowIndex model.Translations key dispatch
                | None -> Html.none
                corpus.ResultLinks(pageNumber, rowIndex) ]
 

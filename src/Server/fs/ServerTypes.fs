@@ -46,9 +46,9 @@ type Corpus(config: SharedCorpusInfo) =
             |> Option.ofObj
 
         { config with
-              Info = corpusInfo
-              GoogleMapsApiKey = googleMapsApiKey
-              GoogleTranslateApiKey = googleTranslateApiKey }
+            Info = corpusInfo
+            GoogleMapsApiKey = googleMapsApiKey
+            GoogleTranslateApiKey = googleTranslateApiKey }
 
     member val Encoding = System.Text.Encoding.UTF8 with get, set
 

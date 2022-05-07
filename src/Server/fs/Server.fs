@@ -23,89 +23,89 @@ let createServerApi ctx =
 
     { GetCorpusList = fun () -> Remoting.Corpus.getCorpusList ()
       GetCorpusConfig =
-          fun code ->
-              Remoting.Corpus.getCorpusConfig logger code
-              |> Async.AwaitTask
+        fun code ->
+            Remoting.Corpus.getCorpusConfig logger code
+            |> Async.AwaitTask
       GetMetadataForCategory =
-          fun (corpusCode, categoryCode, selection) ->
-              Remoting.Metadata.getMetadataForCategory logger corpusCode categoryCode selection
-              |> Async.AwaitTask
+        fun (corpusCode, categoryCode, selection) ->
+            Remoting.Metadata.getMetadataForCategory logger corpusCode categoryCode selection
+            |> Async.AwaitTask
       GetMinAndMaxForCategory =
-          fun (corpusCode, categoryCode, selection) ->
-              Remoting.Metadata.getMinAndMaxForCategory logger corpusCode categoryCode selection
-              |> Async.AwaitTask
+        fun (corpusCode, categoryCode, selection) ->
+            Remoting.Metadata.getMinAndMaxForCategory logger corpusCode categoryCode selection
+            |> Async.AwaitTask
       GetMetadataForTexts =
-          fun (corpusCode, selection, columns, pageNumber, maybeSortInfo) ->
-              Remoting.Metadata.getMetadataForTexts logger corpusCode selection columns pageNumber maybeSortInfo
-              |> Async.AwaitTask
+        fun (corpusCode, selection, columns, pageNumber, maybeSortInfo) ->
+            Remoting.Metadata.getMetadataForTexts logger corpusCode selection columns pageNumber maybeSortInfo
+            |> Async.AwaitTask
       GetMetadataForSingleText =
-          fun (corpusCode, categories, textId) ->
-              Remoting.Metadata.getMetadataForSingleText logger corpusCode categories textId
-              |> Async.AwaitTask
+        fun (corpusCode, categories, textId) ->
+            Remoting.Metadata.getMetadataForSingleText logger corpusCode categories textId
+            |> Async.AwaitTask
       GetTextAndTokenCount =
-          fun (corpusCode, selection) ->
-              Remoting.Corpus.getTextAndTokenCount logger corpusCode selection
-              |> Async.AwaitTask
+        fun (corpusCode, selection) ->
+            Remoting.Corpus.getTextAndTokenCount logger corpusCode selection
+            |> Async.AwaitTask
       SearchCorpus = fun searchParams -> Remoting.Search.Core.searchCorpus connStr logger searchParams
       GetSearchResults =
-          fun (searchParams, pageNumbers) -> Remoting.Search.Core.getSearchResults logger searchParams None pageNumbers
+        fun (searchParams, pageNumbers) -> Remoting.Search.Core.getSearchResults logger searchParams None pageNumbers
       DownloadSearchResults =
-          fun (searchParams, attributes, format, shouldCreateHeader) ->
-              Remoting.Search.Core.downloadSearchResults logger searchParams attributes format shouldCreateHeader
+        fun (searchParams, attributes, format, shouldCreateHeader) ->
+            Remoting.Search.Core.downloadSearchResults logger searchParams attributes format shouldCreateHeader
       GetMediaObject =
-          fun (searchParams, mediaPlayerType, pageNumber, resultIndex, contextSize, contextUnit) ->
-              Remoting.Search.Cwb.Spoken.getMediaObject
-                  logger
-                  searchParams
-                  mediaPlayerType
-                  pageNumber
-                  resultIndex
-                  contextSize
-                  contextUnit
+        fun (searchParams, mediaPlayerType, pageNumber, resultIndex, contextSize, contextUnit) ->
+            Remoting.Search.Cwb.Spoken.getMediaObject
+                logger
+                searchParams
+                mediaPlayerType
+                pageNumber
+                resultIndex
+                contextSize
+                contextUnit
       GetGeoDistribution =
-          fun searchParams ->
-              Remoting.Search.Cwb.Core.getGeoDistribution logger searchParams
-              |> Async.AwaitTask
+        fun searchParams ->
+            Remoting.Search.Cwb.Core.getGeoDistribution logger searchParams
+            |> Async.AwaitTask
       GetFrequencyList =
-          fun (searchParams, attributes, isCaseSensitive, freqListTokenBoundaries) ->
-              Remoting.Search.Cwb.Core.getFrequencyList
-                  logger
-                  searchParams
-                  attributes
-                  isCaseSensitive
-                  freqListTokenBoundaries
+        fun (searchParams, attributes, isCaseSensitive, freqListTokenBoundaries) ->
+            Remoting.Search.Cwb.Core.getFrequencyList
+                logger
+                searchParams
+                attributes
+                isCaseSensitive
+                freqListTokenBoundaries
       DownloadFrequencyList =
-          fun (searchParams, attributes, isCaseSensitive, freqListTokenBoundaries, format) ->
-              Remoting.Search.Cwb.Core.downloadFrequencyList
-                  logger
-                  searchParams
-                  attributes
-                  isCaseSensitive
-                  freqListTokenBoundaries
-                  format
+        fun (searchParams, attributes, isCaseSensitive, freqListTokenBoundaries, format) ->
+            Remoting.Search.Cwb.Core.downloadFrequencyList
+                logger
+                searchParams
+                attributes
+                isCaseSensitive
+                freqListTokenBoundaries
+                format
       GetMetadataDistribution =
-          fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues, accExcludedAttrValues) ->
-              Remoting.Search.Cwb.Core.getMetadataDistribution
-                  logger
-                  searchParams
-                  attributeCode
-                  categoryCode
-                  categoryType
-                  keepZeroValues
-                  accExcludedAttrValues
-              |> Async.AwaitTask
+        fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues, accExcludedAttrValues) ->
+            Remoting.Search.Cwb.Core.getMetadataDistribution
+                logger
+                searchParams
+                attributeCode
+                categoryCode
+                categoryType
+                keepZeroValues
+                accExcludedAttrValues
+            |> Async.AwaitTask
       DownloadMetadataDistribution =
-          fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues, accExcludedAttrValues, format) ->
-              Remoting.Search.Cwb.Core.downloadMetadataDistribution
-                  logger
-                  searchParams
-                  attributeCode
-                  categoryCode
-                  categoryType
-                  keepZeroValues
-                  accExcludedAttrValues
-                  format
-              |> Async.AwaitTask }
+        fun (searchParams, attributeCode, categoryCode, categoryType, keepZeroValues, accExcludedAttrValues, format) ->
+            Remoting.Search.Cwb.Core.downloadMetadataDistribution
+                logger
+                searchParams
+                attributeCode
+                categoryCode
+                categoryType
+                keepZeroValues
+                accExcludedAttrValues
+                format
+            |> Async.AwaitTask }
 
 let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =
     // do some logging
@@ -172,7 +172,8 @@ let webApp =
 //     forward "" browserRouter
 // }
 
-let webAppWithLogging: HttpHandler = SerilogAdapter.Enable(webApp)
+let webAppWithLogging: HttpHandler =
+    SerilogAdapter.Enable(webApp)
 
 // The default template does not include date, but we want that
 let outputTemplate =

@@ -23,7 +23,8 @@ let sanitizeString s =
         s
 
 let cwbCorpusName (corpus: Corpus) (queries: Query seq) =
-    let uppercaseCode = corpus.Config.Code.ToUpper()
+    let uppercaseCode =
+        corpus.Config.Code.ToUpper()
 
     match corpus.Config.LanguageConfig with
     | Monolingual _ -> uppercaseCode
@@ -69,18 +70,17 @@ let buildMultilingualQuery (corpus: Corpus) (queries: Query []) (sTag: string) =
     let alignedQueries =
         queries
         |> Array.tail
-        |> Array.choose
-            (fun query ->
-                // TODO: In case of mandatory alignment, include even empty queries
-                if String.IsNullOrWhiteSpace(query.QueryString) then
-                    None
-                else
-                    let languageCode =
-                        match query.LanguageCode with
-                        | Some code -> code.ToUpper()
-                        | None -> failwith "Missing language code!"
+        |> Array.choose (fun query ->
+            // TODO: In case of mandatory alignment, include even empty queries
+            if String.IsNullOrWhiteSpace(query.QueryString) then
+                None
+            else
+                let languageCode =
+                    match query.LanguageCode with
+                    | Some code -> code.ToUpper()
+                    | None -> failwith "Missing language code!"
 
-                    Some $"{corpus.Config.Code}_{languageCode} {query.QueryString}")
+                Some $"{corpus.Config.Code}_{languageCode} {query.QueryString}")
 
     (Array.append [| mainQuery |] alignedQueries)
     |> String.concat " :"
@@ -120,7 +120,8 @@ let printPositionsMatchingMetadata
         File.Delete(positionsFilename)
 
         if searchParams.MetadataSelection.Count > 0 then
-            let connStr = getConnectionString corpus.Config.Code
+            let connStr =
+                getConnectionString corpus.Config.Code
 
             use conn = new SqliteConnection(connStr)
 
@@ -138,7 +139,8 @@ let printPositionsMatchingMetadata
             let langSql =
                 generateLanguageSql corpus searchParams.Queries
 
-            let limitsSql = generateLimitsSql corpus startpos endpos
+            let limitsSql =
+                generateLimitsSql corpus startpos endpos
 
             let sql =
                 $"SELECT {positionFields} FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{langSql}{limitsSql}"
@@ -171,7 +173,9 @@ let printPositionsMatchingMetadata
                 // Spoken corpora may include material (typically speech by interviewers) that should
                 // not be searchable, so when no metadata is selected, we search within the bounds for all
                 // speakers (which does not include the interviewers if they should be excluded from search).
-                let connStr = getConnectionString corpus.Config.Code
+                let connStr =
+                    getConnectionString corpus.Config.Code
+
                 use conn = new SqliteConnection(connStr)
 
                 let sql =
@@ -194,7 +198,9 @@ let printPositionsMatchingMetadata
 
                 match corpusSizes.TryFind(cwbCorpus) with
                 | Some corpusSize ->
-                    let endpos' = Math.Min(endpos, corpusSize - 1L)
+                    let endpos' =
+                        Math.Min(endpos, corpusSize - 1L)
+
                     File.WriteAllText(positionsFilename, $"{startpos}\t{endpos'}\n")
                 | None -> failwith $"No corpus size found for {cwbCorpus} in {corpusSizes}!"
     }
@@ -231,7 +237,8 @@ let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes:
                 languages
                 |> Array.find (fun lang -> lang.Code = firstQueryLanguageCode)
 
-            let maybeLangAttributes = language.TokenAttributes
+            let maybeLangAttributes =
+                language.TokenAttributes
 
             match maybeLangAttributes with
             | Some attributes ->
@@ -246,11 +253,10 @@ let alignedLanguagesCommand (corpus: Corpus) (queries: Query []) =
     | Multilingual _ ->
         let languageCodes =
             queries
-            |> Array.map
-                (fun q ->
-                    match q.LanguageCode with
-                    | Some code -> code
-                    | None -> failwith "Missing language code!")
+            |> Array.map (fun q ->
+                match q.LanguageCode with
+                | Some code -> code
+                | None -> failwith "Missing language code!")
 
         let firstLanguageCode =
             match Array.tryHead languageCodes with
@@ -284,10 +290,9 @@ let sortCommand (namedQuery: string) (sortKey: SortKey) =
     | Match -> Some ""
     | Left -> Some " on match[-1]"
     | Right -> Some " on matchend[1]"
-    |> Option.map
-        (fun c ->
-            [ "set ExternalSort on"
-              $"sort {namedQuery} by word %%c{c}" ])
+    |> Option.map (fun c ->
+        [ "set ExternalSort on"
+          $"sort {namedQuery} by word %%c{c}" ])
 
 let constructQueryCommands
     (logger: ILogger)

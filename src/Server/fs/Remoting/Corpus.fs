@@ -12,11 +12,13 @@ open Metadata
 module Spoken =
     let getTextAndTokenCount (logger: ILogger) (corpus: Corpus) (selection: Selection) =
         task {
-            let connStr = getConnectionString corpus.Config.Code
+            let connStr =
+                getConnectionString corpus.Config.Code
 
             use conn = new SqliteConnection(connStr)
 
-            let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
+            let excludedManyToManyCategoriesSql =
+                generateManyToManyExclusions selection
 
             let nonExcludedManyToManyCategories =
                 getNonExcludedManyToManyCategories selection
@@ -27,7 +29,8 @@ module Spoken =
             let joins =
                 generateMetadataSelectionJoins None nonExcludedManyToManyCategories
 
-            let parameters = metadataSelectionToParamDict selection
+            let parameters =
+                metadataSelectionToParamDict selection
 
             let textSql =
                 $"SELECT COUNT(DISTINCT tid) as NumTexts FROM texts{joins} WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
@@ -53,12 +56,11 @@ module Spoken =
                     bounds
                     |> Seq.filter (not << String.IsNullOrWhiteSpace)
                     |> Seq.collect (fun b -> b.Split(':'))
-                    |> Seq.sumBy
-                        (fun b ->
-                            let parts = b.Split('-')
-                            let startBound = Int64.Parse(parts.[0])
-                            let endBound = Int64.Parse(parts.[1])
-                            endBound - startBound + 1L)
+                    |> Seq.sumBy (fun b ->
+                        let parts = b.Split('-')
+                        let startBound = Int64.Parse(parts.[0])
+                        let endBound = Int64.Parse(parts.[1])
+                        endBound - startBound + 1L)
                 | Error ex -> raise ex
 
             return
@@ -69,11 +71,13 @@ module Spoken =
 module Written =
     let getTextAndTokenCount (logger: ILogger) (corpus: Corpus) (selection: Selection) =
         task {
-            let connStr = getConnectionString corpus.Config.Code
+            let connStr =
+                getConnectionString corpus.Config.Code
 
             use conn = new SqliteConnection(connStr)
 
-            let excludedManyToManyCategoriesSql = generateManyToManyExclusions selection
+            let excludedManyToManyCategoriesSql =
+                generateManyToManyExclusions selection
 
             let nonExcludedManyToManyCategories =
                 getNonExcludedManyToManyCategories selection
@@ -88,7 +92,8 @@ module Written =
                 $"SELECT count(DISTINCT texts.tid) as NumTexts, sum(endpos - startpos + 1) as NumTokens FROM texts{joins} \
                   WHERE 1 = 1{metadataSelectionSql}{excludedManyToManyCategoriesSql}"
 
-            let parameters = metadataSelectionToParamDict selection
+            let parameters =
+                metadataSelectionToParamDict selection
 
             let! res = querySingle logger conn sql (Some parameters)
 
@@ -106,7 +111,8 @@ let getCorpusList () =
 
 let getCorpusConfig (logger: ILogger) (corpusCode: string) =
     task {
-        let corpus = Corpora.Server.getCorpus corpusCode
+        let corpus =
+            Corpora.Server.getCorpus corpusCode
 
         let! numTextsAndTokens =
             match corpus.Config.Modality with
@@ -115,13 +121,14 @@ let getCorpusConfig (logger: ILogger) (corpusCode: string) =
 
         return
             { corpus.Config with
-                  TotalTexts = numTextsAndTokens.NumTexts
-                  TotalTokens = numTextsAndTokens.NumTokens }
+                TotalTexts = numTextsAndTokens.NumTexts
+                TotalTokens = numTextsAndTokens.NumTokens }
     }
 
 let getTextAndTokenCount (logger: ILogger) (corpusCode: string) (selection: Selection) =
     task {
-        let corpus = Corpora.Server.getCorpus corpusCode
+        let corpus =
+            Corpora.Server.getCorpus corpusCode
 
         return!
             match corpus.Config.Modality with

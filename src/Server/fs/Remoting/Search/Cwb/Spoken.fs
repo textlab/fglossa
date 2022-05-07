@@ -22,7 +22,9 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
             cwbCorpusName corpus searchParams.Queries
 
         let corpusSizes = corpus.CorpusSizes()
-        let endpos = corpusSizes.[cwbCorpus.ToLower()]
+
+        let endpos =
+            corpusSizes.[cwbCorpus.ToLower()]
 
         let displayedAttrsCmd =
             displayedAttrsCommand corpus searchParams.Queries None
@@ -109,7 +111,8 @@ let transformResults (corpus: Corpus) (queries: Query []) (hits: string []) =
 
            let ls =
                [ for line in hitLines ->
-                     let l = line |> replace "<who_avfile .+?>" ""
+                     let l =
+                         line |> replace "<who_avfile .+?>" ""
                      // Get rid of spaces in multiword expressions. Assuming that
                      // attribute values never contain spaces, we can further
                      // assume that if we find several spaces between slashes,
@@ -187,7 +190,9 @@ let getSearchResults
               $"cat {namedQuery} {searchParams.Start} {searchParams.End}" ]
 
         let! output = runCqpCommands logger corpus false commands
-        let rawResults = fst output |> Option.defaultValue [||]
+
+        let rawResults =
+            fst output |> Option.defaultValue [||]
 
         let hits =
             rawResults
@@ -198,10 +203,9 @@ let getSearchResults
 
         return
             (hitPages |> Array.toSeq, pageNumbers)
-            ||> Seq.map2
-                    (fun pageHits pageNumber ->
-                        { PageNumber = pageNumber
-                          Results = pageHits })
+            ||> Seq.map2 (fun pageHits pageNumber ->
+                { PageNumber = pageNumber
+                  Results = pageHits })
             |> Seq.toArray
     }
 
@@ -227,7 +231,10 @@ let extractMediaInfo (corpus: Corpus) result =
 
     let starttimes = timestamps |> Array.map fst
     let endtimes = timestamps |> Array.map snd
-    let overallStarttime = starttimes |> Array.head
+
+    let overallStarttime =
+        starttimes |> Array.head
+
     let overallEndtime = endtimes |> Array.last
 
     let speakers =
@@ -262,34 +269,32 @@ let extractMediaInfo (corpus: Corpus) result =
 
     let annotations =
         mediaObjLines
-        |> List.mapi
-            (fun index line ->
-                let isMatch = Regex.IsMatch(line, "\{\{")
-                let line' = line |> replace "\{\{|\}\}" ""
-                let tokens = line'.Split()
+        |> List.mapi (fun index line ->
+            let isMatch = Regex.IsMatch(line, "\{\{")
+            let line' = line |> replace "\{\{|\}\}" ""
+            let tokens = line'.Split()
 
-                let annotation =
-                    { Speaker = speakers.[index]
-                      Line =
-                          tokens
-                          |> Array.mapi
-                              (fun index token ->
-                                  let attrValues = token.Split('/')
+            let annotation =
+                { Speaker = speakers.[index]
+                  Line =
+                    tokens
+                    |> Array.mapi (fun index token ->
+                        let attrValues = token.Split('/')
 
-                                  let attrNames =
-                                      "word" :: displayedAttrs
-                                      |> List.truncate attrValues.Length
-                                      |> List.toArray
+                        let attrNames =
+                            "word" :: displayedAttrs
+                            |> List.truncate attrValues.Length
+                            |> List.toArray
 
-                                  let attrs =
-                                      Array.zip attrNames attrValues |> Map.ofArray
+                        let attrs =
+                            Array.zip attrNames attrValues |> Map.ofArray
 
-                                  (index, attrs))
-                      From = starttimes.[index]
-                      To = endtimes.[index]
-                      IsMatch = isMatch }
+                        (index, attrs))
+                  From = starttimes.[index]
+                  To = endtimes.[index]
+                  IsMatch = isMatch }
 
-                (index, annotation))
+            (index, annotation))
         |> Map.ofList
 
     let matchingLineIndex =
@@ -303,11 +308,11 @@ let extractMediaInfo (corpus: Corpus) result =
       DisplayAttribute = "word"
       CorpusCode = corpus.Config.Code
       Mov =
-          { Supplied = "m4v"
-            Path = $"media/{corpus.Config.Code}"
-            MovieLoc = movieLoc
-            Start = overallStarttime
-            Stop = overallEndtime }
+        { Supplied = "m4v"
+          Path = $"media/{corpus.Config.Code}"
+          MovieLoc = movieLoc
+          Start = overallStarttime
+          Stop = overallEndtime }
       Divs = annotations
       StartAt = matchingLineIndex
       EndAt = matchingLineIndex
@@ -340,7 +345,9 @@ let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
             let! cwbResults = runCqpCommands logger corpus false commands
 
             // Get pairs of informant code and place name from MySQL
-            let connStr = getConnectionString corpus.Config.Code
+            let connStr =
+                getConnectionString corpus.Config.Code
+
             use conn = new SqliteConnection(connStr)
 
             let sql =
@@ -387,30 +394,26 @@ let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
                                 let freq = System.Int64.Parse(parts.[2])
 
                                 state
-                                |> Map.change
-                                    form
-                                    (fun (maybePlaceMap: Map<string, int64> option) ->
-                                        match maybePlaceMap with
-                                        | Some placeMap ->
-                                            // We have already created a place map for this form
-                                            placeMap
-                                            |> Map.change
-                                                place
-                                                (fun (maybeAccFreq: int64 option) ->
-                                                    match maybeAccFreq with
-                                                    | Some accFreq ->
-                                                        // We have already registered one or more frequencies
-                                                        // for this place (and form), so accumulate
-                                                        Some(accFreq + freq)
-                                                    | None ->
-                                                        // This is the first time we see this place for the given
-                                                        // form, so start with the current frequency
-                                                        Some freq)
-                                            |> Some
-                                        | None ->
-                                            // We have not yet created a place map for this form, so create one
-                                            // with the current place and frequency
-                                            [ (place, freq) ] |> Map.ofList |> Some)
+                                |> Map.change form (fun (maybePlaceMap: Map<string, int64> option) ->
+                                    match maybePlaceMap with
+                                    | Some placeMap ->
+                                        // We have already created a place map for this form
+                                        placeMap
+                                        |> Map.change place (fun (maybeAccFreq: int64 option) ->
+                                            match maybeAccFreq with
+                                            | Some accFreq ->
+                                                // We have already registered one or more frequencies
+                                                // for this place (and form), so accumulate
+                                                Some(accFreq + freq)
+                                            | None ->
+                                                // This is the first time we see this place for the given
+                                                // form, so start with the current frequency
+                                                Some freq)
+                                        |> Some
+                                    | None ->
+                                        // We have not yet created a place map for this form, so create one
+                                        // with the current place and frequency
+                                        [ (place, freq) ] |> Map.ofList |> Some)
                             | None -> state)
                         Map.empty
                 // The first line is only decoration, so throw it away
@@ -452,6 +455,8 @@ let getMediaObject logger (searchParams: SearchParams) mediaPlayerType pageNumbe
             | Some results, _ -> results.[0]
             | _ -> failwith "Unable to fetch segment for media player"
 
-        let mediaObject = extractMediaInfo corpus result
+        let mediaObject =
+            extractMediaInfo corpus result
+
         return (mediaPlayerType, rowIndex, mediaObject)
     }
