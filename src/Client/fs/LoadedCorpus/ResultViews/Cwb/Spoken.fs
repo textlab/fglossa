@@ -236,6 +236,7 @@ let concordanceTable
                                                          style.verticalAlign.middle ]
                                             prop.children [ idColumn
                                                                 corpus
+                                                                model
                                                                 resultInfo.SId
                                                                 model.ResultPageNo
                                                                 rowIndex
@@ -248,6 +249,14 @@ let concordanceTable
                                                                                audioVideoLinks resultInfo rowIndex
                                                                            ) ] ] ]
                                   yield! textColumns resultLineFields ] ]
+
+    let translatedRow rowIndex =
+        let translationKey = $"{model.ResultPageNo}_{rowIndex}"
+
+        match model.Translations.TryFind(translationKey) with
+        | Some translation ->
+            Html.tr [ Html.td "heidu" ]
+        | None -> Html.none
 
     let phoneticRow _corpus (resultInfo: SearchResultInfo) rowIndex =
         let (resultLineFields: ResultLineFields) =
@@ -400,7 +409,7 @@ let concordanceTable
         ortTipIndexes
         phonTipIndexes
         (searchResult: SearchResult)
-        index
+        rowIndex
         =
 
         let line = searchResult.Text.Head
@@ -432,7 +441,7 @@ let concordanceTable
               PostMatch = ortPost |> Array.map fst
               FullText = Some ortText }
 
-        let orthographic = orthographicRow corpus ortResInfo index
+        let orthographic = orthographicRow corpus ortResInfo rowIndex
 
         let phonetic =
             match maybePhonIndex with
@@ -463,10 +472,10 @@ let concordanceTable
                       FullText = Some phonText }
 
 
-                Some(phoneticRow corpus phonResInfo index)
+                Some(phoneticRow corpus phonResInfo rowIndex)
             | None -> None
 
-        let separator = separatorRow index
+        let separator = separatorRow rowIndex
 
         // let phonPre, phonMatch, phonPost =
         //     match maybePhonIndex with
@@ -475,6 +484,7 @@ let concordanceTable
         //     | None -> None, None, None
 
         [ orthographic
+          translatedRow rowIndex
           if phonetic.IsSome then phonetic.Value
           separator ]
 

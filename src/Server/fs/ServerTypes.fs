@@ -41,9 +41,14 @@ type Corpus(config: SharedCorpusInfo) =
             System.Environment.GetEnvironmentVariable("GOOGLE_MAPS_API_KEY")
             |> Option.ofObj
 
+        let googleTranslateApiKey =
+            System.Environment.GetEnvironmentVariable("GOOGLE_TRANSLATE_API_KEY")
+            |> Option.ofObj
+
         { config with
               Info = corpusInfo
-              GoogleMapsApiKey = googleMapsApiKey }
+              GoogleMapsApiKey = googleMapsApiKey
+              GoogleTranslateApiKey = googleTranslateApiKey }
 
     member val Encoding = System.Text.Encoding.UTF8 with get, set
 

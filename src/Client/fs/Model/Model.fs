@@ -111,7 +111,8 @@ type ConcordanceModel =
       TextIdInQuickView: string option
       MediaPlayer: MediaPlayerInfo option
       VideoContextSize: int
-      VideoContextUnit: string }
+      VideoContextUnit: string
+      Translations: Map<string, string> }
     static member Init(numSteps, contextSizeTextValue, quickViewMetadata) =
         { ContextSizeTextValue = contextSizeTextValue
           IsSearching = true
@@ -130,7 +131,8 @@ type ConcordanceModel =
           TextIdInQuickView = None
           MediaPlayer = None
           VideoContextSize = 25
-          VideoContextUnit = "who_start" }
+          VideoContextUnit = "who_start"
+          Translations = Map.empty }
 
     member this.NumResultPages(pageSize) =
         match this.NumResults with

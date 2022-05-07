@@ -165,6 +165,7 @@ type SharedCorpusInfo =
       FontFamily: string option
       GeoMapConfig: GeoMapConfig option
       GoogleMapsApiKey: string option
+      GoogleTranslateApiKey: string option
       Info: string option
       LanguageConfig: LanguageConfig
       Logo: string option
@@ -180,6 +181,7 @@ type SharedCorpusInfo =
           FontFamily = None
           GeoMapConfig = defaultArg geoMapConfig None
           GoogleMapsApiKey = None
+          GoogleTranslateApiKey = None
           Info = None
           LanguageConfig = defaultArg languageConfig (Monolingual None)
           Logo = logo

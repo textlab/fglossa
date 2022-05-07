@@ -107,6 +107,7 @@ module LoadedCorpus =
                 | ToggleHeadersInDownload
                 | DownloadSearchResults of DownloadFormat
                 | DownloadedSearchResults of byte []
+                | SetTranslation of string * string
 
             let update
                 (msg: Msg)
@@ -535,6 +536,10 @@ module LoadedCorpus =
                     loadedCorpusModel,
                     { concordanceModel with
                           DownloadingFormat = None },
+                    Cmd.none
+                | SetTranslation (translationKey, translation) ->
+                    loadedCorpusModel,
+                    { concordanceModel with Translations = concordanceModel.Translations.Add(translationKey, translation) },
                     Cmd.none
 
 

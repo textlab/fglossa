@@ -1,9 +1,41 @@
 module View.LoadedCorpus.ResultViews.Cwb.Common
 
 open System.Text.RegularExpressions
+open Fetch
 open Feliz
+open Feliz.Bulma
 open Model
 open Update.LoadedCorpus.ShowingResults.Concordance
+
+[<ReactComponent>]
+let TranslationButton pageNumber rowIndex (translations: Map<string, string>) googleTransKey dispatch =
+    let translationKey = $"{pageNumber}_{rowIndex}"
+
+    let onClick _ =
+        let q = "dette er en test"
+
+        let target = "en"
+
+        let url =
+            $"https://www.googleapis.com/language/translate/v2?q={q}&key={googleTransKey}&target={target}"
+
+//        promise {
+//            let! response = fetch url []
+//            let! text = response.text ()
+//            dispatch (SetTranslation (translationKey, text))
+//        }
+//        |> Promise.start
+        dispatch (SetTranslation (translationKey, "En oversettelse"))
+
+    Html.div [ prop.style [ style.display.inlineBlock
+                            style.marginLeft 7
+                            style.marginRight 1
+                            style.marginBottom 2 ]
+               prop.children [ Bulma.button.button [ button.isSmall
+                                                     prop.style [ style.fontSize 10 ]
+                                                     prop.disabled (translations.ContainsKey translationKey)
+                                                     prop.onClick onClick
+                                                     prop.text "Trans" ] ] ]
 
 type ResultLineFields =
     { SId: string
@@ -15,7 +47,7 @@ type ResultInfo =
     { Word: ResultLineFields
       MaybeOrig: ResultLineFields option }
 
-let idColumn (corpus: Corpus) sId (pageNumber: int) rowIndex (dispatch: Msg -> unit) =
+let idColumn (corpus: Corpus) (model: ConcordanceModel) sId (pageNumber: int) rowIndex (dispatch: Msg -> unit) =
 
     // If the 'match' property is defined, we know that we have a result from a monolingual
     // search or the first language of a multilingual one. If that is the case, and s-id is
@@ -33,6 +65,10 @@ let idColumn (corpus: Corpus) sId (pageNumber: int) rowIndex (dispatch: Msg -> u
                                 e.stopPropagation ()
                                 dispatch (FetchMetadataForText(corpus, textId)))
                         prop.children [ Html.span sId ] ]
+               match corpus.SharedInfo.GoogleTranslateApiKey with
+               | Some key ->
+                   TranslationButton pageNumber rowIndex model.Translations key dispatch
+               | None -> Html.none
                corpus.ResultLinks(pageNumber, rowIndex) ]
 
 
