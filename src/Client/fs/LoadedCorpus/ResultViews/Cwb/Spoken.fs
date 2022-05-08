@@ -232,6 +232,7 @@ let concordanceTable
                                                                 model
                                                                 resultInfo.SId
                                                                 model.ResultPageNo
+                                                                resultInfo.FullText
                                                                 rowIndex
                                                                 dispatch
                                                             if not hasPhon then
@@ -248,7 +249,11 @@ let concordanceTable
             $"{model.ResultPageNo}_{rowIndex}"
 
         match model.Translations.TryFind(translationKey) with
-        | Some translation -> Html.tr [ Html.td "heidu" ]
+        | Some translation ->
+            Html.tr [ Html.td [ Html.a [ prop.href "http://translate.google.com/"
+                                         prop.target.blank
+                                         prop.children[Html.img [ prop.src "attr1-2.png" ]] ] ]
+                      Html.td translation ]
         | None -> Html.none
 
     let phoneticRow _corpus (resultInfo: SearchResultInfo) rowIndex =
@@ -420,7 +425,8 @@ let concordanceTable
                ortMatch |> Array.map snd
                ortPost |> Array.map snd |]
             |> Array.concat
-            |> String.concat ""
+            |> String.concat " "
+            |> replace "\s*#" ""
 
         let ortResInfo =
             { AudioType = searchResult.AudioType
@@ -451,7 +457,8 @@ let concordanceTable
                        phonMatch |> Array.map snd
                        phonPost |> Array.map snd |]
                     |> Array.concat
-                    |> String.concat ""
+                    |> String.concat " "
+                    |> replace "\s*#" ""
 
                 let phonResInfo =
                     { AudioType = searchResult.AudioType

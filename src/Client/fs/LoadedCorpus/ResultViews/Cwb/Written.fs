@@ -116,7 +116,14 @@ let concordanceTable
     let mainRow (resultLineFields: ResultLineFields) index =
         Html.tr [ Html.td [ prop.style [ style.textAlign.center
                                          style.verticalAlign.middle ]
-                            prop.children [ idColumn corpus model resultLineFields.SId model.ResultPageNo index dispatch ] ]
+                            prop.children [ idColumn
+                                                corpus
+                                                model
+                                                resultLineFields.SId
+                                                model.ResultPageNo
+                                                None
+                                                index
+                                                dispatch ] ]
                   yield! textColumns resultLineFields ]
 
 

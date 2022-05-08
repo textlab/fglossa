@@ -8,25 +8,32 @@ open Model
 open Update.LoadedCorpus.ShowingResults.Concordance
 
 [<ReactComponent>]
-let TranslationButton pageNumber rowIndex (translations: Map<string, string>) googleTransKey dispatch =
+let TranslationButton pageNumber rowIndex fullText (translations: Map<string, string>) googleTransKey dispatch =
     let translationKey =
         $"{pageNumber}_{rowIndex}"
 
     let onClick _ =
-        let q = "dette er en test"
-
         let target = "en"
 
-        let url =
-            $"https://www.googleapis.com/language/translate/v2?q={q}&key={googleTransKey}&target={target}"
+        let searchText =
+            Fable.Core.JS.encodeURI (fullText)
 
-        //        promise {
-//            let! response = fetch url []
-//            let! text = response.text ()
-//            dispatch (SetTranslation (translationKey, text))
-//        }
-//        |> Promise.start
-        dispatch (SetTranslation(translationKey, "En oversettelse"))
+        let url =
+            $"https://www.googleapis.com/language/translate/v2?q={searchText}&key={googleTransKey}&target={target}"
+
+        promise {
+            let! response = fetch url []
+            let! text = response.text ()
+
+            // Quick and hackish way to extract the translation from the string representation of the returned JSON...
+            let m =
+                Regex.Match(text, "translatedText\":\s*\"(.+?)\",")
+
+            if m.Success then
+                let translation = m.Groups[1].Value
+                dispatch (SetTranslation(translationKey, translation))
+        }
+        |> Promise.start
 
     Html.div [ prop.style [ style.display.inlineBlock
                             style.marginLeft 7
@@ -48,7 +55,15 @@ type ResultInfo =
     { Word: ResultLineFields
       MaybeOrig: ResultLineFields option }
 
-let idColumn (corpus: Corpus) (model: ConcordanceModel) sId (pageNumber: int) rowIndex (dispatch: Msg -> unit) =
+let idColumn
+    (corpus: Corpus)
+    (model: ConcordanceModel)
+    sId
+    (pageNumber: int)
+    (maybeFullText: string option)
+    rowIndex
+    (dispatch: Msg -> unit)
+    =
 
     // If the 'match' property is defined, we know that we have a result from a monolingual
     // search or the first language of a multilingual one. If that is the case, and s-id is
@@ -65,9 +80,10 @@ let idColumn (corpus: Corpus) (model: ConcordanceModel) sId (pageNumber: int) ro
                             e.stopPropagation ()
                             dispatch (FetchMetadataForText(corpus, textId)))
                         prop.children [ Html.span sId ] ]
-               match corpus.SharedInfo.GoogleTranslateApiKey with
-               | Some key -> TranslationButton pageNumber rowIndex model.Translations key dispatch
-               | None -> Html.none
+               match corpus.SharedInfo.GoogleTranslateApiKey, maybeFullText with
+               | Some key, Some fullText ->
+                   TranslationButton pageNumber rowIndex fullText model.Translations key dispatch
+               | _ -> Html.none
                corpus.ResultLinks(pageNumber, rowIndex) ]
 
 
