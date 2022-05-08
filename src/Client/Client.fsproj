@@ -5,33 +5,33 @@
         <DefineConstants>FABLE_COMPILER</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
-        <None Include="index.html" />
-        <None Include="paket.references" />
-        <Compile Include="fs/Model/Model.fs" />
-        <Compile Include="fs/Model/CwbExtended.fs" />
-        <Compile Include="../Corpora/corpora/*/Shared/*.fs" />
-        <Compile Include="../Corpora/corpora/*/Client/*.fs" />
-        <Compile Include="../Corpora/Client.fs" />
-        <Compile Include="fs/Metadata/Update.fs" />
-        <Compile Include="fs/Update.fs" />
-        <Compile Include="fs/Common.fs" />
-        <Compile Include="fs/Metadata/View.fs" />
-        <Compile Include="fs/SearchViews/Cwb/Extended.fs" />
-        <Compile Include="fs/SearchViews/Cwb/View.fs" />
-        <Compile Include="fs/SearchViews/Fcs/View.fs" />
-        <Compile Include="fs/LoadedCorpus/ResultViews/Cwb/Common.fs" />
-        <Compile Include="fs/LoadedCorpus/ResultViews/Cwb/Spoken.fs" />
-        <Compile Include="fs/LoadedCorpus/ResultViews/Cwb/Written.fs" />
-        <Compile Include="fs/LoadedCorpus/View.fs" />
-        <Compile Include="fs/View.fs" />
-        <Compile Include="fs/App.fs" />
-        <Content Include="style.scss" />
-        <Content Include="media.scss" />
-        <Content Include="spinner.scss" />
-        <Content Include="geo-map.scss" />
+        <None Include="index.html"/>
+        <None Include="paket.references"/>
+        <Compile Include="fs/Model/Model.fs"/>
+        <Compile Include="fs/Model/CwbExtended.fs"/>
+        <Compile Include="../Corpora/corpora/*/Shared/*.fs"/>
+        <Compile Include="../Corpora/corpora/*/Client/*.fs"/>
+        <Compile Include="../Corpora/Client.fs"/>
+        <Compile Include="fs/Metadata/Update.fs"/>
+        <Compile Include="fs/Update.fs"/>
+        <Compile Include="fs/Common.fs"/>
+        <Compile Include="fs/Metadata/View.fs"/>
+        <Compile Include="fs/SearchViews/Cwb/Extended.fs"/>
+        <Compile Include="fs/SearchViews/Cwb/View.fs"/>
+        <Compile Include="fs/SearchViews/Fcs/View.fs"/>
+        <Compile Include="fs/LoadedCorpus/ResultViews/Cwb/Common.fs"/>
+        <Compile Include="fs/LoadedCorpus/ResultViews/Cwb/Spoken.fs"/>
+        <Compile Include="fs/LoadedCorpus/ResultViews/Cwb/Written.fs"/>
+        <Compile Include="fs/LoadedCorpus/View.fs"/>
+        <Compile Include="fs/View.fs"/>
+        <Compile Include="fs/App.fs"/>
+        <Content Include="style.scss"/>
+        <Content Include="media.scss"/>
+        <Content Include="spinner.scss"/>
+        <Content Include="geo-map.scss"/>
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Shared\Shared.fsproj" />
+        <ProjectReference Include="..\Shared\Shared.fsproj"/>
     </ItemGroup>
-    <Import Project="..\..\.paket\Paket.Restore.targets" />
+    <Import Project="..\..\.paket\Paket.Restore.targets"/>
 </Project>

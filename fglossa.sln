@@ -32,6 +32,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F84DCF8A-FC1
 		src\Corpora\corpora\ndc2\ndc.png = src\Corpora\corpora\ndc2\ndc.png
 		src\Corpora\corpora\ndc2\create_db.sql = src\Corpora\corpora\ndc2\create_db.sql
 		src\Corpora\corpora\ndc2\ndc2.sqlite = src\Corpora\corpora\ndc2\ndc2.sqlite
+		src\Corpora\corpora\ndc2\Client\Cwb.fs = src\Corpora\corpora\ndc2\Client\Cwb.fs
 		src\Corpora\corpora\ndc2\Client\ZCore.fs = src\Corpora\corpora\ndc2\Client\ZCore.fs
 		src\Corpora\corpora\ndc2\Client\Metadata.fs = src\Corpora\corpora\ndc2\Client\Metadata.fs
 		src\Corpora\corpora\bokmal\uio-app-uio-sickle-medium.png = src\Corpora\corpora\bokmal\uio-app-uio-sickle-medium.png
