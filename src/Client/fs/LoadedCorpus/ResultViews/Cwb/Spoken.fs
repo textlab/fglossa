@@ -253,7 +253,9 @@ let concordanceTable
             Html.tr [ Html.td [ Html.a [ prop.href "http://translate.google.com/"
                                          prop.target.blank
                                          prop.children[Html.img [ prop.src "attr1-2.png" ]] ] ]
-                      Html.td translation ]
+                      Html.td [ prop.colSpan 3
+                                prop.style [ style.color "#737373" ]
+                                prop.text translation ] ]
         | None -> Html.none
 
     let phoneticRow _corpus (resultInfo: SearchResultInfo) rowIndex =
