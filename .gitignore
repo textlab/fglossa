@@ -22,3 +22,4 @@ src/Corpora
 /src/Client/public/tmp
 /src/Client/public/glossa3_doc
 /self-contained
+/convert_edn/vendor

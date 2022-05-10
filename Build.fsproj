@@ -5,6 +5,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Build.fs" />
+    <Content Include="convert_edn\Gemfile.lock" />
+    <Content Include="convert_edn\Gemfile" />
+    <Content Include="convert_edn\convert_edn.rb" />
+    <Content Include="convert_edn\.ruby-version" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>
