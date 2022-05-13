@@ -2,7 +2,12 @@
 
 require 'edn'
 
-File.open("/Users/noklesta_adm/prosjekter/lein/cglossa_cljs/resources/attributes/scandiasyn.edn") do |f|
+if ARGV.length < 1
+    STDERR.puts "Usage: convert_edn.rb [EDN-FILE]"
+    exit
+end
+
+File.open(ARGV[0]) do |f|
   data = EDN.read(f)
   pos_menu = data.drop(1)
 
