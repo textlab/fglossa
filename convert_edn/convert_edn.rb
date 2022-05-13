@@ -11,7 +11,7 @@ File.open("/Users/noklesta_adm/prosjekter/lein/cglossa_cljs/resources/attributes
     attr_name = pos[1]
     cats = pos[3].each_slice(2).to_a
 
-    if cats.size > 0
+    if cats.length > 0
         if pos_index == 0
             puts "        [ (pos,"
         else
@@ -24,7 +24,7 @@ File.open("/Users/noklesta_adm/prosjekter/lein/cglossa_cljs/resources/attributes
         cats.each_with_index do |cat, cat_index|
             cat_name = cat[0]
             cat_values = cat[1]
-            if cat_values.size == 1
+            if cat_values.length == 1
                 cva, cat_value_value, cat_value_text = cat_values[0]
                 cat_value_attr_name = if cva == :type then "``type``" else cva end
                 if cat_index == 0
@@ -44,8 +44,8 @@ File.open("/Users/noklesta_adm/prosjekter/lein/cglossa_cljs/resources/attributes
 
                     if cat_value_index == 0
                         puts "              [ (#{cat_value_attr_name}, \"#{cat_value_value}\", \"#{cat_value_text}\")"
-                    elsif cat_value_index == cat_values.size - 1
-                        if cat_index == cats.size - 1
+                    elsif cat_value_index == cat_values.length - 1
+                        if cat_index == cats.length - 1
                             puts "                (#{cat_value_attr_name}, \"#{cat_value_value}\", \"#{cat_value_text}\") ]) ])"
                         else
                             puts "                (#{cat_value_attr_name}, \"#{cat_value_value}\", \"#{cat_value_text}\") ])"
@@ -57,7 +57,7 @@ File.open("/Users/noklesta_adm/prosjekter/lein/cglossa_cljs/resources/attributes
             end
         end
     else
-        if pos_index == pos_menu.size - 1
+        if pos_index == pos_menu.length - 1
             puts "          (pos, \"#{attr_value}\", \"#{attr_name}\", []) ]"
         else
             puts "          (pos, \"#{attr_value}\", \"#{attr_name}\", [])"
