@@ -33,9 +33,17 @@ File.open(ARGV[0]) do |f|
                 cva, cat_value_value, cat_value_text = cat_values[0]
                 cat_value_attr_name = if cva == :type then "``type``" else cva end
                 if cat_index == 0
-                    puts "           [ (\"#{cat_name}\", [ (#{cat_value_attr_name}, \"#{cat_value_value}\", \"#{cat_value_text}\") ]) ])"
+                    if cat_index == cats.length - 1
+                        puts "           [ (\"#{cat_name}\", [ (#{cat_value_attr_name}, \"#{cat_value_value}\", \"#{cat_value_text}\") ]) ])"
+                    else
+                        puts "           [ (\"#{cat_name}\", [ (#{cat_value_attr_name}, \"#{cat_value_value}\", \"#{cat_value_text}\") ])"
+                    end
                 else
-                    puts "             (\"#{cat_name}\", [ (#{cat_value_attr_name}, \"#{cat_value_value}\", \"#{cat_value_text}\") ]) ])"
+                    if cat_index == cats.length - 1
+                        puts "             (\"#{cat_name}\", [ (#{cat_value_attr_name}, \"#{cat_value_value}\", \"#{cat_value_text}\") ]) ])"
+                    else
+                        puts "             (\"#{cat_name}\", [ (#{cat_value_attr_name}, \"#{cat_value_value}\", \"#{cat_value_text}\") ])"
+                    end
                 end
             else
                 if cat_index == 0
