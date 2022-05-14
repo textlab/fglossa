@@ -3,11 +3,11 @@
 # To convert metadata from the cglossa version of Glossa to the fglossa version,
 # first export the tables from the cglossa_xxx database for the corpus to files:
 #
-# select id, startpos, endpos from text into outfile '/tmp/texts.txt';
-# select id, metadata_category_id, text_value from metadata_value into outfile '/tmp/values.txt';
-# select metadata_value_id, text_id from metadata_value_text into outfile '/tmp/tmp.txt';
+# select id, startpos, endpos from text into outfile '/tmp/mysql/texts.txt';
+# select id, metadata_category_id, text_value from metadata_value into outfile '/tmp/mysql/values.txt';
+# select metadata_value_id, text_id from metadata_value_text into outfile '/tmp/mysql/tmp.txt';
 #
-# $ sort -u /tmp/tmp.txt  > /tmp/values_texts.txt
+# $ sort -u /tmp/mysql/tmp.txt  > /tmp/mysql/values_texts.txt
 #
 # Get num_categories by running "select count(*) from metadata_category"
 #

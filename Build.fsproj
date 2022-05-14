@@ -9,6 +9,7 @@
     <Content Include="convert_edn\Gemfile" />
     <Content Include="convert_edn\convert_edn.rb" />
     <Content Include="convert_edn\.ruby-version" />
+    <Content Include="create_metadata_categories.rb" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>
