@@ -56,6 +56,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F84DCF8A-FC1
 		src\Corpora\corpora\run\Server\ZCore.fs = src\Corpora\corpora\run\Server\ZCore.fs
 		src\Corpora\corpora\run\Shared\MetadataCategories.fs = src\Corpora\corpora\run\Shared\MetadataCategories.fs
 		src\Corpora\corpora\run\Client\ZCore.fs = src\Corpora\corpora\run\Client\ZCore.fs
+		src\Corpora\corpora\lia_norsk\lia_norsk.sqlite = src\Corpora\corpora\lia_norsk\lia_norsk.sqlite
+		src\Corpora\corpora\lia_norsk\lia_coords.txt = src\Corpora\corpora\lia_norsk\lia_coords.txt
+		src\Corpora\corpora\lia_norsk\lia-80.png = src\Corpora\corpora\lia_norsk\lia-80.png
+		src\Corpora\corpora\lia_norsk\lia_norsk_texts.tsv = src\Corpora\corpora\lia_norsk\lia_norsk_texts.tsv
+		src\Corpora\corpora\lia_norsk\Server\ZCore.fs = src\Corpora\corpora\lia_norsk\Server\ZCore.fs
+		src\Corpora\corpora\lia_norsk\Shared\MetadataCategories.fs = src\Corpora\corpora\lia_norsk\Shared\MetadataCategories.fs
+		src\Corpora\corpora\lia_norsk\Shared\Cwb.fs = src\Corpora\corpora\lia_norsk\Shared\Cwb.fs
+		src\Corpora\corpora\lia_norsk\create_db.sql = src\Corpora\corpora\lia_norsk\create_db.sql
+		src\Corpora\corpora\lia_norsk\Client\ZCore.fs = src\Corpora\corpora\lia_norsk\Client\ZCore.fs
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Shared", "src\Shared\Shared.fsproj", "{B743B9A7-78C6-4FEB-ADDD-19B27F542340}"
