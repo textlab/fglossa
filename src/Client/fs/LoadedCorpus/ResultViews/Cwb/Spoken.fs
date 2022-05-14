@@ -12,9 +12,6 @@ open Update.LoadedCorpus.ShowingResults.Concordance
 open View.LoadedCorpus.ResultViews.Cwb.Common
 
 ////////// CHANGE THIS! /////////
-let corpusIds =
-    [ ("ndc2", 52) ] |> Map.ofList
-
 type SearchResultInfo =
     { AudioType: AudioType option
       HasVideo: bool
