@@ -599,15 +599,27 @@ module ResultsView =
                 |> Array.map (fun (locationName, lat, lng) -> locationName, (lat, lng))
                 |> Map.ofArray
 
+            //            printfn "Unknown locations:"
+//
+//            let unknownLocations =
+//                [| for locationName in locationNames do
+//                       if allCoordsMap.TryFind(locationName).IsNone then
+//                           printfn $"{locationName}"
+//                           yield locationName |]
+//
+//            printfn $"Unknown locations: {unknownLocations.Length}"
+
             let coords =
-                [| for locationName in locationNames ->
-                       {| Name = locationName
-                          Coords = allCoordsMap.[locationName]
-                          Phons =
-                           locationPhonFreqs.[locationName]
-                           |> Map.toArray
-                           |> Array.map (fun (phon, freq) -> $"{phon}: {freq}")
-                           |> String.concat "; " |} |]
+                [| for locationName in locationNames do
+                       if allCoordsMap.TryFind(locationName).IsSome then
+                           yield
+                               {| Name = locationName
+                                  Coords = allCoordsMap.[locationName]
+                                  Phons =
+                                   locationPhonFreqs.[locationName]
+                                   |> Map.toArray
+                                   |> Array.map (fun (phon, freq) -> $"{phon}: {freq}")
+                                   |> String.concat "; " |} |]
 
             // These are the small red dots that mark all locations where hits were found
             let smallDots =
