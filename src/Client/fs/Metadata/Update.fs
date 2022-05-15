@@ -338,19 +338,15 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         { model with SelectionTableSort = Some sortInfo }, Cmd.ofMsg (SetSelectionTablePage 1)
     | CloseSelectionTable -> { model with IsSelectionTableOpen = false }, Cmd.none
     | FetchMetadataForGeoMap ->
+        let categories =
+            match model.Corpus.SharedInfo.GeoMapConfig with
+            | Some config -> [ for cat in config.MetadataCategories -> cat.QualifiedColumnName ]
+            | None -> failwith "No metadata categories defined for geographical metadata map!"
+
         let cmd =
             Cmd.OfAsync.perform
                 serverApi.GetMetadataForTexts
-                (model.Corpus.SharedInfo.Code,
-                 model.Search.Params.MetadataSelection,
-                 [ "texts.tid"
-                   "texts.rec"
-                   "texts.age"
-                   "texts.birth"
-                   "texts.sex"
-                   "texts.place" ],
-                 0,
-                 None)
+                (model.Corpus.SharedInfo.Code, model.Search.Params.MetadataSelection, categories, 0, None)
                 OpenMetadataGeoMap
 
         model, cmd
