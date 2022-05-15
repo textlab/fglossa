@@ -5,7 +5,6 @@ open System
 open System.Data.Common
 open System.Collections.Generic
 open System.Text.RegularExpressions
-open FSharp.Control.Tasks
 open Serilog
 
 // https://stackoverflow.com/questions/42797288/dapper-column-to-f-option-property

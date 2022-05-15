@@ -3,7 +3,6 @@ module Remoting.Search.Cwb.Core
 open System
 open System.IO
 open System.Threading.Tasks
-open FSharp.Control.Tasks
 open System.Text.RegularExpressions
 open Microsoft.Data.Sqlite
 open Serilog

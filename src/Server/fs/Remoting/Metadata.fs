@@ -3,7 +3,6 @@ module Remoting.Metadata
 open System.Collections.Generic
 open Microsoft.Data.Sqlite
 open System.Threading.Tasks
-open FSharp.Control.Tasks
 open Serilog
 open ServerTypes
 open Database
@@ -465,7 +464,8 @@ let getMetadataForSingleText
                           let value =
                               if text <> "\N" then text else ""
 
-                          { Name = category.Name; Value = value } ]
+                          { Metadata.CategoryNameAndValue.Name = category.Name
+                            Metadata.CategoryNameAndValue.Value = value } ]
                 | None -> []
             | Error ex -> raise ex
     }

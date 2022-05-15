@@ -3,10 +3,12 @@ framework: net6.0
 storage: none
 
 nuget ClosedXML
+nuget Fable.Fetch
+nuget Fable.Promise
 nuget Fable.Remoting.Giraffe
 nuget Feliz.Bulma.QuickView
 nuget Feliz.Bulma.Tooltip
-nuget Feliz.Recoil
+nuget Ply
 nuget Saturn
 nuget Expecto
 

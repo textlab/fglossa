@@ -2,7 +2,6 @@ module Remoting.Corpus
 
 open System
 open Microsoft.Data.Sqlite
-open FSharp.Control.Tasks
 open Serilog
 open ServerTypes
 open Database
