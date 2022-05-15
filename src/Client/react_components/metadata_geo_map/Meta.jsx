@@ -367,12 +367,15 @@ class Sets {
     }
 
     static union(sets){
-	let u = new Set();
-	for(const [i, set] of Object.entries(sets)){
-	    u = new Set([...u, ...set]);
-	}
-	return u;
+        let u = new Set();
+        for(const [i, set] of Object.entries(sets)){
+           if(set !== undefined){
+                u = new Set([...u, ...set]);
+           }
+        }
+        return u;
     }
+
     static intersection(sets){
 	let inter = false;
 	for(const [k,v] of Object.entries(sets)){
@@ -390,17 +393,18 @@ class Sets {
     // updates the k values in activeSets {sex: {…}, agegroup: {…}, age: {…}}, in the range l - r, but checks each value is actually present in SuperSet
 
     static interval_add_set(k,l,r, activeSets = {}){
-	let nullval = activeSets[k] && activeSets[k][null];
-	activeSets[k] = {} // IE, this is going to be reset, so needs to be purged
-	if(nullval){activeSets = this.add_set(k,null, activeSets)}
-	var i;
-	for(i = l; i <= r; i++){
-	    if(i in this.SuperSet[k]){
-		activeSets = this.add_set(k,i,activeSets);
-	    }
-	}
-	return activeSets;
+        let nullval = activeSets[k] && activeSets[k][null];
+        activeSets[k] = {} // IE, this is going to be reset, so needs to be purged
+
+        if(nullval){activeSets = this.add_set(k,null, activeSets)}
+
+        var i;
+        for(i = l; i <= r; i++){
+            activeSets = this.add_set(k,i,activeSets);
+        }
+        return activeSets;
     }
+
     static add_set(k,v,activeSets){
 	if(!(k in activeSets)){activeSets[k] = {}}
 	activeSets[k][v] = true;
