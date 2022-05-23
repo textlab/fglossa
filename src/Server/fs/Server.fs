@@ -5,6 +5,7 @@ open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
 open Giraffe.SerilogExtensions
 open Giraffe
+open Microsoft.AspNetCore.Http
 open Serilog
 open Saturn
 open Thoth.Json.Net
@@ -128,17 +129,19 @@ let remotingRouter =
     |> Remoting.buildHttpHandler
 
 let restRouter =
-    let getText (corpusCode, attributeName, serializedMetadataSelection) =
+    let getText (corpusCode, attributeName, serializedMetadataSelection) (ctx: HttpContext) =
         let metadataSelectionResult =
             Decode.Auto.fromString<Metadata.Selection> (serializedMetadataSelection)
 
         match metadataSelectionResult with
         | Ok metadataSelection ->
-            RestApi.getText corpusCode attributeName metadataSelection
+            let logger = ctx.Logger()
+
+            RestApi.getText logger corpusCode attributeName metadataSelection
             |> text
         | Error e -> failwith $"Error in serialized metadata selection: {e}"
 
-    router { getf "/text/%s/%s/%s" getText }
+    router { getf "/text/%s/%s/%s" (fun args next ctx -> (getText args ctx) next ctx) }
 
 let browserPipeline =
     pipeline {
@@ -153,8 +156,8 @@ let browserPipeline =
 
 let htmlRouter =
     router {
-        // Ignore the last part of the path, which is the corpus code, since it
-        // it will be handled by the client code instead.b
+        // Ignore the last part of the path, which is the corpus code, since
+        // it will be handled by the client code instead
         getf "/%s" (fun _ _ ctx -> (Controller.file ctx "public/index.html"))
     }
 
