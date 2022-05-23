@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Include="paket.references" />
-    <Compile Include="Config.fs" />
-    <Compile Include="fs/Process.fs" />
-    <Compile Include="fs/Database.fs" />
-    <Compile Include="fs/ServerTypes.fs" />
-    <Compile Include="fs/Templates/App.fs" />
-    <Compile Include="fs/Templates/Index.fs" />
-    <Compile Include="fs/Templates/NotFound.fs" />
-    <Compile Include="../Corpora/corpora/*/Shared/*.fs" />
-    <Compile Include="../Corpora/corpora/*/Server/*.fs" />
-    <Compile Include="../Corpora/Server.fs" />
-    <Compile Include="fs/Remoting/Metadata.fs" />
-    <Compile Include="fs/Remoting/Corpus.fs" />
-    <Compile Include="fs/Remoting/Search/Common.fs" />
-    <Compile Include="fs/Remoting/Search/Cwb/Common.fs" />
-    <Compile Include="fs/Remoting/Search/Cwb/Spoken.fs" />
-    <Compile Include="fs/Remoting/Search/Cwb/Written.fs" />
-    <Compile Include="fs/Remoting/Search/Cwb/Core.fs" />
-    <Compile Include="fs/Remoting/Search/Core.fs" />
-    <Compile Include="fs/Server.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Shared\Shared.fsproj" />
-  </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="paket.references"/>
+        <Compile Include="Config.fs"/>
+        <Compile Include="fs/Process.fs"/>
+        <Compile Include="fs/Database.fs"/>
+        <Compile Include="fs/ServerTypes.fs"/>
+        <Compile Include="fs/Templates/App.fs"/>
+        <Compile Include="fs/Templates/Index.fs"/>
+        <Compile Include="fs/Templates/NotFound.fs"/>
+        <Compile Include="../Corpora/corpora/*/Shared/*.fs"/>
+        <Compile Include="../Corpora/corpora/*/Server/*.fs"/>
+        <Compile Include="../Corpora/Server.fs"/>
+        <Compile Include="fs/Remoting/Metadata.fs"/>
+        <Compile Include="fs/Remoting/Corpus.fs"/>
+        <Compile Include="fs/Remoting/Search/Common.fs"/>
+        <Compile Include="fs/Remoting/Search/Cwb/Common.fs"/>
+        <Compile Include="fs/Remoting/Search/Cwb/Spoken.fs"/>
+        <Compile Include="fs/Remoting/Search/Cwb/Written.fs"/>
+        <Compile Include="fs/Remoting/Search/Cwb/Core.fs"/>
+        <Compile Include="fs/Remoting/Search/Core.fs"/>
+        <Compile Include="fs/Server.fs"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Shared\Shared.fsproj"/>
+    </ItemGroup>
+    <Import Project="..\..\.paket\Paket.Restore.targets"/>
 </Project>
