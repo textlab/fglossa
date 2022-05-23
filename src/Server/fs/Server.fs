@@ -1,16 +1,13 @@
 module Server
 
 open System
-// open Microsoft.AspNetCore.Builder
-// open Microsoft.AspNetCore.Hosting
-// open Microsoft.Extensions.DependencyInjection
-// open Microsoft.Extensions.Hosting
 open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
 open Giraffe.SerilogExtensions
 open Giraffe
 open Serilog
 open Saturn
+open Thoth.Json.Net
 
 open Config
 open Shared
@@ -130,6 +127,19 @@ let remotingRouter =
     |> Remoting.fromContext createServerApi
     |> Remoting.buildHttpHandler
 
+let restRouter =
+    let getText (corpusCode, attributeName, serializedMetadataSelection) =
+        let metadataSelectionResult =
+            Decode.Auto.fromString<Metadata.Selection> (serializedMetadataSelection)
+
+        match metadataSelectionResult with
+        | Ok metadataSelection ->
+            RestApi.getText corpusCode attributeName metadataSelection
+            |> text
+        | Error e -> failwith $"Error in serialized metadata selection: {e}"
+
+    router { getf "/text/%s/%s/%s" getText }
+
 let browserPipeline =
     pipeline {
         plug acceptHtml
@@ -162,6 +172,7 @@ let browserRouter =
 // currently work with .NET 5, so use Giraffe's routing functions instead
 let webApp =
     choose [ routeStartsWith "/glossa3/api" >=> remotingRouter
+             subRoute "/glossa3/rest" restRouter
              // Ignore the corpus code that is provided as path and just return
              // index.html. The corpus code will be handled by the client code.
              routef "/%s" (fun _ -> browserRouter) ]

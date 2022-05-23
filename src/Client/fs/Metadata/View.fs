@@ -517,20 +517,31 @@ module MetadataMenu =
             )
 
         let header =
+            let voyant =
+                Bulma.levelItem [ prop.style [ style.marginRight 50 ]
+                                  prop.children [ Html.span [ prop.style [ style.marginRight 10 ]
+                                                              prop.text "Send to Voyant:" ]
+                                                  Bulma.buttons [ Bulma.button.button [ prop.onClick (fun _ ->
+                                                                                            dispatch SendToVoyant)
+                                                                                        prop.text "Orthographic" ]
+                                                                  Bulma.button.button [ prop.text "Phonetic" ]
+                                                                  Bulma.button.button [ prop.text "Lemmas" ] ] ] ]
+
             Bulma.level [ prop.style [ style.padding 20
                                        style.marginBottom 0 ]
-                          prop.children [ Bulma.levelLeft (
-                                              Bulma.levelItem (
-                                                  Html.span [ Bulma.subtitle (textAndTokenCountText model)
-                                                              Html.div [ prop.style [ style.marginTop 10 ]
-                                                                         prop.children (
-                                                                             Bulma.subtitle [ title.is6
-                                                                                              prop.text
-                                                                                                  "Click on a column header to sort; alt/option + click to edit the metadata selection." ]
-                                                                         ) ] ]
-                                              )
-                                          )
-                                          Bulma.levelRight [ Bulma.levelItem pagination
+                          prop.children [ Bulma.levelLeft [ Bulma.levelItem (
+                                                                Html.span [ Bulma.subtitle (textAndTokenCountText model)
+                                                                            Html.div [ prop.style [ style.marginTop 10 ]
+                                                                                       prop.children (
+                                                                                           Bulma.subtitle [ title.is6
+                                                                                                            prop.text
+                                                                                                                "Click on a column header to sort; alt/option + click to edit the metadata selection." ]
+                                                                                       ) ] ]
+                                                            )
+
+                                                             ]
+                                          Bulma.levelRight [ voyant
+                                                             Bulma.levelItem pagination
                                                              Bulma.levelItem (
                                                                  Bulma.button.button [ color.isInfo
                                                                                        prop.title "Close"

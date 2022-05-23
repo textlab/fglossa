@@ -27,6 +27,10 @@ var CONFIG = {
             target: 'http://0.0.0.0:' + (process.env.SERVER_PROXY_PORT || "8085"),
             changeOrigin: true
         },
+        '/glossa3/rest/**': {
+            target: 'http://0.0.0.0:' + (process.env.SERVER_PROXY_PORT || "8085"),
+            changeOrigin: true
+        },
         // redirect websocket requests that start with /socket/ to the server on the port 8085
         '/socket/**': {
             target: 'http://0.0.0.0:' + (process.env.SERVER_PROXY_PORT || "8085"),

@@ -24,6 +24,7 @@
         <Compile Include="fs/Remoting/Search/Cwb/Written.fs"/>
         <Compile Include="fs/Remoting/Search/Cwb/Core.fs"/>
         <Compile Include="fs/Remoting/Search/Core.fs"/>
+        <Compile Include="fs/RestApi.fs"/>
         <Compile Include="fs/Server.fs"/>
     </ItemGroup>
     <ItemGroup>

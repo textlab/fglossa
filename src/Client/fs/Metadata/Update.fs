@@ -1,5 +1,6 @@
 module Update.Metadata
 
+open Fetch
 open Elmish
 open Shared
 open Model
@@ -31,6 +32,7 @@ type Msg =
     | FetchMetadataForGeoMap
     | OpenMetadataGeoMap of string [] []
     | CloseMetadataGeoMap
+    | SendToVoyant
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
     match msg with
@@ -356,3 +358,20 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             IsMetadataGeoMapOpen = true },
         Cmd.none
     | CloseMetadataGeoMap -> { model with IsMetadataGeoMapOpen = false }, Cmd.none
+    | SendToVoyant ->
+        let serializedMetadataSelection =
+            Thoth.Json.Encode.Auto.toString (0, model.Search.Params.MetadataSelection)
+
+        printfn $"{serializedMetadataSelection}"
+
+        let url =
+            Fable.Core.JS.encodeURI $"http://localhost:8080/glossa3/rest/text/ndc2/word/{serializedMetadataSelection}"
+
+        printfn $"URL: {url}"
+        //        promise {
+//            let! response = fetch "http://www.google.no" []
+//            printfn $"Response: {response.text}"
+//        }
+//        |> ignore
+
+        model, Cmd.none

@@ -5,3 +5,4 @@ Giraffe.SerilogExtensions
 Serilog.Sinks.Console
 ClosedXml
 Microsoft.Data.Sqlite
+Thoth.Json.Net
