@@ -9,7 +9,7 @@ module StringUtils =
 
     let truncate (maxLength: int) (s: string) =
         if s.Length > maxLength - 3 then
-            s.[0..maxLength - 3] + "..."
+            s.[0 .. maxLength - 3] + "..."
         else
             s
 
@@ -42,7 +42,8 @@ module Metadata =
         /// Human-readable name
         member _.Name = aName
         /// Short name, which is also the name of the database column for this category
-        abstract member Code : string
+        abstract member Code: string
+
         /// The name of the database table where the values for this category are stored.
         /// This is relevant for many-to-many relations such as author name for texts in
         /// written corpora or birth place of informants in multi-informant recordings in
@@ -50,7 +51,8 @@ module Metadata =
         /// join table AuthorText in addition to the standard Text table, and in that case
         /// TableName should be 'Author'. A Value of None means that the category is stored
         /// in a column in the Text table.
-        abstract member TableName : string option
+        abstract member TableName: string option
+
         default _.TableName = None
 
         member this.GetQualifiedColumnName() =
@@ -63,7 +65,7 @@ module Metadata =
         /// in the geographical map used for selecting informants in a spoken corpus. It is
         /// overridden for each subtype of Category, and can also be overriden by individual
         /// categories if needed.
-        abstract member GeoMapControlType : GeoMapControlType
+        abstract member GeoMapControlType: GeoMapControlType
 
         member this.GetGeoMapConfig() =
             { QualifiedColumnName = this.GetQualifiedColumnName()
