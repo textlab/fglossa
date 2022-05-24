@@ -177,9 +177,20 @@ type SharedCorpusInfo =
       SearchEngine: SearchEngine
       TotalTexts: int64
       TotalTokens: int64 }
-    static member Init(code, name, ?modality, ?languageConfig, ?logo, ?multiCpuBounds, ?searchEngine, ?geoMapConfig) =
+    static member Init
+        (
+            code,
+            name,
+            ?modality,
+            ?languageConfig,
+            ?logo,
+            ?multiCpuBounds,
+            ?searchEngine,
+            ?externalTools,
+            ?geoMapConfig
+        ) =
         { Code = code
-          ExternalTools = []
+          ExternalTools = defaultArg externalTools []
           FontFamily = None
           GeoMapConfig = defaultArg geoMapConfig None
           GoogleMapsApiKey = None
