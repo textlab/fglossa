@@ -1,6 +1,5 @@
 module Update.Metadata
 
-open Fetch
 open Elmish
 open Shared
 open Model
@@ -32,7 +31,7 @@ type Msg =
     | FetchMetadataForGeoMap
     | OpenMetadataGeoMap of string [] []
     | CloseMetadataGeoMap
-    | SendToVoyant
+    | OpenInVoyant of string
 
 let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
     match msg with
@@ -358,20 +357,25 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             IsMetadataGeoMapOpen = true },
         Cmd.none
     | CloseMetadataGeoMap -> { model with IsMetadataGeoMapOpen = false }, Cmd.none
-    | SendToVoyant ->
+    | OpenInVoyant attributeName ->
+        // First get a text representation of the metadata selection
         let serializedMetadataSelection =
             Thoth.Json.Encode.Auto.toString (0, model.Search.Params.MetadataSelection)
 
-        printfn $"{serializedMetadataSelection}"
+        // Since Voyant refuses to call URLs with characters such as braces in them, we Base64-encode
+        // the text representation
+        let base64Encoded =
+            Browser.Dom.window.btoa serializedMetadataSelection
+
+        // Finally, we need to URI-encode the Base64 representation, using encodeURIComponent instead
+        // of just encodeURI so as to encode even characters such as equals signs
+        let uriEncoded =
+            Fable.Core.JS.encodeURIComponent base64Encoded
 
         let url =
-            Fable.Core.JS.encodeURI $"http://localhost:8080/glossa3/rest/text/ndc2/word/{serializedMetadataSelection}"
+            $"https://voyant.lincsproject.ca/?input=https://tekstlab.uio.no/glossa3/rest/text/ndc2/{attributeName}/{uriEncoded}"
 
-        printfn $"URL: {url}"
-        //        promise {
-//            let! response = fetch "http://www.google.no" []
-//            printfn $"Response: {response.text}"
-//        }
-//        |> ignore
+        Browser.Dom.window.``open`` (url, "_blank")
+        |> ignore
 
         model, Cmd.none

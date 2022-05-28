@@ -518,14 +518,40 @@ module MetadataMenu =
 
         let header =
             let voyant =
+                let buttons =
+                    let info = model.Corpus.SharedInfo
+
+                    Bulma.buttons [ Bulma.button.button [ color.isSuccess
+                                                          prop.onClick (fun _ -> dispatch (OpenInVoyant "word"))
+                                                          prop.text (
+                                                              if info.HasAttribute("phon") then
+                                                                  "Orthographic"
+                                                              elif info.HasAttribute("orig") then
+                                                                  "Corrected"
+                                                              else
+                                                                  "Word form"
+                                                          ) ]
+                                    if info.HasAttribute("phon") then
+                                        Bulma.button.button [ color.isSuccess
+                                                              prop.onClick (fun _ -> dispatch (OpenInVoyant "phon"))
+                                                              prop.text "Phonetic" ]
+                                    if info.HasAttribute("orig") then
+                                        Bulma.button.button [ color.isSuccess
+                                                              prop.onClick (fun _ -> dispatch (OpenInVoyant "orig"))
+                                                              prop.text "Original" ]
+                                    if info.HasAttribute("lemma") then
+                                        Bulma.button.button [ color.isSuccess
+                                                              prop.onClick (fun _ -> dispatch (OpenInVoyant "lemma"))
+                                                              prop.text "Lemmas" ] ]
+
                 Bulma.levelItem [ prop.style [ style.marginRight 50 ]
                                   prop.children [ Html.span [ prop.style [ style.marginRight 10 ]
-                                                              prop.text "Send to Voyant:" ]
-                                                  Bulma.buttons [ Bulma.button.button [ prop.onClick (fun _ ->
-                                                                                            dispatch SendToVoyant)
-                                                                                        prop.text "Orthographic" ]
-                                                                  Bulma.button.button [ prop.text "Phonetic" ]
-                                                                  Bulma.button.button [ prop.text "Lemmas" ] ] ] ]
+                                                              prop.children [ Html.span "Open in "
+                                                                              Html.a [ prop.href
+                                                                                           "https://voyant-tools.org/"
+                                                                                       prop.target.blank
+                                                                                       prop.text "Voyant:" ] ] ]
+                                                  buttons ] ]
 
             Bulma.level [ prop.style [ style.padding 20
                                        style.marginBottom 0 ]
@@ -540,7 +566,9 @@ module MetadataMenu =
                                                             )
 
                                                              ]
-                                          Bulma.levelRight [ voyant
+                                          Bulma.levelRight [ if model.Corpus.SharedInfo.ExternalTools
+                                                                |> List.contains Voyant then
+                                                                 voyant
                                                              Bulma.levelItem pagination
                                                              Bulma.levelItem (
                                                                  Bulma.button.button [ color.isInfo

@@ -129,7 +129,20 @@ let remotingRouter =
     |> Remoting.buildHttpHandler
 
 let restRouter =
-    let getText (corpusCode, attributeName, serializedMetadataSelection) (ctx: HttpContext) =
+    let getText (corpusCode, attributeName, base64EncodedMetadataSelection) (ctx: HttpContext) =
+        // First reverse the effect of encodeURIComponent, which we used on the client side
+        let uriDecoded =
+            Uri.UnescapeDataString(base64EncodedMetadataSelection)
+
+        // Then decode the Base64 representation and convert the resulting bytes to a string,
+        // which is the JSON representation of the metadata selection
+        let bytes =
+            Convert.FromBase64String(uriDecoded)
+
+        let serializedMetadataSelection =
+            System.Text.Encoding.UTF8.GetString(bytes)
+
+        // Finally decode the JSON
         let metadataSelectionResult =
             Decode.Auto.fromString<Metadata.Selection> (serializedMetadataSelection)
 
