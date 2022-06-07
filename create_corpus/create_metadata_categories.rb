@@ -22,7 +22,7 @@ cats.each do |cat|
     superclass = if cat_type && cat_type.start_with?('n') then "NumberCategory" else "StringCategory" end
 
 
-    if cat_code != "bounds"
+    if !["bounds", "startpos", "endpos"].include?(cat_code)
         puts "
 type #{catClass}(aName) =
     inherit #{superclass}(aName)

@@ -1,15 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="Build.fs" />
-    <Content Include="convert_edn\Gemfile.lock" />
-    <Content Include="convert_edn\Gemfile" />
-    <Content Include="convert_edn\convert_edn.rb" />
-    <Content Include="convert_edn\.ruby-version" />
-    <Content Include="create_metadata_categories.rb" />
-  </ItemGroup>
-  <Import Project=".paket\Paket.Restore.targets" />
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="Build.fs"/>
+        <Content Include="convert_edn/Gemfile.lock"/>
+        <Content Include="convert_edn/Gemfile"/>
+        <Content Include="convert_edn/convert_edn.rb"/>
+        <Content Include="convert_edn/.ruby-version"/>
+        <Content Include="create_metadata_categories.rb"/>
+        <Content Include="create_corpus/create_metadata_categories.rb"/>
+        <Content Include="create_corpus/create_db_definition.rb"/>
+    </ItemGroup>
+    <Import Project=".paket/Paket.Restore.targets"/>
 </Project>
