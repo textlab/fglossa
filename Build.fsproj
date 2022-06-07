@@ -12,6 +12,10 @@
         <Content Include="create_metadata_categories.rb"/>
         <Content Include="create_corpus/create_metadata_categories.rb"/>
         <Content Include="create_corpus/create_db_definition.rb"/>
+        <Content Include="create_corpus/README.TXT"/>
+        <Content Include="config_corpora_client.rb"/>
+        <Content Include="config_corpora_server.rb"/>
+        <Content Include="config_corpora.sh"/>
     </ItemGroup>
     <Import Project=".paket/Paket.Restore.targets"/>
 </Project>

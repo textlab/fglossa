@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 if ARGV.length < 1
-    STDERR.puts "Usage: create_create_db.rb [METADATA-TSV-FILE]"
+    STDERR.puts "Usage: create_db_definition.rb [METADATA-TSV-FILE]"
     exit
 end
 

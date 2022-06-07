@@ -70,7 +70,8 @@ module CorpusStartView =
     let corpusInfo (config: SharedCorpusInfo) =
         match config.Info with
         | Some info ->
-            Html.div [ prop.style [ style.marginTop 30
+            Html.div [ prop.className "corpus-info"
+                       prop.style [ style.marginTop 30
                                     style.marginBottom 10 ]
                        prop.dangerouslySetInnerHTML info ]
         | None -> Html.none
