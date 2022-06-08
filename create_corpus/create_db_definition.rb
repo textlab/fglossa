@@ -1,13 +1,15 @@
 #!/usr/bin/env ruby
 
 if ARGV.length < 1
-    STDERR.puts "Usage: create_db_definition.rb [METADATA-TSV-FILE]"
+    STDERR.puts "Usage: create_db_definition.rb METADATA-TSV-FILE"
     exit
 end
 
+metadata_file = ARGV[0]
+
 # Read the categories from the first line, but drop 'tid' (which should be the first one),
 # since we will treat it differently from the other categories
-cats = File.readlines(ARGV[0])[0].split.drop(1)
+cats = File.readlines(metadata_file)[0].split.drop(1)
 
 puts "CREATE TABLE texts (
     tid VARCHAR NOT NULL,
@@ -42,3 +44,8 @@ non_position_cats.each do |cat|
     cat_code = cat.split('$')[0]
     puts "CREATE INDEX idx_texts_#{cat_code}_tid ON texts(#{cat_code}, tid);"
 end
+
+puts
+puts ".mode ascii"
+puts %q{.separator "\t" "\n"}
+puts ".import #{metadata_file} texts"

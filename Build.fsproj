@@ -13,6 +13,10 @@
         <Content Include="create_corpus/create_metadata_categories.rb"/>
         <Content Include="create_corpus/create_db_definition.rb"/>
         <Content Include="create_corpus/README.TXT"/>
+        <Content Include="create_corpus/config_corpora.sh"/>
+        <Content Include="create_corpus/config_corpora_client.rb"/>
+        <Content Include="create_corpus/config_corpora_server.rb"/>
+        <Content Include="create_corpus/create_corpus.rb"/>
         <Content Include="config_corpora_client.rb"/>
         <Content Include="config_corpora_server.rb"/>
         <Content Include="config_corpora.sh"/>

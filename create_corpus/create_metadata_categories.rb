@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 if ARGV.length < 2
-    STDERR.puts "Usage: create_metadata_categories.rb [METADATA-TSV-FILE] [MODULE]"
+    STDERR.puts "Usage: create_metadata_categories.rb METADATA-TSV-FILE MODULE"
     exit
 end
 
