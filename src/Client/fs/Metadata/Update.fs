@@ -220,7 +220,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         { model with
             Search = { model.Search with Params = { model.Search.Params with MetadataSelection = newSelection } } },
-        Cmd.none
+        Cmd.ofMsg FetchTextAndTokenCounts
     | DeselectAllItems category ->
         let tableAndCode =
             category.GetQualifiedColumnName()

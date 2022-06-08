@@ -820,6 +820,7 @@ module MetadataMenu =
                         dispatch (SetIntervalCategoryMode(numberCat, IntervalMode))
                         dispatch (SetIntervalFrom(numberCat, min))
                         dispatch (SetIntervalTo(numberCat, max))
+                        dispatch FetchTextAndTokenCounts
                     | _ -> failwith $"Non-numerical category defined as interval: {catCode}"
                 | DiscreteControl ->
                     let choices =
