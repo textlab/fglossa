@@ -175,6 +175,7 @@ type SharedCorpusInfo =
       MultiCpuBounds: int64 [] [] option
       Name: string
       SearchEngine: SearchEngine
+      TextsReferral: string
       TotalTexts: int64
       TotalTokens: int64 }
     static member Init
@@ -187,8 +188,20 @@ type SharedCorpusInfo =
             ?multiCpuBounds,
             ?searchEngine,
             ?externalTools,
-            ?geoMapConfig
+            ?geoMapConfig,
+            ?textsReferral
         ) =
+        let derivedTextsReferral =
+            match textsReferral with
+            | Some ref -> ref
+            | None ->
+                match modality with
+                | Some modality ->
+                    match modality with
+                    | Spoken -> "speakers"
+                    | Written -> "texts"
+                | None -> "texts"
+
         { Code = code
           ExternalTools = defaultArg externalTools []
           FontFamily = None
@@ -202,6 +215,7 @@ type SharedCorpusInfo =
           MultiCpuBounds = defaultArg multiCpuBounds None
           Name = name
           SearchEngine = defaultArg searchEngine Cwb
+          TextsReferral = derivedTextsReferral
           TotalTexts = 0L
           TotalTokens = 0L }
 
