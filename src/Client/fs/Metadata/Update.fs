@@ -15,7 +15,7 @@ type Msg =
     | FetchMinAndMaxForCategory of category: Metadata.NumberCategory
     | FetchedMinAndMaxForCategory of (int64 * int64)
     | FetchTextAndTokenCounts
-    | FetchedTextAndTokenCounts of TextAndTokenCounts
+    | FetchedTextAndTokenCounts of TextAndTokenCounts * TextSelectionInfo
     | ToggleExclude of category: Metadata.Category
     | SelectItem of Metadata.Category * Metadata.CategoryMenuOption
     | DeselectItem of Metadata.Category * Metadata.CategoryMenuOption
@@ -115,11 +115,12 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                 model, countCmd
 
         newModel, cmd
-    | FetchedTextAndTokenCounts counts ->
+    | FetchedTextAndTokenCounts (counts, TextSelectionInfo textSelectionInfo) ->
         { model with
             NumSelectedTexts = Some counts.NumTexts
             NumSelectedTokens = Some counts.NumTokens
-            SelectionTablePageNumber = 1 },
+            SelectionTablePageNumber = 1
+            TextSelectionInfo = textSelectionInfo },
         Cmd.none
     | ToggleExclude category ->
         let tableAndCode =

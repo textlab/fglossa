@@ -2,6 +2,8 @@ module ServerTypes
 
 open System.IO
 open System.Text.RegularExpressions
+open System.Threading.Tasks
+open Serilog
 open Shared
 open Shared.StringUtils
 open Database
@@ -113,3 +115,7 @@ type Corpus(config: SharedCorpusInfo) =
             |> Set.ofArray
         with
         | :? DirectoryNotFoundException -> Set.empty
+
+    /// Returns additional text to be added after "All xxx texts selected" etc.
+    abstract member GetTextSelectionInfo: ILogger * Metadata.Selection -> Task<string>
+    default _.GetTextSelectionInfo(_, _) = Task.FromResult ""

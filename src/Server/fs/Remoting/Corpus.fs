@@ -129,8 +129,12 @@ let getTextAndTokenCount (logger: ILogger) (corpusCode: string) (selection: Sele
         let corpus =
             Corpora.Server.getCorpus corpusCode
 
-        return!
+        let! textAndTokenCount =
             match corpus.Config.Modality with
             | Spoken -> Spoken.getTextAndTokenCount logger corpus selection
             | Written -> Written.getTextAndTokenCount logger corpus selection
+
+        let! textSelectionInfo = corpus.GetTextSelectionInfo(logger, selection)
+
+        return (textAndTokenCount, TextSelectionInfo(textSelectionInfo))
     }

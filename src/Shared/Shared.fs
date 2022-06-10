@@ -421,6 +421,8 @@ type KeepZeroValues = bool
 
 type AccExcludedAttrValues = Set<string>
 
+type TextSelectionInfo = TextSelectionInfo of string
+
 module Route =
     let builder typeName methodName =
         $"/glossa3/api/%s{typeName}/%s{methodName}"
@@ -432,7 +434,7 @@ type IServerApi =
       GetMinAndMaxForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<int64 * int64>
       GetMetadataForTexts: CorpusCode * Metadata.Selection * DatabaseColumn list * PageNumber * Metadata.SortInfo option -> Async<string [] []>
       GetMetadataForSingleText: CorpusCode * Metadata.CategoryNameAndCode list * TextId -> Async<Metadata.CategoryNameAndValue list>
-      GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts>
+      GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts * TextSelectionInfo>
       SearchCorpus: SearchParams -> Async<SearchResultInfo>
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
       DownloadSearchResults: SearchParams * Cwb.PositionalAttribute list * DownloadFormat * ShouldCreateHeader -> Async<byte []>

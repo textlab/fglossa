@@ -235,7 +235,8 @@ type LoadedCorpusModel =
       ShouldShowQuickView: bool
       SelectionTablePageNumber: int
       SelectionTableSort: Metadata.SortInfo option
-      Substate: LoadedCorpusSubstate }
+      Substate: LoadedCorpusSubstate
+      TextSelectionInfo: string }
 
 type Model =
     | LoadingCorpus

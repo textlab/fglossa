@@ -70,7 +70,8 @@ module LoadingCorpus =
                   ShouldShowQuickView = false
                   SelectionTablePageNumber = 1
                   SelectionTableSort = None
-                  Substate = CorpusStart }
+                  Substate = CorpusStart
+                  TextSelectionInfo = "" }
 
             corpus.SharedInfo.GoogleMapsApiKey
             |> Option.iter loadGoogleMapsApi

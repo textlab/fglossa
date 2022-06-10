@@ -10,12 +10,14 @@ open Model
 open Update.Metadata
 
 let textAndTokenCountText (model: LoadedCorpusModel) =
-    let info = model.Corpus.SharedInfo
+    let corpusInfo = model.Corpus.SharedInfo
 
     match (model.NumSelectedTexts, model.NumSelectedTokens) with
-    | Some selectedTexts, selectedTokens when selectedTexts <> info.TotalTexts ->
-        $"{selectedTexts} of {info.TotalTexts} {info.TextsReferral} ({selectedTokens} of {info.TotalTokens} tokens) selected"
-    | _ -> $"All {info.TotalTexts} {info.TextsReferral} ({info.TotalTokens} tokens) selected"
+    | Some selectedTexts, selectedTokens when selectedTexts <> corpusInfo.TotalTexts ->
+        $"{selectedTexts} of {corpusInfo.TotalTexts} {corpusInfo.TextsReferral} ({selectedTokens}
+          of {corpusInfo.TotalTokens} tokens) selected {model.TextSelectionInfo}"
+    | _ ->
+        $"All {corpusInfo.TotalTexts} {corpusInfo.TextsReferral} ({corpusInfo.TotalTokens} tokens) selected {model.TextSelectionInfo}"
 
 [<ReactComponent(import = "default", from = "../../react_components/metadata_geo_map/Meta.jsx")>]
 let MetadataGeoMap
