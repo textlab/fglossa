@@ -600,15 +600,19 @@ module ResultsView =
                 |> Array.map (fun (locationName, lat, lng) -> locationName, (lat, lng))
                 |> Map.ofArray
 
-            //            printfn "Unknown locations:"
-//
-//            let unknownLocations =
-//                [| for locationName in locationNames do
-//                       if allCoordsMap.TryFind(locationName).IsNone then
-//                           printfn $"{locationName}"
-//                           yield locationName |]
-//
-//            printfn $"Unknown locations: {unknownLocations.Length}"
+            let unknownLocations =
+                [| for locationName in locationNames do
+                       if allCoordsMap.TryFind(locationName).IsNone then
+                           locationName |]
+
+            if unknownLocations.Length > 0 then
+                let msg =
+                    [ "UNKNOWN LOCATIONS:"
+                      unknownLocations |> String.concat "\n"
+                      $"Number of unknown locations: {unknownLocations.Length}" ]
+                    |> String.concat "\n"
+
+                Fable.Core.JS.console.warn msg
 
             let coords =
                 [| for locationName in locationNames do
