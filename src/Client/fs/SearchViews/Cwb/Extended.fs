@@ -225,70 +225,7 @@ let AttributeModal
                                                                                     sectionIndex
                                                                                     menuSection.Values
                                                                                     termSectionSelection ] ] ]
-                            yield! subcategoryPanels
-                            Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.input.text [ prop.style [ style.width
-                                                                                                                  200 ]
-                                                                                                 prop.value
-                                                                                                     modalModel.IncludeExcludeInput
-                                                                                                 prop.onChange (
-                                                                                                     CwbExtendedSetExtraForm
-                                                                                                     >> dispatch
-                                                                                                 ) ] ]
-                                                            Bulma.levelItem [ Bulma.select [ prop.disabled (
-                                                                                                 modalModel.IncludeExcludeInput =
-                                                                                                     ""
-                                                                                             )
-                                                                                             prop.value "default"
-                                                                                             prop.onChange
-
-                                                                                                 (fun (command: string) ->
-                                                                                                     dispatch (
-                                                                                                         CwbExtendedIncludeOrExcludeExtraForm(
-                                                                                                             query,
-                                                                                                             queryIndex,
-                                                                                                             term,
-                                                                                                             termIndex,
-                                                                                                             command
-                                                                                                         )
-                                                                                                     ))
-                                                                                             prop.children
-                                                                                                 includeExcludeOptions ] ]
-                                                            Bulma.levelItem [ Bulma.tags (
-                                                                                  includeExcludeTags
-                                                                                      query
-                                                                                      0
-                                                                                      term
-                                                                                      termIndex
-                                                                                      dispatch
-                                                                              ) ] ] ]
-                            Bulma.level [ Bulma.levelLeft (
-                                              Bulma.levelItem [ prop.text
-                                                                    "Click to select; alt/option + click to exclude" ]
-                                          )
-                                          Bulma.levelRight (
-                                              Bulma.buttons [ Bulma.button.button [ color.isDanger
-                                                                                    prop.onClick (fun _ ->
-                                                                                        dispatch (
-                                                                                            CwbExtendedClearAttributeCategories(
-                                                                                                query,
-                                                                                                queryIndex,
-                                                                                                term,
-                                                                                                termIndex
-                                                                                            )
-                                                                                        ))
-                                                                                    prop.text "Clear" ]
-                                                              Bulma.button.button [ color.isSuccess
-                                                                                    prop.onClick (fun _ ->
-                                                                                        dispatch Search)
-                                                                                    prop.text "Search" ]
-                                                              Bulma.button.button [ color.isInfo
-                                                                                    prop.onClick (fun _ ->
-                                                                                        dispatch (
-                                                                                            CwbExtendedToggleAttrModal
-                                                                                                None
-                                                                                        ))
-                                                                                    prop.text "Close" ] ]
-                                          ) ] ])
+                            yield! subcategoryPanels ])
         | None -> []
 
     let elementRef = React.useElementRef ()
@@ -300,6 +237,71 @@ let AttributeModal
     // Focus the modal when mounted to enable it to receive keyboard events
     React.useEffectOnce focusModal
 
+    let includeExcludeControls =
+        Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ Bulma.input.text [ prop.style [ style.width 200 ]
+                                                                             prop.value modalModel.IncludeExcludeInput
+                                                                             prop.onChange (
+                                                                                 CwbExtendedSetExtraForm >> dispatch
+                                                                             ) ] ]
+                                        Bulma.levelItem [ Bulma.select [ prop.disabled (
+                                                                             modalModel.IncludeExcludeInput = ""
+                                                                         )
+                                                                         prop.value "default"
+                                                                         prop.onChange
+
+                                                                             (fun (command: string) ->
+                                                                                 dispatch (
+                                                                                     CwbExtendedIncludeOrExcludeExtraForm(
+                                                                                         query,
+                                                                                         queryIndex,
+                                                                                         term,
+                                                                                         termIndex,
+                                                                                         command
+                                                                                     )
+                                                                                 ))
+                                                                         prop.children includeExcludeOptions ] ]
+                                        Bulma.levelItem [ Bulma.tags (
+                                                              includeExcludeTags query 0 term termIndex dispatch
+                                                          ) ] ] ]
+
+    let footer =
+        Bulma.modalCardFoot [ prop.style [ style.display.block ]
+                              prop.children [ Bulma.level [ Bulma.levelLeft (
+                                                                Bulma.levelItem [ prop.text
+                                                                                      "Click to select; alt/option + click to exclude" ]
+                                                            )
+                                                            Bulma.levelRight (
+                                                                Bulma.levelItem [ Bulma.button.button [ color.isDanger
+                                                                                                        prop.onClick
+                                                                                                            (fun _ ->
+                                                                                                                dispatch (
+                                                                                                                    CwbExtendedClearAttributeCategories(
+                                                                                                                        query,
+                                                                                                                        queryIndex,
+                                                                                                                        term,
+                                                                                                                        termIndex
+                                                                                                                    )
+                                                                                                                ))
+                                                                                                        prop.text
+                                                                                                            "Clear" ]
+                                                                                  Bulma.button.button [ color.isSuccess
+                                                                                                        prop.onClick
+                                                                                                            (fun _ ->
+                                                                                                                dispatch
+                                                                                                                    Search)
+                                                                                                        prop.text
+                                                                                                            "Search" ]
+                                                                                  Bulma.button.button [ color.isInfo
+                                                                                                        prop.onClick
+                                                                                                            (fun _ ->
+                                                                                                                dispatch (
+                                                                                                                    CwbExtendedToggleAttrModal
+                                                                                                                        None
+                                                                                                                ))
+                                                                                                        prop.text
+                                                                                                            "Close" ] ]
+                                                            ) ] ] ]
+
     Bulma.modal [ modal.isActive
                   // Set elementRef in order to apply the focusModal() function to this element
                   prop.ref elementRef
@@ -310,8 +312,13 @@ let AttributeModal
                           dispatch (CwbExtendedToggleAttrModal None))
                   prop.children [ Bulma.modalBackground [ prop.onClick (fun _ ->
                                                               dispatch (CwbExtendedToggleAttrModal None)) ]
-                                  Bulma.modalContent [ prop.style [ style.width 900 ]
-                                                       prop.children [ Bulma.box attrMenu ] ]
+                                  Bulma.modalCard [ prop.style [ style.width 900 ]
+                                                    prop.children [ Bulma.modalCardBody [ prop.style [ style.width 900 ]
+                                                                                          prop.children [ Bulma.box
+                                                                                                              attrMenu
+                                                                                                          includeExcludeControls ] ]
+
+                                                                    footer ] ]
 
                                   Bulma.modalClose [ button.isLarge
                                                      prop.onClick (fun _ -> dispatch (CwbExtendedToggleAttrModal None)) ] ] ]
