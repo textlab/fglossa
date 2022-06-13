@@ -1157,6 +1157,7 @@ module LoadedCorpus =
                                 cat)
                     else
                         sectionMainCategories)
+                |> List.filter (fun section -> not section.IsEmpty)
 
             let newTerm =
                 { term with CategorySections = newCategorySections }
