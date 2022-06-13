@@ -48,4 +48,4 @@ end
 puts
 puts ".mode ascii"
 puts %q{.separator "\t" "\n"}
-puts ".import #{metadata_file} texts"
+puts ".import --skip 1 #{metadata_file} texts"
