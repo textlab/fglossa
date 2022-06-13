@@ -13,6 +13,8 @@ metadata_file =
 
 the_module = corpus_dir.split('_').collect(&:capitalize).join
 
+system("mkdir -p #{full_corpus_path}/Shared")
+
 system("./create_metadata_categories.rb #{full_corpus_path}/#{metadata_file} #{the_module} > " +
        "#{full_corpus_path}/Shared/MetadataCategories.fs")
 
