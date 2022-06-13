@@ -5,7 +5,8 @@ import ReactDOM from 'react-dom';
 import createReactClass from 'create-react-class';
 
 var corpusIds = {
-    "ndc2": 52
+    "ndc2": 52,
+    "cans3": 53
 };
 
 export var WFplayer = createReactClass({
