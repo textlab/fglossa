@@ -6,7 +6,7 @@
     </PropertyGroup>
     <ItemGroup>
         <None Include="paket.references"/>
-        <Compile Include="Config.fs"/>
+        <Compile Include="fs/Config.fs"/>
         <Compile Include="fs/Process.fs"/>
         <Compile Include="fs/Database.fs"/>
         <Compile Include="fs/ServerTypes.fs"/>
