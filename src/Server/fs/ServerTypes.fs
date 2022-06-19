@@ -38,6 +38,24 @@ type Corpus(config: SharedCorpusInfo) =
         with
         | :? FileNotFoundException -> None
 
+    let geoCoord =
+        try
+            let coordFile =
+                $"{corpusRoot}/{config.Code}/{config.Code}_coords.tsv"
+
+            [| for line in File.ReadAllLines(coordFile) ->
+                   try
+                       let fields = line.Split('\t')
+                       let locationName = fields[0]
+                       let lat = float fields[1]
+                       let lng = float fields[2]
+                       (locationName, lat, lng)
+                   with
+                   | e -> failwith $"Error in geo coordinate line: {line}" |]
+            |> Some
+        with
+        | :? FileNotFoundException -> None
+
     member _.Config =
         let googleMapsApiKey =
             System.Environment.GetEnvironmentVariable("GOOGLE_MAPS_API_KEY")
@@ -49,6 +67,7 @@ type Corpus(config: SharedCorpusInfo) =
 
         { config with
             Info = corpusInfo
+            GeoCoordinates = geoCoord
             GoogleMapsApiKey = googleMapsApiKey
             GoogleTranslateApiKey = googleTranslateApiKey }
 

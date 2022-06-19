@@ -6,10 +6,10 @@
     </PropertyGroup>
     <ItemGroup>
         <None Include="paket.references"/>
-        <Compile Include="fs/Config.fs"/>
         <Compile Include="fs/Process.fs"/>
         <Compile Include="fs/Database.fs"/>
         <Compile Include="fs/ServerTypes.fs"/>
+        <Compile Include="fs/Config.fs"/>
         <Compile Include="fs/Templates/App.fs"/>
         <Compile Include="fs/Templates/Index.fs"/>
         <Compile Include="fs/Templates/NotFound.fs"/>

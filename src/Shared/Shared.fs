@@ -157,14 +157,14 @@ type GeoMapConfig =
       CenterLng: float
       ZoomLevel: float
       MetadataCategories: Metadata.GeoMapCategoryConfig list
-      LocationMetadataCategory: Metadata.GeoMapCategoryConfig
-      Coordinates: (string * float * float) [] }
+      LocationMetadataCategory: Metadata.GeoMapCategoryConfig }
 
 /// Corpus info that is shared between server and client.
 type SharedCorpusInfo =
     { Code: string
       ExternalTools: ExternalTool list
       FontFamily: string option
+      GeoCoordinates: (string * float * float) [] option
       GeoMapConfig: GeoMapConfig option
       GoogleMapsApiKey: string option
       GoogleTranslateApiKey: string option
@@ -205,6 +205,7 @@ type SharedCorpusInfo =
         { Code = code
           ExternalTools = defaultArg externalTools []
           FontFamily = None
+          GeoCoordinates = None
           GeoMapConfig = defaultArg geoMapConfig None
           GoogleMapsApiKey = None
           GoogleTranslateApiKey = None

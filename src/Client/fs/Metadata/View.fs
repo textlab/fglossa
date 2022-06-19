@@ -754,6 +754,7 @@ module MetadataMenu =
     [<ReactComponent>]
     let MetadataGeoMapModal
         (googleMapsApiKey: string)
+        (geoCoords: (string * float * float) [])
         (geoMapConfig: GeoMapConfig)
         (metadata: string [] [])
         (allCategories: Category list)
@@ -770,7 +771,7 @@ module MetadataMenu =
         React.useEffectOnce focusModal
 
         let coords =
-            createObj [| for (place, lat, lng) in geoMapConfig.Coordinates -> (place, [| lat; lng |]) |]
+            createObj [| for (place, lat, lng) in geoCoords -> (place, [| lat; lng |]) |]
 
         let config =
             {| API_KEY = googleMapsApiKey
@@ -924,12 +925,16 @@ module MetadataMenu =
                         | Some config ->
                             match model.Corpus.SharedInfo.GoogleMapsApiKey with
                             | Some key ->
-                                MetadataGeoMapModal
-                                    key
-                                    config
-                                    model.FetchedTextMetadata
-                                    model.Corpus.MetadataQuickView
-                                    dispatch
+                                match model.Corpus.SharedInfo.GeoCoordinates with
+                                | Some coords ->
+                                    MetadataGeoMapModal
+                                        key
+                                        coords
+                                        config
+                                        model.FetchedTextMetadata
+                                        model.Corpus.MetadataQuickView
+                                        dispatch
+                                | None -> failwith "No geographical coordinates provided!"
                             | None ->
                                 failwith
                                     "No Google Maps API key provided! Set it in the environment variable GOOGLE_MAPS_API_KEY."

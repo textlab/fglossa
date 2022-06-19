@@ -474,7 +474,11 @@ module ResultsView =
             React.imported ()
 
         [<ReactComponent>]
-        let GeoMapController (geoMapConfig: GeoMapConfig) (coordMap: Map<string, Map<string, int64>>) =
+        let GeoMapController
+            (allCoords: (string * float * float) [])
+            (geoMapConfig: GeoMapConfig)
+            (coordMap: Map<string, Map<string, int64>>)
+            =
             let selectedColor, setSelectedColor =
                 React.useState ("yellow")
 
@@ -596,7 +600,7 @@ module ResultsView =
                 |> Map.ofArray
 
             let allCoordsMap =
-                geoMapConfig.Coordinates
+                allCoords
                 |> Array.map (fun (locationName, lat, lng) -> locationName, (lat, lng))
                 |> Map.ofArray
 
@@ -1096,7 +1100,10 @@ module ResultsView =
                           showingResultsModel.ConcordanceModel
                           corpus
                           (ShowingResults.ConcordanceMsg >> dispatch)
-              | GeoDistributionMap (geoMapConfig, coordMap) -> GeoDistrMap.GeoMapController geoMapConfig coordMap
+              | GeoDistributionMap (geoMapConfig, coordMap) ->
+                  match corpus.SharedInfo.GeoCoordinates with
+                  | Some coords -> GeoDistrMap.GeoMapController coords geoMapConfig coordMap
+                  | None -> failwith "No geographical coordinates provided!"
               | FrequencyLists frequencyListsModel ->
                   FrequencyLists.view
                       loadedCorpusModel
