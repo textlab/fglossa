@@ -39,46 +39,6 @@ let cleanupResult (result: SearchResult) =
 
     { result with Text = cleanLines }
 
-module LoadingCorpus =
-
-    ////////////////////////////////
-    // Update.LoadingCorpus
-    ////////////////////////////////
-    type Msg = FetchedCorpusConfig of SharedCorpusInfo
-
-    let update (msg: Msg) (_model: Model) =
-        match msg with
-        | FetchedCorpusConfig corpusConfig ->
-            let corpus =
-                Corpora.Client.getCorpus corpusConfig
-
-            let m =
-                { Corpus = corpus
-                  FetchedMetadataValues = [||]
-                  FetchedMinAndMax = None
-                  FetchedTextMetadata = [| [||] |]
-                  GeoDistribution = Map.empty
-                  IsMetadataGeoMapOpen = false
-                  IsNarrowWindow = false
-                  IsSelectionTableOpen = false
-                  IntervalCategoryModes = Map.empty
-                  NumSelectedTexts = None
-                  NumSelectedTokens = None
-                  OpenMetadataCategoryCode = None
-                  Search = Search.Init(corpus.SharedInfo)
-                  ShouldShowMetadataMenu = None
-                  ShouldShowQuickView = false
-                  SelectionTablePageNumber = 1
-                  SelectionTableSort = None
-                  Substate = CorpusStart
-                  TextSelectionInfo = "" }
-
-            corpus.SharedInfo.GoogleMapsApiKey
-            |> Option.iter loadGoogleMapsApi
-
-            LoadedCorpus m, Cmd.none
-
-
 module LoadedCorpus =
 
     module ShowingResults =
@@ -1327,6 +1287,48 @@ module LoadedCorpus =
                 ShouldShowQuickView = false },
             Cmd.none
 
+
+module LoadingCorpus =
+
+    ////////////////////////////////
+    // Update.LoadingCorpus
+    ////////////////////////////////
+    type Msg = FetchedCorpusConfig of SharedCorpusInfo
+
+    let update (msg: Msg) (_model: Model) =
+        match msg with
+        | FetchedCorpusConfig corpusConfig ->
+            let corpus =
+                Corpora.Client.getCorpus corpusConfig
+
+            let m, cmd =
+                { Corpus = corpus
+                  FetchedMetadataValues = [||]
+                  FetchedMinAndMax = None
+                  FetchedTextMetadata = [| [||] |]
+                  GeoDistribution = Map.empty
+                  IsMetadataGeoMapOpen = false
+                  IsNarrowWindow = false
+                  IsSelectionTableOpen = false
+                  IntervalCategoryModes = Map.empty
+                  NumSelectedTexts = None
+                  NumSelectedTokens = None
+                  OpenMetadataCategoryCode = None
+                  Search = Search.Init(corpus.SharedInfo)
+                  ShouldShowMetadataMenu = None
+                  ShouldShowQuickView = false
+                  SelectionTablePageNumber = 1
+                  SelectionTableSort = None
+                  Substate = CorpusStart
+                  TextSelectionInfo = "" }
+                |> Update.Metadata.update (Update.Metadata.Msg.FetchTextAndTokenCounts)
+
+            corpus.SharedInfo.GoogleMapsApiKey
+            |> Option.iter loadGoogleMapsApi
+
+            LoadedCorpus m, Cmd.map LoadedCorpus.MetadataMsg cmd
+
+
 ////////////////////////////////
 // Update
 ////////////////////////////////
@@ -1352,7 +1354,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         let newModel, cmd =
             LoadingCorpus.update msg' model
 
-        newModel, Cmd.map LoadingCorpusMsg cmd
+        newModel, Cmd.map LoadedCorpusMsg cmd
     | LoadedCorpusMsg msg', LoadedCorpus model' ->
         let newModel, cmd =
             LoadedCorpus.update msg' model'
