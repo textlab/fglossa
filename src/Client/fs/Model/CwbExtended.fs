@@ -15,18 +15,21 @@ type AttrOperator =
     | Equals
     | NotEquals
     | Contains
+    | NotContains
     static member OfString(s) =
         match s with
         | "=" -> Equals
         | "!=" -> NotEquals
-        | "contains" -> Contains
+        | "%contains%" -> Contains
+        | "%not%contains%" -> Contains
         | _ -> failwith $"Unrecognized operator: {s}"
 
     member this.ToOperatorString() =
         match this with
         | Equals -> "="
         | NotEquals -> "!="
-        | Contains -> "contains"
+        | Contains -> "%contains%"
+        | NotContains -> "%not%contains%"
 
 type ExtraForm =
     { Attr: string
@@ -44,7 +47,7 @@ type Subcategory =
             |> Array.sort
             |> String.concat "|"
 
-        $"{this.Attr}=\"{valueStr}\""
+        $"{this.Attr}{this.Operator.ToOperatorString()}\"{valueStr}\""
 
 /// Used to represent CWB attribute selections in a query such as parts of speech
 /// with their morphosyntactic categories as subcategories
@@ -357,7 +360,9 @@ let handleAttributeValue
                     |> Array.map (
                         replace "%c" ""
                         >> fun s ->
-                            let m = Regex.Match(s, "(.+?)(!?=)\"(.+)\"")
+                            let m =
+                                Regex.Match(s, "(.+?)(!?=|%(?:not%)?contains%)\"(.+)\"")
+
                             (m.Groups[1].Value, AttrOperator.OfString(m.Groups[2].Value), m.Groups[3].Value)
                     )
 
@@ -396,7 +401,8 @@ let handleAttributeValue
                               let categories =
                                   [ for category in categoryStrings ->
                                         let attributeValuePairs =
-                                            [ for pair in Regex.Matches(category, "(\w+)(!?=)\"(.+?)\"") ->
+                                            [ for pair in
+                                                  Regex.Matches(category, "(\w+)(!?=|%(?:not%)?contains%)\"(.+?)\"") ->
                                                   { Attr = pair.Groups[1].Value
                                                     Operator = pair.Groups[2].Value |> AttrOperator.OfString
                                                     Values = pair.Groups[ 3 ].Value.Split('|') |> Set.ofArray } ]

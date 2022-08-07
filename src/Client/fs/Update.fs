@@ -99,8 +99,24 @@ module LoadedCorpus =
 
                 match msg with
                 | PerformSearchStep ->
+                    // The version of the queries we send to the server need to have some placeholders replaced,
+                    // but for the client code we still need those placeholders, so just replace them in the argument
+                    // to the server call, not in the client model.
+                    let queriesWithTextReplacements =
+                        loadedCorpusModel.Search.Params.Queries
+                        |> Array.map (fun query ->
+                            { query with
+                                QueryString =
+                                    query.QueryString
+                                    |> replace "\"__QUOTE__\"" "'\"'"
+                                    |> replace "%not%contains%" " not contains "
+                                    |> replace "%contains%" " contains " })
+
+                    let paramsWithTextReplacements =
+                        { loadedCorpusModel.Search.Params with Queries = queriesWithTextReplacements }
+
                     let cmd =
-                        Cmd.OfAsync.perform serverApi.SearchCorpus loadedCorpusModel.Search.Params SearchResultsReceived
+                        Cmd.OfAsync.perform serverApi.SearchCorpus paramsWithTextReplacements SearchResultsReceived
 
                     loadedCorpusModel, concordanceModel, cmd
 
@@ -1232,20 +1248,11 @@ module LoadedCorpus =
             // should do instead is to cancel the actual search that is running on the server.
 
             if shouldSearch then
-                let queries =
-                    loadedCorpusModel.Search.Params.Queries
-                    |> Array.map (fun query ->
-                        { query with
-                            QueryString =
-                                query.QueryString
-                                |> replace "\"__QUOTE__\"" "'\"'" })
-
                 let searchParams =
                     { loadedCorpusModel.Search.Params with
                         CpuCounts = None
                         End = 99L
                         LastCount = None
-                        Queries = queries
                         SearchId = 0
                         Start = 0L
                         Step = 1 }

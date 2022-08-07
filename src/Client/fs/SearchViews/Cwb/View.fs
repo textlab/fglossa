@@ -75,6 +75,8 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
         | Cqp ->
             query.QueryString
             |> replace "__QUOTE__" "\""
+            |> replace "%not%contains%" " not contains "
+            |> replace "%contains%" " contains "
             |> fun text ->
                 if query.HasFinalSpace then
                     text + " "
@@ -117,7 +119,9 @@ let view (corpus: Corpus) (search: Search) (dispatch: Msg -> unit) =
                 // them from confusing our regexes later on
                 inputValue.Trim()
                 |> (replace "word=\"\\\"\"" "word=\"__QUOTE__\""
-                    >> replace "^\\\"$" "[word=\"__QUOTE__\"]")
+                    >> replace "^\\\"$" "[word=\"__QUOTE__\"]"
+                    >> replace " not contains " "%not%contains%"
+                    >> replace " contains " "%contains%")
 
             let hasFinalSpace =
                 Regex.IsMatch(inputValue, "\s+$")

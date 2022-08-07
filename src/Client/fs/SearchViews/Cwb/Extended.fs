@@ -76,7 +76,15 @@ let AttributeModal
                                                   prop.onClick (fun e ->
                                                       let category =
                                                           { Attr = attr.Code
-                                                            Operator = if e.altKey then NotEquals else Equals
+                                                            Operator =
+                                                              // If the attribute is called "descr", it may contain
+                                                              // multiple values, whereas other attributes only contain
+                                                              // a single value
+                                                              match e.altKey, attr.Code with
+                                                              | true, "descr" -> NotContains
+                                                              | true, _ -> NotEquals
+                                                              | false, "descr" -> Contains
+                                                              | false, _ -> Equals
                                                             Value = attrValue
                                                             Subcategories = None }
 
