@@ -229,12 +229,19 @@ module ResultsView =
             // Focus the QuickView when mounted to enable it to receive keyboard events
             React.useEffect (focusDownloadWindow, [| box model |])
 
-            let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
+            let attrCheckbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
                              prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
                                                                     prop.onCheckedChange (fun _ ->
                                                                         dispatch (ToggleDownloadAttribute attribute)) ]
                                              Bulma.text.span $" {attribute.Name}" ] ]
+
+            let categoryCheckbox isChecked (category: Metadata.Category) =
+                Html.label [ prop.style [ style.marginRight 15 ]
+                             prop.children [ Bulma.input.checkbox [ prop.isChecked isChecked
+                                                                    prop.onCheckedChange (fun _ ->
+                                                                        dispatch (ToggleDownloadCategory category)) ]
+                                             Bulma.text.span $" {category.Name}" ] ]
 
             let attributeCheckboxes =
                 match corpus.SharedInfo.LanguageConfig with
@@ -243,13 +250,27 @@ module ResultsView =
                     | Some attrs ->
                         let checkboxes =
                             [ for attr in corpus.SharedInfo.GetDefaultAttribute() :: attrs ->
-                                  Bulma.control.div [ checkbox (model.DownloadAttributes |> List.contains attr) attr ] ]
+                                  Bulma.control.div [ attrCheckbox (model.DownloadAttributes |> List.contains attr) attr ] ]
 
                         Bulma.field.div [ field.isGrouped
                                           field.isGroupedMultiline
                                           prop.children checkboxes ]
                     | None -> Html.none
                 | Multilingual _languages -> failwith "NOT IMPLEMENTED"
+
+            let metadataCheckboxes =
+                if not corpus.MetadataQuickView.IsEmpty then
+                    let checkboxes =
+                        [ for category in corpus.MetadataQuickView ->
+                              Bulma.control.div [ categoryCheckbox
+                                                      (model.DownLoadCategories |> List.contains category)
+                                                      category ] ]
+
+                    Bulma.field.div [ field.isGrouped
+                                      field.isGroupedMultiline
+                                      prop.children checkboxes ]
+                else
+                    Html.none
 
             let modalFooter =
                 let disableDownload =
@@ -302,6 +323,20 @@ module ResultsView =
                                                                             prop.text "Comma-separated" ]
                                                   ) ] ] ]
 
+            let modalCardBody =
+                Html.span [ Bulma.message [ color.isInfo
+                                            prop.children [ Bulma.messageHeader [ Html.p "Attributes" ]
+                                                            Bulma.messageBody [ Bulma.field.div [ field.isGrouped
+                                                                                                  field.isGroupedMultiline
+                                                                                                  prop.children
+                                                                                                      attributeCheckboxes ] ] ] ]
+                            Bulma.message [ color.isInfo
+                                            prop.children [ Bulma.messageHeader [ Html.p "Metadata categories" ]
+                                                            Bulma.messageBody [ Bulma.field.div [ field.isGrouped
+                                                                                                  field.isGroupedMultiline
+                                                                                                  prop.children
+                                                                                                      metadataCheckboxes ] ] ] ] ]
+
             Bulma.modal [ if model.ShouldShowDownloadWindow then
                               modal.isActive
                           // Set elementRef in order to apply the focusDownloadWindow() function to this element
@@ -318,15 +353,7 @@ module ResultsView =
                                                                                                      (fun _ ->
                                                                                                          dispatch
                                                                                                              CloseDownloadWindow) ] ]
-                                                            Bulma.modalCardBody (
-                                                                Bulma.message [ color.isInfo
-                                                                                prop.children [ Bulma.messageHeader [ Html.p
-                                                                                                                          "Attributes" ]
-                                                                                                Bulma.messageBody [ Bulma.field.div [ field.isGrouped
-                                                                                                                                      field.isGroupedMultiline
-                                                                                                                                      prop.children
-                                                                                                                                          attributeCheckboxes ] ] ] ]
-                                                            )
+                                                            Bulma.modalCardBody modalCardBody
                                                             Bulma.modalCardFoot modalFooter ] ] ]
 
 

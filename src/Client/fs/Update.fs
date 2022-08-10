@@ -66,6 +66,7 @@ module LoadedCorpus =
                 | OpenDownloadWindow
                 | CloseDownloadWindow
                 | ToggleDownloadAttribute of Cwb.PositionalAttribute
+                | ToggleDownloadCategory of Metadata.Category
                 | ToggleHeadersInDownload
                 | DownloadSearchResults of DownloadFormat
                 | DownloadedSearchResults of byte []
@@ -422,29 +423,49 @@ module LoadedCorpus =
                 | CloseDownloadWindow ->
                     loadedCorpusModel, { concordanceModel with ShouldShowDownloadWindow = false }, Cmd.none
                 | ToggleDownloadAttribute attribute ->
-                    let alreadyExists =
+                    let maybeAlreadyExistsAt =
                         concordanceModel.DownloadAttributes
-                        |> List.contains attribute
+                        |> List.tryFindIndex (fun a -> a = attribute)
 
                     let newAttributes =
-                        if alreadyExists then
+                        match maybeAlreadyExistsAt with
+                        | Some index ->
                             concordanceModel.DownloadAttributes
-                            |> List.filter (fun attr -> attr <> attribute)
-                        else
+                            |> List.removeAt index
+                        | None ->
                             concordanceModel.DownloadAttributes
                             @ [ attribute ]
 
                     loadedCorpusModel, { concordanceModel with DownloadAttributes = newAttributes }, Cmd.none
+                | ToggleDownloadCategory category ->
+                    let maybeAlreadyExistsAt =
+                        concordanceModel.DownLoadCategories
+                        |> List.tryFindIndex (fun c -> c = category)
+
+                    let newCategories =
+                        match maybeAlreadyExistsAt with
+                        | Some index ->
+                            concordanceModel.DownLoadCategories
+                            |> List.removeAt index
+                        | None -> concordanceModel.DownLoadCategories @ [ category ]
+
+                    loadedCorpusModel, { concordanceModel with DownLoadCategories = newCategories }, Cmd.none
                 | ToggleHeadersInDownload ->
                     loadedCorpusModel,
                     { concordanceModel with HeadersInDownload = not concordanceModel.HeadersInDownload },
                     Cmd.none
                 | DownloadSearchResults format ->
+                    let categoryNamesAndCodes: Metadata.CategoryNameAndCode list =
+                        [ for category in concordanceModel.DownLoadCategories ->
+                              { Name = category.Name
+                                Code = category.Code } ]
+
                     let cmd =
                         Cmd.OfAsync.perform
                             serverApi.DownloadSearchResults
                             (loadedCorpusModel.Search.Params,
                              concordanceModel.DownloadAttributes,
+                             categoryNamesAndCodes,
                              format,
                              concordanceModel.HeadersInDownload)
                             DownloadedSearchResults

@@ -48,8 +48,14 @@ let createServerApi ctx =
       GetSearchResults =
         fun (searchParams, pageNumbers) -> Remoting.Search.Core.getSearchResults logger searchParams None pageNumbers
       DownloadSearchResults =
-        fun (searchParams, attributes, format, shouldCreateHeader) ->
-            Remoting.Search.Core.downloadSearchResults logger searchParams attributes format shouldCreateHeader
+        fun (searchParams, attributes, metadataCategories, format, shouldCreateHeader) ->
+            Remoting.Search.Core.downloadSearchResults
+                logger
+                searchParams
+                attributes
+                metadataCategories
+                format
+                shouldCreateHeader
       GetMediaObject =
         fun (searchParams, mediaPlayerType, pageNumber, resultIndex, contextSize, contextUnit) ->
             Remoting.Search.Cwb.Spoken.getMediaObject

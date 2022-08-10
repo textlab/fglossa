@@ -4,6 +4,8 @@ open System.IO
 open System.Text.RegularExpressions
 open Serilog
 open ClosedXML
+open Microsoft.Data.Sqlite
+open ServerTypes
 open Shared
 
 let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams) =
@@ -26,11 +28,13 @@ let getSearchResults (logger: ILogger) (searchParams: SearchParams) maybeAttribu
             | Fcs -> failwith "Not implemented"
     }
 
+type TidAndMetadataValue = { Tid: string; MetadataValue: string }
 
 let downloadSearchResults
     (logger: ILogger)
     (searchParams: SearchParams)
     (attributes: Cwb.PositionalAttribute list)
+    (metadataCategories: Metadata.CategoryNameAndCode list)
     (format: DownloadFormat)
     (shouldCreateHeader: bool)
     : Async<byte []> =
@@ -52,6 +56,31 @@ let downloadSearchResults
             match corpus.Config.SearchEngine with
             | Cwb -> Cwb.Core.getSearchResults logger searchParamsForDownload corpus (Some attributes) pageNumbers
             | Fcs -> failwith "Not implemented"
+
+        let metadata =
+            let connStr = getConnectionString corpus.Config.Code
+            use connection =
+                new SqliteConnection(connStr)
+
+            [ for category in metadataCategories ->
+                  let sanitizedCode =
+                      Database.sanitizeString category.Code
+
+                  let sql =
+                      $"SELECT tid as Tid, {sanitizedCode} AS MetadataValue FROM texts"
+
+                  let rowsTask =
+                      Database.query logger connection sql None
+
+                  match rowsTask.Result with
+                  | Ok (rows: TidAndMetadataValue seq) ->
+                      let valueMap =
+                          [ for row in rows -> row.Tid, row.MetadataValue ]
+                          |> Map.ofList
+
+                      category.Code, valueMap
+                  | Error e -> raise e ]
+            |> Map.ofList
 
         let results =
             resultPages
@@ -114,10 +143,12 @@ let downloadSearchResults
             if shouldCreateHeader then
                 worksheet.Cell(1, 1).Value <- "Corpus position"
 
-                worksheet.Cell(1, 2).Value <- idHeader
-                worksheet.Cell(1, 3).Value <- "Left context"
-                worksheet.Cell(1, 4).Value <- "Match"
-                worksheet.Cell(1, 5).Value <- "Right context"
+                for index, category in metadataCategories |> List.indexed do
+                    worksheet.Cell(1, 2 + index).Value <- category.Name
+
+                worksheet.Cell(1, metadataCategories.Length + 2).Value <- "Left context"
+                worksheet.Cell(1, metadataCategories.Length + 3).Value <- "Match"
+                worksheet.Cell(1, metadataCategories.Length + 4).Value <- "Right context"
 
             let rowDisplacement =
                 if shouldCreateHeader then 2 else 1
@@ -125,10 +156,17 @@ let downloadSearchResults
             results
             |> Array.iteri (fun resultIndex (corpusPosition, segmentId, leftContext, theMatch, rightContext) ->
                 worksheet.Cell(resultIndex + rowDisplacement, 1).Value <- corpusPosition
-                worksheet.Cell(resultIndex + rowDisplacement, 2).Value <- segmentId
-                worksheet.Cell(resultIndex + rowDisplacement, 3).Value <- leftContext
-                worksheet.Cell(resultIndex + rowDisplacement, 4).Value <- theMatch
-                worksheet.Cell(resultIndex + rowDisplacement, 5).Value <- rightContext)
+
+                for index, category in metadataCategories |> List.indexed do
+                    worksheet.Cell(resultIndex + rowDisplacement, index + 2).Value <- match metadata[category.Code]
+                                                                                                .TryFind(segmentId)
+                                                                                          with
+                                                                                      | Some value -> value
+                                                                                      | None -> ""
+
+                worksheet.Cell(resultIndex + rowDisplacement, metadataCategories.Length + 2).Value <- leftContext
+                worksheet.Cell(resultIndex + rowDisplacement, metadataCategories.Length + 3).Value <- theMatch
+                worksheet.Cell(resultIndex + rowDisplacement, metadataCategories.Length + 4).Value <- rightContext)
 
             use outputStream = new MemoryStream()
             workbook.SaveAs(outputStream)

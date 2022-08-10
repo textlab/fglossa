@@ -96,6 +96,7 @@ type ConcordanceModel =
       DownloadingFormat: DownloadFormat option
       HeadersInDownload: bool
       DownloadAttributes: Cwb.PositionalAttribute list
+      DownLoadCategories: Metadata.Category list
       // The page numbers of the result pages currently being fetched from the server
       NumResults: int64 option
       NumSteps: int
@@ -122,6 +123,7 @@ type ConcordanceModel =
           DownloadingFormat = None
           HeadersInDownload = true
           DownloadAttributes = []
+          DownLoadCategories = []
           NumResults = None
           NumSteps = numSteps
           PagesBeingFetched = [||]

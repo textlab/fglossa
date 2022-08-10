@@ -438,7 +438,7 @@ type IServerApi =
       GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts * TextSelectionInfo>
       SearchCorpus: SearchParams -> Async<SearchResultInfo>
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
-      DownloadSearchResults: SearchParams * Cwb.PositionalAttribute list * DownloadFormat * ShouldCreateHeader -> Async<byte []>
+      DownloadSearchResults: SearchParams * Cwb.PositionalAttribute list * Metadata.CategoryNameAndCode list * DownloadFormat * ShouldCreateHeader -> Async<byte []>
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
       GetGeoDistribution: SearchParams -> Async<GeoDistribution>
       GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * FreqListTokenBoundaries -> Async<string []>
