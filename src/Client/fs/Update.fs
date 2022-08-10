@@ -455,17 +455,21 @@ module LoadedCorpus =
                     { concordanceModel with HeadersInDownload = not concordanceModel.HeadersInDownload },
                     Cmd.none
                 | DownloadSearchResults format ->
-                    let categoryNamesAndCodes: Metadata.CategoryNameAndCode list =
+                    let categoryInfos: Metadata.CategoryInfo list =
                         [ for category in concordanceModel.DownLoadCategories ->
                               { Name = category.Name
-                                Code = category.Code } ]
+                                Code = category.Code
+                                Type =
+                                  match category with
+                                  | :? Metadata.NumberCategory -> Metadata.NumberCategoryType
+                                  | _ -> Metadata.StringCategoryType } ]
 
                     let cmd =
                         Cmd.OfAsync.perform
                             serverApi.DownloadSearchResults
                             (loadedCorpusModel.Search.Params,
                              concordanceModel.DownloadAttributes,
-                             categoryNamesAndCodes,
+                             categoryInfos,
                              format,
                              concordanceModel.HeadersInDownload)
                             DownloadedSearchResults

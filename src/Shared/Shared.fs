@@ -107,7 +107,17 @@ module Metadata =
     type CategoryCode = string
     type CategoryMenuOption = { Name: string; Value: string }
 
+    type CategoryType =
+        | StringCategoryType
+        | NumberCategoryType
+
+    type CategoryInfo =
+        { Name: string
+          Code: string
+          Type: CategoryType }
+
     type CategoryNameAndCode = { Name: string; Code: string }
+
     type CategoryNameAndValue = CategoryMenuOption
 
     type CategorySelection =
@@ -120,10 +130,6 @@ module Metadata =
     type Selection = Map<CategoryCode, CategorySelection>
 
     type Value = string * string
-
-    type CategoryType =
-        | StringCategoryType
-        | NumberCategoryType
 
     type SortDirection =
         | Asc
@@ -438,7 +444,7 @@ type IServerApi =
       GetTextAndTokenCount: CorpusCode * Metadata.Selection -> Async<TextAndTokenCounts * TextSelectionInfo>
       SearchCorpus: SearchParams -> Async<SearchResultInfo>
       GetSearchResults: SearchParams * ResultPageNumbers -> Async<SearchResultPage []>
-      DownloadSearchResults: SearchParams * Cwb.PositionalAttribute list * Metadata.CategoryNameAndCode list * DownloadFormat * ShouldCreateHeader -> Async<byte []>
+      DownloadSearchResults: SearchParams * Cwb.PositionalAttribute list * Metadata.CategoryInfo list * DownloadFormat * ShouldCreateHeader -> Async<byte []>
       GetMediaObject: SearchParams * MediaPlayerType * int * int * int * string -> Async<MediaPlayerType * int * MediaObject>
       GetGeoDistribution: SearchParams -> Async<GeoDistribution>
       GetFrequencyList: SearchParams * Cwb.PositionalAttribute list * IsCaseSensitive * FreqListTokenBoundaries -> Async<string []>
