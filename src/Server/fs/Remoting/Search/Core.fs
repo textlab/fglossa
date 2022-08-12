@@ -178,6 +178,49 @@ let downloadSearchResults
               yield "Match"
               yield "Right context" ]
 
+        let constructExportRows results (separator: string) =
+            [| for corpusPosition, segmentId, leftContext, theMatch, rightContext in results do
+                   // Strip everything after the dot from the segment ID to get the text ID. (Note that in spoken corpora,
+                   // those are actually the same, so the segment ID will not contain any dot).
+                   let tid =
+                       segmentId |> StringUtils.replace "\..+" ""
+
+                   let metadataValues =
+                       [ for categoryInfo in categoryInfos ->
+                             match metadata[categoryInfo.Code] with
+                             | DbStringMap valueMap ->
+                                 match valueMap.TryFind(tid) with
+                                 | Some value ->
+                                     if separator = "," then
+                                         $"\"{value}\""
+                                     else
+                                         value
+                                 | None -> ""
+                             | DbNumberMap valueMap ->
+                                 match valueMap.TryFind(tid) with
+                                 | Some value ->
+                                     if separator = "," then
+                                         $"\"{value}\""
+                                     else
+                                         string value
+                                 | None -> "" ]
+
+                   if separator = "," then
+                       [ yield corpusPosition
+                         yield segmentId
+                         yield! metadataValues
+                         yield $"\"{leftContext}\""
+                         yield $"\"{theMatch}\""
+                         yield $"\"{rightContext}\"" ]
+                   else
+                       [ yield corpusPosition
+                         yield segmentId
+                         yield! metadataValues
+                         yield leftContext
+                         yield theMatch
+                         yield rightContext ]
+                   |> String.concat separator |]
+
         match format with
         | Excel ->
             use workbook = new Excel.XLWorkbook()
@@ -234,31 +277,7 @@ let downloadSearchResults
                 headers |> String.concat "\t"
 
             let resultRows =
-                [| for corpusPosition, segmentId, leftContext, theMatch, rightContext in results do
-                       // Strip everything after the dot from the segment ID to get the text ID. (Note that in spoken corpora,
-                       // those are actually the same, so the segment ID will not contain any dot).
-                       let tid =
-                           segmentId |> StringUtils.replace "\..+" ""
-
-                       let metadataValues =
-                           [ for categoryInfo in categoryInfos ->
-                                 match metadata[categoryInfo.Code] with
-                                 | DbStringMap valueMap ->
-                                     match valueMap.TryFind(tid) with
-                                     | Some value -> value
-                                     | None -> ""
-                                 | DbNumberMap valueMap ->
-                                     match valueMap.TryFind(tid) with
-                                     | Some value -> string value
-                                     | None -> "" ]
-
-                       [ yield corpusPosition
-                         yield segmentId
-                         yield! metadataValues
-                         yield leftContext
-                         yield theMatch
-                         yield rightContext ]
-                       |> String.concat "\t" |]
+                constructExportRows results "\t"
 
             let output =
                 Array.append [| headerRow |] resultRows
@@ -273,8 +292,7 @@ let downloadSearchResults
                 |> String.concat ","
 
             let resultRows =
-                [| for corpusPosition, segmentId, leftContext, theMatch, rightContext in results ->
-                       $"\"{corpusPosition}\",\"{segmentId}\",\"{leftContext}\",\"{theMatch}\",\"{rightContext}\"" |]
+                constructExportRows results ","
 
             let output =
                 Array.append [| headerRow |] resultRows
