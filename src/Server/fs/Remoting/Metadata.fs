@@ -309,7 +309,7 @@ let getMetadataForTexts
                 let joinTable = $"{table}_texts"
 
                 let sql =
-                    $"SELECT {joinTable}.tid as Tid, GROUP_CONCAT({column}, '; ') as CatValues FROM {joinTable} \
+                    $"SELECT {joinTable}.tid AS Tid, GROUP_CONCAT({column}, '; ') AS CatValues FROM {joinTable} \
                        INNER JOIN {table} ON {table}.id = {joinTable}.{table}_id WHERE {column} NOT IN ('', '\N') \
                        GROUP BY {joinTable}.tid"
 

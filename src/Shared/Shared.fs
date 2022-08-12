@@ -114,7 +114,8 @@ module Metadata =
     type CategoryInfo =
         { Name: string
           Code: string
-          Type: CategoryType }
+          Type: CategoryType
+          Table: string }
 
     type CategoryNameAndCode = { Name: string; Code: string }
 

@@ -462,7 +462,8 @@ module LoadedCorpus =
                                 Type =
                                   match category with
                                   | :? Metadata.NumberCategory -> Metadata.NumberCategoryType
-                                  | _ -> Metadata.StringCategoryType } ]
+                                  | _ -> Metadata.StringCategoryType
+                                Table = category.TableName |> Option.defaultValue "texts" } ]
 
                     let cmd =
                         Cmd.OfAsync.perform

@@ -79,22 +79,8 @@ let downloadSearchResults
                       Database.sanitizeString categoryInfo.Code
 
                   match categoryInfo.Type with
-                  | Metadata.StringCategoryType ->
-                      let sql =
-                          $"SELECT tid as Tid, {sanitizedCode} AS MetadataValueString FROM texts"
-
-                      let rowsTask =
-                          Database.query logger connection sql None
-
-                      match rowsTask.Result with
-                      | Ok (rows: TidAndMetadataString seq) ->
-                          let valueMap =
-                              [ for row in rows -> row.Tid, row.MetadataValueString ]
-                              |> Map.ofList
-
-                          categoryInfo.Code, DbStringMap valueMap
-                      | Error e -> raise e
-                  | Metadata.NumberCategoryType ->
+                  // If this is a numerical category which is not many-to-many, return numbers
+                  | Metadata.NumberCategoryType when categoryInfo.Table = "texts" ->
                       let sql =
                           $"SELECT tid as Tid, {sanitizedCode} AS MetadataValueNumber FROM texts"
 
@@ -108,6 +94,34 @@ let downloadSearchResults
                               |> Map.ofList
 
                           categoryInfo.Code, DbNumberMap valueMap
+                      | Error e -> raise e
+
+                  // Otherwise, i.e., if this is a string category (regardless of whether it is many-to-many),
+                  // or it is a numerical many-to-many category, return strings (in the latter case the returned string
+                  // will contain the concatenated numbers).
+                  | _ ->
+                      let sql =
+                          if categoryInfo.Table = "texts" then
+                              $"SELECT tid as Tid, {sanitizedCode} AS MetadataValueString FROM texts"
+                          else
+                              let joinTable =
+                                  $"{categoryInfo.Table}_texts"
+
+                              $"SELECT {joinTable}.tid AS Tid, GROUP_CONCAT({sanitizedCode}, '; ') AS MetadataValueString FROM {joinTable} \
+                               INNER JOIN {categoryInfo.Table} ON {categoryInfo.Table}.id = {joinTable}.{categoryInfo.Table}_id
+                               WHERE {sanitizedCode} NOT IN ('', '\N') \
+                               GROUP BY {joinTable}.tid"
+
+                      let rowsTask =
+                          Database.query logger connection sql None
+
+                      match rowsTask.Result with
+                      | Ok (rows: TidAndMetadataString seq) ->
+                          let valueMap =
+                              [ for row in rows -> row.Tid, row.MetadataValueString ]
+                              |> Map.ofList
+
+                          categoryInfo.Code, DbStringMap valueMap
                       | Error e -> raise e ]
             |> Map.ofList
 
