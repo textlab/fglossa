@@ -185,22 +185,23 @@ let downloadSearchResults
 
             results
             |> Array.iteri (fun resultIndex (corpusPosition, segmentId, leftContext, theMatch, rightContext) ->
+                // Strip everything after the dot from the segment ID to get the text ID. (Note that in spoken corpora,
+                // those are actually the same, so the segment ID will not contain any dot).
+                let tid =
+                    segmentId |> StringUtils.replace "\..+" ""
+
                 worksheet.Cell(resultIndex + rowDisplacement, 1).Value <- corpusPosition
                 worksheet.Cell(resultIndex + rowDisplacement, 2).Value <- segmentId
 
                 for index, categoryInfo in categoryInfos |> List.indexed do
                     match metadata[categoryInfo.Code] with
                     | DbStringMap valueMap ->
-                        worksheet.Cell(resultIndex + rowDisplacement, index + 3).Value <- match
-                                                                                              valueMap.TryFind
-                                                                                                  (segmentId)
+                        worksheet.Cell(resultIndex + rowDisplacement, index + 3).Value <- match valueMap.TryFind(tid)
                                                                                               with
                                                                                           | Some value -> value
                                                                                           | None -> ""
                     | DbNumberMap valueMap ->
-                        worksheet.Cell(resultIndex + rowDisplacement, index + 3).Value <- match
-                                                                                              valueMap.TryFind
-                                                                                                  (segmentId)
+                        worksheet.Cell(resultIndex + rowDisplacement, index + 3).Value <- match valueMap.TryFind(tid)
                                                                                               with
                                                                                           | Some value -> value
                                                                                           | None -> 0
