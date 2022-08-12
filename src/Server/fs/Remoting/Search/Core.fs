@@ -170,11 +170,13 @@ let downloadSearchResults
             | Written -> "Sentence ID"
 
         let headers =
-            [| "Corpus position"
-               idHeader
-               "Left context"
-               "Match"
-               "Right context" |]
+            [ yield "Corpus position"
+              yield idHeader
+              for categoryInfo in categoryInfos do
+                  yield categoryInfo.Name
+              yield "Left context"
+              yield "Match"
+              yield "Right context" ]
 
         match format with
         | Excel ->
@@ -232,12 +234,30 @@ let downloadSearchResults
                 headers |> String.concat "\t"
 
             let resultRows =
-                [| for corpusPosition, segmentId, leftContext, theMatch, rightContext in results ->
-                       [ corpusPosition
-                         segmentId
-                         leftContext
-                         theMatch
-                         rightContext ]
+                [| for corpusPosition, segmentId, leftContext, theMatch, rightContext in results do
+                       // Strip everything after the dot from the segment ID to get the text ID. (Note that in spoken corpora,
+                       // those are actually the same, so the segment ID will not contain any dot).
+                       let tid =
+                           segmentId |> StringUtils.replace "\..+" ""
+
+                       let metadataValues =
+                           [ for categoryInfo in categoryInfos ->
+                                 match metadata[categoryInfo.Code] with
+                                 | DbStringMap valueMap ->
+                                     match valueMap.TryFind(tid) with
+                                     | Some value -> value
+                                     | None -> ""
+                                 | DbNumberMap valueMap ->
+                                     match valueMap.TryFind(tid) with
+                                     | Some value -> string value
+                                     | None -> "" ]
+
+                       [ yield corpusPosition
+                         yield segmentId
+                         yield! metadataValues
+                         yield leftContext
+                         yield theMatch
+                         yield rightContext ]
                        |> String.concat "\t" |]
 
             let output =
@@ -249,7 +269,7 @@ let downloadSearchResults
         | Csv ->
             let headerRow =
                 headers
-                |> Array.map (fun s -> $"\"{s}\"")
+                |> List.map (fun s -> $"\"{s}\"")
                 |> String.concat ","
 
             let resultRows =
