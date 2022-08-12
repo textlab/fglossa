@@ -171,13 +171,14 @@ let downloadSearchResults
 
             if shouldCreateHeader then
                 worksheet.Cell(1, 1).Value <- "Corpus position"
+                worksheet.Cell(1, 2).Value <- idHeader
 
                 for index, categoryInfo in categoryInfos |> List.indexed do
-                    worksheet.Cell(1, 2 + index).Value <- categoryInfo.Name
+                    worksheet.Cell(1, 3 + index).Value <- categoryInfo.Name
 
-                worksheet.Cell(1, categoryInfos.Length + 2).Value <- "Left context"
-                worksheet.Cell(1, categoryInfos.Length + 3).Value <- "Match"
-                worksheet.Cell(1, categoryInfos.Length + 4).Value <- "Right context"
+                worksheet.Cell(1, categoryInfos.Length + 3).Value <- "Left context"
+                worksheet.Cell(1, categoryInfos.Length + 4).Value <- "Match"
+                worksheet.Cell(1, categoryInfos.Length + 5).Value <- "Right context"
 
             let rowDisplacement =
                 if shouldCreateHeader then 2 else 1
@@ -185,27 +186,28 @@ let downloadSearchResults
             results
             |> Array.iteri (fun resultIndex (corpusPosition, segmentId, leftContext, theMatch, rightContext) ->
                 worksheet.Cell(resultIndex + rowDisplacement, 1).Value <- corpusPosition
+                worksheet.Cell(resultIndex + rowDisplacement, 2).Value <- segmentId
 
                 for index, categoryInfo in categoryInfos |> List.indexed do
                     match metadata[categoryInfo.Code] with
                     | DbStringMap valueMap ->
-                        worksheet.Cell(resultIndex + rowDisplacement, index + 2).Value <- match
+                        worksheet.Cell(resultIndex + rowDisplacement, index + 3).Value <- match
                                                                                               valueMap.TryFind
                                                                                                   (segmentId)
                                                                                               with
                                                                                           | Some value -> value
                                                                                           | None -> ""
                     | DbNumberMap valueMap ->
-                        worksheet.Cell(resultIndex + rowDisplacement, index + 2).Value <- match
+                        worksheet.Cell(resultIndex + rowDisplacement, index + 3).Value <- match
                                                                                               valueMap.TryFind
                                                                                                   (segmentId)
                                                                                               with
                                                                                           | Some value -> value
                                                                                           | None -> 0
 
-                worksheet.Cell(resultIndex + rowDisplacement, categoryInfos.Length + 2).Value <- leftContext
-                worksheet.Cell(resultIndex + rowDisplacement, categoryInfos.Length + 3).Value <- theMatch
-                worksheet.Cell(resultIndex + rowDisplacement, categoryInfos.Length + 4).Value <- rightContext)
+                worksheet.Cell(resultIndex + rowDisplacement, categoryInfos.Length + 3).Value <- leftContext
+                worksheet.Cell(resultIndex + rowDisplacement, categoryInfos.Length + 4).Value <- theMatch
+                worksheet.Cell(resultIndex + rowDisplacement, categoryInfos.Length + 5).Value <- rightContext)
 
             use outputStream = new MemoryStream()
             workbook.SaveAs(outputStream)

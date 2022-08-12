@@ -261,10 +261,16 @@ module ResultsView =
             let metadataCheckboxes =
                 if not corpus.MetadataQuickView.IsEmpty then
                     let checkboxes =
-                        [ for category in corpus.MetadataQuickView ->
-                              Bulma.control.div [ categoryCheckbox
-                                                      (model.DownLoadCategories |> List.contains category)
-                                                      category ] ]
+                        [ for category in corpus.MetadataQuickView do
+                              // The export always includes a "segment ID" column, and for spoken corpora that is
+                              // in fact the informant ID, since we don't actually have segment IDs for such corpora.
+                              // Furthermore, the informant ID is in fact the text ID in those corpora, so there is
+                              // no need to show a checkbox for the tid category.
+                              if category.Code <> "tid"
+                                 || corpus.SharedInfo.Modality <> Spoken then
+                                  Bulma.control.div [ categoryCheckbox
+                                                          (model.DownLoadCategories |> List.contains category)
+                                                          category ] ]
 
                     Bulma.field.div [ field.isGrouped
                                       field.isGroupedMultiline
