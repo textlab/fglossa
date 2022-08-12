@@ -280,7 +280,10 @@ let downloadSearchResults
                 constructExportRows results "\t"
 
             let output =
-                Array.append [| headerRow |] resultRows
+                if shouldCreateHeader then
+                    Array.append [| headerRow |] resultRows
+                else
+                    resultRows
                 |> String.concat "\n"
 
             return System.Text.Encoding.UTF8.GetBytes(output)
@@ -295,7 +298,10 @@ let downloadSearchResults
                 constructExportRows results ","
 
             let output =
-                Array.append [| headerRow |] resultRows
+                if shouldCreateHeader then
+                    Array.append [| headerRow |] resultRows
+                else
+                    resultRows
                 |> String.concat "\n"
 
             return System.Text.Encoding.UTF8.GetBytes(output)
