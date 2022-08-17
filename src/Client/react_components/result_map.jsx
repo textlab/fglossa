@@ -1,10 +1,5 @@
-import React from 'react'
+import React, {useState, useRef} from 'react'
 import {GoogleMap, Marker} from '@react-google-maps/api';
-
-const position = {
-    lat: 37.772,
-    lng: -122.214
-}
 
 const onLoad = marker => {
     console.log('marker: ', marker)
@@ -16,9 +11,23 @@ function GeoDistributionMap({initLat, initLng, initZoom, width, height, points})
         width: width + "px"
     }
 
-    const center = {
+    // Handle dragging of the map without automatically recentering it on rerender
+    // From https://stackoverflow.com/questions/61624547/can-i-set-a-default-center-value-in-react-googe-maps-api
+    const mapRef = useRef(null);
+    const [position, setPosition] = useState({
         lat: initLat,
         lng: initLng
+    });
+
+    function handleLoad(map) {
+        mapRef.current = map;
+    }
+
+    function handleCenter() {
+        if (!mapRef.current) return;
+
+        const newPos = mapRef.current.getCenter().toJSON();
+        setPosition(newPos);
     }
 
     return (
@@ -26,12 +35,14 @@ function GeoDistributionMap({initLat, initLng, initZoom, width, height, points})
             id="result-map"
             mapContainerStyle={mapContainerStyle}
             zoom={initZoom}
-            center={center}
+            onLoad={handleLoad}
+            onDragEnd={handleCenter}
+            center={position}
         >
             {
                 points ? (
                     points.map((point) => {
-                        const position = {
+                        const pointPos = {
                             lat: point.latitude,
                             lng: point.longitude
                         }
@@ -39,7 +50,7 @@ function GeoDistributionMap({initLat, initLng, initZoom, width, height, points})
                         return (
                             <Marker
                                 key={point.key}
-                                position={position}
+                                position={pointPos}
                                 icon={point.icon || 'speech/red_dot.png'}
                                 title={point.label}
                             />
