@@ -855,6 +855,44 @@ module MetadataMenu =
 
     /// The main view of the metadata menu on the left hand side of the interface
     let view (model: LoadedCorpusModel) (dispatch: Update.Metadata.Msg -> unit) =
+        let voyantSelect =
+            let info = model.Corpus.SharedInfo
+
+            let selectOptions =
+                [ Html.option [ prop.value ""
+                                prop.text "Open in Voyant" ]
+                  Html.option [ prop.value "word"
+                                prop.text (
+                                    if info.HasAttribute("phon") then
+                                        "Orthographic"
+                                    elif info.HasAttribute("orig") then
+                                        "Corrected"
+                                    else
+                                        "Word form"
+                                ) ]
+                  if info.HasAttribute("phon") then
+                      Html.option [ prop.value "phon"
+                                    prop.text "Phonetic" ]
+                  if info.HasAttribute("orig") then
+                      Html.option [ prop.value "orig"
+                                    prop.text "Original" ]
+                  if info.HasAttribute("lemma") then
+                      Html.option [ prop.value "lemma"
+                                    prop.text "Lemmas" ] ]
+
+            Bulma.control.p [ control.hasIconsLeft
+                              prop.style [ style.marginBottom 5 ]
+                              prop.children [ Bulma.select [ select.isSmall
+                                                             color.isInfo
+                                                             prop.value ""
+                                                             prop.onChange (fun (attr: string) ->
+                                                                 if attr <> "" then
+                                                                     dispatch (OpenInVoyant attr))
+                                                             prop.children selectOptions ]
+                                              Bulma.icon [ icon.isLeft
+                                                           prop.children [ Html.i [ prop.className "fa fa-chart-simple"
+                                                                                    prop.style [ style.color "#3e8ed0" ] ] ] ] ] ]
+
         let menuItems =
             [ for item in model.Corpus.MetadataMenu do
                   match item with
@@ -918,7 +956,10 @@ module MetadataMenu =
                                                                       prop.onClick (fun _ ->
                                                                           dispatch FetchMetadataForGeoMap)
                                                                       prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-globe" ] ] ]
-                                                                                      Html.span "Map" ] ] ] ]
+                                                                                      Html.span "Map" ] ]
+                                            if model.Corpus.SharedInfo.ExternalTools
+                                               |> List.contains Voyant then
+                                                voyantSelect ] ]
 
         Html.span [ if model.IsMetadataGeoMapOpen then
                         match model.Corpus.SharedInfo.GeoMapConfig with
