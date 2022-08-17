@@ -822,14 +822,14 @@ module MetadataMenu =
                         dispatch (SetIntervalCategoryMode(numberCat, IntervalMode))
                         dispatch (SetIntervalFrom(numberCat, min))
                         dispatch (SetIntervalTo(numberCat, max))
-                        dispatch FetchTextAndTokenCounts
                     | _ -> failwith $"Non-numerical category defined as interval: {catCode}"
                 | DiscreteControl ->
                     let choices =
                         [| for v in (value :?> string []) -> { Name = v; Value = v } |]
 
-                    dispatch (SetSelection(categoryObj, choices))
+                    dispatch (SetSelection(categoryObj, choices, false))
 
+            dispatch FetchTextAndTokenCounts
             dispatch CloseMetadataGeoMap
 
         Bulma.modal [ modal.isActive

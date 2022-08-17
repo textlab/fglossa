@@ -19,7 +19,7 @@ type Msg =
     | ToggleExclude of category: Metadata.Category
     | SelectItem of Metadata.Category * Metadata.CategoryMenuOption
     | DeselectItem of Metadata.Category * Metadata.CategoryMenuOption
-    | SetSelection of Metadata.Category * Metadata.CategoryMenuOption []
+    | SetSelection of Metadata.Category * Metadata.CategoryMenuOption [] * bool
     | DeselectAllItems of Metadata.Category
     | SetIntervalFrom of Metadata.NumberCategory * string
     | SetIntervalTo of Metadata.NumberCategory * string
@@ -116,12 +116,14 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
 
         newModel, cmd
     | FetchedTextAndTokenCounts (counts, TextSelectionInfo textSelectionInfo) ->
-        { model with
-            NumSelectedTexts = Some counts.NumTexts
-            NumSelectedTokens = Some counts.NumTokens
-            SelectionTablePageNumber = 1
-            TextSelectionInfo = textSelectionInfo },
-        Cmd.none
+        let newModel =
+            { model with
+                NumSelectedTexts = Some counts.NumTexts
+                NumSelectedTokens = Some counts.NumTokens
+                SelectionTablePageNumber = 1
+                TextSelectionInfo = textSelectionInfo }
+
+        newModel, Cmd.none
     | ToggleExclude category ->
         let tableAndCode =
             category.GetQualifiedColumnName()
@@ -206,7 +208,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
         let cmd = Cmd.ofMsg FetchTextAndTokenCounts
 
         newModel, cmd
-    | SetSelection (category, choices) ->
+    | SetSelection (category, choices, shouldFetchCounts) ->
         let tableAndCode =
             category.GetQualifiedColumnName()
 
@@ -219,9 +221,17 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
                 { Choices = choices
                   ShouldExclude = false }
 
-        { model with
-            Search = { model.Search with Params = { model.Search.Params with MetadataSelection = newSelection } } },
-        Cmd.ofMsg FetchTextAndTokenCounts
+        let newModel =
+            { model with
+                Search = { model.Search with Params = { model.Search.Params with MetadataSelection = newSelection } } }
+
+        let cmd =
+            if shouldFetchCounts then
+                Cmd.ofMsg FetchTextAndTokenCounts
+            else
+                Cmd.none
+
+        newModel, cmd
     | DeselectAllItems category ->
         let tableAndCode =
             category.GetQualifiedColumnName()
