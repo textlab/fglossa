@@ -72,13 +72,15 @@ type Corpus
         ?cwbAttributeMenu: CwbAttributeMenu,
         ?metadataMenu: Metadata.MenuItem list,
         ?metadataTable: Metadata.Category list,
-        ?metadataQuickView: Metadata.Category list
+        ?metadataQuickView: Metadata.Category list,
+        ?metadataDistributionCategories: Metadata.Category list
     ) =
     member val SharedInfo = sharedInfo
     member val CwbAttributeMenu = cwbAttributeMenu
     member val MetadataMenu = defaultArg metadataMenu []
     member val MetadataTable = defaultArg metadataTable []
     member val MetadataQuickView = defaultArg metadataQuickView []
+    member val MetadataDistributionCategories = defaultArg metadataDistributionCategories []
 
     abstract member ResultLinks: pageNumber: int * rowIndex: int -> ReactElement
     default _.ResultLinks(_, _) = Html.none

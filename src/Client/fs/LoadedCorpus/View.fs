@@ -894,7 +894,13 @@ module ResultsView =
                                        dispatch (SelectAttribute s)) ]
 
             let categoryOptions =
-                [ for index, category in corpus.MetadataQuickView |> List.indexed ->
+                let categories =
+                    if corpus.MetadataDistributionCategories.IsEmpty then
+                        corpus.MetadataQuickView
+                    else
+                        corpus.MetadataDistributionCategories
+
+                [ for index, category in categories |> List.indexed ->
                       Html.option [ prop.value (string index)
                                     prop.text category.Name ] ]
 
