@@ -927,11 +927,19 @@ module MetadataMenu =
                             | Some key ->
                                 match model.Corpus.SharedInfo.GeoCoordinates with
                                 | Some coords ->
+                                    let metadata =
+                                        [| for informants in model.FetchedTextMetadata ->
+                                               [| for informantCategory in informants ->
+                                                      if informantCategory = "" then
+                                                          "null"
+                                                      else
+                                                          informantCategory |] |]
+
                                     MetadataGeoMapModal
                                         key
                                         coords
                                         config
-                                        model.FetchedTextMetadata
+                                        metadata
                                         model.Corpus.MetadataQuickView
                                         dispatch
                                 | None -> failwith "No geographical coordinates provided!"
