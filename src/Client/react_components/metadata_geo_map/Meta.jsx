@@ -58,7 +58,7 @@ const polygonContains = (polygon,coords) => {
     return markers;
 }
 
-function Map({ apiKey, center, callback, coords, zoom }) {
+function Map({ apiKey, initCenter, callback, coords, zoom }) {
     // Define refs for Polygon instance and listeners
     let enveloped = [];
     const polyHash = useRef({});
@@ -68,6 +68,26 @@ function Map({ apiKey, center, callback, coords, zoom }) {
     });
 
     const [polyid, polyidinc] = useState(0);
+
+// Handle dragging of the map without automatically recentering it on rerender
+// From https://stackoverflow.com/questions/61624547/can-i-set-a-default-center-value-in-react-googe-maps-api
+	const mapRef = useRef(null);
+	const [position, setPosition] = useState({
+    	lat: initCenter.lat,
+    	lng: initCenter.lng
+	});
+
+	function handleLoad(map) {
+	    mapRef.current = map;
+	}
+
+	function handleCenter() {
+	    if (!mapRef.current) return;
+
+	    const newPos = mapRef.current.getCenter().toJSON();
+	    setPosition(newPos);
+	}
+// END OF Handle dragging of the map
 
 //    const [ markers, setMarkers] = useState([...coords.values()]);
 
@@ -104,8 +124,10 @@ function Map({ apiKey, center, callback, coords, zoom }) {
     return (
 	<div className="MapComp" style={{marginTop: 20}}>
 		<GoogleMap
+			onLoad={handleLoad}
+      		onDragEnd={handleCenter}
 		    mapContainerClassName="Map"
-		    center={center}
+		    center={position}
 		    zoom={zoom}
 		    version="weekly"
 //		    disableDoubleClickZoom={true}
@@ -352,7 +374,7 @@ class Sets {
 	for (const [k, v] of Object.entries(meta)) {
 	    let tid = v[cats[id_key].COLUMN]; //ALWAYS 0
 	    for (const [i, e] of Object.entries(v)){
-		if(i != 0 & e != 0){
+		if(i != 0 & e != ''){
 		    let key = column_names[i];
 		    if(key == loc_key){this.tid2loc[tid] = e}
 		    if(!(e in this.SuperSet[key])){
@@ -582,7 +604,7 @@ export default function Meta({ coords, config, meta, ok, cancel }){
             </div>
             <Map
                 apiKey={API_KEY}
-                center={center}
+                initCenter={center}
                 callback={(d) => mapCallback(d)}
                 coords={c}
                 zoom={zoom}
