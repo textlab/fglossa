@@ -376,7 +376,10 @@ class Sets {
 	    for (const [i, e] of Object.entries(v)){
 		if(i != 0 & e != ''){
 		    let key = column_names[i];
-		    if(key == loc_key){this.tid2loc[tid] = e}
+		    if(key == loc_key){
+				if(e == 'null'){console.log("Locator missing for "+tid);}
+		    	this.tid2loc[tid] = e
+		    }
 		    if(!(e in this.SuperSet[key])){
 			this.SuperSet[key][e] = new Set();
 		    }
