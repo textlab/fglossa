@@ -490,8 +490,10 @@ export default function Meta({ coords, config, meta, ok, cancel }){
     const locs = Object.keys(Sets.SuperSet[location_key]);
     let menu_data = initMenuData(Sets.SuperSet, config.CATEGORY, "");
     const orig = useRef(menu_data);
-    const markers = locs.map(function(loc){
-	return {id: loc, polyselected: true, selected: true, coords:{id: loc, lat: coords[loc][0],lng: coords[loc][1]}}});
+    const markers = locs.filter(function(loc) {
+        return loc != 'null'
+    }).map(function(loc){
+        return {id: loc, polyselected: true, selected: true, coords:{id: loc, lat: coords[loc][0],lng: coords[loc][1]}}});
 //    let a = Sets.initActiveSets([{type: 'discrete', key: location_key, val: locs}]);
     //    a = Sets.initActiveSets(menu_data, a);
     let a = Sets.initActiveSets(menu_data);
