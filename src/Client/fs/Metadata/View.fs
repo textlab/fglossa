@@ -880,18 +880,19 @@ module MetadataMenu =
                       Html.option [ prop.value "lemma"
                                     prop.text "Lemmas" ] ]
 
-            Bulma.control.p [ control.hasIconsLeft
-                              prop.style [ style.marginBottom 5 ]
-                              prop.children [ Bulma.select [ select.isSmall
-                                                             color.isInfo
-                                                             prop.value ""
-                                                             prop.onChange (fun (attr: string) ->
-                                                                 if attr <> "" then
-                                                                     dispatch (OpenInVoyant attr))
-                                                             prop.children selectOptions ]
-                                              Bulma.icon [ icon.isLeft
-                                                           prop.children [ Html.i [ prop.className "fa fa-chart-simple"
-                                                                                    prop.style [ style.color "#3e8ed0" ] ] ] ] ] ]
+            Bulma.control.div [ control.hasIconsLeft
+                                prop.style [ style.marginBottom 5 ]
+                                prop.children [ Bulma.select [ select.isSmall
+                                                               color.isInfo
+                                                               prop.value ""
+                                                               prop.onChange (fun (attr: string) ->
+                                                                   if attr <> "" then
+                                                                       dispatch (OpenInVoyant attr))
+                                                               prop.children selectOptions ]
+                                                Bulma.icon [ icon.isLeft
+                                                             prop.children [ Html.i [ prop.className
+                                                                                          "fa fa-chart-simple"
+                                                                                      prop.style [ style.color "#3e8ed0" ] ] ] ] ] ]
 
         let menuItems =
             [ for item in model.Corpus.MetadataMenu do
