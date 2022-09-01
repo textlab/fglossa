@@ -1280,6 +1280,7 @@ module LoadedCorpus =
                         End = 99L
                         LastCount = None
                         SearchId = 0
+                        SortKey = Position
                         Start = 0L
                         Step = 1 }
 

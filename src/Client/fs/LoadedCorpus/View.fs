@@ -382,6 +382,7 @@ module ResultsView =
 
             let sortMenu =
                 Bulma.select [ prop.disabled isSearchingOrFetching
+                               prop.value (string loadedCorpusModel.Search.Params.SortKey)
                                prop.onChange (fun (s: string) ->
                                    let sortKey = SortKey.OfString(s)
 
