@@ -480,7 +480,7 @@ let getSearchResults
                         $"{queryName}_sort_by_{searchParams.SortKey}"
 
                     let undumpSaveCommands =
-                        if File.Exists($"tmp/{cwbCorpusName corpus searchParams.Queries}:{namedQuery}") then
+                        if File.Exists($"/tmp/glossa/{cwbCorpusName corpus searchParams.Queries}:{namedQuery}") then
                             []
                         else
                             let sortedPositions =

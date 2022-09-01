@@ -137,7 +137,7 @@ let transformResults (corpus: Corpus) (queries: Query []) (hits: string []) =
 
 let sortContextWithinWho namedQuery sortKey =
     let tmpfile =
-        $"\"tmp/{namedQuery}_sort_by_{sortKey}\""
+        $"\"/tmp/glossa/{namedQuery}_sort_by_{sortKey}\""
 
     let bound, ``match`` =
         match sortKey with
