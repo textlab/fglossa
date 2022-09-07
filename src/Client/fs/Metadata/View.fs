@@ -972,7 +972,7 @@ module MetadataMenu =
                                     let metadata =
                                         [| for informants in model.FetchedTextMetadata ->
                                                [| for informantCategory in informants ->
-                                                      if informantCategory = "" then
+                                                      if informantCategory = "" || informantCategory = "NULL" then
                                                           "null"
                                                       else
                                                           informantCategory |] |]
