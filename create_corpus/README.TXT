@@ -10,7 +10,7 @@ called 'startpos' and 'endpos' and contain the start and end positions of the te
 After adding the directory and file for a new corpus called, say, my_corpus (with the metadata file
 my_corpus_texts.tsv), run the following from the present directory:
 
-$ ./create_corpus.rb my_corpus
+$ ./create_corpus.rb my_corpus "My magnificent corpus"
 
 (If you name the metadata file something different than my_corpus_texts.tsv, provide the file name as an
 additional argument to create_corpus.rb.)
