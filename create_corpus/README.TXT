@@ -21,7 +21,10 @@ closed by typing '.quit' or pressing ctrl-d.
 
 Finally recompile the client and server projects to include the new F# types and corpus-specific code.
 Note that it may be necessary to run 'dotnet fable clean' to make all of the new client code
-be picked up by Fable in development mode.
+be picked up by Fable in development mode. In other words (compiling in development mode):
+
+dotnet fable clean
+dotnet run
 
 In addition, for corpora using CQP as their search engine, a CQP corpus with the same ID as the new corpus
 directory must be added to the CQP registry. Additional configuration of the corpus can be done in folders
