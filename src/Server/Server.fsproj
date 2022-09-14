@@ -5,30 +5,30 @@
         <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
-        <None Include="paket.references"/>
-        <Compile Include="fs/Process.fs"/>
-        <Compile Include="fs/Database.fs"/>
-        <Compile Include="fs/ServerTypes.fs"/>
-        <Compile Include="fs/Config.fs"/>
-        <Compile Include="fs/Templates/App.fs"/>
-        <Compile Include="fs/Templates/Index.fs"/>
-        <Compile Include="fs/Templates/NotFound.fs"/>
-        <Compile Include="fs/Remoting/Metadata.fs"/>
-        <Compile Include="../Corpora/corpora/*/Shared/*.fs"/>
-        <Compile Include="../Corpora/corpora/*/Server/*.fs"/>
-        <Compile Include="../Corpora/Server.fs"/>
-        <Compile Include="fs/Remoting/Corpus.fs"/>
-        <Compile Include="fs/Remoting/Search/Common.fs"/>
-        <Compile Include="fs/Remoting/Search/Cwb/Common.fs"/>
-        <Compile Include="fs/Remoting/Search/Cwb/Spoken.fs"/>
-        <Compile Include="fs/Remoting/Search/Cwb/Written.fs"/>
-        <Compile Include="fs/Remoting/Search/Cwb/Core.fs"/>
-        <Compile Include="fs/Remoting/Search/Core.fs"/>
-        <Compile Include="fs/RestApi.fs"/>
-        <Compile Include="fs/Server.fs"/>
+        <None Include="paket.references" />
+        <Compile Include="fs/Process.fs" />
+        <Compile Include="fs/Database.fs" />
+        <Compile Include="fs/ServerTypes.fs" />
+        <Compile Include="fs/Config.fs" />
+        <Compile Include="fs/Templates/App.fs" />
+        <Compile Include="fs/Templates/Index.fs" />
+        <Compile Include="fs/Templates/NotFound.fs" />
+        <Compile Include="fs/Remoting/Metadata.fs" />
+        <Compile Include="../Corpora/corpora/*/Shared/*.fs" />
+        <Compile Include="../Corpora/corpora/*/Server/*.fs" />
+        <Compile Include="../Corpora/Server.fs" />
+        <Compile Include="fs/Remoting/Corpus.fs" />
+        <Compile Include="fs/Remoting/Search/Common.fs" />
+        <Compile Include="fs/Remoting/Search/Cwb/Common.fs" />
+        <Compile Include="fs/Remoting/Search/Cwb/Spoken.fs" />
+        <Compile Include="fs/Remoting/Search/Cwb/Written.fs" />
+        <Compile Include="fs/Remoting/Search/Cwb/Core.fs" />
+        <Compile Include="fs/Remoting/Search/Core.fs" />
+        <Compile Include="fs/RestApi.fs" />
+        <Compile Include="fs/Server.fs" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Shared\Shared.fsproj"/>
+        <ProjectReference Include="..\Shared\Shared.fsproj" />
     </ItemGroup>
-    <Import Project="..\..\.paket\Paket.Restore.targets"/>
+    <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
