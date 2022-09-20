@@ -5,6 +5,7 @@ open Fetch
 open Feliz
 open Feliz.Bulma
 open Model
+open Shared
 open Update.LoadedCorpus.ShowingResults.Concordance
 
 [<ReactComponent>]
@@ -82,7 +83,11 @@ let idColumn
                         prop.children [ Html.span sId ] ]
                match corpus.SharedInfo.GoogleTranslateApiKey, maybeFullText with
                | Some key, Some fullText ->
-                   TranslationButton pageNumber rowIndex fullText model.Translations key dispatch
+                   if corpus.SharedInfo.ExternalTools
+                      |> List.contains ExternalTool.GoogleTranslate then
+                       TranslationButton pageNumber rowIndex fullText model.Translations key dispatch
+                   else
+                       Html.none
                | _ -> Html.none
                corpus.ResultLinks(pageNumber, rowIndex) ]
 

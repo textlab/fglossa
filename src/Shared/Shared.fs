@@ -157,7 +157,9 @@ type LanguageConfig =
     | Monolingual of Cwb.PositionalAttribute list option
     | Multilingual of Language []
 
-type ExternalTool = | Voyant
+type ExternalTool =
+    | GoogleTranslate
+    | Voyant
 
 type GeoMapConfig =
     { CenterLat: float
