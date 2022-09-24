@@ -178,7 +178,7 @@ let downloadSearchResults
               yield "Match"
               yield "Right context" ]
 
-        let constructExportRows results (separator: string) =
+        let constructExportRows (separator: string) =
             [| for corpusPosition, segmentId, leftContext, theMatch, rightContext in results do
                    // Strip everything after the dot from the segment ID to get the text ID. (Note that in spoken corpora,
                    // those are actually the same, so the segment ID will not contain any dot).
@@ -276,8 +276,7 @@ let downloadSearchResults
             let headerRow =
                 headers |> String.concat "\t"
 
-            let resultRows =
-                constructExportRows results "\t"
+            let resultRows = constructExportRows "\t"
 
             let output =
                 if shouldCreateHeader then
@@ -294,8 +293,7 @@ let downloadSearchResults
                 |> List.map (fun s -> $"\"{s}\"")
                 |> String.concat ","
 
-            let resultRows =
-                constructExportRows results ","
+            let resultRows = constructExportRows ","
 
             let output =
                 if shouldCreateHeader then
