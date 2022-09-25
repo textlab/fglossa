@@ -327,7 +327,25 @@ module ResultsView =
                                                                             prop.onClick (fun _ ->
                                                                                 dispatch (DownloadSearchResults Csv))
                                                                             prop.text "Comma-separated" ]
-                                                  ) ] ] ]
+                                                  )
+                                                  if
+                                                      corpus.SharedInfo.HasAttribute("phon")
+                                                      || corpus.SharedInfo.HasAttribute("orig")
+                                                  then
+                                                      Bulma.levelItem (
+                                                          Bulma.button.button [ color.isSuccess
+
+                                                                                match model.DownloadingFormat with
+                                                                                | Some Multiline -> button.isLoading
+                                                                                | Some _ -> prop.disabled true
+                                                                                | None -> prop.disabled false
+
+                                                                                prop.onClick (fun _ ->
+                                                                                    dispatch (
+                                                                                        DownloadSearchResults Multiline
+                                                                                    ))
+                                                                                prop.text "Multiline" ]
+                                                      ) ] ] ]
 
             let modalCardBody =
                 Html.span [ Bulma.message [ color.isInfo

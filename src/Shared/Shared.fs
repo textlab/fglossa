@@ -381,6 +381,7 @@ type TextAndTokenCounts = { NumTexts: int64; NumTokens: int64 }
 type ResultPageNumbers = int seq
 
 type DownloadFormat =
+    | Multiline
     | Excel
     | Csv
     | Tsv

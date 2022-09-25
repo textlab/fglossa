@@ -479,6 +479,7 @@ module LoadedCorpus =
                 | DownloadedSearchResults fileBytes ->
                     let extension =
                         match concordanceModel.DownloadingFormat with
+                        | Some Multiline -> ".txt"
                         | Some Excel -> ".xlsx"
                         | Some Tsv -> ".tsv"
                         | Some Csv -> ".csv"
@@ -599,6 +600,7 @@ module LoadedCorpus =
                 | DownloadedFrequencyList fileBytes ->
                     let extension =
                         match frequencyListsModel.DownloadingFormat with
+                        | Some Multiline -> failwith "Frequency lists in multiline format not supported!"
                         | Some Excel -> ".xlsx"
                         | Some Tsv -> ".tsv"
                         | Some Csv -> ".csv"
@@ -760,6 +762,7 @@ module LoadedCorpus =
                 | DownloadedMetadataDistribution fileBytes ->
                     let extension =
                         match metadataDistributionModel.DownloadingFormat with
+                        | Some Multiline -> failwith "Metadata distributions in multiline format not supported!"
                         | Some Excel -> ".xlsx"
                         | Some Tsv -> ".tsv"
                         | Some Csv -> ".csv"

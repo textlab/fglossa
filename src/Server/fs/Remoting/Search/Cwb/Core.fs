@@ -183,6 +183,7 @@ let downloadFrequencyList
         let! freqList = getFrequencyList logger searchParams attributes isCaseSensitive freqListTokenBoundaries
 
         match format with
+        | Multiline -> return failwith "Multiline format not supported for frequency lists!"
         | Excel ->
             use workbook = new Excel.XLWorkbook()
 
@@ -604,6 +605,7 @@ let downloadMetadataDistribution
                 accExcludedAttrValues
 
         match format with
+        | Multiline -> return failwith "Multiline format not supported for metadata distributions!"
         | Excel ->
             use workbook = new Excel.XLWorkbook()
 

@@ -63,8 +63,28 @@ let downloadSearchResults
             let pageNumbers =
                 Seq.initInfinite (fun index -> index)
 
+            let selectedAttributes =
+                match format with
+                | Multiline ->
+                    // If the Multiline format is selected, we want either a phon or orig attribute, which will
+                    // be shown under the line with the word (default) attribute
+                    let extraAttribute =
+                        match corpus.Config.TryGetAttribute("phon") with
+                        | Some attr -> attr
+                        | None ->
+                            match corpus.Config.TryGetAttribute("orig") with
+                            | Some attr -> attr
+                            | None -> failwith "Multiline format requires either phon or orig attribute!"
+
+                    [ corpus.Config.GetDefaultAttribute()
+                      extraAttribute ]
+                | _ ->
+                    // Otherwise, we want the list of attributes that the user has selected
+                    attributes
+
             match corpus.Config.SearchEngine with
-            | Cwb -> Cwb.Core.getSearchResults logger searchParamsForDownload corpus (Some attributes) pageNumbers
+            | Cwb ->
+                Cwb.Core.getSearchResults logger searchParamsForDownload corpus (Some selectedAttributes) pageNumbers
             | Fcs -> failwith "Not implemented"
 
         let metadata: Map<string, DbStringOrNumberMap> =
@@ -178,6 +198,26 @@ let downloadSearchResults
               yield "Match"
               yield "Right context" ]
 
+        let getMetadataValues tid separator =
+            [ for categoryInfo in categoryInfos ->
+                  match metadata[categoryInfo.Code] with
+                  | DbStringMap valueMap ->
+                      match valueMap.TryFind(tid) with
+                      | Some value ->
+                          if separator = "," then
+                              $"\"{value}\""
+                          else
+                              value
+                      | None -> ""
+                  | DbNumberMap valueMap ->
+                      match valueMap.TryFind(tid) with
+                      | Some value ->
+                          if separator = "," then
+                              $"\"{value}\""
+                          else
+                              string value
+                      | None -> "" ]
+
         let constructExportRows (separator: string) =
             [| for corpusPosition, segmentId, leftContext, theMatch, rightContext in results do
                    // Strip everything after the dot from the segment ID to get the text ID. (Note that in spoken corpora,
@@ -186,24 +226,7 @@ let downloadSearchResults
                        segmentId |> StringUtils.replace "\..+" ""
 
                    let metadataValues =
-                       [ for categoryInfo in categoryInfos ->
-                             match metadata[categoryInfo.Code] with
-                             | DbStringMap valueMap ->
-                                 match valueMap.TryFind(tid) with
-                                 | Some value ->
-                                     if separator = "," then
-                                         $"\"{value}\""
-                                     else
-                                         value
-                                 | None -> ""
-                             | DbNumberMap valueMap ->
-                                 match valueMap.TryFind(tid) with
-                                 | Some value ->
-                                     if separator = "," then
-                                         $"\"{value}\""
-                                     else
-                                         string value
-                                 | None -> "" ]
+                       getMetadataValues tid separator
 
                    if separator = "," then
                        [ yield corpusPosition
@@ -222,6 +245,45 @@ let downloadSearchResults
                    |> String.concat separator |]
 
         match format with
+        | Multiline ->
+            let output =
+                [| for _, segmentId, leftContext, theMatch, rightContext in results do
+                       // Strip everything after the dot from the segment ID to get the text ID. (Note that in spoken corpora,
+                       // those are actually the same, so the segment ID will not contain any dot).
+                       let tid =
+                           segmentId |> StringUtils.replace "\..+" ""
+
+                       let metadataValues =
+                           getMetadataValues tid " "
+
+                       // In each part of the search result (the contexts and the match), each token should be represented as its
+                       // word attribute and either the phon or the orig attribute separated by a slash
+                       let entireResult =
+                           [ leftContext; theMatch; rightContext ]
+                           |> List.filter (fun part -> (not (System.String.IsNullOrWhiteSpace(part))))
+                           |> String.concat " "
+
+                       let attrValues =
+                           [| for token in entireResult.Split(' ') -> token.Split('/') |]
+
+                       let line1 =
+                           [| yield segmentId
+                              yield! metadataValues
+                              for token in attrValues do
+                                  yield token[0] |]
+                           |> String.concat " "
+
+                       let line2 =
+                           [| yield segmentId
+                              yield! metadataValues
+                              for token in attrValues do
+                                  yield token[1] |]
+                           |> String.concat " "
+
+                       [ line1; line2 ] |> String.concat "\n" |]
+                |> String.concat "\n\n"
+
+            return System.Text.Encoding.UTF8.GetBytes(output)
         | Excel ->
             use workbook = new Excel.XLWorkbook()
 
