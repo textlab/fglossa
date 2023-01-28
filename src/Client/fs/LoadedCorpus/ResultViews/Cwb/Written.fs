@@ -29,9 +29,10 @@ let concordanceTable
                         | Some origCorrIndex ->
                             attrs
                             |> Array.mapi (fun attrIndex attr ->
-                                if attrIndex = origCorrIndex then
-                                    $"<i>{attr}</i>"
-                                else
+                                // TODO: Fix the use of italics. Does not work with Feliz.Bulma.Tooltip
+                                // if attrIndex = origCorrIndex then
+                                //     $"<i>{attr}</i>"
+                                // else
                                     attr)
                         | None -> attrs
                     |> fun attrs ->
