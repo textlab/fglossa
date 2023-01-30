@@ -75,21 +75,21 @@ let idColumn
     // which are irrelevant when fetching metadata.
     let textId = Regex.Replace(sId, "\..+", "")
 
-    Html.div [ Html.a [ prop.href ""
-                        prop.onClick (fun e ->
-                            e.preventDefault ()
-                            e.stopPropagation ()
-                            dispatch (FetchMetadataForText(corpus, textId)))
-                        prop.children [ Html.span sId ] ]
-               match corpus.SharedInfo.GoogleTranslateApiKey, maybeFullText with
-               | Some key, Some fullText ->
-                   if corpus.SharedInfo.ExternalTools
-                      |> List.contains ExternalTool.GoogleTranslate then
-                       TranslationButton pageNumber rowIndex fullText model.Translations key dispatch
-                   else
-                       Html.none
-               | _ -> Html.none
-               corpus.ResultLinks(pageNumber, rowIndex) ]
+    Html.div [ Html.div [ Html.a [ prop.href ""
+                                   prop.onClick (fun e ->
+                                       e.preventDefault ()
+                                       e.stopPropagation ()
+                                       dispatch (FetchMetadataForText(corpus, textId)))
+                                   prop.children [ Html.span sId ] ]
+                          match corpus.SharedInfo.GoogleTranslateApiKey, maybeFullText with
+                          | Some key, Some fullText ->
+                              if corpus.SharedInfo.ExternalTools
+                                 |> List.contains ExternalTool.GoogleTranslate then
+                                  TranslationButton pageNumber rowIndex fullText model.Translations key dispatch
+                              else
+                                  Html.none
+                          | _ -> Html.none ]
+               corpus.ResultLinks(pageNumber, rowIndex, textId) ]
 
 
 let textColumns (resultLineFields: ResultLineFields) =
