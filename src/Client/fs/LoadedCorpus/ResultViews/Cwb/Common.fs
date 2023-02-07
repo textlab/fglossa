@@ -89,7 +89,7 @@ let idColumn
                               else
                                   Html.none
                           | _ -> Html.none ]
-               corpus.ResultLinks(pageNumber, rowIndex, textId) ]
+               corpus.ResultLinks(pageNumber, rowIndex, textId, corpus.SharedInfo) ]
 
 
 let textColumns (resultLineFields: ResultLineFields) =

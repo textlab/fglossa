@@ -171,6 +171,7 @@ type GeoMapConfig =
 /// Corpus info that is shared between server and client.
 type SharedCorpusInfo =
     { Code: string
+      DataFiles: Map<string, Set<string>>
       ExternalTools: ExternalTool list
       FontFamily: string option
       GeoCoordinates: (string * float * float) [] option
@@ -198,7 +199,8 @@ type SharedCorpusInfo =
             ?searchEngine,
             ?externalTools,
             ?geoMapConfig,
-            ?textsReferral
+            ?textsReferral,
+            ?dataFiles
         ) =
         let derivedTextsReferral =
             match textsReferral with
@@ -212,6 +214,7 @@ type SharedCorpusInfo =
                 | None -> "texts"
 
         { Code = code
+          DataFiles = defaultArg dataFiles Map.empty
           ExternalTools = defaultArg externalTools []
           FontFamily = None
           GeoCoordinates = None

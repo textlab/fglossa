@@ -82,8 +82,10 @@ type Corpus
     member val MetadataQuickView = defaultArg metadataQuickView []
     member val MetadataDistributionCategories = defaultArg metadataDistributionCategories []
 
-    abstract member ResultLinks: pageNumber: int * rowIndex: int * textId: string -> ReactElement
-    default _.ResultLinks(_, _, _) = Html.none
+    abstract member ResultLinks:
+        pageNumber: int * rowIndex: int * textId: string * corpusInfo: SharedCorpusInfo -> ReactElement
+
+    default _.ResultLinks(_, _, _, _) = Html.none
 
 type MediaPlayerInfo =
     { Type: MediaPlayerType
