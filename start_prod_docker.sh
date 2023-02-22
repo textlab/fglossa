@@ -9,5 +9,5 @@ docker run -it -d \
     -w /app/deploy \
     -p 8088:8085 \
     --name fglossa \
-    mcr.microsoft.com/dotnet/sdk:5.0 \
+    mcr.microsoft.com/dotnet/sdk:6.0 \
     dotnet Server.dll
