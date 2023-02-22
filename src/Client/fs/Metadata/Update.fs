@@ -384,7 +384,7 @@ let update (msg: Msg) (model: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> 
             Fable.Core.JS.encodeURIComponent base64Encoded
 
         let url =
-            $"https://voyant.lincsproject.ca/?input=https://tekstlab.uio.no/glossa3/rest/text/ndc2/{attributeName}/{uriEncoded}"
+            $"https://voyant.lincsproject.ca/?input=https://tekstlab.uio.no/glossa3/rest/text/{model.Corpus.SharedInfo.Code}/{attributeName}/{uriEncoded}"
 
         Browser.Dom.window.``open`` (url, "_blank")
         |> ignore
