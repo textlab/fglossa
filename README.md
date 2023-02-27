@@ -2,11 +2,12 @@ The application was created using the dotnet [SAFE Template](https://safe-stack.
 
 ## Install pre-requisites
 
-On your development machine, you'll need to install the following pre-requisites in order to build SAFE applications
+On your development machine, you'll need to install the following pre-requisites in order to import your corpora into Glossa and build the application:
 
 * [.NET SDK 6.0](https://www.microsoft.com/net/download)
 * [Node LTS](https://nodejs.org/en/download/)
 * [SQLite 3](https://www.sqlite.org/index.html)
+* [Ruby](https://www.ruby-lang.org/en/)
 
 None of these are required on your production server if you build a self-contained executable on your development machine (see `create_executable.sh` for an example).
 
@@ -21,6 +22,9 @@ mkdir -p src/Corpora/corpora
 ./create_db.sh
 ```
 After that last command, simply exit from the sqlite command line using `.exit` or Ctrl-D. Then `cd` into the `create_corpus` directory and follow the instructions in the `README.TXT` to create your first corpus in Glossa.
+
+Note that the `src/Corpora` directory and its contents are included in `.gitignore` to prevent your corpus-specific code from being included in the main repo.
+You may want to initialize a separate git repo in `src/Corpora` to keep your corpus definitions under version control.
 
 ## Starting the application
 
@@ -45,6 +49,10 @@ dotnet run -- Bundle
 cd deploy
 dotnet ./Server.dll
 ```
+
+Alternatively, you could create a self-contained executable, which can then be simply copied to the server and run like any other executable without any pre-requisites.
+(see `create_executable.sh` for an example of how to do this). Note that the target platform does not have to be the same as the develoopment platform,
+so you could for instance use a Mac to create an executable for 64-bit Linux.
 
 ## SAFE Stack Documentation
 

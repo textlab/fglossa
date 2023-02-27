@@ -1,5 +1,6 @@
-In order to add a new corpus, start by adding a new directory in src/Corpora/corpora that contains a tab-separated
-file of metadata with codes for metadata categories on the first line. Each metadata code may be
+In order to add a new corpus, start by adding a new directory in src/Corpora/corpora with the same name as the
+CWB registry ID of the corpus. In that directory, put a tab-separated
+file of metadata where the first line contains codes for metadata categories. Each metadata code may be
 optionally followed by '$num' to indicate a numerical category rather than a string category.
 
 The first column should be called 'tid' and contain a unique text id (or speaker ID in the case
@@ -7,8 +8,8 @@ of spoken corpora). For spoken corpora, the last column should be called 'bounds
 the corpus bounds containing material from the speaker. For written corpora, the last two columns should be
 called 'startpos' and 'endpos' and contain the start and end positions of the text.
 
-After adding the directory and file for a new corpus called, say, my_corpus (with the metadata file
-my_corpus_texts.tsv), run the following from the present directory:
+After adding the directory and metadata file for a new corpus called, say, my_corpus (with the metadata file
+my_corpus_texts.tsv), run the following from the current directory:
 
 $ ./create_corpus.rb my_corpus "My magnificent corpus"
 
