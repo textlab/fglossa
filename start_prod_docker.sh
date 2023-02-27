@@ -6,6 +6,7 @@
 
 docker run -it -d \
     --mount type=bind,src="${PWD}"/deploy,dst=/app/deploy \
+    --mount type=bind,src="${PWD}"/src/Corpora/corpora,dst=/app/Corpora/corpora \
     -w /app/deploy \
     -p 8088:8085 \
     --name fglossa \
