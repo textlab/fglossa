@@ -21,7 +21,7 @@ After checking out this repository, you will need to create the directory that w
 mkdir -p src/Corpora/corpora
 ./create_db.sh
 ```
-Simply exit from the sqlite command line using `.quit` or ctrl-d. Then `cd` into the `create_corpus` directory and follow the instructions in the `README.TXT` to create your first corpus in Glossa.
+Simply exit from the sqlite command line using `.quit` or ctrl-d. Then `cd` into the `create_corpus` directory and follow the instructions in the `README.MD` to create your first corpus in Glossa.
 
 Note that the `src/Corpora` directory and its contents are included in `.gitignore` to prevent your corpus-specific code from being included in the main repo.
 You may want to initialize a separate git repo in `src/Corpora` to keep your corpus definitions under version control.
