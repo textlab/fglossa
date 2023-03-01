@@ -34,6 +34,7 @@ let sanitizeString s =
     if
         String.IsNullOrWhiteSpace(s)
         || Regex.IsMatch(s, "[^-\w\.]")
+        || s.Contains("--")
     then
         failwith $"Invalid string in SQL: {s}"
     else
