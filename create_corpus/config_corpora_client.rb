@@ -4,7 +4,7 @@ require "pathname"
 
 corpus_dirs = Pathname.new("../src/Corpora/corpora/").children.select(&:directory?).map(&:basename).map(&:to_s).sort
 
-module_names = corpus_dirs.map { |dir| dir.split('_').collect(&:capitalize).join }
+module_names = corpus_dirs.map { |dir| dir.split(/[-_]/).collect(&:capitalize).join }
 
 corpus_matches = corpus_dirs.zip(module_names).map { | dir, mod | "    | \"#{dir}\" -> #{mod}.Client.ZCore.getCorpus config" }.join("\n")
 

@@ -13,7 +13,7 @@ corpus_name = ARGV[1]
 metadata_file =
     if ARGV.length == 3 then ARGV[2].split("/").last else "#{corpus_dir}_texts.tsv" end
 
-the_module = corpus_dir.split('_').collect(&:capitalize).join
+the_module = corpus_dir.split(/[-_]/).collect(&:capitalize).join
 
 system("mkdir -p #{full_corpus_path}/Shared")
 system("mkdir -p #{full_corpus_path}/Client")

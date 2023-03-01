@@ -18,7 +18,7 @@ open Shared.Metadata
 
 cats.each do |cat|
     cat_code, cat_type = cat.split('$')
-    catClass = cat_code.split('_').collect(&:capitalize).join
+    catClass = cat_code.split(/[-_]/).collect(&:capitalize).join
     superclass = if cat_type && cat_type.start_with?('n') then "NumberCategory" else "StringCategory" end
 
 
