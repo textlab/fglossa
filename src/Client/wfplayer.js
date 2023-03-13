@@ -7,7 +7,8 @@ import createReactClass from 'create-react-class';
 var corpusIds = {
     "bb": 28,
     "cans3": 53,
-    "ndc2": 52
+    "ndc2": 52,
+    "nota_oslo": 26
 };
 
 export var WFplayer = createReactClass({
