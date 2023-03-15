@@ -17,15 +17,6 @@ let corpusRoot =
     else
         envVar
 
-let downloadRoot =
-    let envVar =
-        System.Environment.GetEnvironmentVariable("GLOSSA_DOWNLOAD_ROOT")
-
-    if isNull envVar then
-        "../Client/public"
-    else
-        envVar
-
 let getConnectionString corpusCode =
     let code = sanitizeString corpusCode
 
