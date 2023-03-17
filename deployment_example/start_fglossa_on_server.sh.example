@@ -1,0 +1,10 @@
+#!/bin/sh
+
+### Example script. Replace /path/to/fglossa and xxx with actual values (remove
+### GOOGLE_MAPS_API_KEY and GOOGLE_TRANSLATE_API_KEY if you don't use Google Maps
+### or Google Translate in Glossa).
+
+GLOSSA_CORPUS_ROOT=/path/to/fglossa_corpora/corpora \
+        GOOGLE_MAPS_API_KEY=xxxx \
+        GOOGLE_TRANSLATE_API_KEY=xxxx \
+        ./Server

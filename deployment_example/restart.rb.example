@@ -1,0 +1,15 @@
+#!/bin/env ruby
+
+### Example script. Replace platform (linux-x64) and /path/to/fglossa with actual values.
+
+### Kills the fglossa processes, gives them a second to finish
+### and restarts the application.
+
+parent = `pgrep -f 'fglossa/self-contained.+start_fglossa_on_server.sh'`
+child = `ps -o pid= --ppid #{parent}`
+system("kill #{parent}")
+system("kill #{child}")
+sleep(1)
+
+dir = "/path/to/fglossa/self-contained/linux-x64"
+system("#{dir}/start_fglossa_on_server.sh &> #{dir}/log.txt &")

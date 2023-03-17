@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -ev
+
+### Example script. Replace platform (linux-x64), user@server.com and /path/to/fglossa with actual values.
+
+### Copies a self-contained executable from the self-contained/linux-x64/ directory
+### on the development machine to the production server and makes modifications
+### necessary when running Glossa on the path prefix /glossa3.
+
+### Note: The create_executable.sh script deletes the directory
+### self-contained/linux-x64 on the development machine and recreates it to make
+### sure it does not contain any leftovers from the previous compilation. However,
+### running rsync with the --delete option means that the self-contained/linux-x64
+### directory on the server will be wiped clean of any files that are not in that
+### directory on the development machine, hence the need to copy
+### start_fglossa_on_server.sh, restart.rb and src/Server/util into the
+### self-contained/linux-x64 directory on the development machine after running the
+### create_executable.sh script but before rsyncing to the server.
+
+cp ./start_fglossa_on_server.sh self-contained/linux-x64/
+cp ./restart.rb self-contained/linux-x64/
+cp -R ./src/Server/util self-contained/linux-x64/
+rsync -avzu --delete --progress -h self-contained/linux-x64 user@server.com:/path/to/fglossa/self-contained/
+
+# Only necessary if running Glossa on the path prefix /glossa3
+ssh user@server.com "sed -i 's/url(\//url\(\/glossa3\//g' /path/to/fglossa/self-contained/linux-x64/public/*.css && sed -r -i 's/\"(\w+\.svg)/\"glossa3\/\1/g' /path/to/fglossa/self-contained/linux-x64/public/*.js"
