@@ -222,7 +222,7 @@ let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes:
             | Some attributes ->
                 let attrString = createAttrString attributes
                 $"show {attrString}"
-            | None -> ""
+            | None -> "show "
         | Multilingual languages ->
             let firstQueryLanguageCode =
                 match Array.tryHead queries with
@@ -243,7 +243,7 @@ let displayedAttrsCommand (corpus: Corpus) (queries: Query []) (maybeAttributes:
             | Some attributes ->
                 let attrString = createAttrString attributes
                 $"show {attrString}"
-            | None -> ""
+            | None -> "show "
 // TODO: Implement parsing of tagger attributes and corpus-specific attributes
 
 let alignedLanguagesCommand (corpus: Corpus) (queries: Query []) =

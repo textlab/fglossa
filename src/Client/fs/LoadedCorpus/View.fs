@@ -857,7 +857,10 @@ module ResultsView =
                                                                     Bulma.levelItem fromTokenInput
                                                                     Bulma.levelItem toTokenInput ] ]
                                     buttonRow ]
-                    | None -> Html.span caseSensitiveCheckbox
+                    | None -> Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem caseSensitiveCheckbox
+                                                                          Bulma.levelItem fromTokenInput
+                                                                          Bulma.levelItem toTokenInput ] ]
+                                          buttonRow ]
                 | Multilingual _languages -> failwith "NOT IMPLEMENTED"
 
             let frequencyTable =
@@ -895,6 +898,7 @@ module ResultsView =
             let attributes =
                 match corpus.SharedInfo.LanguageConfig with
                 | Monolingual (Some attrs) -> corpus.SharedInfo.GetDefaultAttribute() :: attrs
+                | Monolingual None -> [ corpus.SharedInfo.GetDefaultAttribute() ]
                 | _ -> failwith "NOT IMPLEMENTED"
 
             let attrOptions =

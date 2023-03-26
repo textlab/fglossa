@@ -237,6 +237,7 @@ type SharedCorpusInfo =
         | Monolingual (Some attributes) ->
             attributes
             |> List.tryFind (fun a -> a.Code = attrCode)
+        | Monolingual None -> None
         | _ -> failwith "NOT IMPLEMENTED!"
 
     member this.HasAttribute(attrCode: string) =

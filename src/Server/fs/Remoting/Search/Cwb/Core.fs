@@ -144,8 +144,14 @@ let getFrequencyList
                 | None, Some toToken -> $"match .. match[{toToken - 1}]"
                 | None, None -> "match .. matchend"
 
+            let selAttrs: Cwb.PositionalAttribute list =
+                if attributes.IsEmpty then
+                    [ { Code = "word"; Name = "Word form" } ]
+                else
+                    attributes
+
             let attrs =
-                [ for attr in attributes -> $"{matchStr} {attr.Code}{caseStr}" ]
+                [ for attr in selAttrs -> $"{matchStr} {attr.Code}{caseStr}" ]
                 |> String.concat ", "
 
             let awk =
