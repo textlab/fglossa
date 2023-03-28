@@ -880,19 +880,36 @@ module MetadataMenu =
                       Html.option [ prop.value "lemma"
                                     prop.text "Lemmas" ] ]
 
+            let dropdown =
+                [ Bulma.select [ select.isSmall
+                                 color.isInfo
+                                 prop.value ""
+                                 prop.onChange (fun (attr: string) ->
+                                     if attr <> "" then
+                                         dispatch (OpenInVoyant attr))
+                                 prop.children selectOptions ]
+                  Bulma.icon [ icon.isLeft
+                               prop.children [ Html.i [ prop.className "fa fa-chart-simple"
+                                                        prop.style [ style.color "#3e8ed0" ] ] ] ] ]
+
             Bulma.control.div [ control.hasIconsLeft
                                 prop.style [ style.marginBottom 5 ]
-                                prop.children [ Bulma.select [ select.isSmall
-                                                               color.isInfo
-                                                               prop.value ""
-                                                               prop.onChange (fun (attr: string) ->
-                                                                   if attr <> "" then
-                                                                       dispatch (OpenInVoyant attr))
-                                                               prop.children selectOptions ]
-                                                Bulma.icon [ icon.isLeft
-                                                             prop.children [ Html.i [ prop.className
-                                                                                          "fa fa-chart-simple"
-                                                                                      prop.style [ style.color "#3e8ed0" ] ] ] ] ] ]
+                                prop.children (
+                                    if
+                                        info.HasAttribute("phon")
+                                        || info.HasAttribute("orig")
+                                        || info.HasAttribute("lemma")
+                                    then
+                                        dropdown
+                                    else
+                                        [ Bulma.button.button [ button.isSmall
+                                                                button.isOutlined
+                                                                color.isInfo
+                                                                prop.style [ style.marginTop 5 ]
+                                                                prop.title "Show selection"
+                                                                prop.onClick (fun _ -> dispatch (OpenInVoyant "word"))
+                                                                prop.children [ Html.span "Open in Voyant" ] ] ]
+                                ) ]
 
         let menuItems =
             [ for item in model.Corpus.MetadataMenu do
@@ -972,7 +989,8 @@ module MetadataMenu =
                                     let metadata =
                                         [| for informants in model.FetchedTextMetadata ->
                                                [| for informantCategory in informants ->
-                                                      if informantCategory = "" || informantCategory = "NULL" then
+                                                      if informantCategory = ""
+                                                         || informantCategory = "NULL" then
                                                           "null"
                                                       else
                                                           informantCategory |] |]
