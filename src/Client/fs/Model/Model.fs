@@ -9,6 +9,9 @@ let serverApi =
     |> Remoting.withRouteBuilder Route.builder
     |> Remoting.buildProxy<IServerApi>
 
+type LoadingCorpusModel =
+    { MaybeCorpusList: (CorpusCode * CorpusName) [] option }
+
 module CwbAttributeMenu =
     open Shared.Cwb
 
@@ -245,5 +248,5 @@ type LoadedCorpusModel =
       TextSelectionInfo: string }
 
 type Model =
-    | LoadingCorpus
+    | LoadingCorpus of LoadingCorpusModel
     | LoadedCorpus of LoadedCorpusModel

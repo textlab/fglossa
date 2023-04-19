@@ -1330,11 +1330,16 @@ module LoadingCorpus =
     ////////////////////////////////
     // Update.LoadingCorpus
     ////////////////////////////////
-    type Msg = FetchedCorpusConfig of SharedCorpusInfo
+    type Msg =
+        | FetchedCorpusList of (CorpusCode * CorpusName) []
+        | FetchedCorpusConfig of SharedCorpusInfo
 
-    let update (msg: Msg) (_model: Model) =
-        match msg with
-        | FetchedCorpusConfig corpusConfig ->
+    let update (msg: Msg) (model: Model) =
+        match msg, model with
+        | FetchedCorpusList corpusList, LoadingCorpus m ->
+            LoadingCorpus { m with MaybeCorpusList = Some corpusList }, Cmd.none
+
+        | FetchedCorpusConfig corpusConfig, _ ->
             let corpus =
                 Corpora.Client.getCorpus corpusConfig
 
@@ -1365,6 +1370,7 @@ module LoadingCorpus =
 
             LoadedCorpus m, Cmd.map LoadedCorpus.MetadataMsg cmd
 
+        | _ -> failwithf $"Incompatible message and model: {msg}; {model}"
 
 ////////////////////////////////
 // Update
@@ -1374,20 +1380,24 @@ type Msg =
     | LoadedCorpusMsg of LoadedCorpus.Msg
 
 let init () : Model * Cmd<Msg> =
-    let model = LoadingCorpus
+    let model =
+        LoadingCorpus { MaybeCorpusList = None }
 
     let corpusCode =
         Browser.Dom.window.location.href.Split('/')
         |> Array.last
 
     let cmd =
-        Cmd.OfAsync.perform serverApi.GetCorpusConfig corpusCode LoadingCorpus.FetchedCorpusConfig
+        if String.IsNullOrWhiteSpace(corpusCode) then
+            Cmd.OfAsync.perform serverApi.GetCorpusList () LoadingCorpus.FetchedCorpusList
+        else
+            Cmd.OfAsync.perform serverApi.GetCorpusConfig corpusCode LoadingCorpus.FetchedCorpusConfig
 
     model, Cmd.map LoadingCorpusMsg cmd
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg, model with
-    | LoadingCorpusMsg msg', LoadingCorpus ->
+    | LoadingCorpusMsg msg', LoadingCorpus model' ->
         let newModel, cmd =
             LoadingCorpus.update msg' model
 

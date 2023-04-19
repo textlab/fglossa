@@ -444,7 +444,7 @@ module Route =
 
 type IServerApi =
     { GetCorpusConfig: CorpusCode -> Async<SharedCorpusInfo>
-      GetCorpusList: unit -> Async<(CorpusCode * CorpusName) list>
+      GetCorpusList: unit -> Async<(CorpusCode * CorpusName) []>
       GetMetadataForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<string []>
       GetMinAndMaxForCategory: CorpusCode * Metadata.CategoryCode * Metadata.Selection -> Async<int64 * int64>
       GetMetadataForTexts: CorpusCode * Metadata.Selection * DatabaseColumn list * PageNumber * Metadata.SortInfo option -> Async<string [] []>
