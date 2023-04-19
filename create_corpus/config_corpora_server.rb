@@ -15,14 +15,17 @@ puts "module Corpora.Server
 //// !!! Auto-generated from corpus directory structure. Do not edit!
 /////////////////////////////////////////////////////////////////////
 
+open System.IO
 open ServerTypes
 open Shared
 
 let getCorpusList () =
-    [
+    [|
 #{corpus_list}
-    ]
-    |> List.map (fun config -> (config.Code, config.Name))
+    |]
+    |> Array.filter (fun config -> not (File.Exists($\"{corpusRoot}/{config.Code}/_hide\")))
+    |> Array.map (fun config -> (config.Code, config.Name))
+    |> Array.sortBy snd
 
 let getCorpus (corpusCode: string) : Corpus =
     match corpusCode with
