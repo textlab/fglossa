@@ -226,7 +226,7 @@ let extractMediaInfo (corpus: Corpus) result =
         |> replace "((?:</\S+?>\s*)+)\}\}" "}}$1" // Find end tags
 
     let timestamps =
-        [| for m in Regex.Matches(result, "<who_start\s+([\d\.]+)><who_stop\s+([\d\.]+)>.*?</who_start>") ->
+        [| for m in Regex.Matches(result', "<who_start\s+([\d\.]+)><who_stop\s+([\d\.]+)>.*?</who_start>") ->
                (m.Groups.[1].Value, m.Groups.[2].Value) |]
 
     let starttimes = timestamps |> Array.map fst
