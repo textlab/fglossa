@@ -17,13 +17,13 @@ let getParts (corpus: Corpus) (step: int) (corpusSize: int64) (maybeCommand: str
         // Multicpu bounds have been defined for this corpus. The startpos for the
         // first cpu in the current step should be one above the last bounds value
         // (i.e., the last endpos) in the previous step.
-        let stepBounds = allBounds.[stepIndex]
+        let stepBounds = allBounds[stepIndex]
 
         let prevLastBounds =
             if step = 1 then
                 0L
             else
-                (allBounds.[stepIndex - 1] |> Array.last)
+                (allBounds[stepIndex - 1] |> Array.last)
 
         stepBounds
         |> Array.mapi (fun cpuIndex endpos ->
@@ -35,7 +35,7 @@ let getParts (corpus: Corpus) (step: int) (corpusSize: int64) (maybeCommand: str
                     else
                         prevLastBounds + 1L
                 else
-                    stepBounds.[cpuIndex - 1] + 1L
+                    stepBounds[cpuIndex - 1] + 1L
 
             (startpos, endpos))
     | _ ->
@@ -268,7 +268,7 @@ let getFileStartEnd (searchParams: SearchParams) =
     | Some cpuCounts ->
         let firstFileIndex, firstFileStart =
             let rec sumCountsFirst sum fileIndex =
-                let newSum = sum + cpuCounts.[fileIndex]
+                let newSum = sum + cpuCounts[fileIndex]
 
                 if newSum > searchParams.Start then
                     // We found the first result file to fetch results from. Return the index of that file as well as the first
@@ -282,7 +282,7 @@ let getFileStartEnd (searchParams: SearchParams) =
 
         let lastFileIndex =
             let rec sumCountsLast sum fileIndex =
-                let newSum = sum + cpuCounts.[fileIndex]
+                let newSum = sum + cpuCounts[fileIndex]
                 // If either the end index can be found in the current file (meaning
                 // that if we add the current count to the sum, we exceed the end
                 // index) or there are no more files, the current file should be the
@@ -324,7 +324,7 @@ let getNonzeroFiles
 
         // Select the range of files that contains the range of results we are asking for
         // and remove files that don't actually contain any results
-        [ for file, count in filesAndCounts.[firstFile..lastFile] do
+        [ for file, count in filesAndCounts[firstFile..lastFile] do
               if count > 0L then file ]
     | _ -> []
 

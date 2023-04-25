@@ -59,8 +59,8 @@ module Spoken =
                         let parts = b.Split('-')
 
                         try
-                            let startBound = Int64.Parse(parts.[0])
-                            let endBound = Int64.Parse(parts.[1])
+                            let startBound = Int64.Parse(parts[0])
+                            let endBound = Int64.Parse(parts[1])
                             endBound - startBound + 1L
                         with
                         | ex -> failwith $"Error in bounds value: {b}")

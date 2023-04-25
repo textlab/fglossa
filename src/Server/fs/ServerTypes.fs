@@ -96,7 +96,7 @@ type Corpus(config: SharedCorpusInfo) =
                                 sizeLine,
                                 "^size\s+\(tokens\):\s+(\d+)"
                             )
-                            .Groups.[1]
+                            .Groups[1]
                             .Value
                         |> int64
 

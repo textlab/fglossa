@@ -111,7 +111,7 @@ let createServerApi ctx =
                 format
             |> Async.AwaitTask }
 
-let errorHandler (ex: Exception) (routeInfo: RouteInfo<Microsoft.AspNetCore.Http.HttpContext>) =
+let errorHandler (ex: Exception) (routeInfo: RouteInfo<HttpContext>) =
     // do some logging
     printfn $"Error at {routeInfo.path} on method {routeInfo.methodName}"
     printfn $"{ex}"
@@ -150,7 +150,7 @@ let restRouter =
 
         // Finally decode the JSON
         let metadataSelectionResult =
-            Decode.Auto.fromString<Metadata.Selection> (serializedMetadataSelection)
+            Decode.Auto.fromString<Metadata.Selection> serializedMetadataSelection
 
         match metadataSelectionResult with
         | Ok metadataSelection ->

@@ -143,8 +143,8 @@ let generateManyToManyExclusions (selection: Metadata.Selection) =
              && not (category.Key.Contains("texts."))
              && category.Value.ShouldExclude then
               let parts = category.Key.Split('.')
-              let table = parts.[0]
-              let column = parts.[1]
+              let table = parts[0]
+              let column = parts[1]
               let join = createJoin table
 
               let subquery =
@@ -413,12 +413,12 @@ let getMetadataForTexts
                                       let dbRowKey = column.Split('.').[1]
 
                                       if row.ContainsKey(dbRowKey) then
-                                          row.[dbRowKey] |> string
+                                          row[dbRowKey] |> string
                                       else
-                                          let tid = row.["tid"] |> string
+                                          let tid = row["tid"] |> string
 
-                                          manyToManyMap.[column].TryFind(tid)
-                                          |> Option.defaultValue ("")
+                                          manyToManyMap[column].TryFind(tid)
+                                          |> Option.defaultValue ""
 
                                   if text <> "\N" then text else "" |] |]
                 | None -> [||]
@@ -459,7 +459,7 @@ let getMetadataForSingleText
                         rows |> Seq.cast |> Seq.head
 
                     [ for category in categories ->
-                          let text = row.[category.Code] |> string
+                          let text = row[category.Code] |> string
 
                           let value =
                               if text <> "\N" then text else ""

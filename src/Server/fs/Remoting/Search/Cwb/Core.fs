@@ -94,7 +94,7 @@ let searchCorpus (connStr: string) (logger: ILogger) (searchParams: SearchParams
                                       HasVideo = false
                                       Text = resultLines }) }) }
         else
-            return failwith $"TOO MANY CQP PROCESSES: {nCqpProcs}; aborting search at {System.DateTime.Now}"
+            return failwith $"TOO MANY CQP PROCESSES: {nCqpProcs}; aborting search at {DateTime.Now}"
     }
 
 let getSearchResults
@@ -432,8 +432,8 @@ let getMetadataDistribution
                                 d.Bounds.Split(':')
                                 |> Array.sumBy (fun b ->
                                     let parts = b.Split('-')
-                                    let startBound = Int64.Parse(parts.[0])
-                                    let endBound = Int64.Parse(parts.[1])
+                                    let startBound = Int64.Parse(parts[0])
+                                    let endBound = Int64.Parse(parts[1])
                                     endBound - startBound + 1L)
 
                             { StringCategoryTextIdsAndTokenCount.CategoryValue = d.CategoryValue
@@ -454,8 +454,8 @@ let getMetadataDistribution
                                 d.Bounds.Split(':')
                                 |> Array.sumBy (fun b ->
                                     let parts = b.Split('-')
-                                    let startBound = Int64.Parse(parts.[0])
-                                    let endBound = Int64.Parse(parts.[1])
+                                    let startBound = Int64.Parse(parts[0])
+                                    let endBound = Int64.Parse(parts[1])
                                     endBound - startBound + 1L)
 
                             { CategoryValue = string d.CategoryValue

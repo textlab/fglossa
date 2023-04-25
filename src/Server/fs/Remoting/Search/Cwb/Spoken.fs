@@ -24,7 +24,7 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
         let corpusSizes = corpus.CorpusSizes()
 
         let endpos =
-            corpusSizes.[cwbCorpus.ToLower()]
+            corpusSizes[cwbCorpus.ToLower()]
 
         let displayedAttrsCmd =
             displayedAttrsCommand corpus searchParams.Queries None
@@ -93,7 +93,7 @@ let transformResults (corpus: Corpus) (queries: Query []) (hits: string []) =
                hitLines
                |> Array.head
                |> fun line ->
-                   Regex.Match(line, "<who_avfile (.+?)>").Groups.[1]
+                   Regex.Match(line, "<who_avfile (.+?)>").Groups[1]
                        .Value
 
            let maybeAudioType =
@@ -227,7 +227,7 @@ let extractMediaInfo (corpus: Corpus) result =
 
     let timestamps =
         [| for m in Regex.Matches(result', "<who_start\s+([\d\.]+)><who_stop\s+([\d\.]+)>.*?</who_start>") ->
-               (m.Groups.[1].Value, m.Groups.[2].Value) |]
+               (m.Groups[1].Value, m.Groups[2].Value) |]
 
     let starttimes = timestamps |> Array.map fst
     let endtimes = timestamps |> Array.map snd
@@ -238,7 +238,7 @@ let extractMediaInfo (corpus: Corpus) result =
     let overallEndtime = endtimes |> Array.last
 
     let speakers =
-        [ for m in Regex.Matches(result', "<who_name\s+(.+?)>") -> m.Groups.[1].Value ]
+        [ for m in Regex.Matches(result', "<who_name\s+(.+?)>") -> m.Groups[1].Value ]
 
     // If we get at hit at the beginning or end of a session, the context may include
     // material from the session before or after. Hence, we need to make sure that
@@ -248,13 +248,13 @@ let extractMediaInfo (corpus: Corpus) result =
         let m =
             Regex.Match(result', "<who_avfile\s+([^>]+)>[^<]*\{\{")
 
-        m.Groups.[1].Value
+        m.Groups[1].Value
 
     let result'' =
         result' |> replace "</?who_avfile ?.*?>" ""
 
     let mediaObjLines =
-        [ for m in Regex.Matches(result'', "<who_stop.+?>(.*?)</who_stop>") -> m.Groups.[1].Value ]
+        [ for m in Regex.Matches(result'', "<who_stop.+?>(.*?)</who_stop>") -> m.Groups[1].Value ]
 
     // Create the data structure that is needed by jPlayer for a single search result
     let displayedAttrs =
@@ -275,7 +275,7 @@ let extractMediaInfo (corpus: Corpus) result =
             let tokens = line'.Split()
 
             let annotation =
-                { Speaker = speakers.[index]
+                { Speaker = speakers[index]
                   Line =
                     tokens
                     |> Array.mapi (fun index token ->
@@ -290,8 +290,8 @@ let extractMediaInfo (corpus: Corpus) result =
                             Array.zip attrNames attrValues |> Map.ofArray
 
                         (index, attrs))
-                  From = starttimes.[index]
-                  To = endtimes.[index]
+                  From = starttimes[index]
+                  To = endtimes[index]
                   IsMatch = isMatch }
 
             (index, annotation))
@@ -381,7 +381,7 @@ let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
                             let parts = line.Split('\t')
 
                             let form =
-                                let candidate = parts.[0]
+                                let candidate = parts[0]
 
                                 if System.String.IsNullOrWhiteSpace(candidate) then
                                     prevForm
@@ -389,9 +389,9 @@ let getGeoDistribution (logger: ILogger) (searchParams: SearchParams) =
                                     prevForm <- candidate
                                     candidate
 
-                            match informantPlaceMap.TryFind(parts.[1]) with
+                            match informantPlaceMap.TryFind(parts[1]) with
                             | Some place ->
-                                let freq = System.Int64.Parse(parts.[2])
+                                let freq = System.Int64.Parse(parts[2])
 
                                 state
                                 |> Map.change form (fun (maybePlaceMap: Map<string, int64> option) ->
@@ -452,7 +452,7 @@ let getMediaObject logger (searchParams: SearchParams) mediaPlayerType pageNumbe
 
         let result =
             match cqpResults with
-            | Some results, _ -> results.[0]
+            | Some results, _ -> results[0]
             | _ -> failwith "Unable to fetch segment for media player"
 
         let mediaObject =
