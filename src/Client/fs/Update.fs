@@ -1335,12 +1335,12 @@ module LoadingCorpus =
         | FetchedCorpusList of (CorpusCode * CorpusName) []
         | FetchedCorpusConfig of SharedCorpusInfo
 
-    let update (msg: Msg) (model: Model) =
-        match msg, model with
-        | FetchedCorpusList corpusList, LoadingCorpus m ->
-            LoadingCorpus { m with MaybeCorpusList = Some corpusList }, Cmd.none
+    let update (msg: Msg) (model: LoadingCorpusModel) =
+        match msg with
+        | FetchedCorpusList corpusList ->
+            LoadingCorpus { model with MaybeCorpusList = Some corpusList }, Cmd.none
 
-        | FetchedCorpusConfig corpusConfig, _ ->
+        | FetchedCorpusConfig corpusConfig ->
             let corpus =
                 Corpora.Client.getCorpus corpusConfig
 
@@ -1400,7 +1400,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg, model with
     | LoadingCorpusMsg msg', LoadingCorpus model' ->
         let newModel, cmd =
-            LoadingCorpus.update msg' model
+            LoadingCorpus.update msg' model'
 
         newModel, Cmd.map LoadedCorpusMsg cmd
     | LoadedCorpusMsg msg', LoadedCorpus model' ->
