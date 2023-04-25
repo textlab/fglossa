@@ -771,7 +771,7 @@ module MetadataMenu =
         React.useEffectOnce focusModal
 
         let coords =
-            createObj [| for (place, lat, lng) in geoCoords -> (place, [| lat; lng |]) |]
+            createObj [| for place, lat, lng in geoCoords -> (place, [| lat; lng |]) |]
 
         let config =
             {| API_KEY = googleMapsApiKey
@@ -794,10 +794,10 @@ module MetadataMenu =
 
         let okHandler (results: obj) =
             let catCodes =
-                Fable.Core.JS.Constructors.Object.keys (results)
+                Fable.Core.JS.Constructors.Object.keys results
 
             let values =
-                Fable.Core.JS.Constructors.Object.values (results)
+                Fable.Core.JS.Constructors.Object.values results
 
             for catCode, value in Seq.zip catCodes values do
                 let categoryObj =
@@ -817,8 +817,8 @@ module MetadataMenu =
                     match categoryObj with
                     | :? NumberCategory as numberCat ->
                         let valueArray = value :?> string []
-                        let min = valueArray.[0]
-                        let max = valueArray.[1]
+                        let min = valueArray[0]
+                        let max = valueArray[1]
                         dispatch (SetIntervalCategoryMode(numberCat, IntervalMode))
                         dispatch (SetIntervalFrom(numberCat, min))
                         dispatch (SetIntervalTo(numberCat, max))

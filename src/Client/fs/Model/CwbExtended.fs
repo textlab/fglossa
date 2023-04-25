@@ -556,7 +556,7 @@ let updateQuery model query queryIndex newQueryTerms =
 
     let newQueries =
         model.Search.Params.Queries
-        |> Array.updateAt queryIndex { model.Search.Params.Queries.[queryIndex] with QueryString = newQueryCqp }
+        |> Array.updateAt queryIndex { model.Search.Params.Queries[queryIndex] with QueryString = newQueryCqp }
 
     { model with Search = { model.Search with Params = { model.Search.Params with Queries = newQueries } } }
 
