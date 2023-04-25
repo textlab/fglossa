@@ -12,11 +12,11 @@ open Shared.StringUtils
 
 let loadGoogleMapsApi apiKey =
     let script =
-        Browser.Dom.document.createElement ("script") :?> Browser.Types.HTMLScriptElement
+        Browser.Dom.document.createElement "script" :?> Browser.Types.HTMLScriptElement
 
     script.src <- $"https://maps.googleapis.com/maps/api/js?key={apiKey}&libraries=drawing,geometry"
 
-    Browser.Dom.document.head.appendChild (script)
+    Browser.Dom.document.head.appendChild script
     |> ignore
 
 let cleanupResult (result: SearchResult) =
@@ -253,7 +253,7 @@ module LoadedCorpus =
                     else
                         // Calculate the first and last result index (zero-based) to request from the server
                         let firstResult =
-                            (pageNumbers.[0] - 1)
+                            (pageNumbers[0] - 1)
                             * loadedCorpusModel.Search.Params.PageSize
                             |> int64
 
@@ -578,10 +578,10 @@ module LoadedCorpus =
                     let listItems =
                         [| for row in rows ->
                                let m = Regex.Match(row, "(\d+)\s+(.+)")
-                               let freq = Int64.Parse(m.Groups.[1].Value)
+                               let freq = Int64.Parse(m.Groups[1].Value)
 
                                let attrValues =
-                                   m.Groups.[2].Value.Split('\t')
+                                   m.Groups[2].Value.Split('\t')
 
                                { Frequency = freq
                                  AttributeValues = attrValues } |]
@@ -926,7 +926,7 @@ module LoadedCorpus =
                 loadedCorpusModel.Search.Params.Queries
                 |> Array.updateAt
                     queryIndex
-                    { loadedCorpusModel.Search.Params.Queries.[queryIndex] with
+                    { loadedCorpusModel.Search.Params.Queries[queryIndex] with
                         HasFinalSpace = hasFinalSpace
                         QueryString = text }
 
@@ -1364,7 +1364,7 @@ module LoadingCorpus =
                   SelectionTableSort = None
                   Substate = CorpusStart
                   TextSelectionInfo = "" }
-                |> Update.Metadata.update (Update.Metadata.Msg.FetchTextAndTokenCounts)
+                |> Update.Metadata.update Update.Metadata.Msg.FetchTextAndTokenCounts
 
             corpus.SharedInfo.GoogleMapsApiKey
             |> Option.iter loadGoogleMapsApi

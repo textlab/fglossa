@@ -532,17 +532,17 @@ module ResultsView =
             (coordMap: Map<string, Map<string, int64>>)
             =
             let selectedColor, setSelectedColor =
-                React.useState ("yellow")
+                React.useState "yellow"
 
             // coloredPhons is a map from a color name to a set of phonetic forms whose buttons have that color
             let (coloredPhons: Map<string, Set<string>>), setColorPhons =
-                React.useState (Map.empty)
+                React.useState Map.empty
 
             let colorPicker selectedColor color =
                 let borderColor =
                     if
                         [ "white"; "red"; "orange"; "yellow" ]
-                        |> List.contains (color)
+                        |> List.contains color
                     then
                         "black"
                     else
@@ -580,10 +580,10 @@ module ResultsView =
                     | None -> []
 
                 let total =
-                    coordMap.[phon] |> Map.toArray |> Array.sumBy snd
+                    coordMap[phon] |> Map.toArray |> Array.sumBy snd
 
                 let titleText =
-                    coordMap.[phon]
+                    coordMap[phon]
                     |> Map.toArray
                     |> Array.sortBy snd
                     |> Array.rev
@@ -645,7 +645,7 @@ module ResultsView =
                 |> Array.groupBy (fun (location, _, _) -> location)
                 |> Array.map (fun (location, phonFreqs) ->
                     let phonFreqMap =
-                        [| for (_, phon, freq) in phonFreqs -> phon, freq |]
+                        [| for _, phon, freq in phonFreqs -> phon, freq |]
                         |> Map.ofArray
 
                     (location, phonFreqMap))
@@ -675,9 +675,9 @@ module ResultsView =
                        if allCoordsMap.TryFind(locationName).IsSome then
                            yield
                                {| Name = locationName
-                                  Coords = allCoordsMap.[locationName]
+                                  Coords = allCoordsMap[locationName]
                                   Phons =
-                                   locationPhonFreqs.[locationName]
+                                   locationPhonFreqs[locationName]
                                    |> Map.toArray
                                    |> Array.map (fun (phon, freq) -> $"{phon}: {freq}")
                                    |> String.concat "; " |} |]
@@ -696,10 +696,10 @@ module ResultsView =
             // found one or more of the phonetic forms selected for that color, and create
             // colored markers for them.
             let selectedPoints =
-                [| for (color, phons) in coloredPhons |> Map.toArray do
+                [| for color, phons in coloredPhons |> Map.toArray do
                        yield!
                            [| for phon in phons do
-                                  let locationFreqs = coordMap.[phon]
+                                  let locationFreqs = coordMap[phon]
 
                                   let selectedLocations =
                                       Set.ofSeq locationFreqs.Keys
@@ -936,7 +936,7 @@ module ResultsView =
                                prop.onChange (fun (s: string) ->
                                    if s <> "" then
                                        let category =
-                                           corpus.MetadataQuickView.[int s]
+                                           corpus.MetadataQuickView[int s]
 
                                        dispatch (SelectCategory category)) ]
 

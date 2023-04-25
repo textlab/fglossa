@@ -17,7 +17,7 @@ let TranslationButton pageNumber rowIndex fullText (translations: Map<string, st
         let target = "en"
 
         let searchText =
-            Fable.Core.JS.encodeURI (fullText)
+            Fable.Core.JS.encodeURI fullText
 
         let url =
             $"https://www.googleapis.com/language/translate/v2?q={searchText}&key={googleTransKey}&target={target}"

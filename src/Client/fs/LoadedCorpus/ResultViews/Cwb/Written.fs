@@ -26,9 +26,9 @@ let concordanceTable
                         // Show the corrected or original
                         // form in italics, if present
                         match maybeOrigCorrIndex with
-                        | Some origCorrIndex ->
+                        | Some _origCorrIndex ->
                             attrs
-                            |> Array.mapi (fun attrIndex attr ->
+                            |> Array.mapi (fun _attrIndex attr ->
                                 // TODO: Fix the use of italics. Does not work with Feliz.Bulma.Tooltip
                                 // if attrIndex = origCorrIndex then
                                 //     $"<i>{attr}</i>"
@@ -68,7 +68,7 @@ let concordanceTable
                             match corpus.SharedInfo.FontFamily with
                             | Some fontFamily -> prop.style [ style.fontFamily fontFamily ]
                             | None -> ignore None
-                            prop.dangerouslySetInnerHTML (attributes.[displayedAttributeIndex] + " ") ]
+                            prop.dangerouslySetInnerHTML (attributes[displayedAttributeIndex] + " ") ]
             else
                 // With multi-word expressions, the non-last parts become simple strings
                 // without any attributes (i.e., no slashes) when we split the text on
@@ -86,7 +86,7 @@ let concordanceTable
         let components =
             if matches.Count > 0 then
                 matches
-                |> Seq.map (fun m -> Html.span $"{m.Groups.[2]}: {m.Groups.[3]}")
+                |> Seq.map (fun m -> Html.span $"{m.Groups[2]}: {m.Groups[3]}")
                 |> Seq.toArray
             else
                 processField 0 maybeOrigCorrIndex maybeLemmaIndex line
@@ -106,10 +106,10 @@ let concordanceTable
                 )
                 .Groups
 
-        let sId = groups.[1].Value
-        let pre = groups.[2].Value
-        let searchWord = groups.[3].Value
-        let post = groups.[4].Value
+        let sId = groups[1].Value
+        let pre = groups[2].Value
+        let searchWord = groups[3].Value
+        let post = groups[4].Value
 
         (sId, pre, searchWord, post)
 
