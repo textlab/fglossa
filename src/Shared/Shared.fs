@@ -179,6 +179,7 @@ type SharedCorpusInfo =
       GoogleMapsApiKey: string option
       GoogleTranslateApiKey: string option
       Info: string option
+      IsTreebank: bool
       LanguageConfig: LanguageConfig
       Logo: string option
       Modality: CorpusModality
@@ -200,7 +201,8 @@ type SharedCorpusInfo =
             ?externalTools,
             ?geoMapConfig,
             ?textsReferral,
-            ?dataFiles
+            ?dataFiles,
+            ?isTreebank
         ) =
         let derivedTextsReferral =
             match textsReferral with
@@ -222,6 +224,7 @@ type SharedCorpusInfo =
           GoogleMapsApiKey = None
           GoogleTranslateApiKey = None
           Info = None
+          IsTreebank = defaultArg isTreebank false
           LanguageConfig = defaultArg languageConfig (Monolingual None)
           Logo = logo
           Modality = defaultArg modality Written

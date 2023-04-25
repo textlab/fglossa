@@ -201,7 +201,6 @@ let concordanceTable
                                         Bulma.button.button [ button.isSmall
                                                               prop.title "Show waveform"
                                                               prop.style [ style.marginLeft 2
-                                                                           style.marginRight 12
                                                                            style.marginTop 2
                                                                            style.marginBottom 2
                                                                            style.paddingLeft 6

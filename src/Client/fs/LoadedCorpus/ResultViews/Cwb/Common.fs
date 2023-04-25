@@ -75,20 +75,39 @@ let idColumn
     // which are irrelevant when fetching metadata.
     let textId = Regex.Replace(sId, "\..+", "")
 
-    Html.div [ Html.div [ Html.a [ prop.href ""
-                                   prop.onClick (fun e ->
-                                       e.preventDefault ()
-                                       e.stopPropagation ()
-                                       dispatch (FetchMetadataForText(corpus, textId)))
-                                   prop.children [ Html.span sId ] ]
-                          match corpus.SharedInfo.GoogleTranslateApiKey, maybeFullText with
-                          | Some key, Some fullText ->
-                              if corpus.SharedInfo.ExternalTools
-                                 |> List.contains ExternalTool.GoogleTranslate then
-                                  TranslationButton pageNumber rowIndex fullText model.Translations key dispatch
+    Html.div [ Html.div [ Html.div [ Html.a [ prop.href ""
+                                              prop.onClick (fun e ->
+                                                  e.preventDefault ()
+                                                  e.stopPropagation ()
+                                                  dispatch (FetchMetadataForText(corpus, textId)))
+                                              prop.children [ Html.span sId ] ] ]
+                          Html.div [
+                              match corpus.SharedInfo.GoogleTranslateApiKey, maybeFullText with
+                              | Some key, Some fullText ->
+                                  if corpus.SharedInfo.ExternalTools
+                                     |> List.contains ExternalTool.GoogleTranslate then
+                                      TranslationButton
+                                          pageNumber
+                                          rowIndex
+                                          fullText
+                                          model.Translations
+                                          key
+                                          dispatch
+                                  else
+                                      Html.none
+                              | _ -> Html.none
+                              if corpus.SharedInfo.IsTreebank then
+                                  Html.div [ prop.style [ style.display.inlineBlock
+                                                          style.marginLeft 1
+                                                          style.marginRight 1
+                                                          style.marginBottom 2 ]
+                                             prop.children [ Bulma.button.button [ button.isSmall
+                                                                                   prop.style [ style.fontSize 10 ]
+                                                                                   prop.title "Syntactic tree"
+                                                                                   prop.onClick (fun _ -> ())
+                                                                                   prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-manat-sign" ] ] ] ] ] ] ]
                               else
-                                  Html.none
-                          | _ -> Html.none ]
+                                  Html.none ] ]
                corpus.ResultLinks(pageNumber, rowIndex, textId, corpus.SharedInfo) ]
 
 

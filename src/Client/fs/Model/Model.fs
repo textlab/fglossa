@@ -95,6 +95,14 @@ type MediaPlayerInfo =
       RowIndex: int
       MediaObject: MediaObject }
 
+type SyntaxNode =
+    { Index: int
+      OrthographicForm: string
+      PartOfSpeech: string
+      Dependency: int
+      SyntacticFunction: string
+      IsMatch: bool }
+
 type ConcordanceModel =
     { ContextSizeTextValue: string
       IsSearching: bool
@@ -121,7 +129,8 @@ type ConcordanceModel =
       MediaPlayer: MediaPlayerInfo option
       VideoContextSize: int
       VideoContextUnit: string
-      Translations: Map<string, string> }
+      Translations: Map<string, string>
+      SyntaxTrees: Map<string, SyntaxNode []> }
     static member Init(numSteps, contextSizeTextValue, quickViewMetadata) =
         { ContextSizeTextValue = contextSizeTextValue
           IsSearching = true
@@ -142,7 +151,8 @@ type ConcordanceModel =
           MediaPlayer = None
           VideoContextSize = 25
           VideoContextUnit = "who_start"
-          Translations = Map.empty }
+          Translations = Map.empty
+          SyntaxTrees = Map.empty }
 
     member this.NumResultPages(pageSize) =
         match this.NumResults with

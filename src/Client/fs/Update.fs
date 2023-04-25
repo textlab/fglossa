@@ -71,6 +71,7 @@ module LoadedCorpus =
                 | DownloadSearchResults of DownloadFormat
                 | DownloadedSearchResults of byte []
                 | SetTranslation of string * string
+                | SetSyntaxTree of string * string
 
             let update
                 (msg: Msg)
