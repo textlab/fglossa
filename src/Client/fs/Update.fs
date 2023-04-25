@@ -1371,8 +1371,6 @@ module LoadingCorpus =
 
             LoadedCorpus m, Cmd.map LoadedCorpus.MetadataMsg cmd
 
-        | _ -> failwithf $"Incompatible message and model: {msg}; {model}"
-
 ////////////////////////////////
 // Update
 ////////////////////////////////
