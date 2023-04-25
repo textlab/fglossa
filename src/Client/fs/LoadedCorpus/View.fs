@@ -737,7 +737,6 @@ module ResultsView =
         /// View.LoadedCorpus.ResultsView.FrequencyLists.view
         ////////////////////////////////////////////////////
         let view
-            (loadedCorpusModel: LoadedCorpusModel)
             (frequencyListsModel: FrequencyListsModel)
             (corpus: Corpus)
             (dispatch: Msg -> unit)
@@ -1168,7 +1167,6 @@ module ResultsView =
                   | None -> failwith "No geographical coordinates provided!"
               | FrequencyLists frequencyListsModel ->
                   FrequencyLists.view
-                      loadedCorpusModel
                       frequencyListsModel
                       corpus
                       (ShowingResults.FrequencyListsMsg >> dispatch)
