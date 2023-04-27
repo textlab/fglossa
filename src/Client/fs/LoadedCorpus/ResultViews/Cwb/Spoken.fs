@@ -227,7 +227,6 @@ let concordanceTable
                                                                 corpus
                                                                 model
                                                                 resultInfo.SId
-                                                                model.ResultPageNo
                                                                 resultInfo.FullText
                                                                 rowIndex
                                                                 dispatch

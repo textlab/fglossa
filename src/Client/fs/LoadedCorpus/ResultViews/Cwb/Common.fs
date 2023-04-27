@@ -60,7 +60,6 @@ let idColumn
     (corpus: Corpus)
     (model: ConcordanceModel)
     sId
-    (pageNumber: int)
     (maybeFullText: string option)
     rowIndex
     (dispatch: Msg -> unit)
@@ -87,7 +86,7 @@ let idColumn
                                   if corpus.SharedInfo.ExternalTools
                                      |> List.contains ExternalTool.GoogleTranslate then
                                       TranslationButton
-                                          pageNumber
+                                          model.ResultPageNo
                                           rowIndex
                                           fullText
                                           model.Translations
@@ -108,7 +107,7 @@ let idColumn
                                                                                    prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-manat-sign" ] ] ] ] ] ] ]
                               else
                                   Html.none ] ]
-               corpus.ResultLinks(pageNumber, rowIndex, textId, corpus.SharedInfo) ]
+               corpus.ResultLinks(model.ResultPageNo, rowIndex, textId, corpus.SharedInfo) ]
 
 
 let textColumns (resultLineFields: ResultLineFields) =

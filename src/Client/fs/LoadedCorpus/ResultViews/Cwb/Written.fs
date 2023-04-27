@@ -121,7 +121,6 @@ let concordanceTable
                                                 corpus
                                                 model
                                                 resultLineFields.SId
-                                                model.ResultPageNo
                                                 None
                                                 index
                                                 dispatch ] ]
