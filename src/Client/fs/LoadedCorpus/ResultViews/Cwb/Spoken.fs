@@ -480,6 +480,7 @@ let concordanceTable
 
         [ orthographic
           translatedRow rowIndex
+          syntaxRow model rowIndex
           if phonetic.IsSome then phonetic.Value
           separator ]
 

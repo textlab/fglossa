@@ -497,6 +497,7 @@ module LoadedCorpus =
                     { concordanceModel with
                         Translations = concordanceModel.Translations.Add(translationKey, translation) },
                     Cmd.none
+                // | SetSyntaxTree
 
 
         module FrequencyLists =

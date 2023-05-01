@@ -1,0 +1,34 @@
+.match{
+    fill: green;
+    font-weight:bold;
+}
+.match_edge{
+    stroke: green;
+    stroke-width: 3.6;
+    fill: none;
+}
+.root{
+    fill: #fff;
+    font-weight:bold;
+}
+.hover_egde{
+    
+}
+.highlight{ /* the node labels */
+    stroke: red;
+}
+
+.edge_highlight{ /* the edges */
+    stroke-width: 1.5;
+    stroke: #f00;
+    fill: none;
+}
+
+.edge{
+    stroke: #000;
+    stroke-width: 0.5;
+    fill: none;
+}
+.edge_label_highlight{
+    fill: #f00;
+}

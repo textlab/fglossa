@@ -6,6 +6,7 @@ open Feliz
 open Feliz.Bulma
 open Model
 open Shared
+open StringUtils
 open Update.LoadedCorpus.ShowingResults.Concordance
 
 [<ReactComponent>]
@@ -103,8 +104,11 @@ let idColumn
                                              prop.children [ Bulma.button.button [ button.isSmall
                                                                                    prop.style [ style.fontSize 10 ]
                                                                                    prop.title "Syntactic tree"
-                                                                                   prop.onClick (fun _ -> ())
-                                                                                   prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-manat-sign" ] ] ] ] ] ] ]
+                                                                                   prop.onClick (fun _ ->
+                                                                                       printfn $"{maybeFullText}"
+                                                                                       ()
+                                                                                       )
+                                                                                   prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-sitemap" ] ] ] ] ] ] ]
                               else
                                   Html.none ] ]
                corpus.ResultLinks(model.ResultPageNo, rowIndex, textId, corpus.SharedInfo) ]
@@ -139,3 +143,50 @@ let separatorRow rowIndex =
               prop.style [ style.backgroundColor "#f1f1f1" ]
               prop.children [ Html.td [ prop.colSpan 4
                                         prop.style [ style.padding 2 ] ] ] ]
+
+[<ReactComponent(import = "default", from = "../../../../syntax_tree.jsx")>]
+let SyntaxTree (cnl: SyntaxNode []) = React.imported ()
+
+let syntaxRow (model: ConcordanceModel) rowIndex =
+    let m =
+        model.ResultPages[model.ResultPageNo][rowIndex]
+
+    let tokens =
+        m.Text[0]
+        |> replace "<who_name\s+(.+?)>\s*" "<who_name_$1> "
+        |> replace "\s*</who_name>" " $&"
+        |> fun s -> s.Split()
+        |> Array.skip 3
+
+    let nodes =
+        [| for token in tokens ->
+               let isMatch = Regex.IsMatch(token, "^\{\{.+\}\}$")
+               let attrs =
+                   token
+                   |> replace "^\{\{" ""
+                   |> replace "\}\}$" ""
+                   |> fun t -> t.Split('/')
+               let orthographicForm = attrs[0]
+               let partOfSpeech = attrs[3]
+               let synFunc = attrs[attrs.Length - 3]
+               let index = attrs[attrs.Length - 2] |> int
+               let dependency =
+                   attrs[attrs.Length - 1] |> int
+
+               { index = index
+                 ort = orthographicForm
+                 pos = partOfSpeech
+                 dep = dependency
+                 ``fun`` = synFunc
+                 ``match`` = isMatch } |]
+
+    let key = $"{model.ResultPageNo}_{rowIndex}"
+
+    // match model.SyntaxTrees.TryFind(key) with
+    // | Some syntaxTree ->
+    Html.tr [ Html.td []
+              Html.td [ prop.colSpan 3
+                        prop.style [ style.color "#737373" ]
+                        prop.children (SyntaxTree(nodes))  ]]
+// | None -> Html.none
+

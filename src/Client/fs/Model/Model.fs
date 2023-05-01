@@ -96,12 +96,12 @@ type MediaPlayerInfo =
       MediaObject: MediaObject }
 
 type SyntaxNode =
-    { Index: int
-      OrthographicForm: string
-      PartOfSpeech: string
-      Dependency: int
-      SyntacticFunction: string
-      IsMatch: bool }
+    { index: int
+      ort: string
+      pos: string
+      dep: int
+      ``fun``: string
+      ``match``: bool }
 
 type ConcordanceModel =
     { ContextSizeTextValue: string
