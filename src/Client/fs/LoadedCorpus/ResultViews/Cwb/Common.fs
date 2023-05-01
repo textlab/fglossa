@@ -188,9 +188,10 @@ let syntaxRow (model: ConcordanceModel) rowIndex =
                      ``fun`` = synFunc
                      ``match`` = isMatch } |]
 
-        Html.tr [ Html.td [ prop.colSpan 4
-                            prop.style [ style.maxWidth 1100
-                                         style.overflowX.auto ]
-                            prop.children (SyntaxTree(nodes)) ] ]
+        Html.tr [ prop.key $"syntax_{key}"
+                  prop.children [ Html.td [ prop.colSpan 4
+                                            prop.style [ style.maxWidth 1100
+                                                         style.overflowX.auto ]
+                                            prop.children (SyntaxTree(nodes)) ] ] ]
     else
         Html.none
