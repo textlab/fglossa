@@ -71,7 +71,7 @@ module LoadedCorpus =
                 | DownloadSearchResults of DownloadFormat
                 | DownloadedSearchResults of byte []
                 | SetTranslation of string * string
-                | SetSyntaxTree of string * string
+                | SetSyntaxTree of string
 
             let update
                 (msg: Msg)
@@ -497,7 +497,15 @@ module LoadedCorpus =
                     { concordanceModel with
                         Translations = concordanceModel.Translations.Add(translationKey, translation) },
                     Cmd.none
-                // | SetSyntaxTree
+                | SetSyntaxTree key ->
+                    let newKeys =
+                        if concordanceModel.VisibleSyntaxTreeKeys.Contains(key) then
+                            concordanceModel.VisibleSyntaxTreeKeys.Remove(key)
+                        else
+                            concordanceModel.VisibleSyntaxTreeKeys.Add(key)
+                    loadedCorpusModel,
+                    { concordanceModel with VisibleSyntaxTreeKeys = newKeys },
+                    Cmd.none
 
 
         module FrequencyLists =

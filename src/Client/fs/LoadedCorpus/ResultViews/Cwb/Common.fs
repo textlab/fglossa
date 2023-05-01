@@ -45,6 +45,7 @@ let TranslationButton pageNumber rowIndex fullText (translations: Map<string, st
                                                      prop.style [ style.fontSize 10 ]
                                                      prop.disabled (translations.ContainsKey translationKey)
                                                      prop.onClick onClick
+                                                     prop.title "Translate with Google Translate"
                                                      prop.text "Trans" ] ] ]
 
 type ResultLineFields =
@@ -102,10 +103,9 @@ let idColumn
                                                                  style.marginBottom 2 ]
                                                     prop.children [ Bulma.button.button [ button.isSmall
                                                                                           prop.style [ style.fontSize 10 ]
-                                                                                          prop.title "Syntactic tree"
+                                                                                          prop.title "Show syntactic tree"
                                                                                           prop.onClick (fun _ ->
-                                                                                              printfn $"{maybeFullText}"
-                                                                                              ())
+                                                                                              SetSyntaxTree $"{model.ResultPageNo}_{rowIndex}" |> dispatch)
                                                                                           prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-sitemap" ] ] ] ] ] ] ]
                                      else
                                          Html.none ] ]
@@ -183,11 +183,8 @@ let syntaxRow (model: ConcordanceModel) rowIndex =
 
     let key = $"{model.ResultPageNo}_{rowIndex}"
 
-    // match model.SyntaxTrees.TryFind(key) with
-    // | Some syntaxTree ->
-    Html.tr [ Html.td []
-              Html.td [ prop.colSpan 3
-                        prop.style [ style.color "#737373" ]
-                        prop.children (SyntaxTree(nodes))  ]]
-// | None -> Html.none
-
+    if model.VisibleSyntaxTreeKeys.Contains(key) then
+        Html.tr [ Html.td [ prop.colSpan 4
+                            prop.style [ style.maxWidth 1100; style.overflowX.auto ]
+                            prop.children (SyntaxTree(nodes)) ] ]
+    else Html.none

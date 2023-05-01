@@ -130,7 +130,7 @@ type ConcordanceModel =
       VideoContextSize: int
       VideoContextUnit: string
       Translations: Map<string, string>
-      SyntaxTrees: Map<string, SyntaxNode []> }
+      VisibleSyntaxTreeKeys: Set<string> }
     static member Init(numSteps, contextSizeTextValue, quickViewMetadata) =
         { ContextSizeTextValue = contextSizeTextValue
           IsSearching = true
@@ -152,7 +152,7 @@ type ConcordanceModel =
           VideoContextSize = 25
           VideoContextUnit = "who_start"
           Translations = Map.empty
-          SyntaxTrees = Map.empty }
+          VisibleSyntaxTreeKeys = Set.empty }
 
     member this.NumResultPages(pageSize) =
         match this.NumResults with

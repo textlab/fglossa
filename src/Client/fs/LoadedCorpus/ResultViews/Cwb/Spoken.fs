@@ -480,8 +480,9 @@ let concordanceTable
 
         [ orthographic
           translatedRow rowIndex
-          syntaxRow model rowIndex
           if phonetic.IsSome then phonetic.Value
+          if corpus.SharedInfo.IsTreebank then
+              syntaxRow model rowIndex
           separator ]
 
     let attributes =
