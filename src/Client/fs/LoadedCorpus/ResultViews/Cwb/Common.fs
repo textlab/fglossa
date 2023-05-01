@@ -103,9 +103,12 @@ let idColumn
                                                                  style.marginBottom 2 ]
                                                     prop.children [ Bulma.button.button [ button.isSmall
                                                                                           prop.style [ style.fontSize 10 ]
-                                                                                          prop.title "Show syntactic tree"
+                                                                                          prop.title
+                                                                                              "Show syntactic tree"
                                                                                           prop.onClick (fun _ ->
-                                                                                              SetSyntaxTree $"{model.ResultPageNo}_{rowIndex}" |> dispatch)
+                                                                                              SetSyntaxTree
+                                                                                                  $"{model.ResultPageNo}_{rowIndex}"
+                                                                                              |> dispatch)
                                                                                           prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-sitemap" ] ] ] ] ] ] ]
                                      else
                                          Html.none ] ]
@@ -146,11 +149,11 @@ let separatorRow rowIndex =
 let SyntaxTree (cnl: SyntaxNode []) = React.imported ()
 
 let syntaxRow (model: ConcordanceModel) rowIndex =
-    let m =
+    let searchResult =
         model.ResultPages[model.ResultPageNo][rowIndex]
 
     let tokens =
-        m.Text[0]
+        searchResult.Text[0]
         |> replace "<who_name\s+(.+?)>\s*" "<who_name_$1> "
         |> replace "\s*</who_name>" " $&"
         |> fun s -> s.Split()
@@ -171,6 +174,7 @@ let syntaxRow (model: ConcordanceModel) rowIndex =
                let partOfSpeech = attrs[3]
                let synFunc = attrs[attrs.Length - 3]
                let index = attrs[attrs.Length - 2] |> int
+
                let dependency =
                    attrs[attrs.Length - 1] |> int
 
@@ -185,6 +189,8 @@ let syntaxRow (model: ConcordanceModel) rowIndex =
 
     if model.VisibleSyntaxTreeKeys.Contains(key) then
         Html.tr [ Html.td [ prop.colSpan 4
-                            prop.style [ style.maxWidth 1100; style.overflowX.auto ]
+                            prop.style [ style.maxWidth 1100
+                                         style.overflowX.auto ]
                             prop.children (SyntaxTree(nodes)) ] ]
-    else Html.none
+    else
+        Html.none
