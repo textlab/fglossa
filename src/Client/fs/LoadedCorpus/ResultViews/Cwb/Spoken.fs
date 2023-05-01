@@ -311,6 +311,11 @@ let concordanceTable
                       "<i>_</i>" ]
                     |> List.contains attr
                     |> not)
+                |> fun a ->
+                    if corpus.SharedInfo.IsTreebank then
+                        Array.sub a 0 (a.Length - 2)
+                    else
+                        a
                 |> Array.map snd
 
             let tipText = tipAttrs |> String.concat " "
