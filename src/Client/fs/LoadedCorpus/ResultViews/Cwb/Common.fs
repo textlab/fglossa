@@ -81,36 +81,34 @@ let idColumn
                                                   e.stopPropagation ()
                                                   dispatch (FetchMetadataForText(corpus, textId)))
                                               prop.children [ Html.span sId ] ] ]
-                          Html.div [
-                              match corpus.SharedInfo.GoogleTranslateApiKey, maybeFullText with
-                              | Some key, Some fullText ->
-                                  if corpus.SharedInfo.ExternalTools
-                                     |> List.contains ExternalTool.GoogleTranslate then
-                                      TranslationButton
-                                          model.ResultPageNo
-                                          rowIndex
-                                          fullText
-                                          model.Translations
-                                          key
-                                          dispatch
-                                  else
-                                      Html.none
-                              | _ -> Html.none
-                              if corpus.SharedInfo.IsTreebank then
-                                  Html.div [ prop.style [ style.display.inlineBlock
-                                                          style.marginLeft 1
-                                                          style.marginRight 1
-                                                          style.marginBottom 2 ]
-                                             prop.children [ Bulma.button.button [ button.isSmall
-                                                                                   prop.style [ style.fontSize 10 ]
-                                                                                   prop.title "Syntactic tree"
-                                                                                   prop.onClick (fun _ ->
-                                                                                       printfn $"{maybeFullText}"
-                                                                                       ()
-                                                                                       )
-                                                                                   prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-sitemap" ] ] ] ] ] ] ]
-                              else
-                                  Html.none ] ]
+                          Html.div [ match corpus.SharedInfo.GoogleTranslateApiKey, maybeFullText with
+                                     | Some key, Some fullText ->
+                                         if corpus.SharedInfo.ExternalTools
+                                            |> List.contains ExternalTool.GoogleTranslate then
+                                             TranslationButton
+                                                 model.ResultPageNo
+                                                 rowIndex
+                                                 fullText
+                                                 model.Translations
+                                                 key
+                                                 dispatch
+                                         else
+                                             Html.none
+                                     | _ -> Html.none
+                                     if corpus.SharedInfo.IsTreebank then
+                                         Html.div [ prop.style [ style.display.inlineBlock
+                                                                 style.marginLeft 1
+                                                                 style.marginRight 1
+                                                                 style.marginBottom 2 ]
+                                                    prop.children [ Bulma.button.button [ button.isSmall
+                                                                                          prop.style [ style.fontSize 10 ]
+                                                                                          prop.title "Syntactic tree"
+                                                                                          prop.onClick (fun _ ->
+                                                                                              printfn $"{maybeFullText}"
+                                                                                              ())
+                                                                                          prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-sitemap" ] ] ] ] ] ] ]
+                                     else
+                                         Html.none ] ]
                corpus.ResultLinks(model.ResultPageNo, rowIndex, textId, corpus.SharedInfo) ]
 
 
@@ -160,12 +158,15 @@ let syntaxRow (model: ConcordanceModel) rowIndex =
 
     let nodes =
         [| for token in tokens ->
-               let isMatch = Regex.IsMatch(token, "^\{\{.+\}\}$")
+               let isMatch =
+                   Regex.IsMatch(token, "^\{\{.+\}\}$")
+
                let attrs =
                    token
                    |> replace "^\{\{" ""
                    |> replace "\}\}$" ""
                    |> fun t -> t.Split('/')
+
                let orthographicForm = attrs[0]
                let partOfSpeech = attrs[3]
                let synFunc = attrs[attrs.Length - 3]
