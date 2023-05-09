@@ -540,10 +540,8 @@ module ResultsView =
 
             let colorPicker selectedColor color =
                 let borderColor =
-                    if
-                        [ "white"; "red"; "orange"; "yellow" ]
-                        |> List.contains color
-                    then
+                    if [ "white"; "red"; "orange"; "yellow" ]
+                       |> List.contains color then
                         "black"
                     else
                         "red"
@@ -736,11 +734,7 @@ module ResultsView =
         ////////////////////////////////////////////////////
         /// View.LoadedCorpus.ResultsView.FrequencyLists.view
         ////////////////////////////////////////////////////
-        let view
-            (frequencyListsModel: FrequencyListsModel)
-            (corpus: Corpus)
-            (dispatch: Msg -> unit)
-            =
+        let view (frequencyListsModel: FrequencyListsModel) (corpus: Corpus) (dispatch: Msg -> unit) =
 
             let checkbox isChecked (attribute: Cwb.PositionalAttribute) =
                 Html.label [ prop.style [ style.marginRight 15 ]
@@ -856,10 +850,11 @@ module ResultsView =
                                                                     Bulma.levelItem fromTokenInput
                                                                     Bulma.levelItem toTokenInput ] ]
                                     buttonRow ]
-                    | None -> Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem caseSensitiveCheckbox
-                                                                          Bulma.levelItem fromTokenInput
-                                                                          Bulma.levelItem toTokenInput ] ]
-                                          buttonRow ]
+                    | None ->
+                        Html.span [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem caseSensitiveCheckbox
+                                                                    Bulma.levelItem fromTokenInput
+                                                                    Bulma.levelItem toTokenInput ] ]
+                                    buttonRow ]
                 | Multilingual _languages -> failwith "NOT IMPLEMENTED"
 
             let frequencyTable =
@@ -1166,10 +1161,7 @@ module ResultsView =
                   | Some coords -> GeoDistrMap.GeoMapController coords geoMapConfig coordMap
                   | None -> failwith "No geographical coordinates provided!"
               | FrequencyLists frequencyListsModel ->
-                  FrequencyLists.view
-                      frequencyListsModel
-                      corpus
-                      (ShowingResults.FrequencyListsMsg >> dispatch)
+                  FrequencyLists.view frequencyListsModel corpus (ShowingResults.FrequencyListsMsg >> dispatch)
               | MetadataDistribution metadataDistributionModel ->
                   MetadataDistribution.view
                       corpus
