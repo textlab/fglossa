@@ -574,11 +574,24 @@ module LoadedCorpus =
 
                     loadedCorpusModel, { frequencyListsModel with TokenBoundaries = boundaries }, Cmd.none
                 | FetchFrequencyList ->
+                    let queriesWithTextReplacements =
+                        loadedCorpusModel.Search.Params.Queries
+                        |> Array.map (fun query ->
+                            { query with
+                                QueryString =
+                                    query.QueryString
+                                    |> replace "\"__QUOTE__\"" "'\"'"
+                                    |> replace "%not%contains%" " not contains "
+                                    |> replace "%contains%" " contains " })
+
+                    let paramsWithTextReplacements =
+                        { loadedCorpusModel.Search.Params with Queries = queriesWithTextReplacements }
+
                     loadedCorpusModel,
                     frequencyListsModel,
                     Cmd.OfAsync.perform
                         serverApi.GetFrequencyList
-                        (loadedCorpusModel.Search.Params,
+                        (paramsWithTextReplacements,
                          frequencyListsModel.Attributes,
                          frequencyListsModel.IsCaseSensitive,
                          frequencyListsModel.TokenBoundaries)
