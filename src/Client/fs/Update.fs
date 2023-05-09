@@ -43,6 +43,22 @@ module LoadedCorpus =
 
     module ShowingResults =
 
+        // The version of the queries we send to the server need to have some placeholders replaced,
+        // but for the client code we still need those placeholders, so just replace them in the argument
+        // to the server call, not in the client model.
+        let replacePlaceholdersInSearchParams loadedCorpusModel =
+            let queriesWithTextReplacements =
+                loadedCorpusModel.Search.Params.Queries
+                |> Array.map (fun query ->
+                    { query with
+                        QueryString =
+                            query.QueryString
+                            |> replace "\"__QUOTE__\"" "'\"'"
+                            |> replace "%not%contains%" " not contains "
+                            |> replace "%contains%" " contains " })
+
+            { loadedCorpusModel.Search.Params with Queries = queriesWithTextReplacements }
+
         module Concordance =
             //////////////////////////////////////////////////
             // Update.LoadedCorpus.ShowingResults.Concordance
@@ -101,21 +117,8 @@ module LoadedCorpus =
 
                 match msg with
                 | PerformSearchStep ->
-                    // The version of the queries we send to the server need to have some placeholders replaced,
-                    // but for the client code we still need those placeholders, so just replace them in the argument
-                    // to the server call, not in the client model.
-                    let queriesWithTextReplacements =
-                        loadedCorpusModel.Search.Params.Queries
-                        |> Array.map (fun query ->
-                            { query with
-                                QueryString =
-                                    query.QueryString
-                                    |> replace "\"__QUOTE__\"" "'\"'"
-                                    |> replace "%not%contains%" " not contains "
-                                    |> replace "%contains%" " contains " })
-
                     let paramsWithTextReplacements =
-                        { loadedCorpusModel.Search.Params with Queries = queriesWithTextReplacements }
+                        replacePlaceholdersInSearchParams loadedCorpusModel
 
                     let cmd =
                         Cmd.OfAsync.perform serverApi.SearchCorpus paramsWithTextReplacements SearchResultsReceived
@@ -280,7 +283,7 @@ module LoadedCorpus =
                         let cmd =
                             Cmd.OfAsync.perform
                                 serverApi.GetSearchResults
-                                (searchParams, pageNumbers)
+                                (replacePlaceholdersInSearchParams newLoadedCorpusModel, pageNumbers)
                                 FetchedResultWindow
 
                         newLoadedCorpusModel, newConcordanceModel, cmd
@@ -469,7 +472,7 @@ module LoadedCorpus =
                     let cmd =
                         Cmd.OfAsync.perform
                             serverApi.DownloadSearchResults
-                            (loadedCorpusModel.Search.Params,
+                            (replacePlaceholdersInSearchParams loadedCorpusModel,
                              concordanceModel.DownloadAttributes,
                              categoryInfos,
                              format,
@@ -573,24 +576,11 @@ module LoadedCorpus =
 
                     loadedCorpusModel, { frequencyListsModel with TokenBoundaries = boundaries }, Cmd.none
                 | FetchFrequencyList ->
-                    let queriesWithTextReplacements =
-                        loadedCorpusModel.Search.Params.Queries
-                        |> Array.map (fun query ->
-                            { query with
-                                QueryString =
-                                    query.QueryString
-                                    |> replace "\"__QUOTE__\"" "'\"'"
-                                    |> replace "%not%contains%" " not contains "
-                                    |> replace "%contains%" " contains " })
-
-                    let paramsWithTextReplacements =
-                        { loadedCorpusModel.Search.Params with Queries = queriesWithTextReplacements }
-
                     loadedCorpusModel,
                     frequencyListsModel,
                     Cmd.OfAsync.perform
                         serverApi.GetFrequencyList
-                        (paramsWithTextReplacements,
+                        (replacePlaceholdersInSearchParams loadedCorpusModel,
                          frequencyListsModel.Attributes,
                          frequencyListsModel.IsCaseSensitive,
                          frequencyListsModel.TokenBoundaries)
@@ -613,7 +603,7 @@ module LoadedCorpus =
                     { frequencyListsModel with DownloadingFormat = Some format },
                     Cmd.OfAsync.perform
                         serverApi.DownloadFrequencyList
-                        (loadedCorpusModel.Search.Params,
+                        (replacePlaceholdersInSearchParams loadedCorpusModel,
                          frequencyListsModel.Attributes,
                          frequencyListsModel.IsCaseSensitive,
                          frequencyListsModel.TokenBoundaries,
@@ -680,7 +670,7 @@ module LoadedCorpus =
                         | Some downloadingFormat ->
                             Cmd.OfAsync.perform
                                 serverApi.DownloadMetadataDistribution
-                                (loadedCorpusModel.Search.Params,
+                                (replacePlaceholdersInSearchParams loadedCorpusModel,
                                  attributeCode,
                                  catCode,
                                  categoryType,
@@ -692,7 +682,7 @@ module LoadedCorpus =
                         | None ->
                             Cmd.OfAsync.perform
                                 serverApi.GetMetadataDistribution
-                                (loadedCorpusModel.Search.Params,
+                                (replacePlaceholdersInSearchParams loadedCorpusModel,
                                  attributeCode,
                                  catCode,
                                  categoryType,
