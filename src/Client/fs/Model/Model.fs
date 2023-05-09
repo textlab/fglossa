@@ -167,12 +167,14 @@ type FrequencyListsModel =
     { Attributes: Cwb.PositionalAttribute list
       Frequencies: FrequencyListItem [] option
       IsCaseSensitive: bool
+      IsFetchingFrequencyList: bool
       TokenBoundaries: FreqListTokenBoundaries
       DownloadingFormat: DownloadFormat option }
     static member Default =
         { Attributes = []
           Frequencies = None
           IsCaseSensitive = false
+          IsFetchingFrequencyList = false
           TokenBoundaries = { From = None; To = None }
           DownloadingFormat = None }
 

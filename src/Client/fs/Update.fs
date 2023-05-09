@@ -577,7 +577,7 @@ module LoadedCorpus =
                     loadedCorpusModel, { frequencyListsModel with TokenBoundaries = boundaries }, Cmd.none
                 | FetchFrequencyList ->
                     loadedCorpusModel,
-                    frequencyListsModel,
+                    { frequencyListsModel with IsFetchingFrequencyList = true },
                     Cmd.OfAsync.perform
                         serverApi.GetFrequencyList
                         (replacePlaceholdersInSearchParams loadedCorpusModel,
@@ -597,7 +597,11 @@ module LoadedCorpus =
                                { Frequency = freq
                                  AttributeValues = attrValues } |]
 
-                    loadedCorpusModel, { frequencyListsModel with Frequencies = Some listItems }, Cmd.none
+                    loadedCorpusModel,
+                    { frequencyListsModel with
+                        Frequencies = Some listItems
+                        IsFetchingFrequencyList = false },
+                    Cmd.none
                 | DownloadFrequencyList format ->
                     loadedCorpusModel,
                     { frequencyListsModel with DownloadingFormat = Some format },

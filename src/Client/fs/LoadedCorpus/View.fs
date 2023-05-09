@@ -858,27 +858,31 @@ module ResultsView =
                 | Multilingual _languages -> failwith "NOT IMPLEMENTED"
 
             let frequencyTable =
-                match frequencyListsModel.Frequencies with
-                | Some frequencyRows ->
-                    Bulma.tableContainer [ prop.style [ style.marginTop 20 ]
-                                           prop.children [ Bulma.table [ Html.thead [ Html.tr [ Html.th "Count"
-                                                                                                yield!
-                                                                                                    [ for attr in
-                                                                                                          frequencyListsModel.Attributes ->
-                                                                                                          Html.th
-                                                                                                              attr.Name ] ] ]
-                                                                         Html.tbody [ for row in frequencyRows ->
-                                                                                          Html.tr [ Html.td [ prop.style [ style.textAlign.right ]
-                                                                                                              prop.text (
-                                                                                                                  string
-                                                                                                                      row.Frequency
-                                                                                                              ) ]
-                                                                                                    yield!
-                                                                                                        [ for attrValue in
-                                                                                                              row.AttributeValues ->
-                                                                                                              Html.td
-                                                                                                                  attrValue ] ] ] ] ] ]
-                | None -> Html.none
+                let tableOrEmpty =
+                    match frequencyListsModel.Frequencies with
+                    | Some frequencyRows ->
+                        [ Bulma.tableContainer [ prop.style [ style.marginTop 20 ]
+                                                 prop.children [ Bulma.table [ Html.thead [ Html.tr [ Html.th "Count"
+                                                                                                      yield!
+                                                                                                          [ for attr in
+                                                                                                                frequencyListsModel.Attributes ->
+                                                                                                                Html.th
+                                                                                                                    attr.Name ] ] ]
+                                                                               Html.tbody [ for row in frequencyRows ->
+                                                                                                Html.tr [ Html.td [ prop.style [ style.textAlign.right ]
+                                                                                                                    prop
+                                                                                                                        .text (
+                                                                                                                            string
+                                                                                                                                row.Frequency
+                                                                                                                        ) ]
+                                                                                                          yield!
+                                                                                                              [ for attrValue in
+                                                                                                                    row.AttributeValues ->
+                                                                                                                    Html.td
+                                                                                                                        attrValue ] ] ] ] ] ] ]
+                    | None -> [ Html.none ]
+
+                spinnerOverlay frequencyListsModel.IsFetchingFrequencyList None tableOrEmpty
 
             Html.span [ controls; frequencyTable ]
 
