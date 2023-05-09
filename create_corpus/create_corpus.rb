@@ -22,12 +22,12 @@ system("mkdir -p #{full_corpus_path}/Server")
 system("./create_metadata_categories.rb #{full_corpus_path}/#{metadata_file} #{the_module} > " +
        "#{full_corpus_path}/Shared/MetadataCategories.fs")
 
-if !File.exists?("#{full_corpus_path}/Client/ZCore.fs")
+if !File.exist?("#{full_corpus_path}/Client/ZCore.fs")
         system("./create_client_code.rb #{the_module} > " +
                "#{full_corpus_path}/Client/ZCore.fs")
 end
 
-if !File.exists?("#{full_corpus_path}/Server/ZCore.fs")
+if !File.exist?("#{full_corpus_path}/Server/ZCore.fs")
         system("./create_server_code.rb #{corpus_dir} \"#{corpus_name}\" #{the_module} > " +
                "#{full_corpus_path}/Server/ZCore.fs")
 end
