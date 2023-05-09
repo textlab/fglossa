@@ -503,9 +503,8 @@ module LoadedCorpus =
                             concordanceModel.VisibleSyntaxTreeKeys.Remove(key)
                         else
                             concordanceModel.VisibleSyntaxTreeKeys.Add(key)
-                    loadedCorpusModel,
-                    { concordanceModel with VisibleSyntaxTreeKeys = newKeys },
-                    Cmd.none
+
+                    loadedCorpusModel, { concordanceModel with VisibleSyntaxTreeKeys = newKeys }, Cmd.none
 
 
         module FrequencyLists =
@@ -603,7 +602,7 @@ module LoadedCorpus =
                                let freq = Int64.Parse(m.Groups[1].Value)
 
                                let attrValues =
-                                   m.Groups[2].Value.Split('\t')
+                                   m.Groups[ 2 ].Value.Split('\t')
 
                                { Frequency = freq
                                  AttributeValues = attrValues } |]
@@ -1359,8 +1358,7 @@ module LoadingCorpus =
 
     let update (msg: Msg) (model: LoadingCorpusModel) =
         match msg with
-        | FetchedCorpusList corpusList ->
-            LoadingCorpus { model with MaybeCorpusList = Some corpusList }, Cmd.none
+        | FetchedCorpusList corpusList -> LoadingCorpus { model with MaybeCorpusList = Some corpusList }, Cmd.none
 
         | FetchedCorpusConfig corpusConfig ->
             let corpus =
