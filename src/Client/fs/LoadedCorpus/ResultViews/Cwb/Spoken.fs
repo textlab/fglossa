@@ -101,7 +101,8 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
     React.useEffectOnce focusPopup
 
     let popup =
-        Html.div [ prop.style [ style.height (length.percent 100)
+        Html.div [ prop.className "overscroll-contain"
+                   prop.style [ style.height (length.percent 100)
                                 style.top 0
                                 style.left 0
                                 style.width (length.percent 100)

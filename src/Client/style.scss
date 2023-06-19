@@ -15,6 +15,13 @@ html {
     font-size: 14px;
 }
 
+// Prevent popups from scrolling the underlying element.
+// Since Feliz does not support overscrollBehavior, we have to
+// define a CSS class for this instead of just setting it as an inline style.
+.overscroll-contain {
+    overscroll-behavior: contain;
+}
+
 // Override a few bulma-tooltip styles
 .concordance-table {
     span[data-tooltip] {
