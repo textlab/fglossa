@@ -691,14 +691,33 @@ module MetadataMenu =
                                                                   style.marginBottom 5 ]
                                                      prop.children (getMenu false) ] ] ]
 
+            let tableHeader =
+                let firstColumnHeader =
+                    if model.Corpus.SelectionTableFirstColumn("", model.Corpus.SharedInfo) = Html.none then
+                        Html.none
+                    else
+                        Html.th []
+
+                let metadataHeaders =
+                    [ for category in model.Corpus.MetadataTable -> columnHeader category ]
+
+                Html.thead [ Html.tr (List.append [ firstColumnHeader ] metadataHeaders) ]
+
+            let tableBody =
+                Html.tbody [ for row in model.FetchedTextMetadata do
+                                 let tid = row[0]
+
+                                 let firstColumn =
+                                     model.Corpus.SelectionTableFirstColumn(tid, model.Corpus.SharedInfo)
+
+                                 let metadataColumns =
+                                     [ for column in row -> Html.td column ]
+
+                                 Html.tr (List.append [ firstColumn ] metadataColumns) ]
+
             Bulma.tableContainer [ Bulma.table [ table.isStriped
                                                  table.isFullWidth
-                                                 prop.children [ Html.thead [ Html.tr [ for category in
-                                                                                            model.Corpus.MetadataTable ->
-                                                                                            columnHeader category ] ]
-                                                                 Html.tbody [ for row in model.FetchedTextMetadata ->
-                                                                                  Html.tr [ for column in row ->
-                                                                                                Html.td column ] ] ] ] ]
+                                                 prop.children [ tableHeader; tableBody ] ] ]
 
         let footer =
             Bulma.level [ prop.style [ style.padding 20

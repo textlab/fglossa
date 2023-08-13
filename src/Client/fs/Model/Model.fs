@@ -90,6 +90,12 @@ type Corpus
 
     default _.ResultLinks(_, _, _, _) = Html.none
 
+    // The first column in the selection table (showing metadata for the currently selected texts), which
+    // may e.g. show links to PDFs or other info about each text
+    abstract member SelectionTableFirstColumn: textId: string * corpusInfo: SharedCorpusInfo -> ReactElement
+
+    default _.SelectionTableFirstColumn(_, _) = Html.none
+
 type MediaPlayerInfo =
     { Type: MediaPlayerType
       RowIndex: int
