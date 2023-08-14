@@ -495,7 +495,18 @@ module ResultsView =
               | Spoken ->
                   LoadedCorpus.ResultViews.Cwb.Spoken.concordanceTable concordanceModel corpus resultPage dispatch
               | Written ->
-                  LoadedCorpus.ResultViews.Cwb.Written.concordanceTable concordanceModel corpus resultPage dispatch ]
+                  LoadedCorpus.ResultViews.Cwb.Written.concordanceTable concordanceModel corpus resultPage dispatch
+
+              Bulma.level [ prop.style [ style.marginTop 10 ]
+                            prop.children [ Bulma.levelLeft []
+                                            Bulma.levelRight (
+                                                pagination
+                                                    loadedCorpusModel
+                                                    concordanceModel
+                                                    isSearchingOrFetching
+                                                    numPages
+                                                    dispatch
+                                            ) ] ] ]
 
 
     module GeoDistrMap =
