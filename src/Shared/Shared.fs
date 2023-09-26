@@ -159,6 +159,7 @@ type LanguageConfig =
 
 type ExternalTool =
     | GoogleTranslate
+    | SaamiTranslate
     | Voyant
 
 type GeoMapConfig =

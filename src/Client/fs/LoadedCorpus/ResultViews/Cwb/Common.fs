@@ -48,6 +48,45 @@ let TranslationButton pageNumber rowIndex fullText (translations: Map<string, st
                                                      prop.title "Translate with Google Translate"
                                                      prop.text "Trans" ] ] ]
 
+let TranslationButtonSaami pageNumber rowIndex fullText (translations: Map<string, string>) googleTransKey dispatch =
+    let translationKey =
+        $"{pageNumber}_{rowIndex}"
+
+    let onClick _ =
+        let target = "en"
+
+        let searchText =
+            Fable.Core.JS.encodeURI fullText
+
+        let url =
+            $"https://gtweb.uit.no/apy/translate?langpair=sme|nob&q={searchText}"
+
+        promise {
+            let! response = fetch url []
+            let! text = response.text ()
+
+            // Quick and hackish way to extract the translation from the string representation of the returned JSON...
+            let m =
+                Regex.Match(text, "translatedText\":\s*\"(.+?)\"")
+
+            if m.Success then
+                let translation = m.Groups[1].Value
+                printfn $"{translation}"
+                dispatch (SetTranslation(translationKey, translation))
+        }
+        |> Promise.start
+
+    Html.div [ prop.style [ style.display.inlineBlock
+                            style.marginLeft 7
+                            style.marginRight 1
+                            style.marginBottom 2 ]
+               prop.children [ Bulma.button.button [ button.isSmall
+                                                     prop.style [ style.fontSize 10 ]
+                                                     prop.disabled (translations.ContainsKey translationKey)
+                                                     prop.onClick onClick
+                                                     prop.title "Translate with Giellatekno Apertium"
+                                                     prop.text "Trans" ] ] ]
+
 type ResultLineFields =
     { SId: string
       PreMatch: ReactElement []
@@ -87,6 +126,15 @@ let idColumn
                                          if corpus.SharedInfo.ExternalTools
                                             |> List.contains ExternalTool.GoogleTranslate then
                                              TranslationButton
+                                                 model.ResultPageNo
+                                                 rowIndex
+                                                 fullText
+                                                 model.Translations
+                                                 key
+                                                 dispatch
+                                         elif corpus.SharedInfo.ExternalTools
+                                              |> List.contains ExternalTool.SaamiTranslate then
+                                             TranslationButtonSaami
                                                  model.ResultPageNo
                                                  rowIndex
                                                  fullText

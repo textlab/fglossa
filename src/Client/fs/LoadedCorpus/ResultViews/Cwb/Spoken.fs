@@ -246,12 +246,22 @@ let concordanceTable
 
         match model.Translations.TryFind(translationKey) with
         | Some translation ->
-            Html.tr [ Html.td [ Html.a [ prop.href "http://translate.google.com/"
-                                         prop.target.blank
-                                         prop.children[Html.img [ prop.src "attr1-2.png" ]] ] ]
-                      Html.td [ prop.colSpan 3
-                                prop.style [ style.color "#737373" ]
-                                prop.text translation ] ]
+            if corpus.SharedInfo.ExternalTools
+               |> List.contains GoogleTranslate then
+                Html.tr [ Html.td [ Html.a [ prop.href "http://translate.google.com/"
+                                             prop.target.blank
+                                             prop.children[Html.img [ prop.src "attr1-2.png" ]] ] ]
+                          Html.td [ prop.colSpan 3
+                                    prop.style [ style.color "#737373" ]
+                                    prop.text translation ] ]
+            else
+                Html.tr [ Html.td [ Html.span "Translated by "
+                                    Html.a [ prop.href "http://gtweb.uit.no/jorgal/index.nob.html?dir=sme-nob#"
+                                             prop.target.blank
+                                             prop.text "Giellatekno Apertium" ] ]
+                          Html.td [ prop.colSpan 3
+                                    prop.style [ style.color "#737373" ]
+                                    prop.text translation ] ]
         | None -> Html.none
 
     let phoneticRow _corpus (resultInfo: SearchResultInfo) rowIndex =
