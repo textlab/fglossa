@@ -71,7 +71,6 @@ let TranslationButtonSaami pageNumber rowIndex fullText (translations: Map<strin
 
             if m.Success then
                 let translation = m.Groups[1].Value
-                printfn $"{translation}"
                 dispatch (SetTranslation(translationKey, translation))
         }
         |> Promise.start

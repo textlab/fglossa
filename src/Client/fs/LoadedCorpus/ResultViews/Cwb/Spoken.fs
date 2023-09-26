@@ -1,5 +1,6 @@
 module View.LoadedCorpus.ResultViews.Cwb.Spoken
 
+open Fable.Core
 open Fable.Core.JsInterop
 open System
 open System.Text.RegularExpressions
@@ -10,6 +11,11 @@ open Shared.StringUtils
 open Model
 open Update.LoadedCorpus.ShowingResults.Concordance
 open View.LoadedCorpus.ResultViews.Cwb.Common
+
+// Ugly, but it seems we need to abuse JSON.parse to correctly convert Norwegian characters
+// in the translation from Saami...
+[<Emit("JSON.parse('[\"' + $0 + '\"]')[0]")>]
+let jsonParse (s: string) : string = failwith "JS only"
 
 ////////// CHANGE THIS! /////////
 type SearchResultInfo =
@@ -261,7 +267,7 @@ let concordanceTable
                                              prop.text "Giellatekno Apertium" ] ]
                           Html.td [ prop.colSpan 3
                                     prop.style [ style.color "#737373" ]
-                                    prop.text translation ] ]
+                                    prop.text (jsonParse translation) ] ]
         | None -> Html.none
 
     let phoneticRow _corpus (resultInfo: SearchResultInfo) rowIndex =
