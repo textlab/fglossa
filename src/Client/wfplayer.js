@@ -10,7 +10,8 @@ var corpusIds = {
     "ndc2": 52,
     "nota_oslo": 26,
     "liatrebanken": 62,
-    "ndctrebanken": 63
+    "ndctrebanken": 63,
+    "saami": 24
 };
 
 export var WFplayer = createReactClass({
