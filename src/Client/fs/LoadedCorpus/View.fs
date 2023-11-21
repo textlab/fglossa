@@ -1137,17 +1137,18 @@ module ResultsView =
                                                                  )
                                                              ))
                                                          prop.children [ Html.a [ prop.text "Frequency lists" ] ] ]
-                                               Html.li [ if activeTab = "Metadata distribution" then
-                                                             tab.isActive
-                                                         prop.onClick (fun _ ->
-                                                             dispatch (
-                                                                 ShowingResults.SelectResultTab(
-                                                                     MetadataDistribution(
-                                                                         MetadataDistributionModel.Init()
+                                               if not loadedCorpusModel.Corpus.MetadataQuickView.IsEmpty then
+                                                   Html.li [ if activeTab = "Metadata distribution" then
+                                                                 tab.isActive
+                                                             prop.onClick (fun _ ->
+                                                                 dispatch (
+                                                                     ShowingResults.SelectResultTab(
+                                                                         MetadataDistribution(
+                                                                             MetadataDistributionModel.Init()
+                                                                         )
                                                                      )
-                                                                 )
-                                                             ))
-                                                         prop.children [ Html.a [ prop.text "Metadata distribution" ] ] ] ] ] ]
+                                                                 ))
+                                                             prop.children [ Html.a [ prop.text "Metadata distribution" ] ] ] ] ] ]
 
     ///////////////////////////////////////
     /// View.LoadedCorpus.ResultsView.view
