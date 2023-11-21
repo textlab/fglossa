@@ -106,7 +106,12 @@ module Written =
                     match maybeCounts with
                     | Some (counts: TextAndTokenCounts) -> counts
                     | None -> { NumTexts = 0L; NumTokens = 0L }
-            | Error ex -> return raise ex
+            | Error ex ->
+                if ex.Message.Contains("no such column: texts.tid") then
+                    printfn $"NOTE: No db column texts.tid found for corpus {corpus.Config.Code}."
+                    return { NumTexts = 0L; NumTokens = 0L }
+                else
+                    return raise ex
         }
 
 let getCorpusList () =
