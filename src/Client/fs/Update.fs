@@ -73,9 +73,6 @@ module LoadedCorpus =
                 | SetPaginatorPage of pageNumber: int option * maybeSortKey: SortKey option
                 | SetContextSizeTextValue of string
                 | SetContextSize of int
-                | FetchMetadataForText of corpus: Corpus * textId: string
-                | FetchedMetadataForText of Metadata.CategoryNameAndValue list
-                | CloseQuickView
                 | FetchMediaObject of MediaPlayerType * rowIndex: int
                 | FetchedMediaObject of MediaPlayerType * rowIndex: int * MediaObject
                 | RemoveMediaObject
@@ -364,38 +361,6 @@ module LoadedCorpus =
                     newLoadedCorpusModel,
                     newConcordanceModel,
                     Cmd.ofMsg (FetchResultWindow(concordanceModel.ResultPageNo, None))
-
-                | FetchMetadataForText (corpus, textId) ->
-                    let (categories: Metadata.CategoryNameAndCode list) =
-                        [ for category in corpus.MetadataQuickView ->
-                              { Name = category.Name
-                                Code = category.Code } ]
-
-                    let getNew () =
-                        loadedCorpusModel,
-                        { concordanceModel with TextIdInQuickView = Some textId },
-                        Cmd.OfAsync.perform
-                            serverApi.GetMetadataForSingleText
-                            (corpus.SharedInfo.Code, categories, textId)
-                            FetchedMetadataForText
-
-                    match concordanceModel.TextIdInQuickView with
-                    | Some textIdInQuickView when textIdInQuickView = textId ->
-                        // We have already loaded this text into the quick view, so just make
-                        // sure we show it
-                        { loadedCorpusModel with ShouldShowQuickView = true }, concordanceModel, Cmd.none
-                    | Some _
-                    | None -> getNew ()
-
-                | FetchedMetadataForText metadata ->
-                    { loadedCorpusModel with ShouldShowQuickView = true },
-                    { concordanceModel with QuickViewMetadata = metadata },
-                    Cmd.none
-
-                | CloseQuickView ->
-                    { loadedCorpusModel with ShouldShowQuickView = false },
-                    { concordanceModel with TextIdInQuickView = None },
-                    Cmd.none
 
                 | FetchMediaObject (mediaPlayerType, rowIndex) ->
                     let cmd =
@@ -911,6 +876,9 @@ module LoadedCorpus =
         | Search
         | ResetForm
         | ClosePopups
+        | CloseQuickView
+        | FetchMetadataForText of corpus: Corpus * textId: string
+        | FetchedMetadataForText of Metadata.CategoryNameAndValue list
 
     let update (msg: Msg) (loadedCorpusModel: LoadedCorpusModel) : LoadedCorpusModel * Cmd<Msg> =
         match msg with
@@ -1309,8 +1277,7 @@ module LoadedCorpus =
                             ShowingResults(
                                 ShowingResultsModel.Init(
                                     numSteps,
-                                    string loadedCorpusModel.Search.Params.ContextSize,
-                                    []
+                                    string loadedCorpusModel.Search.Params.ContextSize
                                 )
                             )
                         Search = { loadedCorpusModel.Search with Params = searchParams } }
@@ -1338,6 +1305,35 @@ module LoadedCorpus =
             { loadedCorpusModel with
                 OpenMetadataCategoryCode = None
                 ShouldShowQuickView = false },
+            Cmd.none
+
+        | CloseQuickView ->
+            { loadedCorpusModel with ShouldShowQuickView = false; TextIdInQuickView = None },
+            Cmd.none
+
+        | FetchMetadataForText (corpus, textId) ->
+            let (categories: Metadata.CategoryNameAndCode list) =
+                [ for category in corpus.MetadataQuickView ->
+                      { Name = category.Name
+                        Code = category.Code } ]
+
+            let getNew () =
+                { loadedCorpusModel with TextIdInQuickView = Some textId },
+                Cmd.OfAsync.perform
+                    serverApi.GetMetadataForSingleText
+                    (corpus.SharedInfo.Code, categories, textId)
+                    FetchedMetadataForText
+
+            match loadedCorpusModel.TextIdInQuickView with
+            | Some textIdInQuickView when textIdInQuickView = textId ->
+                // We have already loaded this text into the quick view, so just make
+                // sure we show it
+                { loadedCorpusModel with ShouldShowQuickView = true }, Cmd.none
+            | Some _
+            | None -> getNew ()
+
+        | FetchedMetadataForText metadata ->
+            { loadedCorpusModel with ShouldShowQuickView = true; QuickViewMetadata = metadata },
             Cmd.none
 
 
@@ -1377,7 +1373,9 @@ module LoadingCorpus =
                   SelectionTablePageNumber = 1
                   SelectionTableSort = None
                   Substate = CorpusStart
-                  TextSelectionInfo = "" }
+                  TextSelectionInfo = ""
+                  TextIdInQuickView = None
+                  QuickViewMetadata = [] }
                 |> Update.Metadata.update Update.Metadata.Msg.FetchTextAndTokenCounts
 
             corpus.SharedInfo.GoogleMapsApiKey

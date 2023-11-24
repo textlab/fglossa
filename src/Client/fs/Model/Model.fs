@@ -112,7 +112,6 @@ type SyntaxNode =
 type ConcordanceModel =
     { ContextSizeTextValue: string
       IsSearching: bool
-      QuickViewMetadata: Metadata.CategoryNameAndValue list
       ShouldShowDownloadWindow: bool
       DownloadingFormat: DownloadFormat option
       HeadersInDownload: bool
@@ -131,16 +130,14 @@ type ConcordanceModel =
       // The number of the result page actually being shown at the moment
       ResultPageNo: int
       ResultPages: Map<int, SearchResult []>
-      TextIdInQuickView: string option
       MediaPlayer: MediaPlayerInfo option
       VideoContextSize: int
       VideoContextUnit: string
       Translations: Map<string, string>
       VisibleSyntaxTreeKeys: Set<string> }
-    static member Init(numSteps, contextSizeTextValue, quickViewMetadata) =
+    static member Init(numSteps, contextSizeTextValue) =
         { ContextSizeTextValue = contextSizeTextValue
           IsSearching = true
-          QuickViewMetadata = quickViewMetadata
           ShouldShowDownloadWindow = false
           DownloadingFormat = None
           HeadersInDownload = true
@@ -153,7 +150,6 @@ type ConcordanceModel =
           PaginatorTextValue = "1"
           ResultPageNo = 1
           ResultPages = Map.empty
-          TextIdInQuickView = None
           MediaPlayer = None
           VideoContextSize = 25
           VideoContextUnit = "who_start"
@@ -229,13 +225,12 @@ type ShowingResultsModel =
     static member Init
         (
             numSteps: int,
-            contextSizeTextValue: string,
-            quickViewMetadata: Metadata.CategoryNameAndValue list
+            contextSizeTextValue: string
         ) =
         { ActiveTab = Concordance
           SearchResults = None
           NumSteps = numSteps
-          ConcordanceModel = ConcordanceModel.Init(numSteps, contextSizeTextValue, quickViewMetadata) }
+          ConcordanceModel = ConcordanceModel.Init(numSteps, contextSizeTextValue) }
 
 type LoadedCorpusSubstate =
     | CorpusStart
@@ -263,7 +258,9 @@ type LoadedCorpusModel =
       SelectionTablePageNumber: int
       SelectionTableSort: Metadata.SortInfo option
       Substate: LoadedCorpusSubstate
-      TextSelectionInfo: string }
+      TextSelectionInfo: string
+      TextIdInQuickView: string option
+      QuickViewMetadata: Metadata.CategoryNameAndValue list }
 
 type Model =
     | LoadingCorpus of LoadingCorpusModel

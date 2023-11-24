@@ -102,6 +102,7 @@ let idColumn
     sId
     (maybeFullText: string option)
     rowIndex
+    (loadedCorpusDispatch: Update.LoadedCorpus.Msg -> unit)
     (dispatch: Msg -> unit)
     =
 
@@ -118,7 +119,7 @@ let idColumn
                                               prop.onClick (fun e ->
                                                   e.preventDefault ()
                                                   e.stopPropagation ()
-                                                  dispatch (FetchMetadataForText(corpus, textId)))
+                                                  loadedCorpusDispatch (Update.LoadedCorpus.FetchMetadataForText(corpus, textId)))
                                               prop.children [ Html.span sId ] ] ]
                           Html.div [ match corpus.SharedInfo.GoogleTranslateApiKey, maybeFullText with
                                      | Some key, Some fullText ->

@@ -52,6 +52,45 @@ let selectSearchView (corpus: Corpus) (search: Search) dispatch =
     | Fcs -> SearchViews.Fcs.view corpus search dispatch
 
 
+[<ReactComponent>]
+let MetadataQuickView (model: LoadedCorpusModel) dispatch =
+    let elementRef = React.useElementRef ()
+
+    let focusQuickView () =
+        elementRef.current
+        |> Option.iter (fun quickViewElement ->
+            if model.ShouldShowQuickView then
+                quickViewElement.focus ())
+
+    // Focus the QuickView when mounted to enable it to receive keyboard events
+    React.useEffect (focusQuickView, [| box model |])
+
+    QuickView.quickview [ if model.ShouldShowQuickView then
+                              quickview.isActive
+                          // Set elementRef in order to apply the focusQuickView() function to this element
+                          prop.ref elementRef
+                          // Set tabIndex so that the element receives keyboard events
+                          prop.tabIndex 0
+                          prop.onKeyUp (fun e ->
+                              if e.key = "Escape" then
+                                  dispatch CloseQuickView)
+                          prop.children [ QuickView.header [ Html.div [ prop.style [ style.fontSize 16
+                                                                                     style.fontWeight.bold ]
+                                                                        prop.text "Metadata" ]
+                                                             Bulma.delete [ prop.onClick (fun _ ->
+                                                                                dispatch CloseQuickView) ] ]
+                                          QuickView.body [ QuickView.block [ Bulma.table [ prop.style [ style.margin
+                                                                                                            5 ]
+                                                                                           prop.children [ Html.tbody [ for category in
+                                                                                                                            model.QuickViewMetadata ->
+                                                                                                                            Html.tr [ Html
+                                                                                                                                          .td (
+                                                                                                                                              category.Name
+                                                                                                                                              + ":"
+                                                                                                                                          )
+                                                                                                                                      Html.td
+                                                                                                                                          category.Value ] ] ] ] ] ] ] ]
+
 module CorpusStartView =
     let corpusNameBox config =
         let logo =
@@ -176,45 +215,6 @@ module ResultsView =
                                        | true, size -> dispatch (SetContextSize size)
                                        | false, _ -> ignore None)
                                ) ]
-
-        [<ReactComponent>]
-        let MetadataQuickView (model: ConcordanceModel) (shouldShowQuickView: bool) dispatch =
-            let elementRef = React.useElementRef ()
-
-            let focusQuickView () =
-                elementRef.current
-                |> Option.iter (fun quickViewElement ->
-                    if shouldShowQuickView then
-                        quickViewElement.focus ())
-
-            // Focus the QuickView when mounted to enable it to receive keyboard events
-            React.useEffect (focusQuickView, [| box model |])
-
-            QuickView.quickview [ if shouldShowQuickView then
-                                      quickview.isActive
-                                  // Set elementRef in order to apply the focusQuickView() function to this element
-                                  prop.ref elementRef
-                                  // Set tabIndex so that the element receives keyboard events
-                                  prop.tabIndex 0
-                                  prop.onKeyUp (fun e ->
-                                      if e.key = "Escape" then
-                                          dispatch CloseQuickView)
-                                  prop.children [ QuickView.header [ Html.div [ prop.style [ style.fontSize 16
-                                                                                             style.fontWeight.bold ]
-                                                                                prop.text "Metadata" ]
-                                                                     Bulma.delete [ prop.onClick (fun _ ->
-                                                                                        dispatch CloseQuickView) ] ]
-                                                  QuickView.body [ QuickView.block [ Bulma.table [ prop.style [ style.margin
-                                                                                                                    5 ]
-                                                                                                   prop.children [ Html.tbody [ for category in
-                                                                                                                                    model.QuickViewMetadata ->
-                                                                                                                                    Html.tr [ Html
-                                                                                                                                                  .td (
-                                                                                                                                                      category.Name
-                                                                                                                                                      + ":"
-                                                                                                                                                  )
-                                                                                                                                              Html.td
-                                                                                                                                                  category.Value ] ] ] ] ] ] ] ]
 
         [<ReactComponent>]
         let DownloadWindow (model: ConcordanceModel) (corpus: Corpus) dispatch =
@@ -389,6 +389,7 @@ module ResultsView =
             (loadedCorpusModel: LoadedCorpusModel)
             (concordanceModel: ConcordanceModel)
             (corpus: Corpus)
+            (loadedCorpusDispatch: Update.LoadedCorpus.Msg -> unit)
             (dispatch: Msg -> unit)
             =
             let numPages =
@@ -478,7 +479,7 @@ module ResultsView =
                 concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
 
             [ DownloadWindow concordanceModel corpus dispatch
-              MetadataQuickView concordanceModel loadedCorpusModel.ShouldShowQuickView dispatch
+              MetadataQuickView loadedCorpusModel loadedCorpusDispatch
               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ sortMenu
                                                                 downloadButton ]
                                               Bulma.levelItem resultsInfo ]
@@ -493,9 +494,9 @@ module ResultsView =
                                                        dispatch ] ]
               match corpus.SharedInfo.Modality with
               | Spoken ->
-                  LoadedCorpus.ResultViews.Cwb.Spoken.concordanceTable concordanceModel corpus resultPage dispatch
+                  LoadedCorpus.ResultViews.Cwb.Spoken.concordanceTable concordanceModel corpus resultPage loadedCorpusDispatch dispatch
               | Written ->
-                  LoadedCorpus.ResultViews.Cwb.Written.concordanceTable concordanceModel corpus resultPage dispatch
+                  LoadedCorpus.ResultViews.Cwb.Written.concordanceTable concordanceModel corpus resultPage loadedCorpusDispatch dispatch
 
               Bulma.level [ prop.style [ style.marginTop 10 ]
                             prop.children [ Bulma.levelLeft []
@@ -1171,6 +1172,7 @@ module ResultsView =
                           loadedCorpusModel
                           showingResultsModel.ConcordanceModel
                           corpus
+                          loadedCorpusDispatch
                           (ShowingResults.ConcordanceMsg >> dispatch)
               | GeoDistributionMap (geoMapConfig, coordMap) ->
                   match corpus.SharedInfo.GeoCoordinates with

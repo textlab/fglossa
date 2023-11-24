@@ -143,6 +143,7 @@ let concordanceTable
     (model: ConcordanceModel)
     (corpus: Corpus)
     (pageResults: SearchResult [] option)
+    (loadedCorpusDispatch: Update.LoadedCorpus.Msg -> unit)
     (dispatch: Msg -> unit)
     =
     let mediaPlayer =
@@ -236,6 +237,7 @@ let concordanceTable
                                                                 resultInfo.SId
                                                                 resultInfo.FullText
                                                                 rowIndex
+                                                                loadedCorpusDispatch
                                                                 dispatch
                                                             if not hasPhon then
                                                                 // If we don't have a phonetic transcription, we need to show the audio and video

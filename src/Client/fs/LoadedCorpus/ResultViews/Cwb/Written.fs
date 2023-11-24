@@ -12,6 +12,7 @@ let concordanceTable
     (model: ConcordanceModel)
     (corpus: Corpus)
     (pageResults: SearchResult [] option)
+    (loadedCorpusDispatch: Update.LoadedCorpus.Msg -> unit)
     (dispatch: Msg -> unit)
     =
 
@@ -123,6 +124,7 @@ let concordanceTable
                                                 resultLineFields.SId
                                                 None
                                                 index
+                                                loadedCorpusDispatch
                                                 dispatch ] ]
                   yield! textColumns resultLineFields ]
 
