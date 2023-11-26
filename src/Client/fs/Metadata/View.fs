@@ -457,7 +457,11 @@ module MetadataMenu =
                      ]
 
     [<ReactComponent>]
-    let SelectionTablePopup (model: LoadedCorpusModel) dispatch =
+    let SelectionTablePopup
+        (model: LoadedCorpusModel)
+        (loadedCorpusDispatch: Update.LoadedCorpus.Msg -> unit)
+        dispatch
+        =
         let pagination =
             let pageSize = 50.0
 
@@ -683,10 +687,16 @@ module MetadataMenu =
                     else
                         Html.th []
 
+                let infoBtnHeader =
+                    if model.Corpus.SharedInfo.ShowInfoBtnInSelectionPopup then
+                        Html.th []
+                    else
+                        Html.none
+
                 let metadataHeaders =
                     [ for category in model.Corpus.MetadataTable -> columnHeader category ]
 
-                Html.thead [ Html.tr (List.append [ firstColumnHeader ] metadataHeaders) ]
+                Html.thead [ Html.tr (List.append [ firstColumnHeader; infoBtnHeader ] metadataHeaders) ]
 
             let tableBody =
                 Html.tbody [ for row in model.FetchedTextMetadata do
@@ -695,10 +705,31 @@ module MetadataMenu =
                                  let firstColumn =
                                      model.Corpus.SelectionTableFirstColumn(tid, model.Corpus.SharedInfo)
 
-                                 let metadataColumns =
-                                     [ for column in row -> Html.td column ]
+                                 let infoBtnColumn =
+                                     if model.Corpus.SharedInfo.ShowInfoBtnInSelectionPopup then
+                                         Html.td [ Html.a [ prop.href ""
+                                                            prop.children [ Bulma.button.button [ button.isSmall
+                                                                                                  prop.onClick
+                                                                                                      (fun e ->
+                                                                                                          e.preventDefault
+                                                                                                              ()
 
-                                 Html.tr (List.append [ firstColumn ] metadataColumns) ]
+                                                                                                          loadedCorpusDispatch (
+                                                                                                              Update
+                                                                                                                  .LoadedCorpus
+                                                                                                                  .FetchMetadataForText(
+                                                                                                                      model.Corpus,
+                                                                                                                      tid
+                                                                                                                  )
+                                                                                                          ))
+                                                                                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"
+                                                                                                                                                         "fa-info" ] ] ] ] ] ] ] ]
+                                     else
+                                         Html.none
+
+                                 let metadataColumns = [ for column in row -> Html.td column ]
+
+                                 Html.tr (List.append [ firstColumn; infoBtnColumn ] metadataColumns) ]
 
             Bulma.tableContainer [ Bulma.table [ table.isStriped
                                                  table.isFullWidth
@@ -855,7 +886,11 @@ module MetadataMenu =
 
 
     /// The main view of the metadata menu on the left hand side of the interface
-    let view (model: LoadedCorpusModel) (dispatch: Update.Metadata.Msg -> unit) =
+    let view
+        (model: LoadedCorpusModel)
+        (loadedCorpusDispatch: Update.LoadedCorpus.Msg -> unit)
+        (dispatch: Update.Metadata.Msg -> unit)
+        =
         let voyantSelect =
             let info = model.Corpus.SharedInfo
 
@@ -1013,7 +1048,7 @@ module MetadataMenu =
                                prop.children [ Html.text (textAndTokenCountText model)
                                                selectionButtons ] ]
                     if model.IsSelectionTableOpen then
-                        SelectionTablePopup model dispatch
+                        SelectionTablePopup model loadedCorpusDispatch dispatch
                     Bulma.menu [ prop.style [ style.width 200
                                               style.overflowX.hidden ]
                                  prop.onClick (fun e ->

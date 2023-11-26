@@ -67,6 +67,7 @@ let MetadataQuickView (model: LoadedCorpusModel) dispatch =
 
     QuickView.quickview [ if model.ShouldShowQuickView then
                               quickview.isActive
+                          prop.style [ style.zIndex 50 ]
                           // Set elementRef in order to apply the focusQuickView() function to this element
                           prop.ref elementRef
                           // Set tabIndex so that the element receives keyboard events
@@ -479,7 +480,6 @@ module ResultsView =
                 concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
 
             [ DownloadWindow concordanceModel corpus dispatch
-              MetadataQuickView loadedCorpusModel loadedCorpusDispatch
               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ sortMenu
                                                                 downloadButton ]
                                               Bulma.levelItem resultsInfo ]
@@ -1218,6 +1218,7 @@ let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) 
                                                                                    prop.style [ style.marginRight 20 ]
                                                                                    prop.children [ Metadata.MetadataMenu.view
                                                                                                        model
+                                                                                                       dispatch
                                                                                                        (MetadataMsg
                                                                                                         >> dispatch) ] ]
                                                                 Bulma.column [ prop.style [ style.overflow.auto ]
@@ -1239,4 +1240,5 @@ let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) 
                                                                                            dispatch
                                                                                            (ShowingResultsMsg
                                                                                             >> dispatch)
-                                                                               ) ] ] ] ] ]
+                                                                               ) ] ]
+                                                MetadataQuickView model dispatch ] ] ]

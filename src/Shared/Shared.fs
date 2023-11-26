@@ -187,6 +187,7 @@ type SharedCorpusInfo =
       MultiCpuBounds: int64 [] [] option
       Name: string
       SearchEngine: SearchEngine
+      ShowInfoBtnInSelectionPopup: bool
       TextsReferral: string
       TotalTexts: int64
       TotalTokens: int64 }
@@ -203,7 +204,8 @@ type SharedCorpusInfo =
             ?geoMapConfig,
             ?textsReferral,
             ?dataFiles,
-            ?isTreebank
+            ?isTreebank,
+            ?showInfoBtnInSelectionPopup
         ) =
         let derivedTextsReferral =
             match textsReferral with
@@ -232,6 +234,7 @@ type SharedCorpusInfo =
           MultiCpuBounds = defaultArg multiCpuBounds None
           Name = name
           SearchEngine = defaultArg searchEngine Cwb
+          ShowInfoBtnInSelectionPopup = defaultArg showInfoBtnInSelectionPopup false
           TextsReferral = derivedTextsReferral
           TotalTexts = 0L
           TotalTokens = 0L }
