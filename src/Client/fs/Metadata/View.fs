@@ -36,8 +36,7 @@ let MetadataGeoMap
 
 module MetadataMenu =
     [<ReactComponent>]
-    let FixedSizeList: obj =
-        importMember "react-window"
+    let FixedSizeList: obj = importMember "react-window"
 
     [<ReactComponent>]
     let MetadataSelect
@@ -49,11 +48,9 @@ module MetadataMenu =
         dispatch
         =
 
-        let filterInputText, setFilterInputText =
-            React.useState ""
+        let filterInputText, setFilterInputText = React.useState ""
 
-        let filterInputNumChars, setFilterInputNumChars =
-            React.useState 1.0
+        let filterInputNumChars, setFilterInputNumChars = React.useState 1.0
 
         let filterInputRef = React.useInputRef ()
 
@@ -66,8 +63,7 @@ module MetadataMenu =
             if System.String.IsNullOrWhiteSpace(filterInputText) then
                 selectOptions
             else
-                let downCasedFilterText =
-                    filterInputText.ToLower()
+                let downCasedFilterText = filterInputText.ToLower()
 
                 selectOptions
                 |> Array.filter (fun option -> option.ToLower().Contains(downCasedFilterText))
@@ -96,8 +92,7 @@ module MetadataMenu =
             /// function will be called directly by React code and not transformed by Feliz.
             let listItem (props: {| index: int; style: obj |}) =
                 // let selectOption = fetchedMetadataValues[props.index]
-                let metadataValue =
-                    fetchedMetadataValues[props.index]
+                let metadataValue = fetchedMetadataValues[props.index]
 
                 let selectOption =
                     { Name = metadataValue
@@ -132,8 +127,7 @@ module MetadataMenu =
                                                  "itemSize" ==> 32 ],
                                      listItem)
 
-        let tableAndColumn =
-            category.GetQualifiedColumnName()
+        let tableAndColumn = category.GetQualifiedColumnName()
 
         let categorySelection =
             metadataSelection.TryFind(tableAndColumn)
@@ -240,11 +234,9 @@ module MetadataMenu =
         (isInSidebar: bool)
         dispatch
         =
-        let catCode =
-            category.GetQualifiedColumnName()
+        let catCode = category.GetQualifiedColumnName()
 
-        let maybeCategorySelection =
-            metadataSelection.TryFind(catCode)
+        let maybeCategorySelection = metadataSelection.TryFind(catCode)
 
         let pickValue choiceName =
             // If a from or to value already exists, find it
@@ -257,8 +249,7 @@ module MetadataMenu =
                     else
                         None))
 
-        let maybeFrom =
-            pickValue "app_interval_from"
+        let maybeFrom = pickValue "app_interval_from"
 
         let maybeTo = pickValue "app_interval_to"
 
@@ -350,11 +341,9 @@ module MetadataMenu =
                                                         boundaryInput "To:" intervalState["To:"] snd SetIntervalTo ]
                                        ) ]
                       else
-                          let fromText =
-                              maybeFrom |> Option.defaultValue ""
+                          let fromText = maybeFrom |> Option.defaultValue ""
 
-                          let toText =
-                              maybeTo |> Option.defaultValue ""
+                          let toText = maybeTo |> Option.defaultValue ""
 
                           if fromText <> "" || toText <> "" then
                               Html.div [ prop.className "selected-interval"
@@ -398,8 +387,7 @@ module MetadataMenu =
                                      prop.children [ Html.ul [ listButton; intervalButton ] ] ] ]
 
     let freeTextSearch (category: LongTextCategory) dispatch =
-        let catCode =
-            category.GetQualifiedColumnName()
+        let catCode = category.GetQualifiedColumnName()
 
         Html.li (
             Html.a [ prop.key catCode
@@ -420,8 +408,7 @@ module MetadataMenu =
         (fetchedMinAndMax: (int64 * int64) option)
         (dispatch: Msg -> unit)
         =
-        let isExpanded, setIsExpanded =
-            React.useState startExpanded
+        let isExpanded, setIsExpanded = React.useState startExpanded
 
         let children =
             items
@@ -429,8 +416,7 @@ module MetadataMenu =
                 match item with
                 | Section _ -> failwith $"Sections are not allowed as children of other sections: {item}"
                 | CategoryMenu cat ->
-                    let isOpen =
-                        (Some cat.Code = openCategoryCode)
+                    let isOpen = (Some cat.Code = openCategoryCode)
 
                     match cat with
                     | :? StringCategory as c ->
@@ -638,8 +624,7 @@ module MetadataMenu =
                     else
                         menuList
 
-                let isMenuOpen =
-                    (Some category.Code = model.OpenMetadataCategoryCode)
+                let isMenuOpen = (Some category.Code = model.OpenMetadataCategoryCode)
 
                 Html.th [ prop.onClick (fun e ->
                               if e.altKey then
@@ -765,8 +750,7 @@ module MetadataMenu =
                                dispatch CloseSelectionTable)
                        prop.children [ header; table; footer ] ]
 
-        let root =
-            Browser.Dom.document.getElementById "metadata-selection-popup-root"
+        let root = Browser.Dom.document.getElementById "metadata-selection-popup-root"
 
         ReactDOM.createPortal (popup, root)
 
@@ -813,11 +797,9 @@ module MetadataMenu =
                 ) |}
 
         let okHandler (results: obj) =
-            let catCodes =
-                Fable.Core.JS.Constructors.Object.keys results
+            let catCodes = Fable.Core.JS.Constructors.Object.keys results
 
-            let values =
-                Fable.Core.JS.Constructors.Object.values results
+            let values = Fable.Core.JS.Constructors.Object.values results
 
             for catCode, value in Seq.zip catCodes values do
                 let categoryObj =
@@ -844,8 +826,7 @@ module MetadataMenu =
                         dispatch (SetIntervalTo(numberCat, max))
                     | _ -> failwith $"Non-numerical category defined as interval: {catCode}"
                 | DiscreteControl ->
-                    let choices =
-                        [| for v in (value :?> string []) -> { Name = v; Value = v } |]
+                    let choices = [| for v in (value :?> string []) -> { Name = v; Value = v } |]
 
                     dispatch (SetSelection(categoryObj, choices, false))
 
@@ -951,8 +932,7 @@ module MetadataMenu =
                           model.FetchedMinAndMax
                           dispatch
                   | CategoryMenu category ->
-                      let isOpen =
-                          (Some category.Code = model.OpenMetadataCategoryCode)
+                      let isOpen = (Some category.Code = model.OpenMetadataCategoryCode)
 
                       match category with
                       | :? StringCategory as cat ->
