@@ -80,8 +80,7 @@ let MetadataQuickView (model: LoadedCorpusModel) dispatch =
                                                                         prop.text "Metadata" ]
                                                              Bulma.delete [ prop.onClick (fun _ ->
                                                                                 dispatch CloseQuickView) ] ]
-                                          QuickView.body [ QuickView.block [ Bulma.table [ prop.style [ style.margin
-                                                                                                            5 ]
+                                          QuickView.body [ QuickView.block [ Bulma.table [ prop.style [ style.margin 5 ]
                                                                                            prop.children [ Html.tbody [ for category in
                                                                                                                             model.QuickViewMetadata ->
                                                                                                                             Html.tr [ Html
@@ -89,8 +88,8 @@ let MetadataQuickView (model: LoadedCorpusModel) dispatch =
                                                                                                                                               category.Name
                                                                                                                                               + ":"
                                                                                                                                           )
-                                                                                                                                      Html.td
-                                                                                                                                          category.Value ] ] ] ] ] ] ] ]
+                                                                                                                                      Html.td [ prop.dangerouslySetInnerHTML
+                                                                                                                                                    category.Value ] ] ] ] ] ] ] ] ]
 
 module CorpusStartView =
     let corpusNameBox config =
@@ -280,8 +279,7 @@ module ResultsView =
                     Html.none
 
             let modalFooter =
-                let disableDownload =
-                    model.DownloadAttributes.IsEmpty
+                let disableDownload = model.DownloadAttributes.IsEmpty
 
                 [ Bulma.level [ Bulma.levelLeft [ Bulma.levelItem (
                                                       Html.label [ Bulma.input.checkbox [ prop.isChecked
@@ -428,8 +426,7 @@ module ResultsView =
                     | Some numResults ->
                         if numResults > 0L then
                             // We have received a non-zero number of results
-                            let pagesStr =
-                                if numPages = 1 then "page" else "pages"
+                            let pagesStr = if numPages = 1 then "page" else "pages"
 
                             if concordanceModel.IsSearching then
                                 $"Showing {numResults} matches ({numPages} {pagesStr}); searching..."
@@ -476,8 +473,7 @@ module ResultsView =
                   Bulma.levelItem [ prop.style [ style.marginRight 50 ]
                                     prop.text "words" ] ]
 
-            let resultPage =
-                concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
+            let resultPage = concordanceModel.ResultPages.TryFind(concordanceModel.ResultPageNo)
 
             [ DownloadWindow concordanceModel corpus dispatch
               Bulma.level [ Bulma.levelLeft [ Bulma.levelItem [ sortMenu
@@ -494,9 +490,19 @@ module ResultsView =
                                                        dispatch ] ]
               match corpus.SharedInfo.Modality with
               | Spoken ->
-                  LoadedCorpus.ResultViews.Cwb.Spoken.concordanceTable concordanceModel corpus resultPage loadedCorpusDispatch dispatch
+                  LoadedCorpus.ResultViews.Cwb.Spoken.concordanceTable
+                      concordanceModel
+                      corpus
+                      resultPage
+                      loadedCorpusDispatch
+                      dispatch
               | Written ->
-                  LoadedCorpus.ResultViews.Cwb.Written.concordanceTable concordanceModel corpus resultPage loadedCorpusDispatch dispatch
+                  LoadedCorpus.ResultViews.Cwb.Written.concordanceTable
+                      concordanceModel
+                      corpus
+                      resultPage
+                      loadedCorpusDispatch
+                      dispatch
 
               Bulma.level [ prop.style [ style.marginTop 10 ]
                             prop.children [ Bulma.levelLeft []
@@ -543,8 +549,7 @@ module ResultsView =
             (geoMapConfig: GeoMapConfig)
             (coordMap: Map<string, Map<string, int64>>)
             =
-            let selectedColor, setSelectedColor =
-                React.useState "yellow"
+            let selectedColor, setSelectedColor = React.useState "yellow"
 
             // coloredPhons is a map from a color name to a set of phonetic forms whose buttons have that color
             let (coloredPhons: Map<string, Set<string>>), setColorPhons =
@@ -589,8 +594,7 @@ module ResultsView =
                           style.backgroundColor color ]
                     | None -> []
 
-                let total =
-                    coordMap[phon] |> Map.toArray |> Array.sumBy snd
+                let total = coordMap[phon] |> Map.toArray |> Array.sumBy snd
 
                 let titleText =
                     coordMap[phon]
@@ -711,8 +715,7 @@ module ResultsView =
                            [| for phon in phons do
                                   let locationFreqs = coordMap[phon]
 
-                                  let selectedLocations =
-                                      Set.ofSeq locationFreqs.Keys
+                                  let selectedLocations = Set.ofSeq locationFreqs.Keys
 
                                   let selectedCoords =
                                       smallDots
@@ -945,8 +948,7 @@ module ResultsView =
                                )
                                prop.onChange (fun (s: string) ->
                                    if s <> "" then
-                                       let category =
-                                           corpus.MetadataQuickView[int s]
+                                       let category = corpus.MetadataQuickView[int s]
 
                                        dispatch (SelectCategory category)) ]
 
@@ -1017,8 +1019,7 @@ module ResultsView =
 
                     let frequencyRows =
                         [| for attrValueDistribution in model.MetadataDistribution.Distribution ->
-                               let attrValue =
-                                   attrValueDistribution.AttributeValue
+                               let attrValue = attrValueDistribution.AttributeValue
 
                                let checkboxCell =
                                    Html.td [ Bulma.input.checkbox [ prop.isChecked (
@@ -1204,8 +1205,7 @@ module ResultsView =
 /// View.LoadedCorpus.view
 //////////////////////////////
 let view (model: LoadedCorpusModel) (dispatch: Update.LoadedCorpus.Msg -> unit) =
-    let topRowButtonsElement =
-        topRowButtons model dispatch
+    let topRowButtonsElement = topRowButtons model dispatch
 
     Html.span [ Bulma.section [ prop.style [ style.paddingTop (length.em 2.5) ]
                                 prop.tabIndex 0
