@@ -261,7 +261,7 @@ let concordanceTable
                                              prop.children[Html.img [ prop.src "attr1-2.png" ]] ] ]
                           Html.td [ prop.colSpan 3
                                     prop.style [ style.color "#737373" ]
-                                    prop.text translation ] ]
+                                    prop.dangerouslySetInnerHTML translation ] ]
             else
                 Html.tr [ Html.td [ Html.span "Translated by "
                                     Html.a [ prop.href "http://gtweb.uit.no/jorgal/index.nob.html?dir=sme-nob#"
