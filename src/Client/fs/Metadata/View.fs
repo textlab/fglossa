@@ -707,23 +707,24 @@ module MetadataMenu =
 
                                  let infoBtnColumn =
                                      if model.Corpus.SharedInfo.ShowInfoBtnInSelectionPopup then
-                                         Html.td [ Html.a [ prop.href ""
-                                                            prop.children [ Bulma.button.button [ button.isSmall
-                                                                                                  prop.onClick
-                                                                                                      (fun e ->
-                                                                                                          e.preventDefault
-                                                                                                              ()
+                                         Html.td [ prop.style [ style.paddingLeft 0; style.paddingRight 0 ]
+                                                   prop.children [ Html.a [ prop.href ""
+                                                                            prop.children [ Bulma.button.button [ button.isSmall
+                                                                                                                  prop.onClick
+                                                                                                                      (fun e ->
+                                                                                                                          e.preventDefault
+                                                                                                                              ()
 
-                                                                                                          loadedCorpusDispatch (
-                                                                                                              Update
-                                                                                                                  .LoadedCorpus
-                                                                                                                  .FetchMetadataForText(
-                                                                                                                      model.Corpus,
-                                                                                                                      tid
-                                                                                                                  )
-                                                                                                          ))
-                                                                                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"
-                                                                                                                                                         "fa-info" ] ] ] ] ] ] ] ]
+                                                                                                                          loadedCorpusDispatch (
+                                                                                                                              Update
+                                                                                                                                  .LoadedCorpus
+                                                                                                                                  .FetchMetadataForText(
+                                                                                                                                      model.Corpus,
+                                                                                                                                      tid
+                                                                                                                                  )
+                                                                                                                          ))
+                                                                                                                  prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa"
+                                                                                                                                                                         "fa-info" ] ] ] ] ] ] ] ] ]
                                      else
                                          Html.none
 
