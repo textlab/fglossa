@@ -168,9 +168,14 @@ type QueryTerm =
                 None
 
         let maybeCategoryStrings =
-            if this.CategorySections
-               |> List.exists (fun sectionCategories -> not sectionCategories.IsEmpty) then
-                [ for categorySection in this.CategorySections ->
+            let nonEmptyCategorySections =
+                this.CategorySections
+                |> List.filter (fun sectionCategories -> not sectionCategories.IsEmpty)
+
+            if nonEmptyCategorySections.IsEmpty then
+                None
+            else
+                [ for categorySection in nonEmptyCategorySections ->
                       // If we want to exclude these category values rather than include them,
                       // the output expressions should be combined with '&' instead of '|'
                       // (e.g. [pos!="noun" & pos!="adj"])
@@ -190,8 +195,6 @@ type QueryTerm =
                 // yields e.g. (((pos="noun" & num="sg") | (pos="pron" & num="sg")) & ((desc="laughing")))
                 |> fun s -> $"({s})"
                 |> Some
-            else
-                None
 
         let forms =
             [ maybeMainString
