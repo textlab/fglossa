@@ -57,8 +57,7 @@ type MainCategory =
       Value: string
       Subcategories: Set<Subcategory> option }
     member this.ToCqp() =
-        let mainExpr =
-            $"{this.Attr}{this.Operator.ToOperatorString()}\"{this.Value}\""
+        let mainExpr = $"{this.Attr}{this.Operator.ToOperatorString()}\"{this.Value}\""
 
         let expressions =
             match this.Subcategories with
@@ -139,8 +138,7 @@ type QueryTerm =
                     elif this.IsOriginal then "orig"
                     else "word"
 
-                let caseInsensitiveStr =
-                    if this.IsPhonetic then "" else " %c"
+                let caseInsensitiveStr = if this.IsPhonetic then "" else " %c"
 
                 let processedForm =
                     form
@@ -269,8 +267,7 @@ let handleQuotedOrEmptyTerm (termStr: string) interval (maybeCwbAttributeMenu: C
 
     if termStr.Length > 2 then
         // quoted term
-        let form =
-            termStr[1 .. (termStr.Length - 2)]
+        let form = termStr[1 .. (termStr.Length - 2)]
 
         let isStart = Regex.IsMatch(form, ".+\.\*$")
         let isEnd = Regex.IsMatch(form, "^\.\*.+")
@@ -308,8 +305,7 @@ let handleAttributeValue
         let isPhon = name = "phon"
         let isOrig = name = "orig"
 
-        let isStart =
-            Regex.IsMatch(value, ".+\.\*$")
+        let isStart = Regex.IsMatch(value, ".+\.\*$")
 
         let isEnd = Regex.IsMatch(value, "^\.\*.+")
         let isMiddle = isStart && isEnd
@@ -324,8 +320,7 @@ let handleAttributeValue
             IsMiddle = isMiddle }
 
     let processOtherForms (term: QueryTerm) (name, operator, value) =
-        let newExtraForms =
-            addOrRemoveExtraForms term name operator value
+        let newExtraForms = addOrRemoveExtraForms term name operator value
 
         { term with ExtraForms = newExtraForms }
 
@@ -360,8 +355,7 @@ let handleAttributeValue
                     |> Array.map (
                         replace "%c" ""
                         >> fun s ->
-                            let m =
-                                Regex.Match(s, "(.+?)(!?=|%(?:not%)?contains%)\"(.+)\"")
+                            let m = Regex.Match(s, "(.+?)(!?=|%(?:not%)?contains%)\"(.+)\"")
 
                             (m.Groups[1].Value, AttrOperator.OfString(m.Groups[2].Value), m.Groups[3].Value)
                     )
@@ -390,13 +384,11 @@ let handleAttributeValue
                 let m = Regex.Match(inputStr, "\((.+)\)")
 
                 if m.Success then
-                    let categorySections =
-                        Regex.Matches(m.Groups[1].Value, "\(\((.+?)\)\)")
+                    let categorySections = Regex.Matches(m.Groups[1].Value, "\(\((.+?)\)\)")
 
                     let sectionsByAttributeMenuIndex =
                         [ for categorySection in categorySections ->
-                              let categoryStrings =
-                                  Regex.Split(categorySection.Groups[0].Value, "\)[\|\&]\(")
+                              let categoryStrings = Regex.Split(categorySection.Groups[0].Value, "\)[\|\&]\(")
 
                               let categories =
                                   [ for category in categoryStrings ->
@@ -407,8 +399,7 @@ let handleAttributeValue
                                                     Operator = pair.Groups[2].Value |> AttrOperator.OfString
                                                     Values = pair.Groups[ 3 ].Value.Split('|') |> Set.ofArray } ]
 
-                                        let firstPair =
-                                            List.head attributeValuePairs
+                                        let firstPair = List.head attributeValuePairs
 
                                         { Attr = firstPair.Attr
                                           Operator = firstPair.Operator
@@ -482,14 +473,12 @@ type Query =
 
         // An attribute/value expression such as [lemma="car" %c] or [(lemma="car" & pos="n")].
         // Treat quoted strings separately; they may contain right brackets
-        let attributeValueRx =
-            $"(?:<{sTag}>)?\\\[(.+?)\\\](?:</{sTag}>)?"
+        let attributeValueRx = $"(?:<{sTag}>)?\\\[(.+?)\\\](?:</{sTag}>)?"
 
         // A quoted string or a single unspecified token
         let quotedOrEmptyTermRx = "\".*?\"|\[\]"
 
-        let termsRegex =
-            $"{intervalRx}|{quotedOrEmptyTermRx}|{attributeValueRx}"
+        let termsRegex = $"{intervalRx}|{quotedOrEmptyTermRx}|{attributeValueRx}"
 
         cqpQuery
         // remove all whitespace so we don't have to allow for that everywhere in our later regexes
@@ -500,8 +489,7 @@ type Query =
                     [ ("[]", []) ]
                 else
                     [ for m in Regex.Matches(s, termsRegex) ->
-                          let groups =
-                              [ for group in m.Groups -> group.Value ]
+                          let groups = [ for group in m.Groups -> group.Value ]
 
                           (m.Value, groups) ]
 
@@ -513,11 +501,9 @@ type Query =
                 if Regex.IsMatch(termStr, intervalRx) then
                     latestInterval <- handleInterval groups[1]
                 elif Regex.IsMatch(termStr, attributeValueRx) then
-                    let isSegmentInitial =
-                        Regex.IsMatch(termStr, $"<{sTag}>")
+                    let isSegmentInitial = Regex.IsMatch(termStr, $"<{sTag}>")
 
-                    let isSegmentFinal =
-                        Regex.IsMatch(termStr, $"</{sTag}>")
+                    let isSegmentFinal = Regex.IsMatch(termStr, $"</{sTag}>")
 
                     let term =
                         handleAttributeValue
@@ -530,8 +516,7 @@ type Query =
                     terms <- Array.append terms [| term |]
                     latestInterval <- None
                 elif Regex.IsMatch(termStr, quotedOrEmptyTermRx) then
-                    let term =
-                        handleQuotedOrEmptyTerm termStr latestInterval corpus.CwbAttributeMenu
+                    let term = handleQuotedOrEmptyTerm termStr latestInterval corpus.CwbAttributeMenu
 
                     terms <- Array.append terms [| term |]
                     latestInterval <- None)
@@ -548,11 +533,9 @@ type Query =
 ///////////////////////////////////////
 
 let updateQuery model query queryIndex newQueryTerms =
-    let newQuery =
-        { query with Terms = newQueryTerms }
+    let newQuery = { query with Terms = newQueryTerms }
 
-    let newQueryCqp =
-        newQuery.ToCqp(model.Corpus)
+    let newQueryCqp = newQuery.ToCqp(model.Corpus)
 
     let newQueries =
         model.Search.Params.Queries
@@ -562,7 +545,6 @@ let updateQuery model query queryIndex newQueryTerms =
 
 
 let updateQueryTerm model query queryIndex newTerm termIndex =
-    let newQueryTerms =
-        query.Terms |> Array.updateAt termIndex newTerm
+    let newQueryTerms = query.Terms |> Array.updateAt termIndex newTerm
 
     updateQuery model query queryIndex newQueryTerms
