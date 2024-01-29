@@ -492,7 +492,7 @@ let getSearchResults
 
                     let commands =
                         [ yield!
-                              cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery undumpSaveCommands
+                              cqpInit corpus searchParams (Some searchParams.SortKey) maybeAttributes namedQuery undumpSaveCommands
                           $"cat {namedQuery} {searchParams.Start} {searchParams.End}" ]
 
                     async {
@@ -504,7 +504,7 @@ let getSearchResults
                 let namedQuery = $"{queryName}_1_0"
 
                 let commands =
-                    [ yield! cqpInit corpus searchParams (Some searchParams.SortKey) None namedQuery []
+                    [ yield! cqpInit corpus searchParams (Some searchParams.SortKey) maybeAttributes namedQuery []
                       $"cat {namedQuery} {searchParams.Start} {searchParams.End}" ]
 
                 async {
