@@ -10,7 +10,7 @@ function SyntaxTree({ cnl }) {
             svg.current.appendChild(tree);
         }
     }, []);
-    return <div ref={svg} />;
+    return <div style={{ overflowX: "auto" }} ref={svg} />;
 }
 
 const find_seg = (arr) => {

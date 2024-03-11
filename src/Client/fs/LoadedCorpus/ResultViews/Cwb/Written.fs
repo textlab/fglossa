@@ -178,8 +178,7 @@ let concordanceTable
 
             Html.tr [ prop.key $"syntax_{key}"
                       prop.children [ Html.td [ prop.colSpan 4
-                                                prop.style [ style.maxWidth 1100
-                                                             style.overflowX.auto ]
+                                                prop.style [ style.maxWidth 1100 ]
                                                 prop.children (SyntaxTree(nodes)) ] ] ]
         else
             Html.none
