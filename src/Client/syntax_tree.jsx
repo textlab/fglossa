@@ -13,11 +13,47 @@ function SyntaxTree({ cnl }) {
     return <div ref={svg} />;
 }
 
+const find_seg = (arr) => {
+    let start = -1;
+    for (const [i, e] of Object.entries(arr)) {
+        if (e.index == 1) {
+            start = i;
+        } // ie new start point
+        if (e.match) {
+            // ie found "hit" so this must be the seg. NB, a hit is guaranteed.
+            break;
+        }
+    }
+    if (start < 0) {
+        return false;
+    } // ie, start never set, so seg start missing
+    arr = arr.slice(start); // lob off leading toks
+
+    let i = 0;
+    let highest_dep = 0;
+    for (const [j, e] of Object.entries(arr)) {
+        if (e.dep > highest_dep) {
+            highest_dep = e.dep;
+        } // need to make sure the end of the seg is present
+        if (e.index - i != 1) {
+            // end reached
+            break;
+        }
+        i++;
+    }
+    if (highest_dep > i) {
+        return false;
+    }
+    return arr.slice(0, i);
+};
+
 const range = (arr, step = 1) =>
     Array(Math.ceil((arr[1] - arr[0]) / step))
         .fill(arr[0])
         .map((x, y) => x + y * step);
+
 const init = (arr) => {
+    arr = find_seg(arr);
     const uniq = (Math.random() + "").replace("0.", "");
     const tree = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const svgheight = 220;
@@ -32,6 +68,32 @@ const init = (arr) => {
     tree.setAttribute("id", "tree");
     tree.setAttribute("width", 3600);
     tree.setAttribute("height", svgheight);
+
+    if (!arr) {
+        tree.appendChild(
+            txt(
+                0,
+                130,
+                800,
+                "Øk konteksten for å tegne treet",
+                uniq + "no",
+                16,
+                false
+            )
+        );
+        tree.appendChild(
+            txt(
+                0,
+                160,
+                800,
+                "Increase context to draw tree",
+                uniq + "en",
+                16,
+                false
+            )
+        );
+        return tree;
+    }
 
     let x = 4;
     depend[0] = false;
