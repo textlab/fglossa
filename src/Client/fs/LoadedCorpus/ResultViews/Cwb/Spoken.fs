@@ -416,6 +416,54 @@ let concordanceTable
             else
                 None)
 
+    let syntaxRow (model: ConcordanceModel) rowIndex =
+        let key = $"{model.ResultPageNo}_{rowIndex}"
+
+        if model.VisibleSyntaxTreeKeys.Contains(key) then
+            let searchResult =
+                model.ResultPages[model.ResultPageNo][rowIndex]
+
+            let tokens =
+                searchResult.Text[0]
+                |> replace "<who_name\s+(.+?)>\s*" "<who_name_$1> "
+                |> replace "\s*</who_name>" " $&"
+                |> fun s -> s.Split()
+                |> Array.skip 3
+
+            let nodes =
+                [| for token in tokens ->
+                       let isMatch =
+                           Regex.IsMatch(token, "^\{\{.+\}\}$")
+
+                       let attrs =
+                           token
+                           |> replace "^\{\{" ""
+                           |> replace "\}\}$" ""
+                           |> fun t -> t.Split('/')
+
+                       let orthographicForm = attrs[0]
+                       let partOfSpeech = attrs[3]
+                       let synFunc = attrs[attrs.Length - 3]
+                       let index = attrs[attrs.Length - 2] |> int
+
+                       let dependency =
+                           attrs[attrs.Length - 1] |> int
+
+                       { index = index
+                         ort = orthographicForm
+                         pos = partOfSpeech
+                         dep = dependency
+                         ``fun`` = synFunc
+                         ``match`` = isMatch } |]
+
+            Html.tr [ prop.key $"syntax_{key}"
+                      prop.children [ Html.td [ prop.colSpan 4
+                                                prop.style [ style.maxWidth 1100
+                                                             style.overflowX.auto ]
+                                                prop.children (SyntaxTree(nodes)) ] ] ]
+        else
+            Html.none
+
     // Returns one or more rows representing a single search result
     let singleResultRows
         ortIndex
