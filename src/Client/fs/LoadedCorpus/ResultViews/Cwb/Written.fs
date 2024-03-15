@@ -151,9 +151,9 @@ let concordanceTable
                 |> Array.skip 3
 
             let nodes =
+                let mutable isMatch = false
                 [| for token in tokens ->
-                       let isMatch =
-                           Regex.IsMatch(token, "^\{\{.+\}\}$")
+                       if Regex.IsMatch(token, "^\{\{") then isMatch <- true
 
                        let attrs =
                            token
@@ -169,12 +169,15 @@ let concordanceTable
                        let dependency =
                            attrs[attrs.Length - 1] |> int
 
-                       { index = index
-                         ort = orthographicForm
-                         pos = partOfSpeech
-                         dep = dependency
-                         ``fun`` = synFunc
-                         ``match`` = isMatch } |]
+                       let result =
+                           { index = index
+                             ort = orthographicForm
+                             pos = partOfSpeech
+                             dep = dependency
+                             ``fun`` = synFunc
+                             ``match`` = isMatch }
+                       if Regex.IsMatch(token, "\}\}$") then isMatch <- false
+                       result |]
 
             Html.tr [ prop.key $"syntax_{key}"
                       prop.children [ Html.td [ prop.colSpan 4
