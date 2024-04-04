@@ -320,7 +320,11 @@ type SearchParams =
                 | Some language -> Some language.Code
                 | None -> None
 
-        { ContextSize = 15
+        { ContextSize =
+            if corpusConfig.IsTreebank then
+                25
+            else
+                15
           CorpusCode = corpusConfig.Code
           CpuCounts = None
           End = 99L
