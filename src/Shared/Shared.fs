@@ -56,8 +56,7 @@ module Metadata =
         default _.TableName = None
 
         member this.GetQualifiedColumnName() =
-            let tableName =
-                this.TableName |> Option.defaultValue "texts"
+            let tableName = this.TableName |> Option.defaultValue "texts"
 
             $"{tableName}.{this.Code}"
 
