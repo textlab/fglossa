@@ -12,7 +12,8 @@ var corpusIds = {
     "liatrebanken": 62,
     "ndctrebanken": 63,
     "saami": 24,
-    "taus3": 54
+    "taus3": 54,
+    "kindergarten": 64
 };
 
 export var WFplayer = createReactClass({
