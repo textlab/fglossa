@@ -189,7 +189,7 @@ let concordanceTable
     /// Returns one or more table rows representing a single search result
     let singleResultRows wordIndex maybeOrigCorrIndex maybeLemmaIndex (searchResult: SearchResult) rowIndex =
         match searchResult.Text with
-        // Only one line per search result
+        // Only one CQP line per search result (i.e., monolingual results)
         | mainLine :: otherLines when otherLines.IsEmpty ->
             let sId, pre, searchWord, post =
                 extractFields mainLine
@@ -220,7 +220,7 @@ let concordanceTable
                         if corpus.SharedInfo.IsTreebank then
                             syntaxRow model rowIndex ]
 
-        // Multiple lines per search result
+        // Multiple CQP lines per search result (i.e., multilingual results)
         | mainLine :: otherLines ->
             let sId, pre, searchWord, post =
                 extractFields mainLine
