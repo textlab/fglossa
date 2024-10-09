@@ -285,6 +285,11 @@ let concordanceTable
                                             prop.children [ audioVideoLinks resultInfo rowIndex ] ]
                                   yield! textColumns resultLineFields ] ]
 
+    let originalRow (resultLineFields: ResultLineFields) index =
+        Html.tr [ prop.key $"orig{index}"
+                  prop.children [ Html.td [ prop.style [ style.verticalAlign.middle ] ]
+                                  yield! textColumns resultLineFields ] ]
+
     let processToken token index displayedFieldIndex (_maybeOrtPhonIndex: int option) maybeLemmaIndex tipFieldIndexes =
         if String.IsNullOrWhiteSpace(token) then
             (Html.none, "")
@@ -472,6 +477,7 @@ let concordanceTable
         ortIndex
         maybePhonIndex
         maybeLemmaIndex
+        maybeOrigIndex
         ortTipIndexes
         phonTipIndexes
         (searchResult: SearchResult)
@@ -545,6 +551,35 @@ let concordanceTable
                 Some(phoneticRow corpus phonResInfo rowIndex)
             | None -> None
 
+        let orig =
+            match maybeOrigIndex with
+            | Some origIndex ->
+                let origPre =
+                    processField origIndex maybePhonIndex maybeLemmaIndex ortTipIndexes pre
+
+                let origMatch =
+                    processField origIndex maybePhonIndex maybeLemmaIndex ortTipIndexes searchWord
+
+                let origPost =
+                    processField origIndex maybePhonIndex maybeLemmaIndex ortTipIndexes post
+
+                let origText =
+                    [| ortPre |> Array.map snd
+                       ortMatch |> Array.map snd
+                       ortPost |> Array.map snd |]
+                    |> Array.concat
+                    |> String.concat " "
+                    |> replace "\s*#" ""
+
+                let resultLineFields =
+                    { SId = sId
+                      PreMatch = origPre |> Array.map fst
+                      SearchWord = origMatch |> Array.map fst
+                      PostMatch = origPost |> Array.map fst }
+
+                Some(originalRow resultLineFields rowIndex)
+            | None -> None
+
         let separator = separatorRow rowIndex
 
         // let phonPre, phonMatch, phonPost =
@@ -556,6 +591,7 @@ let concordanceTable
         [ orthographic
           translatedRow rowIndex
           if phonetic.IsSome then phonetic.Value
+          if orig.IsSome then orig.Value
           if corpus.SharedInfo.IsTreebank then
               syntaxRow model rowIndex
           separator ]
@@ -581,6 +617,11 @@ let concordanceTable
         |> List.tryFindIndex (fun attr -> attr.Code = "lemma")
         |> Option.map (fun i -> i + 1)
 
+    let maybeOrigIndex =
+        attributes
+        |> List.tryFindIndex (fun attr -> attr.Code = "orig")
+        |> Option.map (fun i -> i + 1)
+
     let ortTipIndexes =
         [ 0 .. attributes.Length ]
         |> List.except [ ortIndex ]
@@ -599,7 +640,7 @@ let concordanceTable
             |> Array.toList
             |> List.indexed
             |> List.collect (fun (index, result) ->
-                singleResultRows ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes phonTipIndexes result index)
+                singleResultRows ortIndex maybePhonIndex maybeLemmaIndex maybeOrigIndex ortTipIndexes phonTipIndexes result index)
         | None -> []
 
 
