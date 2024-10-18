@@ -153,7 +153,7 @@ let concordanceTable
 
     let extractFields result =
         let m =
-            Regex.Match(result, "^<who_name\s+(\S*?)>:\s+(.*)\{\{(.+?)\}\}(.*?)$")
+            Regex.Match(result, "^<who_name\s+(\S*?)>(?:<who_messageid.+?>)?:\s+(.*)\{\{(.+?)\}\}(.*?)$")
 
         let groupValues =
             m.Groups

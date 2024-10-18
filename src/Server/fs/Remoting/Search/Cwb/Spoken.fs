@@ -30,6 +30,12 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
             displayedAttrsCommand corpus searchParams.Queries None
 
         let commands =
+            let printStructuresCmd =
+                if corpus.Config.HasMessages then
+                  "set PrintStructures \"who_name, who_avfile, who_messageid\""
+                else
+                  "set PrintStructures \"who_name, who_avfile\""
+
             [ "set DataDirectory \"/tmp/glossa\""
               cwbCorpus
 
@@ -50,7 +56,7 @@ let runQueries (logger: ILogger) (corpus: Corpus) (searchParams: SearchParams) (
 
               $"save {namedQuery}"
               "set Context 1 who_start"
-              "set PrintStructures \"who_name, who_avfile\""
+              printStructuresCmd
               "set LD \"{{\""
               "set RD \"}}\""
 
@@ -178,10 +184,16 @@ let getSearchResults
             sortWithinWho namedQuery searchParams.SortKey
 
         let commands =
+            let printStructuresCmd =
+                if corpus.Config.HasMessages then
+                  "set PrintStructures \"who_name, who_avfile, who_messageid\""
+                else
+                  "set PrintStructures \"who_name, who_avfile\""
+
             [ "set DataDirectory \"/tmp/glossa\""
               cwbCorpusName corpus searchParams.Queries
               "set Context 1 who_start"
-              "set PrintStructures \"who_name, who_avfile\""
+              printStructuresCmd
               "set LD \"{{\""
               "set RD \"}}\""
               displayedAttrsCommand corpus searchParams.Queries maybeAttributes
@@ -439,13 +451,19 @@ let getMediaObject logger (searchParams: SearchParams) mediaPlayerType pageNumbe
             (pageNumber - 1) * searchParams.PageSize
             + rowIndex
 
+        let showLine =
+            if corpus.Config.HasMessages then
+              "show +who_start +who_stop +who_name +who_avfile +trans +who_messageid"
+            else
+              "show +who_start +who_stop +who_name +who_avfile +trans"
+
         let commands =
             [ $"set DataDirectory \"/tmp/glossa\""
               corpus.Config.Code.ToUpper()
               $"set Context {contextSize} {unitStr}"
               "set LD \"{{\""
               "set RD \"}}\""
-              "show +who_start +who_stop +who_name +who_avfile +trans"
+              showLine
               $"cat {namedQuery} {resultIndex} {resultIndex}" ]
 
         let! cqpResults = runCqpCommands logger corpus false commands
