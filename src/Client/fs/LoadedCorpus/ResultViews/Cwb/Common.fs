@@ -100,6 +100,7 @@ let idColumn
     (corpus: Corpus)
     (model: ConcordanceModel)
     sId
+    messageId
     (maybeFullText: string option)
     rowIndex
     (loadedCorpusDispatch: Update.LoadedCorpus.Msg -> unit)
@@ -160,7 +161,7 @@ let idColumn
                                                                                           prop.children [ Bulma.icon [ Html.i [ prop.className [ "fa fa-sitemap" ] ] ] ] ] ] ]
                                      else
                                          Html.none ] ]
-               corpus.ResultLinks(model.ResultPageNo, rowIndex, textId, corpus.SharedInfo) ]
+               corpus.ResultLinks(model.ResultPageNo, rowIndex, textId, messageId, corpus.SharedInfo) ]
 
 
 let textColumns (resultLineFields: ResultLineFields) =

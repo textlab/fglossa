@@ -86,9 +86,9 @@ type Corpus
     member val MetadataDistributionCategories = defaultArg metadataDistributionCategories []
 
     abstract member ResultLinks:
-        pageNumber: int * rowIndex: int * textId: string * corpusInfo: SharedCorpusInfo -> ReactElement
+        pageNumber: int * rowIndex: int * textId: string * messageId: string * corpusInfo: SharedCorpusInfo -> ReactElement
 
-    default _.ResultLinks(_, _, _, _) = Html.none
+    default _.ResultLinks(_, _, _, _, _) = Html.none
 
     // The first column in the selection table (showing metadata for the currently selected texts), which
     // may e.g. show links to PDFs or other info about each text

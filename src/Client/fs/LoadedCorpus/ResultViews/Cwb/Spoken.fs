@@ -22,6 +22,7 @@ type SearchResultInfo =
     { AudioType: AudioType option
       HasVideo: bool
       SId: string
+      MessageId: string
       PreMatch: ReactElement []
       Match: ReactElement []
       PostMatch: ReactElement []
@@ -153,7 +154,7 @@ let concordanceTable
 
     let extractFields result =
         let m =
-            Regex.Match(result, "^<who_name\s+(\S*?)>(?:<who_messageid.+?>)?:\s+(.*)\{\{(.+?)\}\}(.*?)$")
+            Regex.Match(result, "^<who_name\s+(\S*?)>(<who_messageid.+?>)?:\s+(.*)\{\{(.+?)\}\}(.*?)$")
 
         let groupValues =
             m.Groups
@@ -162,15 +163,17 @@ let concordanceTable
 
         let sId = groupValues[1]
 
+        let messageId = groupValues[2]
+
         let pre =
-            groupValues[2]
+            groupValues[3]
             // If the result begins with a who_name tag with the same ID as the one for the
             // actual match, it feels redundant (since that speaker ID is listed just
             // to the left of it), so just remove it.
             |> replace $"^<who_name\s+{sId}>" ""
 
         let searchWord =
-            groupValues[3]
+            groupValues[4]
             |> fun m ->
                 // Do the same with the match if there is no left context
                 if String.IsNullOrWhiteSpace(pre) then
@@ -178,9 +181,9 @@ let concordanceTable
                 else
                     m
 
-        let post = groupValues[4]
+        let post = groupValues[5]
 
-        (sId, pre, searchWord, post)
+        (sId, messageId, pre, searchWord, post)
 
     let audioVideoLinks (resultInfo: SearchResultInfo) rowIndex : ReactElement =
         let audioButton title icon =
@@ -228,17 +231,13 @@ let concordanceTable
               SearchWord = resultInfo.Match
               PostMatch = resultInfo.PostMatch }
 
+        let idCol =
+           idColumn corpus model resultInfo.SId resultInfo.MessageId resultInfo.FullText rowIndex loadedCorpusDispatch dispatch
+
         Html.tr [ prop.key $"ort{rowIndex}"
                   prop.children [ Html.td [ prop.style [ style.textAlign.center
                                                          style.verticalAlign.middle ]
-                                            prop.children [ idColumn
-                                                                corpus
-                                                                model
-                                                                resultInfo.SId
-                                                                resultInfo.FullText
-                                                                rowIndex
-                                                                loadedCorpusDispatch
-                                                                dispatch
+                                            prop.children [ idCol
                                                             if not hasPhon then
                                                                 // If we don't have a phonetic transcription, we need to show the audio and video
                                                                 // links in the orthographic row instead
@@ -486,7 +485,7 @@ let concordanceTable
 
         let line = searchResult.Text.Head
 
-        let sId, pre, searchWord, post =
+        let sId, messageId, pre, searchWord, post =
             extractFields line
 
         let ortPre =
@@ -510,6 +509,7 @@ let concordanceTable
             { AudioType = searchResult.AudioType
               HasVideo = searchResult.HasVideo
               SId = sId
+              MessageId = messageId
               PreMatch = ortPre |> Array.map fst
               Match = ortMatch |> Array.map fst
               PostMatch = ortPost |> Array.map fst
@@ -542,6 +542,7 @@ let concordanceTable
                     { AudioType = searchResult.AudioType
                       HasVideo = searchResult.HasVideo
                       SId = sId
+                      MessageId = ""
                       PreMatch = phonPre |> Array.map fst
                       Match = phonMatch |> Array.map fst
                       PostMatch = phonPost |> Array.map fst
@@ -562,14 +563,6 @@ let concordanceTable
 
                 let origPost =
                     processField origIndex maybePhonIndex maybeLemmaIndex ortTipIndexes post
-
-                let origText =
-                    [| ortPre |> Array.map snd
-                       ortMatch |> Array.map snd
-                       ortPost |> Array.map snd |]
-                    |> Array.concat
-                    |> String.concat " "
-                    |> replace "\s*#" ""
 
                 let resultLineFields =
                     { SId = sId

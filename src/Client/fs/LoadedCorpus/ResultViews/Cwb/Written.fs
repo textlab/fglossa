@@ -123,6 +123,7 @@ let concordanceTable
                                                 corpus
                                                 model
                                                 resultLineFields.SId
+                                                ""
                                                 None
                                                 index
                                                 loadedCorpusDispatch
