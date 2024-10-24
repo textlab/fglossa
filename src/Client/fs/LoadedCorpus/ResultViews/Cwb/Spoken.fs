@@ -135,8 +135,7 @@ let MediaPlayerPopup (mediaPlayerInfo: MediaPlayerInfo) (dispatch: Msg -> unit) 
                                    footer ] ]
 
 
-    let root =
-        Browser.Dom.document.getElementById "media-player-popup-root"
+    let root = Browser.Dom.document.getElementById "media-player-popup-root"
 
     ReactDOM.createPortal (popup, root)
 
@@ -222,8 +221,7 @@ let concordanceTable
                                                                                          prop.style [ style.width 12 ] ] ] ] ] ]
 
     let orthographicRow (corpus: Corpus) (resultInfo: SearchResultInfo) rowIndex =
-        let hasPhon =
-            corpus.SharedInfo.HasAttribute("phon")
+        let hasPhon = corpus.SharedInfo.HasAttribute("phon")
 
         let (resultLineFields: ResultLineFields) =
             { SId = resultInfo.SId
@@ -232,7 +230,15 @@ let concordanceTable
               PostMatch = resultInfo.PostMatch }
 
         let idCol =
-           idColumn corpus model resultInfo.SId resultInfo.MessageId resultInfo.FullText rowIndex loadedCorpusDispatch dispatch
+            idColumn
+                corpus
+                model
+                resultInfo.SId
+                resultInfo.MessageId
+                resultInfo.FullText
+                rowIndex
+                loadedCorpusDispatch
+                dispatch
 
         Html.tr [ prop.key $"ort{rowIndex}"
                   prop.children [ Html.td [ prop.style [ style.textAlign.center
@@ -248,8 +254,7 @@ let concordanceTable
                                   yield! textColumns resultLineFields ] ]
 
     let translatedRow rowIndex =
-        let translationKey =
-            $"{model.ResultPageNo}_{rowIndex}"
+        let translationKey = $"{model.ResultPageNo}_{rowIndex}"
 
         match model.Translations.TryFind(translationKey) with
         | Some translation ->
@@ -400,8 +405,7 @@ let concordanceTable
         tokens
         |> Array.indexed
         |> Array.choose (fun (index, token) ->
-            let m =
-                Regex.Match(token, "<who_name_(.+?)>")
+            let m = Regex.Match(token, "<who_name_(.+?)>")
 
             if m.Success then
                 // Extract the speaker ID and put it in front of its segment
@@ -424,8 +428,7 @@ let concordanceTable
         let key = $"{model.ResultPageNo}_{rowIndex}"
 
         if model.VisibleSyntaxTreeKeys.Contains(key) then
-            let searchResult =
-                model.ResultPages[model.ResultPageNo][rowIndex]
+            let searchResult = model.ResultPages[model.ResultPageNo][rowIndex]
 
             let tokens =
                 searchResult.Text[0]
@@ -436,8 +439,10 @@ let concordanceTable
 
             let nodes =
                 let mutable isMatch = false
+
                 [| for token in tokens ->
-                       if Regex.IsMatch(token, "^\{\{") then isMatch <- true
+                       if Regex.IsMatch(token, "^\{\{") then
+                           isMatch <- true
 
                        let attrs =
                            token
@@ -450,8 +455,7 @@ let concordanceTable
                        let synFunc = attrs[attrs.Length - 3]
                        let index = attrs[attrs.Length - 2] |> int
 
-                       let dependency =
-                           attrs[attrs.Length - 1] |> int
+                       let dependency = attrs[attrs.Length - 1] |> int
 
                        let result =
                            { index = index
@@ -460,7 +464,10 @@ let concordanceTable
                              dep = dependency
                              ``fun`` = synFunc
                              ``match`` = isMatch }
-                       if Regex.IsMatch(token, "\}\}$") then isMatch <- false
+
+                       if Regex.IsMatch(token, "\}\}$") then
+                           isMatch <- false
+
                        result |]
 
             Html.tr [ prop.key $"syntax_{key}"
@@ -485,11 +492,9 @@ let concordanceTable
 
         let line = searchResult.Text.Head
 
-        let sId, messageId, pre, searchWord, post =
-            extractFields line
+        let sId, messageId, pre, searchWord, post = extractFields line
 
-        let ortPre =
-            processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes pre
+        let ortPre = processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes pre
 
         let ortMatch =
             processField ortIndex maybePhonIndex maybeLemmaIndex ortTipIndexes searchWord
@@ -515,8 +520,7 @@ let concordanceTable
               PostMatch = ortPost |> Array.map fst
               FullText = Some ortText }
 
-        let orthographic =
-            orthographicRow corpus ortResInfo rowIndex
+        let orthographic = orthographicRow corpus ortResInfo rowIndex
 
         let phonetic =
             match maybePhonIndex with
@@ -633,7 +637,15 @@ let concordanceTable
             |> Array.toList
             |> List.indexed
             |> List.collect (fun (index, result) ->
-                singleResultRows ortIndex maybePhonIndex maybeLemmaIndex maybeOrigIndex ortTipIndexes phonTipIndexes result index)
+                singleResultRows
+                    ortIndex
+                    maybePhonIndex
+                    maybeLemmaIndex
+                    maybeOrigIndex
+                    ortTipIndexes
+                    phonTipIndexes
+                    result
+                    index)
         | None -> []
 
 
